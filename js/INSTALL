@@ -1,0 +1,3 @@
+To install issue the following commands
+   sh getDojo.sh
+   sh compile.sh

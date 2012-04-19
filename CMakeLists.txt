@@ -19,6 +19,17 @@ IF( EXTEND_CMAKE_MODULE_PATH )
     )
 ENDIF( EXTEND_CMAKE_MODULE_PATH )
 
+SET( revision $ENV{GIT_REVISION} )
+IF ( NOT DEFINED revision )
+    SET( revision 0 )
+ENDIF( NOT  DEFINED revision )
+
+SET( build_number $ENV{BUILD_NUMBER} )
+IF ( NOT DEFINED build_number )
+    SET( build_number 0 )
+ENDIF( NOT  DEFINED build_number )
+
+SET( version_number "0.${revision}.${build_number}" )
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_CXX_FLAGS " -DDEBUG -g3 -Wall -fPIC -std=gnu++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
@@ -85,8 +96,6 @@ include_directories( "./include"
   ${APR_INCLUDE_DIR}
 )
 
-
-
 ADD_SUBDIRECTORY( "src/policylib" )
 ADD_SUBDIRECTORY( "src/policylibxml" )
 ADD_SUBDIRECTORY( "src/librenderlist" )
@@ -106,3 +115,32 @@ ADD_SUBDIRECTORY( "unittests/jobobserver/" )
 # Examples
 ADD_SUBDIRECTORY( "examples/rlview/" )
 ADD_SUBDIRECTORY( "examples/simplejob" )
+
+
+SET( CPACK_DEB_COMPONENT_INSTALL ON)
+SET( CPACK_GENERATOR "DEB" )
+#SET( CPACK_PACKAGE_NAME "policylib" )
+#SET( CPACK_DEBIAN_PACKAGE_NAME "policylib" )
+SET( CPACK_PACKAGE_VERSION ${version_number} )
+SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
+SET( CPACK_COMPONENTS_ALL 
+  policylib
+  policylib-dev 
+  policylibxml
+  policylibxml-dev
+  jobobserver
+  jobobserver-dev
+  renderlist
+  renderlist-dev
+  renderlistgl
+  renderlistgl-dev
+  qtobserver
+  qtobserver-dev
+  libtrell
+  libtrell-dev
+  mod_trell
+  )
+SET( CPACK_COMPONENT_POLICYLIB_HEADERS_DEPENDS policylib_libraries )
+SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
+SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
+include ( CPack )

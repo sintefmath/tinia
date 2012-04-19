@@ -1,0 +1,2 @@
+EXECUTE_PROCESS("sh ./getDojo.sh")
+EXECUTE_PROCESS("sh ./compile.sh")

@@ -35,3 +35,13 @@ target_link_libraries ( QtObserver
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
 )
+
+IF(NOT WIN32)
+  # TODO We probably don't need to include all the [moced] headers in the final
+  # libary, but keeping it simple for now.
+  install( FILES ${qtobserver_HEADERS}
+    DESTINATION include/qtobserver  COMPONENT qtobserver-dev)
+  install( FILES ${qtobserver_HEADERS_MOC} ${qtobserver_SOURCES_TO_BE_MOCED}
+    DESTINATION include/qtobserver/moc  COMPONENT qtobserver-dev)
+  install( TARGETS QtObserver LIBRARY DESTINATION lib/ COMPONENT qtobserver)
+ENDIF()

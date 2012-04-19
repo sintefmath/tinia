@@ -1,0 +1,169 @@
+<?xml version="1.0"?>
+<renderList xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://cloudviz.sintef.no/renderlist/1.0" xsi:schemaLocation="http://cloudviz.sintef.no/renderlist/1.0 renderlist.xsd" from="0" to="92">
+  <updateItems>
+    <buffers>
+      <update id="0" type="float" count="9">
+[0, 0, 0.5, 0.5, 1, 0.5, 1, 0, 0]
+      </update>
+      <update id="2" type="float" count="108">
+[0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 
+0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 
+0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 
+0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 
+1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 
+1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 
+0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0]
+      </update>
+      <update id="3" type="float" count="108">
+[0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 
+-1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 
+0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 
+0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 
+0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 
+0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, 
+-1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]
+      </update>
+    </buffers>
+    <shaders>
+      <update id="5">
+        <vertex>
+uniform mat4 MVP;
+attribute vec3 position;
+void
+main()
+{
+    gl_Position = MVP * vec4( position, 1.0 );
+}
+        </vertex>
+        <fragment>
+#ifdef GL_ES
+precision highp float;
+#endif
+uniform vec3 color;
+void
+main()
+{
+    gl_FragColor = vec4( color, 1.0 );
+}
+        </fragment>
+      </update>
+      <update id="10">
+        <vertex>
+uniform mat4 MVP;
+uniform mat3 NM;
+attribute vec3 position;
+attribute vec3 normal;
+varying vec3 es_normal;
+void
+main()
+{
+    es_normal = NM * normal;
+    gl_Position = MVP * vec4( position, 1.0 );
+}
+        </vertex>
+        <fragment>
+#ifdef GL_ES
+precision highp float;
+#endif
+varying vec3 es_normal;
+uniform vec3 color;
+void
+main()
+{
+    vec3 light_z = normalize( vec3(1,1,1) );
+    gl_FragColor = vec4( color*max(0.1, dot( normalize(es_normal), light_z ) ), 1.0 );
+}
+        </fragment>
+      </update>
+    </shaders>
+    <actions>
+      <setFramebufferState id="23">
+        <colorWriteMask>[1, 1, 1, 1]</colorWriteMask>
+        <depthWriteMask>1</depthWriteMask>
+      </setFramebufferState>
+      <setRasterState id="24" />
+      <draw id="1" mode="GL_LINE_LOOOP" first="0" count="3" />
+      <draw id="4" mode="GL_TRIANGLES" first="0" count="36" />
+      <setShader id="6" shader="5" />
+      <setUniforms id="7" shader="5">
+        <uniform symbol="MVP" semantic="MODELVIEW_PROJECTION_MATRIX"/>
+      </setUniforms>
+      <setUniforms id="8" shader="5">
+        <uniform symbol="color"><float3>[0.5, 1, 0.6]</float3></uniform>
+      </setUniforms>
+      <setInputs id="9" shader="5">
+        <input symbol="position" buffer="0" components="3" offset="0" stride="3" />
+      </setInputs>
+      <setShader id="11" shader="10" />
+      <setUniforms id="12" shader="10">
+        <uniform symbol="MVP" semantic="MODELVIEW_PROJECTION_MATRIX"/>
+        <uniform symbol="NM" semantic="NORMAL_MATRIX"/>
+      </setUniforms>
+      <setUniforms id="13" shader="10">
+        <uniform symbol="color"><float3>[0.8, 0.9, 1]</float3></uniform>
+      </setUniforms>
+      <setUniforms id="14" shader="10">
+        <uniform symbol="color"><float3>[1, 0.5, 0.4]</float3></uniform>
+      </setUniforms>
+      <setInputs id="15" shader="10">
+        <input symbol="position" buffer="2" components="3" offset="0" stride="3" />
+        <input symbol="normal" buffer="3" components="3" offset="0" stride="3" />
+      </setInputs>
+      <setLocalCoordSys id="16">
+        <fromWorld>[1.42857, -0, 0, -0, -0, 1.42857, -0, 0, 0, -0, 1.42857, -0, -1.14286, -1.14286, -1.14286, 1]</fromWorld>
+        <toWorld>[0.7, 0, 0, 0, 0, 0.7, 0, 0, 0, 0, 0.7, 0, 0.8, 0.8, 0.8, 1]</toWorld>
+      </setLocalCoordSys>
+      <setLocalCoordSys id="17">
+        <fromWorld>[1.42857, -0, 0, -0, -0, 1.42857, -0, 0, 0, -0, 1.42857, -0, -0.428571, -0.428571, -0.428571, 1]</fromWorld>
+        <toWorld>[0.7, 0, 0, 0, 0, 0.7, 0, 0, 0, 0, 0.7, 0, 0.3, 0.3, 0.3, 1]</toWorld>
+      </setLocalCoordSys>
+      <setLocalCoordSys id="18">
+        <fromWorld>[1, -0, 0, -0, -0, 1, -0, 0, 0, -0, 1, -0, -0, 0, -0, 1]</fromWorld>
+        <toWorld>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]</toWorld>
+      </setLocalCoordSys>
+      <SetViewCoordSys id="19">
+        <projection>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1.0202, -1, 0, 0, -0.121333, 0]</projection>
+        <projectionInverse>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -8.24176, 0, 0, -1, 8.40826]</projectionInverse>
+        <fromWorld>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -3, 1]</fromWorld>
+        <toWorld>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 3, 1]</toWorld>
+      </SetViewCoordSys>
+      <setLight id="20" index="0" type="POINT">
+        <color>[0.8, 1, 1, 1]</color>
+        <attenuation>[1, 0, 0]</attenuation>
+        <fromWorld>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]</fromWorld>
+        <toWorld>[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]</toWorld>
+      </setLight>
+      <setFramebuffer id="21" />
+      <setPixelState id="22">
+        <depthTest>1</depthTest>
+        <depthFunc>GL_LESS</depthFunc>
+        <blend>0</blend>
+      </setPixelState>
+    </actions>
+  </updateItems>
+  <drawOrder>
+    <invoke action="19"/>
+    <invoke action="21"/>
+    <invoke action="24"/>
+    <invoke action="22"/>
+    <invoke action="23"/>
+    <invoke action="11"/>
+    <invoke action="15"/>
+    <invoke action="16"/>
+    <invoke action="12"/>
+    <invoke action="13"/>
+    <invoke action="4"/>
+    <invoke action="11"/>
+    <invoke action="15"/>
+    <invoke action="17"/>
+    <invoke action="12"/>
+    <invoke action="14"/>
+    <invoke action="4"/>
+    <invoke action="6"/>
+    <invoke action="18"/>
+    <invoke action="7"/>
+    <invoke action="8"/>
+    <invoke action="9"/>
+    <invoke action="1"/>
+  </drawOrder>
+</renderList>

@@ -1,0 +1,1 @@
+LoadModule trell_module /var/trell/module/libmod_trell.so
