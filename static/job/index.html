@@ -1,0 +1,143 @@
+<html>
+<head>
+<SCRIPT type="text/javascript">
+
+
+
+
+var jsFile = "../../../static/common.js";
+var tmp = '<script type="text/javascript" src="' + jsFile + '"></scr' + 'ipt>';
+window.console.log( "tmp: " + tmp );
+document.write(tmp);
+
+
+
+var long_polling_time = null;
+var long_polling_rev = 0;
+var long_polling_req = null;
+
+function
+handlePolicyUpdate( dom )
+{
+    var n = dom.getElementsByTagName('PolicyUpdate')[0];
+    var r = n.attributes['revision'].nodeValue;
+    if( r != null ) {
+        long_polling_rev = r;
+    }
+
+    var img = document.getElementById( 'snapshot' );
+//    img.setAttribute( 'src', "snapshot.png?key=foo&width=200&height=100" );
+    img.src = "snapshot.png?key=foo&width=200&height=100&foo="+r;
+
+}
+
+function
+doLongPolling()
+{
+    var now = new Date();
+    if( long_polling_time != null ) {
+        var since_last = Date.parse(now) - Date.parse(long_polling_time);
+        if( since_last < 10 ) {
+            // throttle
+//            setTimeout( doLongPolling, 100 );
+//            return;
+        }
+    }
+    long_polling_req = new XMLHttpRequest();
+    long_polling_req.open( "GET", "getPolicyUpdate.xml?revision="+long_polling_rev );
+    long_polling_req.onreadystatechange = function() {
+        if( this.readyState == 4 ) {
+            if( this.status == 200 ) {
+                var dump = document.getElementById( 'dump' );
+                if( dump != null ) {
+                    dump.value = this.responseText;
+                }
+                handlePolicyUpdate( this.responseXML );
+            }
+            else {
+                window.console.log( "no update" );
+            }
+            if( this.status != 404 ) {
+                doLongPolling();
+            }
+         }
+     };
+     long_polling_req.send();
+     long_polling_time = now;
+}
+
+function
+updateState()
+{
+    var foow = document.getElementById( 'foo' );
+
+    var req = new XMLHttpRequest();
+    req.open( "POST", "updateState.xml" );
+    req.send( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+              "<State>\n" +
+              "  <foo>" + foow.value + "</foo>" +
+              "</State>\n" );
+
+
+    window.console.log( foo.value );
+}
+
+function
+getRenderList()
+{
+    var req = new XMLHttpRequest();
+    req.open( "GET", "getRenderList.xml?key=foo&timestamp=bar" );
+    req.onreadystatechange = function() {
+        if( this.readyState == 4 ) {
+            var rl = document.getElementById( 'renderlist' );
+            rl.value = this.responseText;
+        }
+    }
+    req.send();
+}
+
+function
+onLoad()
+{
+    doLongPolling();
+    getRenderList();
+}
+
+
+
+
+</SCRIPT>
+
+
+
+
+
+
+
+
+</head>
+<body onload="onLoad();">
+
+<!--
+Moo.
+</body>
+</html>
+-->
+
+<h1>trell interact</h1>
+
+
+    <textarea id="dump"></textarea>
+
+    <img id="snapshot" src="snapshot.png?key=foo&width=200&height=100">
+
+    <textarea id="renderlist"></textarea>
+
+    <p>
+
+    Foo: <input id="foo" type="range" min="0" max="100" onchange="updateState();" />
+
+
+
+</body>
+</html>

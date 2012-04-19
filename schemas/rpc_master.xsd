@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="http://cloudviz.sintef.no/trell/1.0"
+        targetNamespace="http://cloudviz.sintef.no/trell/1.0"
+        elementFormDefault="qualified"
+>
+  <xsd:include schemaLocation="common.xsd"/>
+
+  <!-- Defines a legal query in the context of master -->
+
+  <xsd:element name="query">
+    <xsd:complexType>
+      <xsd:choice>
+        <xsd:element name="restartMaster" type="RestartMaster"/>
+        <xsd:element name="ping" type="Ping"/>
+        <xsd:element name="getServerLoad" type="GetServerLoad"/>
+        <xsd:element name="getJobList" type="GetJobList"/>
+        <xsd:element name="killJob" type="KillJob"/>
+        <xsd:element name="wipeJob" type="WipeJob"/>
+        <xsd:element name="addJob" type="AddJob"/>
+      </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

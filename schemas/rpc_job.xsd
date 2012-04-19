@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="http://cloudviz.sintef.no/V1/policies"
+        targetNamespace="http://cloudviz.sintef.no/V1/policies"
+        elementFormDefault="qualified"
+>
+<xsd:element name="parameter_set">
+  <xsd:complexType>
+    <xsd:all>
+      <xsd:element name="timestep">
+        <xsd:annotation>
+          <xsd:documentation xml:lang="en">Time step</xsd:documentation>
+          <xsd:documentation xml:lang="no">Tidsskritt</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+           <xsd:restriction base="xsd:integer">
+             <xsd:minInclusive value="0"/>
+             <xsd:maxInclusive value="42"/>
+           </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="property" default="pressure">
+        <xsd:annotation>
+          <xsd:documentation xml:lang="en">Property</xsd:documentation>
+          <xsd:documentation xml:lang="no">Egenskap</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="none">
+              <xsd:annotation>
+                <xsd:documentation xml:lang="en">None</xsd:documentation>
+                <xsd:documentation xml:lang="no">Ingen</xsd:documentation>
+              </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="pressure"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="render_mode">
+        <xsd:simpleType>
+          <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="points" />
+            <xsd:enumeration value="wireframe"/>
+            <xsd:enumeration value="solid"/>
+          </xsd:restriction>
+        </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="project" type="xsd:string"/>
+      <xsd:element name="isovalue" type="xsd:float" default="0"/>
+      <xsd:element name="hidden" type="xsd:string" default="foo" minOccurs="0"/>
+    </xsd:all>
+  </xsd:complexType>
+</xsd:element>
+
+
+
+<!--
+  <xsd:element name="root">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="element" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+-->
+</xsd:schema>

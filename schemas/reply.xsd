@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="http://cloudviz.sintef.no/trell/1.0"
+        targetNamespace="http://cloudviz.sintef.no/trell/1.0"
+        elementFormDefault="qualified"
+>
+  <xsd:include schemaLocation="common.xsd" />
+  <xsd:element name="reply">
+    <xsd:complexType>
+      <xsd:choice>
+        <xsd:element name="result" type="Result"/>
+        <xsd:element name="pong" type="Pong"/>
+        <xsd:element name="serverLoad" type="ServerLoad"/>
+        <xsd:element name="jobList" type="JobList"/>
+      </xsd:choice>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="http://cloudviz.sintef.no/trell/1.0"
+        targetNamespace="http://cloudviz.sintef.no/trell/1.0"
+        elementFormDefault="qualified"
+>
+  <!-- Types -->
+
+  <xsd:simpleType name="SessionId">
+    <xsd:restriction base="xsd:string">
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="JobId">
+    <xsd:restriction base="xsd:string">
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="ProcessId">
+    <xsd:restriction base="xsd:integer">
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="ApplicationId">
+    <xsd:restriction base="xsd:string">
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="Result">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="SUCCESS"/>
+      <xsd:enumeration value="FAILURE"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="TimeStamp">
+    <xsd:restriction base="xsd:integer">
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <!-- simplecontent and restrict requires a complex base type, which string
+       isn't. Thus, we restrict and then extend to get around this, introducing
+       JobStateEnum. -->
+
+  <xsd:simpleType name="JobStateEnum">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="NOT_STARTED"></xsd:enumeration>
+      <xsd:enumeration value="RUNNING"></xsd:enumeration>
+      <xsd:enumeration value="FINISHED"></xsd:enumeration>
+      <xsd:enumeration value="FAILED"></xsd:enumeration>
+      <xsd:enumeration value="TERMINATED_SUCCESSFULLY"></xsd:enumeration>
+      <xsd:enumeration value="TERMINATED_UNSUCCESSFULLY"></xsd:enumeration>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="JobState">
+    <xsd:simpleContent>
+      <xsd:extension base="JobStateEnum">
+        <xsd:attribute name="updated" type="TimeStamp" use="required"></xsd:attribute>
+      </xsd:extension>
+    </xsd:simpleContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="JobInfo">
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId"></xsd:element>
+      <xsd:element name="pid" type="ProcessId"></xsd:element>
+      <xsd:element name="application" type="ApplicationId"></xsd:element>
+      <xsd:element name="state" type="JobState"></xsd:element>
+      <xsd:element name="allowed">
+        <xsd:complexType>
+          <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="session" type="SessionId"/>
+          </xsd:choice>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="JobList">
+    <xsd:choice minOccurs="0" maxOccurs="unbounded">
+      <xsd:element name="jobInfo" type="JobInfo">
+      </xsd:element>
+    </xsd:choice>
+  </xsd:complexType>
+
+
+  <xsd:complexType name="ServerLoad">
+    <xsd:choice minOccurs="1" maxOccurs="unbounded">
+      <xsd:element name="avg">
+        <xsd:complexType>
+          <xsd:simpleContent>
+            <xsd:extension base="xsd:decimal">
+              <xsd:attribute name="interval" type="xsd:string" use="required" />
+            </xsd:extension>
+          </xsd:simpleContent>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:choice>
+  </xsd:complexType>
+
+  <xsd:complexType name="Pong"/>
+
+  <!-- Prototypes for queries -->
+  <xsd:complexType name="RestartMaster">
+  </xsd:complexType>
+
+  <xsd:complexType name="Ping">
+  </xsd:complexType>
+
+  <xsd:complexType name="GetServerLoad">
+  </xsd:complexType>
+
+  <xsd:complexType name="GetJobList">
+  </xsd:complexType>
+
+  <xsd:complexType name="AddJob">
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId"/>
+      <xsd:element name="application" type="ApplicationId"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="KillJob">
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId"/>
+      <xsd:element name="force" type="xsd:boolean"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="WipeJob">
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="GrantAccess">
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+        RPC request that a session should be allowed direct access to job.
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId">
+        <xsd:annotation>
+          <xsd:documentation xml:lang="en">
+            The job id of the job that the session will access.
+          </xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+      <xsd:element name="session" type="SessionId">
+        <xsd:annotation>
+          <xsd:documentation xml:lang="en">
+            The job id of the job that the session will access.
+          </xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="RevokeAccess">
+    <xsd:sequence>
+      <xsd:element name="job" type="JobId"/>
+      <xsd:element name="session" type="SessionId"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+</xsd:schema>

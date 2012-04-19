@@ -1,0 +1,272 @@
+<html>
+<head>
+<title>trell interact</title>
+
+<script type="text/javascript">
+
+
+
+
+var jsFile = "common.js";
+var tmp = '<script type="text/javascript" src="' + jsFile + '"></scr' + 'ipt>';
+window.console.log( "tmp: " + tmp );
+document.write(tmp);
+
+
+
+
+function periodic()
+{
+    update();
+    insertIdHTML();
+    setTimeout( periodic, 100000 );
+}
+
+
+
+
+function update()
+{
+  // rpcMaster('<?xml version="1.0"?><listJobs/>', updateJobList );
+  rpcMaster( '<getServerLoad/>', updateLoad );
+}
+
+
+
+
+function getGeneralResponse( req )
+{
+  var doc, div, div2, table, row, cell;
+  
+  doc = req.responseXML;
+  if ( doc == null )
+    return;
+  
+  table = document.createElement( "table" );
+  row = document.createElement( "tr" );
+  table.appendChild( row );
+  
+  cell = document.createElement( "td" );
+  var string = (new XMLSerializer()).serializeToString(doc);
+  // window.console.log( "doc: " + string );
+  
+  // If 'xmlEscape' is used, the full text is shown, otherwise all '<'-enclosed tags that are not html will
+  // probably be swallowed, and only the innermost content is shown...
+  cell.innerHTML = string; // xmlEscape(string);
+  row.appendChild( cell );
+  
+  div = document.getElementById( 'generalResponse' );
+  if ( div == null )
+    {
+      window.console.log( "Could not find tag in html" );
+      return;
+    }
+  div.value = string;
+  
+  div2 = document.getElementById( 'generalResponse2' );
+  while ( div2.childNodes.length )
+    div2.removeChild( div2.childNodes[0] );
+  div2.appendChild( table );
+}
+
+
+
+
+function sendXML()
+{
+  var tagid = document.getElementById( 'xmltosend' );
+  if( tagid == null )
+    return;
+  var xml = tagid.value;
+  window.console.log( "Going to send: " + xml );
+  rpcMaster( xml, getGeneralResponse );
+}
+
+
+
+
+function sendParamUpdate()
+{
+  var tagid = document.getElementById( 'paramid' );
+  if( tagid == null )
+    return;
+  var id = tagid.value;
+
+  tagid = document.getElementById( 'paramval' );
+  if( tagid == null )
+    return;
+  var val = tagid.value;
+  
+  var xml = "<policyupd><paramupd><id>" + id + "</id><val>" + val + "</val></paramupd></policyupd>";
+  window.console.log( "sendParamUpdate: Going to send: " + xml );
+
+  var div = document.getElementById( 'paramUpdateXML' );
+  if ( div == null )
+    {
+      window.console.log( "didn't find tag" );
+      return;
+    }
+  while ( div.childNodes.length )
+    div.removeChild( div.childNodes[0] );
+  var foo = document.createElement( "td" );
+  foo.innerHTML = xmlEscape(xml);
+  div.appendChild( foo );
+
+  rpcMaster( xml, getGeneralResponse );
+}
+
+
+
+
+function getURLparam(variable)
+{ 
+  var query = window.location.search.substring(1); 
+  // window.console.log( 'query = ' + query );
+  var vars = query.split("&"); 
+  for (var i=0; i<vars.length; i++)
+    { 
+      var pair = vars[i].split("="); 
+      // window.console.log( 'pair = (' + pair[0] + ', ' + pair[1] + ')' );
+      if (pair[0] == variable)
+	return pair[1]; 
+    } 
+  alert('Query Variable ' + variable + ' not found'); 
+} 
+
+
+
+
+function insertIdHTML()
+{
+  var div = document.getElementById( 'idtest' );
+  if ( div == null ) {
+    return;
+  }
+  while( div.childNodes.length ) {
+    div.removeChild( div.childNodes[0] );
+  }
+  var foo = document.createElement( "td" );
+  id = getURLparam('id');
+  foo.innerHTML = id;
+  // window.console.log( 'foo=' + foo );
+  div.appendChild( foo );
+}
+
+
+
+
+
+</script>
+
+<body onload="periodic();">
+<h1>trell interact</h1>
+
+
+<table>
+
+  <tr>
+    <td><b>Master load averages:</b></td>
+    <td><div id="load"></div></td>
+    <td></td>
+    <td></td>
+    <td><button type="button" onclick="load()">Refresh</button></td>
+  </tr>
+  
+  <tr>
+    <td><B>Job id:</B></td>
+    <td><div id="idtest"></div></td>
+  </tr>
+  
+  <tr>
+    <td><br></td>
+  </tr>
+  
+  <tr>
+    <td><b>Send general XML:</b></td>
+    <td colspan="3"><input id="xmltosend" type="text" size="80" title="Some XML-string to send to the job" value="<getServerLoad/>"></td>
+    <td><button type="button" onclick="sendXML()">Send</button></td>
+  </tr>
+
+  <tr>
+    <td><b>Response XML:</b></td>
+    <td colspan="3"><input id="generalResponse" type="text" size="80" title="foobar" value="[press send to get a response]"></td>
+  </tr>
+
+  <tr>
+    <td><br></td>
+    <td id="generalResponse2">foobar</td>
+  </tr>
+
+  <tr>
+    <td><br></td>
+  </tr>
+  
+  <tr>
+    <td><b>Send param update:</b></td>
+    <td><input id="paramid" type="text" size="32" title="Select a parameter to update" value="timeStep"></td>
+    <td><input id="paramval" type="text" size="32" title="New value of parameter" value="3.1415"></td>
+    <td></td>
+    <td><button type="button" onclick="sendParamUpdate()">Send</button></td>
+  </tr>
+
+  <tr>
+    <td><b>XML:</b></td>
+    <td colspan="3" id="paramUpdateXML" type="text" size="80" title="XML for parameter update">foobar2</td>
+  </tr>
+
+  <tr>
+    <td><br></td>
+  </tr>
+  
+  <tr>
+    <td><b>Send left-mouse-click:</b></td>
+    <td><input id="sxid" type="text" size="10" title="screen x coo" value="100"></td>
+    <td><input id="syid" type="text" size="10" title="screen y coo" value="50"></td>
+    <td></td>
+    <td><button type="button" onclick="sendLeftMouseClick()">Send</button></td>
+  </tr>
+
+  <tr>
+    <td><b>Send right-mouse-click:</b></td>
+    <td><input id="sxid" type="text" size="10" title="screen x coo" value="100"></td>
+    <td><input id="syid" type="text" size="10" title="screen y coo" value="50"></td>
+    <td></td>
+    <td><button type="button" onclick="sendRightMouseClick()">Send</button></td>
+  </tr>
+
+  <tr>
+    <td><br></td>
+  </tr>
+  
+  <tr>
+    <td><b>Long-poll timeout (ms):</b></td>
+    <td><input id="longPollTimeout" type="text" size="10" title="long-poll timeout ms" value="100000"></td>
+    <td></td>
+    <td></td>
+    <td><button type="button" onclick="setLongPollTimeout()">Set</button></td>
+  </tr>
+
+  <tr>
+    <td><b>Cancel long-poll:</b></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td><button type="button" onclick="cancelLongPoll()">Do it</button></td>
+  </tr>
+
+  <tr>
+    <td><b>Do a long-poll:</b></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td><button type="button" onclick="doLongPoll()">Do it</button></td>
+  </tr>
+  
+
+
+</table>
+
+
+
+</body>
+</html>

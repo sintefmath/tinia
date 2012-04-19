@@ -1,0 +1,289 @@
+<HTML>
+<HEAD>
+<TITLE>mod_trell poke</TITLE>
+<SCRIPT type="text/javascript">
+
+
+var jsFile = "common.js";
+var tmp = '<script type="text/javascript" src="' + jsFile + '"></scr' + 'ipt>';
+window.console.log( "tmp: " + tmp );
+document.write(tmp);
+
+
+function
+periodic()
+{
+    update();
+    setTimeout( periodic, 100000 );
+}
+
+
+function
+update()
+{
+    foo();
+    load();
+}
+
+
+function
+updateJobList( req )
+{
+    var doc, div, table, row, cell, reply, jobList, jobInfo, item, spec,
+    stdout, stderr, suicide, kill, wipe, interact;
+
+    doc = req.responseXML;
+    if( doc == null ) {
+        window.console.log( "doc==null" );
+        return;
+    }
+
+    table = document.createElement( "table" );
+    row = document.createElement( "tr" );
+    table.appendChild( row );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "Id";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "Pid";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "Executable";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "stdout";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "stderr";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "State";
+    row.appendChild( cell );
+    cell = document.createElement( "td" );
+    cell.innerHTML = "Manage";
+    row.appendChild( cell );
+
+    for( reply = doc.firstChild; reply; reply = reply.nextSibling ) {
+        if( reply.nodeName == 'reply' ) {
+            for( jobList = reply.firstChild; jobList; jobList = jobList.nextSibling ) {
+                if( jobList.nodeName == 'jobList' ) {
+                    for( jobInfo=jobList.firstChild; jobInfo; jobInfo=jobInfo.nextSibling ) {
+                        if( jobInfo.nodeName == 'jobInfo' ) {
+                            spec = {};
+                            for( item=jobInfo.firstChild; item; item=item.nextSibling ) {
+                                if( item.nodeName == 'job' ) {
+                                    spec['id'] = item.childNodes[0].nodeValue;
+                                }
+                                else if( item.nodeName == 'pid' ) {
+                                    spec['pid'] = item.childNodes[0].nodeValue;
+                                }
+                                else if( item.nodeName == 'application' ) {
+                                    spec['exe'] = item.childNodes[0].nodeValue;
+                                }
+                                else if( item.nodeName == 'state' ) {
+                                    spec['state'] = item.childNodes[0].nodeValue;
+                                }
+                            }
+
+                            row = document.createElement( "tr" );
+                            table.appendChild( row );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['id'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['pid'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['exe'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['stdout'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['stderr'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            cell.innerHTML = spec['state'];
+                            row.appendChild( cell );
+                            cell = document.createElement( "td" );
+                            stdout = document.createElement( "button" );
+                            stdout.innerHTML = "stdout";
+                            cell.appendChild( stdout );
+                            stderr = document.createElement( "button" );
+                            stderr.innerHTML = "stderr";
+                            cell.appendChild( stderr );
+                            suicide = document.createElement( "button" );
+                            suicide.setAttribute( 'onclick', 'killJob( "'+spec['id']+'", false );' );
+                            suicide.setAttribute( 'title', 'Cleanly kill job by sending a messsage to job suggesting a suicide.' );
+                            suicide.innerHTML = "Suicide";
+                            cell.appendChild( suicide );
+                            kill = document.createElement( "button" );
+                            kill.setAttribute( 'title', 'Brutally kill job by sending it a SIGTERM signal. Try requesting a suicide first.' );
+                            kill.setAttribute( 'onclick', 'killJob( "'+spec['id']+'", true );' );
+                            kill.innerHTML = "Kill";
+                            cell.appendChild( kill );
+                            wipe = document.createElement( "button" );
+                            wipe.setAttribute( 'title', 'Wipe this job from list of managed jobs. Not allowed for running jobs.' );
+                            wipe.setAttribute( 'onclick', 'wipe( "'+spec['id']+'");' );
+                            wipe.innerHTML = "Wipe";
+                            cell.appendChild( wipe );
+                            interact = document.createElement( "button" );
+                            interact.setAttribute( 'title', 'Interact with this job. Makes sense only for running jobs.' );
+                            interact.setAttribute( 'onclick', 'interact( "' + spec['id'] + '");' );
+                            interact.innerHTML = "Interact";
+                            cell.appendChild( interact );
+                            row.appendChild( cell );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    div = document.getElementById( 'joblist' );
+    if( div == null ) {
+        return;
+    }
+    while( div.childNodes.length ) {
+        div.removeChild( div.childNodes[0] );
+    }
+    div.appendChild( table );
+}
+
+
+function
+restartMaster()
+{
+    var req = new XMLHttpRequest();
+    req.open( "GET", "../mod/rpc.xml?action=restart_master" )
+    req.onreadystatechange = function() {
+        if( this.readyState == 4 && this.status == 200 ) {
+            window.console.log( "master restarted" );
+        }
+    };
+    req.send();
+}
+
+
+function interact( id )
+{
+  window.open( '../job/' + id + "/sessionid/index.html", '_'+id ); // Don't know why, but using this, stuff written to the console log seems to disappear.
+  // window.location = '../job/' + id + "/sessionid/index.html", '_'+id;
+}
+
+
+function
+pingMaster()
+{
+    rpcMaster( '<ping/>',
+               dumpXML );
+}
+
+
+function
+addJob( job, application )
+{
+    rpcMaster( '<addJob>'+
+               '  <job>'+job+'</job>'+
+               '  <application>'+application+'<application/>' +
+               '</addJob>',
+               update );
+}
+
+function foo()
+{
+    rpcMaster( '<getJobList/>',
+               updateJobList );
+}
+
+function killJob( job, force )
+{
+    rpcMaster( '<killJob>'+
+               '  <job>'+job+'</job>'+
+               '  <force>'+force+'</force>'+
+               '</killJob>',
+               dumpXML );
+}
+
+function
+wipe( job )
+{
+    rpcMaster( '<wipeJob>'+
+               '  <job>'+job+'</job>'+
+               '</wipeJob>',
+               update );
+}
+
+
+function guiAddJob()
+{
+    var job, application, t;
+
+    t = document.getElementById( 'jobid' );
+    if( t == null ) {
+        return;
+    }
+    job = t.value;
+    t.value = "";
+
+    t = document.getElementById( 'jobexe' );
+    if( t == null ) {
+        return;
+    }
+    application = t.value;
+
+    if( !job ) {
+        alert( "Empty job name" );
+        return;
+    }
+    if( !application ) {
+        alert( "Empty job executble" );
+        return;
+    }
+    rpcMaster( '<addJob>'+
+               '  <job>'+job+'</job>'+
+               '  <application>'+application+'</application>'+
+               '</addJob>',
+               update );
+}
+
+
+</SCRIPT>
+<BODY onload="periodic();">
+<H1>mod_trell poke</H1>
+
+
+
+
+
+<TABLE>
+<TR><TD COLSPAN=3><B>Master</B></TD></TR>
+<TR><TD>Load averages:</TD><TD COLSPAN=2><div id="load"></div></TD></TR>
+<TR><TD COLSPAN=3 ALIGN=RIGHT>
+<BUTTON type="button" onclick="restartMaster('foo','bar')">(Re)start</BUTTON>
+<BUTTON type="button" onclick="pingMaster();">Ping</BUTTON>
+<BUTTON type="button" onclick="load()">Refresh</BUTTON>
+</TD></TR>
+
+<TR><TD COLSPAN=3> <B>Running jobs</B></TD></TR>
+<TR><TD COLSPAN=3 PADDING=0><div id="joblist"> </div></TD></TR>
+<TR><TD ALIGN=RIGHT COLSPAN=3><BUTTON type="button" onclick="foo('foo','bar')">Refresh</BUTTON></TD></TR>
+
+
+<TR>
+<TD COLSPAN=3><B>Add Job</B></TD>
+</TR>
+<TR>
+<TD>Job id:</TD>
+<TD><INPUT id="jobid" type="text" size="32" title="The server-unique id of this job."/></TD>
+</TR>
+<TR>
+<TD>Executable:</TD>
+<TD><INPUT id="jobexe" type="text" size="32" value="stest_job" title="Path to the executable of the job"/></TD>
+<TD ALIGN=RIGHT><BUTTON  type="button" onclick="guiAddJob();" title="Spawns a new job">Commit</BUTTON></TD>
+</TR>
+</TABLE>
+</P>
+
+</BODY>
+</HTML>
