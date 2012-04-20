@@ -9,7 +9,7 @@ FILE( GLOB LIB_TRELL_HEADERS "../../include/tinia/trell/*.hpp" "../../include/ti
   
 
 ADD_LIBRARY( trell SHARED ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
-TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} policyLib policyLibXml jobobserver)
+TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} policy policyXml jobobserver)
 
 INSTALL( TARGETS trell
   LIBRARY DESTINATION lib

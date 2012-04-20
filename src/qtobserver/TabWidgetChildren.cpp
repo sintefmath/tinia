@@ -7,7 +7,7 @@ namespace qtobserver {
   \todo Make this change when the annotation changes
   */
 TabWidgetChildren::TabWidgetChildren(std::string key,
-                                     std::shared_ptr<policylib::PolicyLib> policyLib,
+                                     std::shared_ptr<policy::Policy> policy,
                                      QTabWidget *parent) :
     QWidget(parent)
 {
@@ -16,7 +16,7 @@ TabWidgetChildren::TabWidgetChildren(std::string key,
 
 
 
-void TabWidgetChildren::stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement)
+void TabWidgetChildren::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
 {
 }
 

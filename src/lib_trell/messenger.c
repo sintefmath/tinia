@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdio.h>
-#include "trell/messenger.h"
+#include "tinia/trell/messenger.h"
 
 
 #define PREFIX "mod_trell: @messenger: "

@@ -1,5 +1,5 @@
 #include "trell/ComputeJob.hpp"
-#include "policylib/PolicyLib.hpp"
+#include "policy/Policy.hpp"
 
 namespace Trell
 {

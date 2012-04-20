@@ -1,7 +1,7 @@
 #pragma once
 #include "IPCObserver.hpp"
 #include "tinia/jobobserver/Job.hpp"
-#include "tinia/policylibxml/XMLHandler.hpp"
+#include "tinia/policyxml/XMLHandler.hpp"
 
 namespace tinia {
 namespace Trell {
@@ -64,8 +64,8 @@ namespace Trell {
   * }
   *\endcode
   */
-class IPCJobObserver : public IPCObserver, public policylib::StateListener,
-      public policylib::StateSchemaListener
+class IPCJobObserver : public IPCObserver, public policy::StateListener,
+      public policy::StateSchemaListener
 {
 public:
 
@@ -127,15 +127,15 @@ protected:
                    const size_t        buffer_size,
                    const std::string&  session );
 
-    void stateElementModified(policylib::StateElement *stateElement);
-    void stateSchemaElementAdded(policylib::StateSchemaElement *stateSchemaElement);
-    void stateSchemaElementRemoved(policylib::StateSchemaElement *stateSchemaElement);
-    void stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement);
+    void stateElementModified(policy::StateElement *stateElement);
+    void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement);
+    void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement);
+    void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
 
 protected:
-    std::shared_ptr<policylib::PolicyLib>    m_policyLib;
+    std::shared_ptr<policy::Policy>    m_policy;
     jobobserver::Job*                        m_job;
-    policylibxml::XMLHandler*                m_xmlHandler;
+    policyxml::XMLHandler*                m_xmlHandler;
     volatile bool                            m_updateOngoing;
 
     /** Handles incoming messages (mainly from master job).

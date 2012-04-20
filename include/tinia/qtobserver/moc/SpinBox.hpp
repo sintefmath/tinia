@@ -2,8 +2,8 @@
 #define QTOBSERVER_SPINBOX_HPP
 
 #include <QSpinBox>
-#include "tinia/policylib/PolicyLib.hpp"
-#include "tinia/policylib/StateListener.hpp"
+#include "tinia/policy/Policy.hpp"
+#include "tinia/policy/StateListener.hpp"
 #include <memory>
 
 namespace tinia {
@@ -11,15 +11,15 @@ namespace qtobserver {
 /**
   \todo Use max and min if available.
   */
-class SpinBox : public QSpinBox, public policylib::StateListener
+class SpinBox : public QSpinBox, public policy::StateListener
 {
     Q_OBJECT
 public:
-    explicit SpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
+    explicit SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
                      QWidget *parent = 0);
    ~SpinBox();
 
-   void stateElementModified(policylib::StateElement *stateElement);
+   void stateElementModified(policy::StateElement *stateElement);
 
 signals:
    void setValueFromPolicy(int val);
@@ -28,7 +28,7 @@ public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
 };
 }
 }

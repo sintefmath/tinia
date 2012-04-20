@@ -3,7 +3,7 @@
 #include <mutex> 
 #include "Observer.hpp"
 #include "Job.hpp"
-#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policy/Policy.hpp"
 
 namespace tinia {
 namespace Trell
@@ -48,7 +48,7 @@ protected:
   bool m_isSuicidal;
   int  m_LastStateRead;
   mutable std::mutex m_policyLock;
-  policylib::PolicyLib m_policy;
+  policy::Policy m_policy;
 
 
 };

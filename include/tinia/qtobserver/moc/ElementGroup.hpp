@@ -2,30 +2,30 @@
 #define QTOBSERVER_ELEMENTGROUP_HPP
 
 #include <QGroupBox>
-#include "tinia/policylib/PolicyLib.hpp"
-#include "tinia/policylib/StateListener.hpp"
+#include "tinia/policy/Policy.hpp"
+#include "tinia/policy/StateListener.hpp"
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class ElementGroup : public QGroupBox, public policylib::StateListener
+class ElementGroup : public QGroupBox, public policy::StateListener
 {
     Q_OBJECT
 public:
     explicit ElementGroup(std::string key, bool showLabel,
-                          std::shared_ptr<policylib::PolicyLib> policyLib,
+                          std::shared_ptr<policy::Policy> policy,
                           QWidget *parent = 0);
    ~ElementGroup();
-   void stateElementModified(policylib::StateElement *stateElement);
+   void stateElementModified(policy::StateElement *stateElement);
 
 signals:
-   void setVisibleFromPolicyLib(bool visible);
+   void setVisibleFromPolicy(bool visible);
 public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
 };
 
 } // namespace qtobserver

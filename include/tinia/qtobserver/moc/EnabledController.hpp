@@ -3,33 +3,33 @@
 #include <QObject>
 #include <QWidget>
 #include <string>
-#include "tinia/policylib/PolicyLib.hpp"
-#include "tinia/policylib/StateListener.hpp"
+#include "tinia/policy/Policy.hpp"
+#include "tinia/policy/StateListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
-class EnabledController : public QObject, public policylib::StateListener
+class EnabledController : public QObject, public policy::StateListener
 {
     Q_OBJECT;
 public:
     explicit
     EnabledController( QWidget*                               widget,
-                       std::shared_ptr<policylib::PolicyLib>  policylib,
+                       std::shared_ptr<policy::Policy>  policy,
                        const std::string&                     key,
                        const bool                             inverted );
 
     ~EnabledController();
 
     void
-    stateElementModified(policylib::StateElement *stateElement);
+    stateElementModified(policy::StateElement *stateElement);
 
 signals:
     void
     setWidgetEnabled( bool enabled );
 
 protected:
-    std::shared_ptr<policylib::PolicyLib>   m_policylib;
+    std::shared_ptr<policy::Policy>   m_policy;
     const std::string                       m_key;
     const bool                              m_inverted;
 };

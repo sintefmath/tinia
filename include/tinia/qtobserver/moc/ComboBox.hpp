@@ -4,26 +4,26 @@
 #include <QComboBox>
 #include <QStringList>
 #include <memory>
-#include <tinia/policylib/PolicyLib.hpp>
-#include <tinia/policylib/StateListener.hpp>
-#include <tinia/policylib/StateSchemaListener.hpp>
+#include <tinia/policy/Policy.hpp>
+#include <tinia/policy/StateListener.hpp>
+#include <tinia/policy/StateSchemaListener.hpp>
 
 namespace tinia {
 namespace qtobserver {
 
-class ComboBox : public QComboBox, public policylib::StateListener,
-         public policylib::StateSchemaListener
+class ComboBox : public QComboBox, public policy::StateListener,
+         public policy::StateSchemaListener
 {
     Q_OBJECT
 public:
-    explicit ComboBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
+    explicit ComboBox(std::string key, std::shared_ptr<policy::Policy> policy,
                       QWidget *parent = 0);
    ~ComboBox();
 
-   void stateElementModified(policylib::StateElement *stateElement);
-   void stateSchemaElementAdded(policylib::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementRemoved(policylib::StateSchemaElement *stateSchemaElement);
+   void stateElementModified(policy::StateElement *stateElement);
+   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement);
 
 signals:
    void setStateFromPolicy(int);
@@ -36,7 +36,7 @@ private slots:
    void activatedChanged(QString value);
 private:
    QStringList m_options;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
    std::string m_key;
 };
 

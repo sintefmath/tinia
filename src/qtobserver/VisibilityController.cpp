@@ -4,11 +4,11 @@ namespace tinia {
 namespace qtobserver {
 
 VisibilityController::VisibilityController( QWidget*                               widget,
-                                            std::shared_ptr<policylib::PolicyLib>  policylib,
+                                            std::shared_ptr<policy::Policy>  policy,
                                             const std::string&                     key,
                                             const bool                             inverted )
     : QObject( widget ),
-      m_policylib( policylib ),
+      m_policy( policy ),
       m_key( key ),
       m_inverted( inverted )
 {
@@ -17,10 +17,10 @@ VisibilityController::VisibilityController( QWidget*                            
     // signal to this object deleteLater slot (but this shouldn't be necessary)
     connect( this, SIGNAL(setWidgetVisible(bool)), widget, SLOT(setVisible(bool)) );
 
-    m_policylib->addStateListener( m_key, this );
+    m_policy->addStateListener( m_key, this );
 
     bool value;
-    m_policylib->getElementValue( m_key, value );
+    m_policy->getElementValue( m_key, value );
 
     bool visible = (value && !m_inverted ) || (!value && m_inverted );
     widget->setVisible( visible );
@@ -28,11 +28,11 @@ VisibilityController::VisibilityController( QWidget*                            
 
 VisibilityController::~VisibilityController()
 {
-    m_policylib->removeStateListener( m_key, this );
+    m_policy->removeStateListener( m_key, this );
 }
 
 void
-VisibilityController::stateElementModified(policylib::StateElement *stateElement)
+VisibilityController::stateElementModified(policy::StateElement *stateElement)
 {
     bool value;
     stateElement->getValue( value );

@@ -14,7 +14,7 @@ TARGET_LINK_LIBRARIES(simple_qt_job
   ${OPENGL_LIBRARIES}
   ${GLEW_LIBRARY}
   ${Freeglut_LIBRARY}
-  policyLib
+  policy
   jobobserver
   ${Boost_LIBRARIES}
 )
@@ -34,8 +34,8 @@ TARGET_LINK_LIBRARIES(test_job
  ${Freeglut_LIBRARY}
  ${Boost_LIBRARIES} 
  ${LIBXML2_LIBRARIES} 
- policyLib 
- policyLibXml
+ policy 
+ policyXml
  renderlist
  renderlistgl
  jobobserver

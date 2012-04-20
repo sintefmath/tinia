@@ -8,13 +8,13 @@ namespace qtobserver {
   Used templated min max and removed boos lexical cast
   */
 HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
-                                   std::shared_ptr<policylib::PolicyLib> policyLib,
+                                   std::shared_ptr<policy::Policy> policy,
                                    QWidget *parent) :
-    QWidget(parent), m_key(key), m_policyLib(policyLib)
+    QWidget(parent), m_key(key), m_policy(policy)
 {
    m_slider = new QSlider(Qt::Horizontal, parent);
    // Get max and min
-   policylib::StateSchemaElement element = m_policyLib->getStateSchemaElement(m_key);
+   policy::StateSchemaElement element = m_policy->getStateSchemaElement(m_key);
    int max = boost::lexical_cast<int>(element.getMaxConstraint());
    int min = boost::lexical_cast<int>(element.getMinConstraint());
    m_slider->setMaximum(max);
@@ -22,7 +22,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 
 
    int value;
-   m_policyLib->getElementValue<int>(m_key, value);
+   m_policy->getElementValue<int>(m_key, value);
    m_slider->setValue(value);
 
 
@@ -30,7 +30,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
    m_slider->setTickInterval((max-min)/20.);
 
 
-   m_policyLib->addStateListener(m_key, this);
+   m_policy->addStateListener(m_key, this);
 
    setLayout(new QHBoxLayout(this));
    layout()->addWidget(m_slider);
@@ -43,7 +43,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
    }
 
    // Do signals
-   connect(this, SIGNAL(setValueFromPolicylib(int)), m_slider,
+   connect(this, SIGNAL(setValueFromPolicy(int)), m_slider,
            SLOT(setValue(int)));
 
    connect(m_slider, SIGNAL(valueChanged(int)), this,
@@ -56,7 +56,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 }
 HorizontalSlider::~HorizontalSlider()
 {
-   m_policyLib->removeStateListener(m_key, this);
+   m_policy->removeStateListener(m_key, this);
 }
 
 }
@@ -67,16 +67,16 @@ void qtobserver::HorizontalSlider::addButtons()
 }
 
 void qtobserver::HorizontalSlider::stateElementModified(
-      policylib::StateElement *stateElement)
+      policy::StateElement *stateElement)
 {
    int value;
    stateElement->getValue(value);
-   emit setValueFromPolicylib(value);
+   emit setValueFromPolicy(value);
 }
 
 void qtobserver::HorizontalSlider::setValueFromQt(int value)
 {
-   m_policyLib->updateElement<int>(m_key, value);
+   m_policy->updateElement<int>(m_key, value);
 }
 
 

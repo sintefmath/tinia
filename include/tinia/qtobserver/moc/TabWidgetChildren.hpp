@@ -3,28 +3,28 @@
 
 #include <QWidget>
 #include <QTableWidget>
-#include "tinia/policylib/PolicyLib.hpp"
-#include "tinia/policylib/StateSchemaListener.hpp"
+#include "tinia/policy/Policy.hpp"
+#include "tinia/policy/StateSchemaListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
-class TabWidgetChildren : public QWidget, public policylib::StateSchemaListener
+class TabWidgetChildren : public QWidget, public policy::StateSchemaListener
 {
     Q_OBJECT
 public:
     explicit TabWidgetChildren(std::string key,
-                               std::shared_ptr<policylib::PolicyLib> policyLib,
+                               std::shared_ptr<policy::Policy> policy,
                                QTabWidget *parent = 0);
-   void stateSchemaElementAdded(policylib::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementRemoved(policylib::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
 
 signals:
 
 public slots:
 private:
-      std::shared_ptr<policylib::PolicyLib> m_policyLib;
+      std::shared_ptr<policy::Policy> m_policy;
       std::string m_key;
 
 };

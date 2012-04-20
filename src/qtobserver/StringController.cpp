@@ -7,22 +7,22 @@ namespace tinia {
 namespace qtobserver {
 
 StringController::StringController( QWidget *widget,
-                                    std::shared_ptr<policylib::PolicyLib>   policylib,
+                                    std::shared_ptr<policy::Policy>   policy,
                                     const std::string&                      key,
                                     const bool                              show_value,
                                     const QString&                          suffix )
     : QObject( widget ),
-      m_policylib( policylib ),
+      m_policy( policy ),
       m_key( key ),
       m_show_value( show_value ),
       m_suffix( suffix ),
       m_button( NULL )
 {
     if( m_show_value ) {
-        m_current_value = m_policylib->getElementValueAsString( m_key );
+        m_current_value = m_policy->getElementValueAsString( m_key );
     }
     else {
-        policylib::StateSchemaElement element = m_policylib->getStateSchemaElement(key);
+        policy::StateSchemaElement element = m_policy->getStateSchemaElement(key);
         if( element.emptyAnnotation() ) {
             m_current_value = m_key;
         }
@@ -43,13 +43,13 @@ StringController::StringController( QWidget *widget,
         line_edit->setText(  QString( m_current_value.c_str() + m_suffix ) );
         connect( line_edit, SIGNAL(textChanged(QString)),
                  this, SLOT(textChangeFromQt(QString)) );
-        connect( this, SIGNAL( textChangeFromPolicyLib(QString)),
+        connect( this, SIGNAL( textChangeFromPolicy(QString)),
                 line_edit, SLOT(setText(QString)) );
     }
     QLabel* label = dynamic_cast<QLabel*>( widget );
     if( label != NULL ) {
         label->setText(  QString( m_current_value.c_str() + m_suffix ) );
-        connect( this, SIGNAL( textChangeFromPolicyLib(QString)),
+        connect( this, SIGNAL( textChangeFromPolicy(QString)),
                  label, SLOT( setText(QString)) );
     }
     QAbstractButton* button = dynamic_cast<QAbstractButton*>( widget );
@@ -59,7 +59,7 @@ StringController::StringController( QWidget *widget,
     }
 
     if( m_show_value ) {
-        m_policylib->addStateListener( m_key, this );
+        m_policy->addStateListener( m_key, this );
     }
 
 }
@@ -67,12 +67,12 @@ StringController::StringController( QWidget *widget,
 StringController::~StringController()
 {
     if( m_show_value ) {
-        m_policylib->removeStateListener( m_key, this );
+        m_policy->removeStateListener( m_key, this );
     }
 }
 
 void
-StringController::stateElementModified( policylib::StateElement *state_element )
+StringController::stateElementModified( policy::StateElement *state_element )
 {
     const std::string& value = state_element->getStringValue();
     if( value != m_current_value ) {
@@ -82,7 +82,7 @@ StringController::stateElementModified( policylib::StateElement *state_element )
             m_button->setText( QString( m_current_value.c_str() + m_suffix ) );
         }
         else {
-            emit textChangeFromPolicyLib( QString( m_current_value.c_str() + m_suffix ) );
+            emit textChangeFromPolicy( QString( m_current_value.c_str() + m_suffix ) );
         }
     }
 }
@@ -93,26 +93,26 @@ StringController::textChangeFromQt( const QString& text )
 {
     if( m_suffix.size() != 0 ) {
         // sanity check. When we add sufficies, don't propagate back to
-        // policylib.
+        // policy.
         return;
     }
     if( m_show_value ) {
         const std::string value = text.toStdString();
         if( m_current_value != value ) {
 			try {
-				m_policylib->updateElementFromString( m_key, value );
+				m_policy->updateElementFromString( m_key, value );
 				m_current_value = value;
 			} catch (...) {
 				if(value == "") {
 					m_current_value = "";
 				}
-				emit textChangeFromPolicyLib( m_current_value.c_str() );
+				emit textChangeFromPolicy( m_current_value.c_str() );
 			}
         }
     }
     else {
         // we do not support editing of key annotations
-        emit textChangeFromPolicyLib( m_current_value.c_str() );
+        emit textChangeFromPolicy( m_current_value.c_str() );
     }
 }
 

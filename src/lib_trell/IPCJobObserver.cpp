@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include "tinia/trell/IPCJobObserver.hpp"
-#include "tinia/policylib/PolicyLock.hpp"
+#include "tinia/policy/PolicyLock.hpp"
 
 // This should not be included here, but will be fixed when interface is
 // cleaned up (that is when IPCJobObserver is rinsed of all opengl-methods)
@@ -18,10 +18,10 @@ IPCJobObserver::IPCJobObserver( bool is_master )
 
 IPCJobObserver::~IPCJobObserver()
 {
-   if(m_policyLib.get() != NULL)
+   if(m_policy.get() != NULL)
    {
-      m_policyLib->removeStateListener(this);
-      m_policyLib->removeStateSchemaListener(this);
+      m_policy->removeStateListener(this);
+      m_policy->removeStateSchemaListener(this);
    }
 }
 
@@ -29,9 +29,9 @@ void
 IPCJobObserver::setJob(jobobserver::Job *job)
 {
     m_job = job;
-    m_policyLib = job->getPolicylib();
-    m_policyLib->addStateListener(this);
-    m_policyLib->addStateSchemaListener(this);
+    m_policy = job->getPolicy();
+    m_policy->addStateListener(this);
+    m_policy->addStateSchemaListener(this);
 }
 
 bool
@@ -39,7 +39,7 @@ IPCJobObserver::init( const std::string& xml )
 {
     bool ipcObserverResponse = IPCObserver::init( xml );
     bool jobResponse = m_job->init( );
-    m_xmlHandler = new policylibxml::XMLHandler(m_job->getPolicylib());
+    m_xmlHandler = new policyxml::XMLHandler(m_job->getPolicy());
 
     return ipcObserverResponse && jobResponse;
 }
@@ -100,7 +100,7 @@ IPCJobObserver::onUpdateState( const char*         buffer,
 
    bool retVal = false;
    { // Scope for policyLock;
-      policylib::PolicyLock lock(m_policyLib);
+      policy::PolicyLock lock(m_policy);
 
       // We don't want to be notified of updates when we're updating ourselves
       m_updateOngoing = true;
@@ -234,7 +234,7 @@ IPCJobObserver::handle( trell_message* msg, size_t buf_size )
 
 } // of namespace Trell
 
-void Trell::IPCJobObserver::stateElementModified(policylib::StateElement *stateElement)
+void Trell::IPCJobObserver::stateElementModified(policy::StateElement *stateElement)
 {
    // We only want to do something if we're not updating the policy ourselves
    // (otherwise we'll post an update on completion)
@@ -245,7 +245,7 @@ void Trell::IPCJobObserver::stateElementModified(policylib::StateElement *stateE
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementAdded(policylib::StateSchemaElement *stateSchemaElement)
+void Trell::IPCJobObserver::stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)
@@ -254,7 +254,7 @@ void Trell::IPCJobObserver::stateSchemaElementAdded(policylib::StateSchemaElemen
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementRemoved(policylib::StateSchemaElement *stateSchemaElement)
+void Trell::IPCJobObserver::stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)
@@ -263,7 +263,7 @@ void Trell::IPCJobObserver::stateSchemaElementRemoved(policylib::StateSchemaElem
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement)
+void Trell::IPCJobObserver::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)

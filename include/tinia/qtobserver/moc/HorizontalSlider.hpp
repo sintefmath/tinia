@@ -3,33 +3,33 @@
 
 #include <QWidget>
 #include <QSlider>
-#include <tinia/policylib/PolicyLib.hpp>
-#include <tinia/policylib/StateListener.hpp>
-#include <tinia/policylib/StateSchemaElement.hpp>
+#include <tinia/policy/Policy.hpp>
+#include <tinia/policy/StateListener.hpp>
+#include <tinia/policy/StateSchemaElement.hpp>
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class HorizontalSlider : public QWidget, public policylib::StateListener
+class HorizontalSlider : public QWidget, public policy::StateListener
 {
     Q_OBJECT
 public:
     explicit HorizontalSlider(std::string key, bool withButtons,
-                              std::shared_ptr<policylib::PolicyLib> policyLib,
+                              std::shared_ptr<policy::Policy> policy,
                               QWidget *parent = 0);
 
    ~HorizontalSlider();
-   void stateElementModified(policylib::StateElement *stateElement);
+   void stateElementModified(policy::StateElement *stateElement);
 signals:
-   void setValueFromPolicylib(int value);
+   void setValueFromPolicy(int value);
 public slots:
    void setValueFromQt(int value);
 
 private:
    void addButtons();
    std::string m_key;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
    QSlider* m_slider;
 
 };

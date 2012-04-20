@@ -6,7 +6,7 @@
 #include <time.h>
 #include <apr_strings.h>
 
-#include "trell/trell.h"
+#include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
 

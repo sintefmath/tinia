@@ -2,13 +2,13 @@
 #include <GL/glew.h>
 #include <tinia/librenderlist/DataBase.hpp>
 #include "tinia/jobobserver/OpenGLJob.hpp"
-#include "tinia/policylib/StateListener.hpp"
-class TestJob : public tinia::jobobserver::OpenGLJob, public tinia::policylib::StateListener
+#include "tinia/policy/StateListener.hpp"
+class TestJob : public tinia::jobobserver::OpenGLJob, public tinia::policy::StateListener
 {
 public:
     TestJob();
     ~TestJob();
-    void stateElementModified(tinia::policylib::StateElement *stateElement);
+    void stateElementModified(tinia::policy::StateElement *stateElement);
     bool init();
     bool renderFrame(const std::string &session, const std::string &key,
                      unsigned int fbo, const size_t width, const size_t height);

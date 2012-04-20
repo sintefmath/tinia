@@ -96,8 +96,8 @@ include_directories( "./include"
   ${APR_INCLUDE_DIR}
 )
 
-ADD_SUBDIRECTORY( "src/policylib" )
-ADD_SUBDIRECTORY( "src/policylibxml" )
+ADD_SUBDIRECTORY( "src/policy" )
+ADD_SUBDIRECTORY( "src/policyxml" )
 ADD_SUBDIRECTORY( "src/librenderlist" )
 ADD_SUBDIRECTORY( "src/librenderlistgl" )
 ADD_SUBDIRECTORY( "src/jobobserver" )
@@ -107,8 +107,8 @@ ADD_SUBDIRECTORY( "src/mod_trell" )
 ADD_SUBDIRECTORY( "src/trell_master" )
 
 # Unit tests
-ADD_SUBDIRECTORY( "unittests/policylib/" )
-ADD_SUBDIRECTORY( "unittests/policylibxml/" )
+ADD_SUBDIRECTORY( "unittests/policy/" )
+ADD_SUBDIRECTORY( "unittests/policyxml/" )
 ADD_SUBDIRECTORY( "unittests/librenderlist/" )
 ADD_SUBDIRECTORY( "unittests/jobobserver/" )
 

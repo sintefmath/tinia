@@ -4,8 +4,8 @@
 #include <httpd.h>
 #include <apr_hash.h>
 #include <libxml/xmlschemas.h>
-#include "trell/messenger.h"
-#include "trell/trell.h"
+#include "tinia/trell/messenger.h"
+#include "tinia/trell/trell.h"
 
 
 

@@ -2,12 +2,12 @@
 
 namespace tinia {
 namespace qtobserver {
-SpinBox::SpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
+SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
                  QWidget *parent) :
-   QSpinBox(parent), m_key(key.c_str()), m_policyLib(policyLib)
+   QSpinBox(parent), m_key(key.c_str()), m_policy(policy)
 {
    // Get max and min
-   policylib::StateSchemaElement element = m_policyLib->getStateSchemaElement(m_key);
+   policy::StateSchemaElement element = m_policy->getStateSchemaElement(m_key);
    try {
 	int maxValue = boost::lexical_cast<int>(element.getMaxConstraint());
 	int minValue = boost::lexical_cast<int>(element.getMinConstraint());
@@ -19,9 +19,9 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLi
    }
 
 
-   m_policyLib->addStateListener(m_key, this);
+   m_policy->addStateListener(m_key, this);
    int value;
-   m_policyLib->getElementValue<int>(m_key, value);
+   m_policy->getElementValue<int>(m_key, value);
    setValue(value);
    connect(this, SIGNAL(setValueFromPolicy(int)), this,
            SLOT(setValue(int)));
@@ -31,20 +31,20 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLi
 }
 SpinBox::~SpinBox()
 {
-   m_policyLib->removeStateListener(m_key, this);
+   m_policy->removeStateListener(m_key, this);
 }
 }
 
-void qtobserver::SpinBox::stateElementModified(policylib::StateElement *stateElement)
+void qtobserver::SpinBox::stateElementModified(policy::StateElement *stateElement)
 {
    int value;
-   m_policyLib->getElementValue<int>(m_key, value);
+   m_policy->getElementValue<int>(m_key, value);
    emit setValueFromPolicy(value);
 }
 
 void qtobserver::SpinBox::valueSetFromQt(int val)
 {
-   m_policyLib->updateElement(m_key, val);
+   m_policy->updateElement(m_key, val);
 }
 
 } // of namespace tinia

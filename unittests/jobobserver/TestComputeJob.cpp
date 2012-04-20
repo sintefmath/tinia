@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( startAndStop ) {
 
 BOOST_AUTO_TEST_CASE( terminatingJob ) {
 	TestComputeJob1 job;
-	std::shared_ptr<policylib::PolicyLib> policy=job.getPolicylib();
+	std::shared_ptr<policy::Policy> policy=job.getPolicy();
 	
 	job.init();
 	job.start();
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( terminatingJob ) {
 
 BOOST_AUTO_TEST_CASE( throwingJob ) {
 	ThrowingComputeJob job;
-	std::shared_ptr<policylib::PolicyLib> policy=job.getPolicylib();
+	std::shared_ptr<policy::Policy> policy=job.getPolicy();
 
 	job.init();
 	job.start();
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( throwingJob ) {
 
 BOOST_AUTO_TEST_CASE( exitingJob ) {
 	CompletingComputeJob job;
-	std::shared_ptr<policylib::PolicyLib> policy=job.getPolicylib();
+	std::shared_ptr<policy::Policy> policy=job.getPolicy();
 
 	job.init();
 	job.start();

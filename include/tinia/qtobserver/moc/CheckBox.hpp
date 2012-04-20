@@ -2,22 +2,22 @@
 #define QTOBSERVER_CHECKBOX_HPP
 
 #include <QCheckBox>
-#include <tinia/policylib/PolicyLib.hpp>
-#include <tinia/policylib/StateListener.hpp>
+#include <tinia/policy/Policy.hpp>
+#include <tinia/policy/StateListener.hpp>
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class CheckBox : public QCheckBox, public policylib::StateListener
+class CheckBox : public QCheckBox, public policy::StateListener
 {
     Q_OBJECT
 public:
-    explicit CheckBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
+    explicit CheckBox(std::string key, std::shared_ptr<policy::Policy> policy,
                       QWidget *parent = 0);
    ~CheckBox();
 
-   void stateElementModified(policylib::StateElement *stateElement);
+   void stateElementModified(policy::StateElement *stateElement);
 
 signals:
    void setCheckFromPolicy(bool checked);
@@ -28,7 +28,7 @@ public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
 
 };
 

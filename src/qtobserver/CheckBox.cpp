@@ -4,14 +4,14 @@
 namespace tinia {
 namespace qtobserver {
 
-CheckBox::CheckBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
+CheckBox::CheckBox(std::string key, std::shared_ptr<policy::Policy> policy,
                    QWidget *parent) :
-   QCheckBox(parent), m_key(key), m_policyLib(policyLib)
+   QCheckBox(parent), m_key(key), m_policy(policy)
 {
-   setText(prettyName(m_key, m_policyLib).c_str());
-   m_policyLib->addStateListener(m_key, this);
+   setText(prettyName(m_key, m_policy).c_str());
+   m_policy->addStateListener(m_key, this);
    bool checked;
-   m_policyLib->getElementValue<bool>(m_key, checked);
+   m_policy->getElementValue<bool>(m_key, checked);
    setChecked(checked);
 
    connect(this, SIGNAL(setCheckFromPolicy(bool)), this,
@@ -22,16 +22,16 @@ CheckBox::CheckBox(std::string key, std::shared_ptr<policylib::PolicyLib> policy
 
 CheckBox::~CheckBox()
 {
-   m_policyLib->removeStateListener(m_key, this);
+   m_policy->removeStateListener(m_key, this);
 }
 }
 
 void qtobserver::CheckBox::setCheckedFromQt(bool checked)
 {
-   m_policyLib->updateElement<bool>(m_key, checked);
+   m_policy->updateElement<bool>(m_key, checked);
 }
 
-void qtobserver::CheckBox::stateElementModified(policylib::StateElement *stateElement)
+void qtobserver::CheckBox::stateElementModified(policy::StateElement *stateElement)
 {
    bool checked;
    stateElement->getValue(checked);

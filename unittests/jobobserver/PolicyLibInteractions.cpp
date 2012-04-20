@@ -4,31 +4,31 @@
 using namespace tinia::jobobserver;
 class JobFixture : Job {
 public:
-   JobFixture() { policyLib = getPolicylib();}
+   JobFixture() { policy = getPolicy();}
    ~JobFixture() {}
-   std::shared_ptr<tinia::policylib::PolicyLib> policyLib;
+   std::shared_ptr<tinia::policy::Policy> policy;
 };
 
 BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
 {
-   policyLib->addElement("Element1", 1);
-   policyLib->addElement("Element2", 2);
+   policy->addElement("Element1", 1);
+   policy->addElement("Element2", 2);
 
-   policyLib->addElement("Element3", 3);
+   policy->addElement("Element3", 3);
 
-   policyLib->addElement("Element4", 4);
+   policy->addElement("Element4", 4);
 
-   policyLib->addElement("Element5", 5);
+   policy->addElement("Element5", 5);
 
-   policyLib->addElement("Element6", 6);
+   policy->addElement("Element6", 6);
 
-   policyLib->addElement("Element7", 7);
+   policy->addElement("Element7", 7);
 
-   policyLib->addElement("Element8", 8);
-   policyLib->addElement("Element9", 9);
+   policy->addElement("Element8", 8);
+   policy->addElement("Element9", 9);
 
-   std::vector<tinia::policylib::StateSchemaElement> elements;
-   policyLib->getFullStateSchema(elements);
+   std::vector<tinia::policy::StateSchemaElement> elements;
+   policy->getFullStateSchema(elements);
    std::vector<bool> found;
 
    for(int i = 0; i < 9; i++) found.push_back(false);

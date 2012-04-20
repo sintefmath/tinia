@@ -1,5 +1,5 @@
 #pragma once
-#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policy/Policy.hpp"
 #include <memory>
 
 namespace tinia {
@@ -23,10 +23,10 @@ public:
 
    void quit();
 
-   virtual std::shared_ptr<policylib::PolicyLib> getPolicylib();
+   virtual std::shared_ptr<policy::Policy> getPolicy();
 
 protected:
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
 };
 }
 }

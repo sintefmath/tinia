@@ -9,25 +9,25 @@
 #include <tinia/librenderlist/gl/Renderer.hpp>
 #include <siut2/dsrv/DSRViewer.hpp>
 #include "tinia/jobobserver/OpenGLJob.hpp"
-#include "tinia/policylib/PolicyLib.hpp"
-#include "tinia/policylib/StateListener.hpp"
+#include "tinia/policy/Policy.hpp"
+#include "tinia/policy/StateListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
-class Canvas : public QGLWidget, public policylib::StateListener
+class Canvas : public QGLWidget, public policy::StateListener
 {
     Q_OBJECT
 public:
     explicit Canvas(jobobserver::OpenGLJob* openglJob,
                     std::string key, std::string boundingBoxKey,
-                    std::shared_ptr<policylib::PolicyLib> policyLib,
+                    std::shared_ptr<policy::Policy> policy,
                     QWidget* parent,
                     QGLWidget* share_widget,
                     bool perf_mode = false);
    ~Canvas();
 
-   void stateElementModified(policylib::StateElement *stateElement);
+   void stateElementModified(policy::StateElement *stateElement);
    void setPreferredSize();
    QSizePolicy sizePolicy() const;
    QSize minimumSize() const;
@@ -40,7 +40,7 @@ protected:
    void mouseMoveEvent(QMouseEvent *event);
    void mouseReleaseEvent(QMouseEvent *event);
 signals:
-   void updateFromPolicylib();
+   void updateFromPolicy();
    void updateDSRV();
    void updateFPS( QString fps );
 public slots:
@@ -51,7 +51,7 @@ private:
    void initializeDSRV();
    std::string m_key;
    std::string m_boundingBoxKey;
-   std::shared_ptr<policylib::PolicyLib> m_policyLib;
+   std::shared_ptr<policy::Policy> m_policy;
    jobobserver::OpenGLJob* m_job;
    siut2::dsrv::DSRViewer* m_dsrv;
    QTime                   m_last_fps_calc;

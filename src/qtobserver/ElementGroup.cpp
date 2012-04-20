@@ -6,24 +6,24 @@ namespace tinia {
 namespace qtobserver {
 
 ElementGroup::ElementGroup(std::string key, bool showLabel,
-                           std::shared_ptr<policylib::PolicyLib> policyLib,
+                           std::shared_ptr<policy::Policy> policy,
                            QWidget *parent) :
-    QGroupBox(parent), m_key(key), m_policyLib(policyLib)
+    QGroupBox(parent), m_key(key), m_policy(policy)
 {
 /*
 
     //   setLayout(new QHBoxLayout(this));
-   m_policyLib->addStateListener(m_key, this);
-   connect(this, SIGNAL(setVisibleFromPolicyLib(bool)), this,
+   m_policy->addStateListener(m_key, this);
+   connect(this, SIGNAL(setVisibleFromPolicy(bool)), this,
            SLOT(setVisible(bool)));
    if(showLabel)
    {
-      setTitle(prettyName(m_key, m_policyLib).c_str());
+      setTitle(prettyName(m_key, m_policy).c_str());
    }
 
    // Should we show ourselves?
    bool show;
-   m_policyLib->getElementValue(m_key, show);
+   m_policy->getElementValue(m_key, show);
    if(!show)
    {
       setVisible(false);
@@ -36,16 +36,16 @@ ElementGroup::ElementGroup(std::string key, bool showLabel,
 
 ElementGroup::~ElementGroup()
 {
-//   m_policyLib->removeStateListener(m_key, this);
+//   m_policy->removeStateListener(m_key, this);
 }
 }
 
-void qtobserver::ElementGroup::stateElementModified(policylib::StateElement *stateElement)
+void qtobserver::ElementGroup::stateElementModified(policy::StateElement *stateElement)
 {
 /*
     bool visible;
    stateElement->getValue(visible);
-   emit setVisibleFromPolicyLib(visible);
+   emit setVisibleFromPolicy(visible);
 */
 }
 

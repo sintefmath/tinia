@@ -5,7 +5,7 @@
 #include <apr_strings.h>
 #include <apr_file_info.h>
 #include <apr_base64.h>
-#include "trell/trell.h"
+#include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
 unsigned long int
