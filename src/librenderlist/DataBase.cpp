@@ -20,6 +20,7 @@
 #include <tinia/librenderlist/SetLight.hpp>
 
 
+namespace tinia {
 namespace librenderlist {
 
 static const std::string package = "librenderlist.DataBase";
@@ -585,3 +586,4 @@ DataBase::bump( )
 }
 
 } // of namespace librenderlist
+} // of namespace tinia

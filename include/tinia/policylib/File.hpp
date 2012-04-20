@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <sstream>
+
+namespace tinia {
 namespace policylib {
 
 class File
@@ -24,5 +26,5 @@ std::ostream& operator<<(std::ostream& stream, const File& file);
 
 std::istream& operator>>(std::istream& stream, File& file);
 }
-
+}
 #endif // POLICYLIB_FILE_HPP

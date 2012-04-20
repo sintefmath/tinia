@@ -2,7 +2,10 @@
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+
+namespace tinia {
 namespace qtobserver {
+
 RadioButtonGroup::RadioButtonGroup(std::string key,
                            std::shared_ptr<policylib::PolicyLib> policyLib,
                                    bool horizontal,
@@ -52,3 +55,4 @@ void qtobserver::RadioButtonGroup::stateSchemaElementModified(policylib::StateSc
 {
    // Do something here eventually
 }
+} // of namespace tinia

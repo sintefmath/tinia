@@ -3,6 +3,8 @@
 #include "tinia/policylib/StateSchemaElement.hpp"
 #include "tinia/policylibxml/XMLBuilder.hpp"
 #define XMLDEBUG {std::cerr<< __FILE__<<__LINE__ << std::endl;}
+
+namespace tinia {
 namespace policylibxml {
 XMLHandler::XMLHandler(std::shared_ptr<policylib::PolicyLib> policyLib)
    : m_policyLib(policyLib), m_elementHandler(policyLib)
@@ -78,4 +80,5 @@ xmlDocPtr policylibxml::XMLHandler::getCompleteDocument()
                       m_policyLib->getRevisionNumber());
    return builder.getDeltaDocument();
 
+}
 }

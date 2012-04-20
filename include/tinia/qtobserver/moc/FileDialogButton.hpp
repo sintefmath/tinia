@@ -6,6 +6,7 @@
 #include <memory>
 #include "tinia/qtobserver/moc/StringController.hpp"
 
+namespace tinia {
 namespace qtobserver {
 class FileDialogButton : public QPushButton
 {
@@ -26,5 +27,5 @@ private:
 };
 
 }
-
+}
 #endif // FILEDIALOGBUTTON_HPP

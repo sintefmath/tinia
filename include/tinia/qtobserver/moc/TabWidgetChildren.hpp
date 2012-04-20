@@ -5,6 +5,8 @@
 #include <QTableWidget>
 #include "tinia/policylib/PolicyLib.hpp"
 #include "tinia/policylib/StateSchemaListener.hpp"
+
+namespace tinia {
 namespace qtobserver {
 
 class TabWidgetChildren : public QWidget, public policylib::StateSchemaListener
@@ -28,5 +30,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // of namespace tinia
 #endif // QTOBSERVER_TABWIDGETCHILDREN_HPP

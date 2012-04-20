@@ -10,6 +10,7 @@
 
 
 using namespace std;
+namespace tinia {
 namespace policylibxml
 {
 
@@ -215,8 +216,7 @@ XMLReader::XMLReader()
 
 
 }
-
-
+}
 
 
 

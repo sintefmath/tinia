@@ -7,6 +7,7 @@
 #include "tinia/jobobserver/OpenGLJob.hpp"
 #include "IPCJobObserver.hpp"
 
+namespace tinia {
 namespace Trell {
 
 class IPCGLJobObserver : public IPCJobObserver
@@ -75,3 +76,4 @@ private:
 
 
 } // of namespace Trell
+} // of namespace tinia

@@ -2,6 +2,9 @@
 #define STATELISTENER_HPP
 #include "tinia/policylib/StateElement.hpp"
 #include <memory>
+
+
+namespace tinia {
 namespace policylib {
 /**
   The basic listener for any changes in the State of the policy. I.e. this
@@ -18,5 +21,6 @@ public:
      */
    virtual void stateElementModified(policylib::StateElement * stateElement) = 0;
 };
+}
 }
 #endif // STATELISTENER_HPP

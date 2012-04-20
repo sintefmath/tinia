@@ -7,6 +7,7 @@
 #include <tinia/librenderlist/gl/RenderBuffer.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -87,3 +88,4 @@ RenderSetInputs::invoke( RenderState& state )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

@@ -2,7 +2,7 @@
 #include <tinia/librenderlist/XMLWriter.hpp>
 #include "tinia/trell/IPCGLJobObserver.hpp"
 
-
+namespace tinia {
 namespace Trell {
 
 
@@ -285,4 +285,5 @@ IPCGLJobObserver::checkForGLError() const
 #undef FOO
 
 } // of namespace Trell
+} // of namespace tinia
 

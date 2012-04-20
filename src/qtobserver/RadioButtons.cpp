@@ -1,4 +1,6 @@
-#include "qtobserver/moc/RadioButtons.hpp"
+#include "tinia/qtobserver/moc/RadioButtons.hpp"
+
+namespace tinia {
 namespace qtobserver {
 RadioButtons::RadioButtons(std::string key,
                            std::shared_ptr<policylib::PolicyLib> policyLib,
@@ -13,3 +15,5 @@ RadioButtons::RadioButtons(std::string key,
 void qtobserver::RadioButtons::buttonChecked(bool)
 {
 }
+
+} // of namespace tinia

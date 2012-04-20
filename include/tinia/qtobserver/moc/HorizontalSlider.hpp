@@ -7,6 +7,8 @@
 #include <tinia/policylib/StateListener.hpp>
 #include <tinia/policylib/StateSchemaElement.hpp>
 #include <memory>
+
+namespace tinia {
 namespace qtobserver {
 
 class HorizontalSlider : public QWidget, public policylib::StateListener
@@ -33,5 +35,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_HORIZONTALSLIDER_HPP

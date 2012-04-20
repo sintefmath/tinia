@@ -1,6 +1,6 @@
 #include "tinia/policylib/StateSchemaListenerHandler.hpp"
 
-
+namespace tinia {
 policylib::StateSchemaListenerHandler::StateSchemaListenerHandler()
 {
 }
@@ -69,4 +69,5 @@ void policylib::StateSchemaListenerHandler::fireStateSchemaElementModified(
    {
       (*it)->stateSchemaElementModified(element);
    }
+}
 }

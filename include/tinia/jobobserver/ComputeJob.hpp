@@ -4,6 +4,7 @@
 #include "tinia/jobobserver/Job.hpp"
 #include <boost/thread/thread.hpp>
 
+namespace tinia {
 namespace jobobserver
 {
 
@@ -50,5 +51,5 @@ private:
 
 
 
-
-} // of namespace Trell
+}
+}

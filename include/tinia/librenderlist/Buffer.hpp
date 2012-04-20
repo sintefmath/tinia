@@ -3,6 +3,7 @@
 #include "Item.hpp"
 #include <initializer_list>
 
+namespace tinia {
 namespace librenderlist {
 
 class Buffer : public Item
@@ -49,3 +50,5 @@ protected:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

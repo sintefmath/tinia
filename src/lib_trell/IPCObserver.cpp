@@ -10,9 +10,10 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
-#include "trell/IPCObserver.hpp"
-#include "trell/messenger.h"
+#include "tinia/trell/IPCObserver.hpp"
+#include "tinia/trell/messenger.h"
 
+namespace tinia {
 namespace Trell {
 
 static std::list<IPCObserver*> instances;
@@ -578,4 +579,4 @@ IPCObserver::cleanup()
 
 }
 
-
+}

@@ -6,6 +6,7 @@
 #include "tinia/policylib/StateListener.hpp"
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 
 class ElementGroup : public QGroupBox, public policylib::StateListener
@@ -28,5 +29,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_ELEMENTGROUP_HPP

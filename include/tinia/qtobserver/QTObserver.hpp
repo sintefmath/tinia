@@ -5,7 +5,7 @@
 
 class QMainWindow;
 class QGLWidget;
-
+namespace tinia {
 namespace policylib {
     class PolicyLib;
 } // of namespace policylib
@@ -54,5 +54,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_QTOBSERVER_HPP

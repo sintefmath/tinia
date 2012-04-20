@@ -11,7 +11,7 @@
 
 
 
-
+namespace tinia {
 namespace policylibxml
 {
 
@@ -70,8 +70,7 @@ private:
 
 
 }
-
-
+}
 
 
 

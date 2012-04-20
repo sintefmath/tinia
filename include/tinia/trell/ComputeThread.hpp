@@ -2,6 +2,7 @@
 #include <string>
 #include <thread> 
 
+namespace tinia {
 namespace Trell
 {
 
@@ -41,3 +42,4 @@ protected:
 
 
 } // of namespace Trell
+} // of namespace tinia

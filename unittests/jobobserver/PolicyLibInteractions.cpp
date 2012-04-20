@@ -1,12 +1,12 @@
 #include <boost/test/unit_test.hpp>
 #include "tinia/jobobserver/Job.hpp"
 #include <memory>
-using namespace jobobserver;
+using namespace tinia::jobobserver;
 class JobFixture : Job {
 public:
    JobFixture() { policyLib = getPolicylib();}
    ~JobFixture() {}
-   std::shared_ptr<policylib::PolicyLib> policyLib;
+   std::shared_ptr<tinia::policylib::PolicyLib> policyLib;
 };
 
 BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
    policyLib->addElement("Element8", 8);
    policyLib->addElement("Element9", 9);
 
-   std::vector<policylib::StateSchemaElement> elements;
+   std::vector<tinia::policylib::StateSchemaElement> elements;
    policyLib->getFullStateSchema(elements);
    std::vector<bool> found;
 

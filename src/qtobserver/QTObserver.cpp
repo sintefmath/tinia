@@ -12,6 +12,7 @@
 #include <QDomDocument>
 #include <QString>
 
+namespace tinia {
 namespace qtobserver {
 
 QTObserver::QTObserver()
@@ -351,3 +352,4 @@ addNode( QDomDocument* dom, QDomElement& parent, policylib::gui::Element* branch
 
 
 }// namespace qtobserver
+} // of namespace tinia

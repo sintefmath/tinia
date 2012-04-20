@@ -1,12 +1,13 @@
 #include <iostream>
 #include <cstring>
-#include "trell/IPCJobObserver.hpp"
+#include "tinia/trell/IPCJobObserver.hpp"
 #include "tinia/policylib/PolicyLock.hpp"
 
 // This should not be included here, but will be fixed when interface is
 // cleaned up (that is when IPCJobObserver is rinsed of all opengl-methods)
 #include "tinia/jobobserver/OpenGLJob.hpp"
 
+namespace tinia {
 namespace Trell {
 
 
@@ -270,3 +271,6 @@ void Trell::IPCJobObserver::stateSchemaElementModified(policylib::StateSchemaEle
       notify();
    }
 }
+
+} // of namespace tinia
+

@@ -9,7 +9,7 @@
 #include "tinia/policylibxml/utils.hpp"
 #include "tinia/policylib/GUILayout.hpp"
 
-
+namespace tinia {
 namespace policylibxml {
 
 /** \class XMLBuilder
@@ -147,4 +147,5 @@ private:
     const std::vector<policylib::StateSchemaElement> &m_stateSchemaDelta;
     policylib::gui::Element* m_rootGUIElement;
 };
+}
 }

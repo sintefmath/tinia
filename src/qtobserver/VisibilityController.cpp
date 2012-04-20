@@ -1,5 +1,6 @@
-#include "qtobserver/moc/VisibilityController.hpp"
+#include "tinia/qtobserver/moc/VisibilityController.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 VisibilityController::VisibilityController( QWidget*                               widget,
@@ -42,3 +43,4 @@ VisibilityController::stateElementModified(policylib::StateElement *stateElement
 
 
 } // of namespace qtobserver
+} // of namespace tinia

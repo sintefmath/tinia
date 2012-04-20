@@ -1,9 +1,10 @@
-#include "qtobserver/moc/Canvas.hpp"
+#include "tinia/qtobserver/moc/Canvas.hpp"
 #include <iostream>
 #include "glm/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <array>
 
+namespace tinia {
 namespace qtobserver {
 
 Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
@@ -287,3 +288,5 @@ void qtobserver::Canvas::updateDSRVNow()
 {
    initializeDSRV();
 }
+
+} // of namespace tinia

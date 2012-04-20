@@ -6,6 +6,7 @@
 #include <tinia/librenderlist/gl/RenderState.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 static const std::string package = "librenderlist.gl.RenderSetUniforms";
@@ -128,3 +129,4 @@ RenderSetUniforms::invoke( RenderState& state )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

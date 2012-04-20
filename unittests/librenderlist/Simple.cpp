@@ -31,24 +31,24 @@ struct Fixture
         BOOST_MESSAGE( "destructor" );
     }
 
-    librenderlist::Revision
-    dumpChanges( librenderlist::Revision has_revision )
+    tinia::librenderlist::Revision
+    dumpChanges( tinia::librenderlist::Revision has_revision )
     {
 
         std::cerr << "----------------------------\n";
         std::cerr << "has_revision=" << has_revision << ", latest=" << m_db.latest() << "\n";
-        std::cout << librenderlist::getUpdateXML( &m_db, librenderlist::ENCODING_JSON,  has_revision );
+        std::cout << tinia::librenderlist::getUpdateXML( &m_db, tinia::librenderlist::ENCODING_JSON,  has_revision );
         std::cerr << "----------------------------\n";
         return m_db.latest();
     }
 
 
-    librenderlist::DataBase m_db;
+    tinia::librenderlist::DataBase m_db;
 };
 
 BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
 {
-    Revision r = 0;
+    tinia::librenderlist::Revision r = 0;
 
 
     m_db.createBuffer( "cube_pos" )
@@ -106,50 +106,50 @@ BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
                                 "    gl_FragColor = vec4( color*max(0.1, dot( es_normal, light_z ) ), 1.0 );\n"
                                 "}\n" );
 
-    m_db.createAction<librenderlist::Draw>( "cube_draw")
-            ->setNonIndexed( librenderlist::PRIMITIVE_TRIANGLES, 0, 36 );
+    m_db.createAction<tinia::librenderlist::Draw>( "cube_draw")
+            ->setNonIndexed( tinia::librenderlist::PRIMITIVE_TRIANGLES, 0, 36 );
 
-    m_db.createAction<librenderlist::SetViewCoordSys>( "cam" )
+    m_db.createAction<tinia::librenderlist::SetViewCoordSys>( "cam" )
             ->setProjection( P, Pi )
             ->setOrientation( cfw, ctw );
 
-    m_db.createAction<librenderlist::SetLight>( "light" )
-        ->setType( librenderlist::LIGHT_POINT )
+    m_db.createAction<tinia::librenderlist::SetLight>( "light" )
+        ->setType( tinia::librenderlist::LIGHT_POINT )
         ->setIndex( 0 )
         ->setColor( 0.8f, 1.f, 1.f )
         ->setAttenuation( 1.f, 0.f, 0.f )
         ->setFalloff( 3.14159f, 0.f )
         ->setOrientation( lfw, ltw );
 
-    m_db.createAction<librenderlist::SetInputs>( "phong_cube" )
+    m_db.createAction<tinia::librenderlist::SetInputs>( "phong_cube" )
         ->setShader( "phong" )
         ->setInput( "position", "cube_pos", 3 )
         ->setInput( "normal", "cube_nrm", 3 );
 
-    m_db.createAction<librenderlist::SetUniforms>( "phong_uniforms" )
+    m_db.createAction<tinia::librenderlist::SetUniforms>( "phong_uniforms" )
         ->setShader( "phong" )
-        ->setSemantic( "MVP", SEMANTIC_MODELVIEW_PROJECTION_MATRIX )
-        ->setSemantic( "NM", SEMANTIC_NORMAL_MATRIX )
+        ->setSemantic( "MVP", tinia::librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX )
+        ->setSemantic( "NM", tinia::librenderlist::SEMANTIC_NORMAL_MATRIX )
         ->setFloat3( "color", 0.8f, 0.9f, 1.f );
 
-    m_db.createAction<librenderlist::SetLocalCoordSys>( "cube0_pos" )
+    m_db.createAction<tinia::librenderlist::SetLocalCoordSys>( "cube0_pos" )
         ->setOrientation( c0fw, c0tw );
 
-    m_db.createAction<librenderlist::SetShader>( "use_phong" )
+    m_db.createAction<tinia::librenderlist::SetShader>( "use_phong" )
         ->setShader( "phong" );
 
-    m_db.createAction<librenderlist::SetFramebuffer>( "default_fbo" )
+    m_db.createAction<tinia::librenderlist::SetFramebuffer>( "default_fbo" )
         ->setDefault();
 
-    m_db.createAction<librenderlist::SetPixelState>( "px_state" )
+    m_db.createAction<tinia::librenderlist::SetPixelState>( "px_state" )
         ->enableDepthTest()
         ->disableBlending();
 
-    m_db.createAction<librenderlist::SetFramebufferState>( "fb_state" )
+    m_db.createAction<tinia::librenderlist::SetFramebufferState>( "fb_state" )
         ->setColorWritemask( true, true, true )
         ->setDepthWritemask( true );
 
-    m_db.createAction<librenderlist::SetRasterState>( "rs_state" );
+    m_db.createAction<tinia::librenderlist::SetRasterState>( "rs_state" );
 
     m_db.drawOrderClear()
         ->drawOrderAdd( "cam" )
@@ -163,17 +163,17 @@ BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
         ->drawOrderAdd( "phong_uniforms" )
         ->drawOrderAdd( "cube_draw" );
 
-    std::cout << librenderlist::getUpdateXML( &m_db, librenderlist::ENCODING_JSON, r );
+    std::cout << tinia::librenderlist::getUpdateXML( &m_db, tinia::librenderlist::ENCODING_JSON, r );
     r = m_db.latest();
 
     /*
 
     std::cerr << "** creating buf0\n";
-    librenderlist::Buffer* buf0 = m_db.createBuffer( "buf0" );
+    tinia::librenderlist::Buffer* buf0 = m_db.createBuffer( "buf0" );
     r = dumpChanges( r );
 
     std::cerr << "** creating buf1,,\n";
-    librenderlist::Buffer* buf1 = m_db.createBuffer( "buf1" );
+    tinia::librenderlist::Buffer* buf1 = m_db.createBuffer( "buf1" );
     r = dumpChanges( r );
 
     std::cerr << "** setting buf0 data\n";
@@ -188,13 +188,13 @@ BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
     buf1->set( foo.data(), foo.size() );
 
 
-    librenderlist::Shader* sh0 = m_db.createShader( "sh0" );
+    tinia::librenderlist::Shader* sh0 = m_db.createShader( "sh0" );
     sh0
     ->setVertexStage( "vertex" )
     ->setGeometryStage( "geometry" )
     ->setFragmentStage( "fragment" );
 
-    librenderlist::SetInputs* si = m_db.createSetInputs( "si" );
+    tinia::librenderlist::SetInputs* si = m_db.createSetInputs( "si" );
     si
     ->addInput( "position", buf1->id(), 3 )
     ->addInput( "normal", buf1->id(), 3 );

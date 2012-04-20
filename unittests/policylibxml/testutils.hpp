@@ -6,7 +6,7 @@
 
 struct TestHelper {
     template<class T>
-    TestHelper(policylibxml::XMLHandler& handler , T t, bool printDoc = false ) {
+    TestHelper(tinia::policylibxml::XMLHandler& handler , T t, bool printDoc = false ) {
         doc = handler.getCompleteDocument();
         if ( printDoc ) {
             xmlSaveFormatFile( "-", doc, 1 );

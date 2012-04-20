@@ -5,6 +5,7 @@
 #include <tinia/librenderlist/Action.hpp>
 #include <tinia/librenderlist/Shader.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 class SetShader : public Action
@@ -45,3 +46,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

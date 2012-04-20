@@ -1,7 +1,8 @@
-#include "qtobserver/moc/MainWindow.hpp"
+#include "tinia/qtobserver/moc/MainWindow.hpp"
 #include <QLayout>
 #include <QLabel>
 #include <QHBoxLayout>
+namespace tinia {
 namespace qtobserver {
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -30,3 +31,6 @@ void qtobserver::MainWindow::clearDrawWidget(QWidget* newWidget)
 void qtobserver::MainWindow::clearDrawWidget(){
    setCentralWidget(new QWidget());
 }
+
+} // of namespace tinia
+

@@ -1,4 +1,6 @@
-#include "qtobserver/moc/SpinBox.hpp"
+#include "tinia/qtobserver/moc/SpinBox.hpp"
+
+namespace tinia {
 namespace qtobserver {
 SpinBox::SpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
                  QWidget *parent) :
@@ -44,3 +46,5 @@ void qtobserver::SpinBox::valueSetFromQt(int val)
 {
    m_policyLib->updateElement(m_key, val);
 }
+
+} // of namespace tinia

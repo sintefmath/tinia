@@ -4,6 +4,7 @@
 #include <boost/utility.hpp>
 #include <tinia/librenderlist/RenderList.hpp>
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -76,3 +77,4 @@ protected:
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

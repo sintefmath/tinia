@@ -4,6 +4,7 @@
 #include "tinia/policylib/PolicyLib.hpp"
 #include <memory>
 
+namespace tinia {
 namespace policylib {
 class PolicyLock
 {
@@ -18,5 +19,5 @@ private:
 };
 
 } // namespace policylib
-
+} // namespace tinia
 #endif // POLICYLIB_POLICYLOCK_HPP

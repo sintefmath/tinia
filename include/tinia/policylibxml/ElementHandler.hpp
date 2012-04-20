@@ -2,6 +2,7 @@
 #include <string>
 #include <memory>
 #include "tinia/policylib/PolicyLib.hpp"
+namespace tinia {
 namespace policylibxml {
 class ElementHandler
 {
@@ -16,4 +17,4 @@ private:
    std::shared_ptr<policylib::PolicyLib> m_policylib;
 };
 }
-
+}

@@ -6,6 +6,7 @@
 #include <tinia/policylib/StateListener.hpp>
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 
 class CheckBox : public QCheckBox, public policylib::StateListener
@@ -32,5 +33,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_CHECKBOX_HPP

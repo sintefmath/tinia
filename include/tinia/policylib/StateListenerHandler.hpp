@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <map>
+
+namespace tinia {
 namespace policylib {
 class StateListenerHandler
 {
@@ -23,5 +25,6 @@ private:
     bool m_isBuffering;
 
 };
+}
 }
 #endif // STATELISTENERHANDLER_HPP

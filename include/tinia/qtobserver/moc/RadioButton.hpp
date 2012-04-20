@@ -6,6 +6,7 @@
 #include "tinia/policylib/StateListener.hpp"
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 
 class RadioButton : public QRadioButton, public policylib::StateListener
@@ -31,5 +32,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_RADIOBUTTON_HPP

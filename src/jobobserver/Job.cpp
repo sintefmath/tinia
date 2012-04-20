@@ -1,4 +1,6 @@
 #include "tinia/jobobserver/Job.hpp"
+
+namespace tinia {
 namespace jobobserver {
 
 Job::Job()
@@ -31,4 +33,6 @@ void jobobserver::Job::quit()
 {
 	cleanup();
 	m_policyLib->releaseAllListeners();
+}
+
 }

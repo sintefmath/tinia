@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -11,6 +12,7 @@ void dumpGLFBOStatus( const std::string& log, int line, GLenum status );
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia
 
 
 #define CHECK_GL do {                                                           \

@@ -7,6 +7,7 @@
 #include "tinia/policylib/PolicyLib.hpp"
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 
 class RadioButtons : public QGroupBox
@@ -29,5 +30,6 @@ private:
    std::string m_key;
    QList<QRadioButton*> m_buttons;
 };
+}
 }
 #endif // QTOBSERVER_RADIOBUTTONS_HPP

@@ -1,5 +1,7 @@
-#include "qtobserver/moc/Button.hpp"
-#include "qtobserver/utils.hpp"
+#include "tinia/qtobserver/moc/Button.hpp"
+#include "tinia/qtobserver/utils.hpp"
+
+namespace tinia {
 namespace qtobserver {
 
 Button::Button(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
@@ -22,3 +24,5 @@ void qtobserver::Button::clickedButton()
 {
    m_policyLib->updateElement<bool>(m_key, true);
 }
+
+} // of namespace tinia

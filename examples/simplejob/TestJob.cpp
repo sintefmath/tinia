@@ -28,7 +28,7 @@ bool TestJob::init()
 
 
    m_policyLib->addStateListener(this);
-   policylib::Viewer viewer;
+   tinia::policylib::Viewer viewer;
    viewer.height = 500;
    viewer.width = 500;
    m_policyLib->addElement("viewer", viewer);
@@ -54,12 +54,12 @@ bool TestJob::init()
 
    m_policyLib->addAnnotation("myButton", "My pushButton");
 
-   policylib::File file;
+   tinia::policylib::File file;
    m_policyLib->addElement("SpecialFile", file);
    m_policyLib->addAnnotation("SpecialFile", "Open file");
    m_policyLib->addElement("SpecialFileName", file.name());
 
-   using namespace policylib::gui;
+   using namespace tinia::policylib::gui;
    TabLayout* root = new TabLayout();
    HorizontalLayout *superLayout = new HorizontalLayout();
 
@@ -158,8 +158,8 @@ bool TestJob::init()
        1.f, 0.f, 1.f,  1.f, 1.f, 1.f,
    };
    m_renderlist_db.createBuffer( "wire_cube_pos" )->set( wire_cube_pos, 12*2*3 );
-   m_renderlist_db.createAction<librenderlist::Draw>( "wire_cube_draw" )
-           ->setNonIndexed( librenderlist::PRIMITIVE_LINES, 0, 12*2 );
+   m_renderlist_db.createAction<tinia::librenderlist::Draw>( "wire_cube_draw" )
+           ->setNonIndexed( tinia::librenderlist::PRIMITIVE_LINES, 0, 12*2 );
    // Solid color shader
    std::string solid_vs =
            "uniform mat4 MVP;\n"
@@ -182,20 +182,20 @@ bool TestJob::init()
    m_renderlist_db.createShader( "solid" )
            ->setVertexStage( solid_vs )
            ->setFragmentStage( solid_fs );
-   m_renderlist_db.createAction<librenderlist::SetShader>( "solid_use" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetShader>( "solid_use" )
            ->setShader( "solid" );
-   m_renderlist_db.createAction<librenderlist::SetUniforms>( "solid_orient" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_orient" )
            ->setShader( "solid" )
-           ->setSemantic( "MVP", librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
-   m_renderlist_db.createAction<librenderlist::SetUniforms>( "solid_white" )
+           ->setSemantic( "MVP", tinia::librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
+   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_white" )
            ->setShader( "solid" )
            ->setFloat3( "color", 1.f, 1.f, 1.f );
-   m_renderlist_db.createAction<librenderlist::SetUniforms>( "solid_green" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_green" )
            ->setShader( "solid" )
            ->setFloat3( "color", 0.f, 1.f, 0.f );
 
    // Combine the wire cube geometry with the solid shader
-   m_renderlist_db.createAction<librenderlist::SetInputs>( "solid_wire_cube_input" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetInputs>( "solid_wire_cube_input" )
            ->setShader( "solid" )
            ->setInput( "position", "wire_cube_pos", 3 );
 
@@ -212,7 +212,7 @@ bool TestJob::init()
        0.f,  0.f,  0.5f,  1.0f,
        0.f,  0.f,  0.f,   1.f,
    };
-   m_renderlist_db.createAction<librenderlist::SetLocalCoordSys>( "shape0_pos" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetLocalCoordSys>( "shape0_pos" )
            ->setOrientation( shape0_from_world, shape0_to_world );
 
    float shape1_to_world[16] = {
@@ -227,7 +227,7 @@ bool TestJob::init()
        0.f,  0.f,  1.f,  0.5f,
        0.f,  0.f,  0.f,   1.f,
    };
-   m_renderlist_db.createAction<librenderlist::SetLocalCoordSys>( "shape1_pos" )
+   m_renderlist_db.createAction<tinia::librenderlist::SetLocalCoordSys>( "shape1_pos" )
            ->setOrientation( shape1_from_world, shape1_to_world );
 
    // Set up draw order
@@ -282,7 +282,7 @@ TestJob::~TestJob()
    m_policyLib->removeStateListener(this);
 }
 
-void TestJob::stateElementModified(policylib::StateElement *stateElement)
+void TestJob::stateElementModified(tinia::policylib::StateElement *stateElement)
 {
    if(stateElement->getKey() == "myButton")
    {
@@ -296,7 +296,7 @@ void TestJob::stateElementModified(policylib::StateElement *stateElement)
    }
    if(stateElement->getKey() == "SpecialFile")
    {
-      policylib::File file;
+      tinia::policylib::File file;
       stateElement->getValue(file);
       m_policyLib->updateElement("SpecialFileName", file.name());
    }
@@ -308,7 +308,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     glClear( GL_COLOR_BUFFER_BIT );
 
 	glViewport(0, 0, width, height);
-    policylib::Viewer viewer;
+    tinia::policylib::Viewer viewer;
     m_policyLib->getElementValue( key, viewer);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
@@ -348,7 +348,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     return true;
 }
 
-const librenderlist::DataBase*
+const tinia::librenderlist::DataBase*
 TestJob::getRenderList( const std::string& session, const std::string& key )
 {
     return &m_renderlist_db;

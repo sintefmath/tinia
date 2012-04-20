@@ -5,6 +5,7 @@
 #include <tinia/librenderlist/DataBase.hpp>
 #include <tinia/librenderlist/Image.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 /** Directs rendering to a framebuffer.
@@ -56,3 +57,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

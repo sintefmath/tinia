@@ -12,6 +12,7 @@
 #include "tinia/policylib/Viewer.hpp"
 
 
+namespace tinia {
 namespace policylib {
 
 /** \class ElementData is responsible for storing data and metadata about a state parameter.
@@ -195,5 +196,6 @@ ElementData::violatingRestriction( const T& value ) const {
 
 
 
+}
 }
 #endif // ELEMENTDATA_HPP

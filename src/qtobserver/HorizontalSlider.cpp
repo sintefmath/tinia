@@ -1,6 +1,8 @@
-#include "qtobserver/moc/HorizontalSlider.hpp"
+#include "tinia/qtobserver/moc/HorizontalSlider.hpp"
 #include <QHBoxLayout>
 #include <boost/lexical_cast.hpp>
+
+namespace tinia {
 namespace qtobserver {
 /**
   Used templated min max and removed boos lexical cast
@@ -76,3 +78,6 @@ void qtobserver::HorizontalSlider::setValueFromQt(int value)
 {
    m_policyLib->updateElement<int>(m_key, value);
 }
+
+
+} // of namespace tinia

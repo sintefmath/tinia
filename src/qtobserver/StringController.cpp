@@ -1,8 +1,9 @@
-#include "qtobserver/moc/StringController.hpp"
+#include "tinia/qtobserver/moc/StringController.hpp"
 #include <QLineEdit>
 #include <QLabel>
 #include <QAbstractButton>
 
+namespace tinia {
 namespace qtobserver {
 
 StringController::StringController( QWidget *widget,
@@ -117,3 +118,4 @@ StringController::textChangeFromQt( const QString& text )
 
 
 } // of namespace qtobserver
+} // of namespace tinia

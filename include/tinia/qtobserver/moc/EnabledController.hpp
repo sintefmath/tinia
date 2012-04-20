@@ -6,6 +6,7 @@
 #include "tinia/policylib/PolicyLib.hpp"
 #include "tinia/policylib/StateListener.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 class EnabledController : public QObject, public policylib::StateListener
@@ -36,3 +37,4 @@ protected:
 
 
 } // of namespace qtobserver
+} // of namespace tinia

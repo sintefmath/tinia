@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/Buffer.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -61,3 +62,4 @@ RenderBuffer::pull( const Buffer* src )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

@@ -1,8 +1,8 @@
 #include "TestJob.hpp"
-#include "trell/IPCGLJobObserver.hpp"
+#include "tinia/trell/IPCGLJobObserver.hpp"
 int main(int argc, char** argv)
 {
-  Trell::IPCGLJobObserver *trellObserver = new Trell::IPCGLJobObserver();
+  tinia::Trell::IPCGLJobObserver *trellObserver = new tinia::Trell::IPCGLJobObserver();
    TestJob *testJob = new TestJob();
    trellObserver->setJob(testJob);
 

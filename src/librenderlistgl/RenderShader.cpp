@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/Shader.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -122,3 +123,4 @@ RenderShader::linkProgram( GLuint program )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

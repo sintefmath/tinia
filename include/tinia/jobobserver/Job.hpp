@@ -1,7 +1,8 @@
-#ifndef JOB_HPP
-#define JOB_HPP
+#pragma once
 #include "tinia/policylib/PolicyLib.hpp"
 #include <memory>
+
+namespace tinia {
 namespace jobobserver {
 class Job
 {
@@ -28,4 +29,5 @@ protected:
    std::shared_ptr<policylib::PolicyLib> m_policyLib;
 };
 }
-#endif // JOB_HPP
+}
+

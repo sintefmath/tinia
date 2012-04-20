@@ -9,6 +9,7 @@
 #include "tinia/policylib/StateSchemaListener.hpp"
 
 class JobWrapper;
+namespace tinia {
 namespace Trell {
 
 /** Base class implementing message-passing destination point.
@@ -249,3 +250,4 @@ private:
 
 
 } // of namespace Trell
+} // of namespace tinia

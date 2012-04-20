@@ -3,6 +3,8 @@
 
 #include <array>
 #include <algorithm>
+
+namespace tinia {
 namespace policylib {
 
 /** \struct Viewer
@@ -39,5 +41,6 @@ struct Viewer {
     std::string sceneView;
 };
 
+}
 }
 #endif // VIEWER_HPP

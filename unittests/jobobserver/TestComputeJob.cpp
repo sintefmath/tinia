@@ -1,6 +1,8 @@
 #include "tinia/jobobserver/ComputeJob.hpp"
 #include <boost/test/unit_test.hpp>
 
+using namespace tinia;
+
 class TestComputeJob1 : public jobobserver::ComputeJob
 {
 public:

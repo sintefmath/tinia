@@ -7,6 +7,7 @@
 #include <tinia/librenderlist/gl/Renderer.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -48,3 +49,4 @@ RenderSetShader::invoke( RenderState& state )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

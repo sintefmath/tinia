@@ -1,5 +1,6 @@
-#include "qtobserver/moc/RadioButton.hpp"
+#include "tinia/qtobserver/moc/RadioButton.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 RadioButton::RadioButton(std::string value, std::string key,
@@ -47,3 +48,5 @@ void qtobserver::RadioButton::stateElementModified(policylib::StateElement *stat
 
    }
 }
+
+} // of namespace tinia

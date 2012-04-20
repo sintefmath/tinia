@@ -29,6 +29,7 @@
 #include <tinia/librenderlist/gl/RenderState.hpp>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -269,3 +270,4 @@ Renderer::render( unsigned int  fbo,
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

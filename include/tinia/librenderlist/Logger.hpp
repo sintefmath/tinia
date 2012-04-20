@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 
+namespace tinia {
 namespace librenderlist {
 
 typedef std::string Logger;
@@ -20,3 +21,5 @@ static inline Logger getLogger( const std::string name )
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

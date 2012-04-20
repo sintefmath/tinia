@@ -15,6 +15,7 @@
 
 #include "tinia/policylib/utils.hpp"
 
+namespace tinia {
 namespace policylib {
 
 using std::cout;
@@ -541,5 +542,6 @@ policylib::PolicyLib::mutex_type& policylib::PolicyLib::getPolicyMutex()
    return m_selfMutex;
 }
 
+} // of namespace tinia
 
 

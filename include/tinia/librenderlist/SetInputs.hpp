@@ -7,6 +7,7 @@
 #include <tinia/librenderlist/Shader.hpp>
 #include <tinia/librenderlist/Buffer.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 /** Maps buffer data to shader inputs.
@@ -113,3 +114,5 @@ protected:
 };
 
 } // of namespace librenderlist
+} // of namespace tinia
+

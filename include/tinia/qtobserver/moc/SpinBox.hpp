@@ -6,6 +6,7 @@
 #include "tinia/policylib/StateListener.hpp"
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 /**
   \todo Use max and min if available.
@@ -29,5 +30,6 @@ private:
    std::string m_key;
    std::shared_ptr<policylib::PolicyLib> m_policyLib;
 };
+}
 }
 #endif // QTOBSERVER_SPINBOX_HPP

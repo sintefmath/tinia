@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/RenderList.hpp>
 #include <tinia/librenderlist/gl/Renderer.hpp>
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -33,3 +34,4 @@ protected:
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

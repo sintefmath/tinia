@@ -3,6 +3,7 @@
 #include "RenderList.hpp"
 #include "Item.hpp"
 
+namespace tinia {
 namespace librenderlist {
 
 class Action : public Item
@@ -21,4 +22,4 @@ protected:
 
 
 } // of namespace librenderlist
-
+} // of namespace tinia

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -56,3 +57,4 @@ protected:
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

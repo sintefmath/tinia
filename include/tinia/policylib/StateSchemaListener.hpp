@@ -1,6 +1,8 @@
 #ifndef STATESCHEMALISTENER_HPP
 #define STATESCHEMALISTENER_HPP
 #include "tinia/policylib/StateSchemaElement.hpp"
+
+namespace tinia {
 namespace policylib {
 class StateSchemaListener
 {
@@ -12,5 +14,6 @@ public:
    virtual void stateSchemaElementModified(policylib::StateSchemaElement*
                                            stateSchemaElement) = 0;
 };
+}
 }
 #endif // STATESCHEMALISTENER_HPP

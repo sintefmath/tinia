@@ -8,7 +8,7 @@
 #include <tinia/policylib/StateListener.hpp>
 #include <tinia/policylib/StateSchemaListener.hpp>
 
-
+namespace tinia {
 namespace qtobserver {
 
 class ComboBox : public QComboBox, public policylib::StateListener,
@@ -40,8 +40,7 @@ private:
    std::string m_key;
 };
 
-}
-
- // namespace qtobserver
+} // namespace qtobserver
+} // namespace tinia
 
 #endif // QTOBSERVER_COMBOBOX_HPP

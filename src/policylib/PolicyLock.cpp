@@ -1,5 +1,6 @@
 #include "tinia/policylib/PolicyLock.hpp"
 
+namespace tinia {
 namespace policylib {
 
 PolicyLock::PolicyLock(std::shared_ptr<PolicyLib>& policylib)
@@ -16,3 +17,4 @@ PolicyLock::~PolicyLock()
 }
 
 } // namespace policylib
+} // of namespace tinia

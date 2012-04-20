@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "RenderList.hpp"
 
-
+namespace tinia {
 namespace librenderlist {
 
 class DataBase
@@ -154,3 +154,5 @@ protected:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

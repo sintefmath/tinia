@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/RenderList.hpp>
 #include <tinia/librenderlist/Action.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 class SetPixelState : public Action
@@ -74,3 +75,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

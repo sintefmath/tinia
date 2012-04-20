@@ -2,6 +2,7 @@
 #include <boost/utility.hpp>
 #include <tinia/librenderlist/RenderList.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 class Item : public boost::noncopyable
@@ -33,3 +34,5 @@ protected:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

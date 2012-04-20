@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/RenderList.hpp>
 #include <tinia/librenderlist/Action.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 class SetLight : public Action
@@ -118,3 +119,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

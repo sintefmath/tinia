@@ -6,6 +6,7 @@
 #include "tinia/policylib/PolicyLib.hpp"
 #include "tinia/policylib/StateListener.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 /** Controller object that lets a widget's visibilty follow a policylib element.
@@ -39,3 +40,4 @@ protected:
 };
 
 } // of namespace qtobserver
+} // of namespace tinia

@@ -3,7 +3,7 @@
 #include "tinia/policylib/PolicyLock.hpp"
 #include "tinia/policylib/StateListener.hpp"
 #include <memory>
-
+using namespace tinia;
 class PolicyLibListenerFixture : policylib::StateListener
 {
 public:

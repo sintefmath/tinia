@@ -10,6 +10,7 @@
 #include <memory>
 #include "tinia/qtobserver/moc/RadioButton.hpp"
 
+namespace tinia {
 namespace qtobserver {
 /**
   \todo Add support for changing restriction set
@@ -37,5 +38,6 @@ private:
    std::shared_ptr<policylib::PolicyLib> m_policyLib;
    std::string m_key;
 };
+}
 }
 #endif // QTOBSERVER_RADIOBUTTONS_HPP

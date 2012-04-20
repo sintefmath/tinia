@@ -1,5 +1,6 @@
 #include <tinia/policylib/StateSchemaElement.hpp>
 
+namespace tinia {
 namespace policylib {
 const int StateSchemaElement::LENGTH_NOT_SET=-1;
 StateSchemaElement::StateSchemaElement() {}
@@ -101,3 +102,4 @@ std::string policylib::StateSchemaElement::getWidgetType() const
 {
    return m_data.getWidgetType();
 }
+} // of namespace tinia

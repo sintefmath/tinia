@@ -1,5 +1,6 @@
-#include "qtobserver/moc/ComboBox.hpp"
+#include "tinia/qtobserver/moc/ComboBox.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 ComboBox::ComboBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
@@ -60,3 +61,5 @@ void qtobserver::ComboBox::activatedChanged(QString value)
 {
    m_policyLib->updateElementFromString(m_key, value.toStdString());
 }
+
+} // of namespace tinia

@@ -1,6 +1,7 @@
 
-#include "qtobserver/moc/EnabledController.hpp"
+#include "tinia/qtobserver/moc/EnabledController.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 EnabledController::EnabledController( QWidget*                               widget,
@@ -43,3 +44,4 @@ EnabledController::stateElementModified(policylib::StateElement *stateElement)
 
 
 } // of namespace qtobserver
+} // of namespace tinia

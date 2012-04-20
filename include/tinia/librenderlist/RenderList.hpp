@@ -3,6 +3,7 @@
 #include <vector>
 
 // forward declarations
+namespace tinia {
 namespace librenderlist {
     typedef unsigned int Id;
     typedef unsigned int Revision;
@@ -167,5 +168,7 @@ createUnitCube( DataBase db, std::vector<Action*>& actions );
 
 } // of namespace librenderlist::Util
 } // of namespace librenderlist
+} // of namespace tinia
+
 
 

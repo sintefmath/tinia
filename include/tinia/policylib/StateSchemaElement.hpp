@@ -4,6 +4,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_map>
 #include <string>
+
+namespace tinia {
 namespace policylib {
 class StateSchemaElement
 {
@@ -79,5 +81,6 @@ private:
 
 
 };
+}
 }
 #endif // STATESCHEMAELEMENT_HPP

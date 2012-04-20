@@ -28,8 +28,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-using policylib::ElementData;
-using policylibxml::xpathQuery;
+using tinia::policylib::ElementData;
+using tinia::policylibxml::xpathQuery;
 
 using namespace std;
 
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE( PolicyLibXml )
 
 struct Fixture {
     Fixture() :
-       policyLib(new policylib::PolicyLib()),
+       policyLib(new tinia::policylib::PolicyLib()),
        xmlHandler(policyLib),
        elementHandler(policyLib),
 
@@ -50,13 +50,13 @@ struct Fixture {
     }
     ~Fixture() {}
 
-    std::shared_ptr<policylib::PolicyLib> policyLib;
-    policylibxml::XMLTransporter xmlTransporter;
+    std::shared_ptr<tinia::policylib::PolicyLib> policyLib;
+    tinia::policylibxml::XMLTransporter xmlTransporter;
     // There is an xmlTransporter in policyLib, but we are not allowed to access that one directly,
     // something we want to do for testing purposes.
-    policylibxml::XMLReader xmlReader;
-    policylibxml::XMLHandler xmlHandler;
-   policylibxml::ElementHandler elementHandler;
+    tinia::policylibxml::XMLReader xmlReader;
+    tinia::policylibxml::XMLHandler xmlHandler;
+   tinia::policylibxml::ElementHandler elementHandler;
     const std::string xsd;
     const std::string xsi;
     const std::string tns;
@@ -210,7 +210,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
         BOOST_REQUIRE( xmlHasProp( minInclusive, BAD_CAST "value" ) );
 
         int readMinValue = 0;
-        policylibxml::getXmlPropAsType( minInclusive, "value", readMinValue );
+        tinia::policylibxml::getXmlPropAsType( minInclusive, "value", readMinValue );
 
         BOOST_CHECK_EQUAL( readMinValue, minValue );
     }
@@ -222,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
         BOOST_REQUIRE( xmlHasProp( maxInclusive, BAD_CAST "value" ) );
 
         int readMaxValue = 0;
-        policylibxml::getXmlPropAsType( maxInclusive, "value", readMaxValue );
+        tinia::policylibxml::getXmlPropAsType( maxInclusive, "value", readMaxValue );
         BOOST_CHECK_EQUAL( readMaxValue, maxValue );
 
     }
@@ -301,7 +301,7 @@ BOOST_FIXTURE_TEST_CASE( addMatrixElementXMLContents, AddMatrixFixture ) {
         BOOST_REQUIRE( projectionMatrix != 0 );
 
         std::string stringContents;
-        policylibxml::getXmlNodeContentAsType( projectionMatrix, stringContents );
+        tinia::policylibxml::getXmlNodeContentAsType( projectionMatrix, stringContents );
 
         vector<string> splitted;
         boost::split( splitted, stringContents, boost::is_any_of(" ") );
@@ -328,7 +328,7 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
         auto policy = doc->children;
         BOOST_REQUIRE( xmlHasProp( policy, BAD_CAST "revision" ) );
 
-        policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[0] );
+        tinia::policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[0] );
 
         xmlFreeDoc( doc );
     }
@@ -341,7 +341,7 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
         auto doc = xmlHandler.getCompleteDocument();
         auto policy = doc->children;
 
-        policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[1] );
+        tinia::policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[1] );
 
         BOOST_CHECK_GT( revisionNumbers[1], revisionNumbers[0] );
 
@@ -357,14 +357,14 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumberOnUpdate, Fixture ) {
 
     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr policy ) {
         BOOST_REQUIRE( xmlHasProp( policy, BAD_CAST "revision" ) );
-        policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[0] );
+        tinia::policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[0] );
     } );
 
     policyLib->updateElement( elementName, 64 );
 
     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr policy ) {
         BOOST_REQUIRE( xmlHasProp( policy, BAD_CAST "revision" ) );
-        policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[1] );
+        tinia::policylibxml::getXmlPropAsType( policy, "revision", revisionNumbers[1] );
     } );
 
     BOOST_CHECK_GT( revisionNumbers[1], revisionNumbers[0] );
@@ -380,7 +380,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
         auto node = xpathQuery( doc, "//" + elementName  );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
-        policylibxml::getXmlNodeContentAsType( node, readValue );
+        tinia::policylibxml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( startValue, readValue );
     } );
 
@@ -391,7 +391,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
         auto node = xpathQuery( doc, "//" + elementName );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
-        policylibxml::getXmlNodeContentAsType( node, readValue );
+        tinia::policylibxml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( updatedValue, readValue );
     } );
 }
@@ -590,7 +590,7 @@ BOOST_FIXTURE_TEST_CASE( AddAnnotationResult, AnnotationFixture ) {
         BOOST_REQUIRE( node != 0 );
 
         std::string readAnnotation;
-        policylibxml::getXmlNodeContentAsType( node, readAnnotation );
+        tinia::policylibxml::getXmlNodeContentAsType( node, readAnnotation );
         BOOST_CHECK_EQUAL( readAnnotation, annotation );
     } );
 }

@@ -1,4 +1,5 @@
 #pragma once
+namespace tinia {
 namespace jobobserver {
 class Observer
 {
@@ -18,4 +19,5 @@ protected:
 
 };
 
+}
 }

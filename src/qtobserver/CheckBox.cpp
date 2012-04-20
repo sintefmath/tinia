@@ -1,5 +1,7 @@
-#include "qtobserver/moc/CheckBox.hpp"
-#include "qtobserver/utils.hpp"
+#include "tinia/qtobserver/moc/CheckBox.hpp"
+#include "tinia/qtobserver/utils.hpp"
+
+namespace tinia {
 namespace qtobserver {
 
 CheckBox::CheckBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
@@ -35,3 +37,5 @@ void qtobserver::CheckBox::stateElementModified(policylib::StateElement *stateEl
    stateElement->getValue(checked);
    emit setCheckFromPolicy(checked);
 }
+
+} // of namespace tinia

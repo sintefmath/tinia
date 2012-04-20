@@ -1,6 +1,7 @@
 #include "tinia/jobobserver/ComputeJob.hpp"
 #include "tinia/policylib/PolicyLib.hpp"
 
+namespace tinia {
 namespace jobobserver
 {
 
@@ -89,4 +90,4 @@ ComputeJob::cleanup()
 
 
 }
-
+}

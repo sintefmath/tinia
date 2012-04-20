@@ -2,6 +2,7 @@
 #include "RenderList.hpp"
 #include "Item.hpp"
 
+namespace tinia {
 namespace librenderlist {
 
 class Image : public Item
@@ -18,3 +19,5 @@ protected:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

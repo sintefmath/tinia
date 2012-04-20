@@ -2,7 +2,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include "tinia/policylib/ElementData.hpp"
-
+using namespace tinia;
 BOOST_AUTO_TEST_SUITE( ElementData )
 
 BOOST_AUTO_TEST_CASE( gettersAndSetters ) {

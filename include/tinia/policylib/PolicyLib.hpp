@@ -71,6 +71,8 @@
 //
 /** \namespace policylib Everything in policylib resides in the policylib namespace.
   */
+
+namespace tinia {
 namespace policylib {
 
 typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
@@ -690,6 +692,7 @@ addAnnotationHelper( key, annotationMap );
 
 
 
+}
 }
 
 #endif // POLICYLIB_HPP

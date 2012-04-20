@@ -5,6 +5,7 @@
 #include "Job.hpp"
 #include "tinia/policylib/PolicyLib.hpp"
 
+namespace tinia {
 namespace Trell
 {
 
@@ -55,3 +56,4 @@ protected:
 
 
 } // of namespace Trell
+} // of namespace tinia

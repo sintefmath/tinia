@@ -1,6 +1,6 @@
 #include <tinia/librenderlist/SetUniforms.hpp>
 
-
+namespace tinia {
 namespace librenderlist {
 
 const Id
@@ -206,3 +206,4 @@ SetUniforms::setFloat4x4v( const std::string& symbol, const float *v )
 
 
 } // of namespace librenderlist
+} // of namespace tinia

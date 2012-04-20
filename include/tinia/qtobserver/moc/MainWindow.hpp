@@ -2,7 +2,7 @@
 #define QTOBSERVER_MAINWINDOW_HPP
 
 #include <QMainWindow>
-
+namespace tinia {
 namespace qtobserver {
 
 
@@ -21,4 +21,5 @@ private:
 
 
 } // namespace qtobserver
+} // namespace tinia
 #endif // QTOBSERVER_MAINWINDOW_HPP

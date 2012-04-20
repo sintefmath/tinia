@@ -9,6 +9,7 @@
 #include "testutils.hpp"
 
 using namespace std;
+using namespace tinia;
 using namespace policylib;
 
 BOOST_AUTO_TEST_SUITE( ViewerHandlingTest )

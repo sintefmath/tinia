@@ -12,6 +12,7 @@
 
 class QGLWidget;
 
+namespace tinia {
 namespace qtobserver {
 
 class GUIBuilder
@@ -86,5 +87,6 @@ private:
 
 };
 
+}
 }
 #endif // QTOBSERVER_GUIBUILDER_HPP

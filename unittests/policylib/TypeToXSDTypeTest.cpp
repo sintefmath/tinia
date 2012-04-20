@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include "tinia/policylib/TypeToXSDType.hpp"
-
+using namespace tinia;
 BOOST_AUTO_TEST_SUITE( TypeToXSDType )
 
 BOOST_AUTO_TEST_CASE( intMapping ) {

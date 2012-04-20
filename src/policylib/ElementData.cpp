@@ -9,6 +9,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
+namespace tinia {
 namespace policylib {
 const int ElementData::LENGTH_NOT_SET = -1;
 const int ElementData::MATRIX_LENGTH = 16;
@@ -338,6 +339,7 @@ bool policylib::ElementData::isComplexType() const
    return propertyTree.get() != NULL;
 }
 
+} // of namespace tinia
 
 
 

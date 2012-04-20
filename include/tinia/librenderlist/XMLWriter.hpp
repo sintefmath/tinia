@@ -3,6 +3,7 @@
 #include <sstream>
 #include <tinia/librenderlist/RenderList.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 
@@ -17,3 +18,5 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

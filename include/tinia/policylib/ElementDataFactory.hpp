@@ -10,6 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
 
+namespace tinia {
 namespace policylib {
 
 /** \class ElementDataFactory
@@ -138,5 +139,6 @@ ElementDataFactory::createMatrix( const ElementData& elementData, float* matrixD
 
 
 
+}
 }
 #endif // ELEMENTDATAFACTORY_HPP

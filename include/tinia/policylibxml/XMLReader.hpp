@@ -15,7 +15,7 @@
 
 
 
-
+namespace tinia {
 namespace policylibxml
 {
 
@@ -67,6 +67,7 @@ namespace policylibxml
 
 
 
+}
 }
 
 

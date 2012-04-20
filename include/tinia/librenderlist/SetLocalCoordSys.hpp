@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/RenderList.hpp>
 #include <tinia/librenderlist/Action.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 class SetLocalCoordSys : public Action
@@ -45,3 +46,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

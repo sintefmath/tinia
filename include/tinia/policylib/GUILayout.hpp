@@ -2,6 +2,8 @@
 #define GUILAYOUT_HPP
 #include <vector>
 #include <string>
+
+namespace tinia {
 namespace policylib {
 class GUILayout
 {
@@ -534,7 +536,7 @@ private:
 
 }
 }
-
+}
 
 
 #endif // GUILAYOUT_HPP

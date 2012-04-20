@@ -1,6 +1,8 @@
-#include "qtobserver/moc/ElementGroup.hpp"
-#include "qtobserver/utils.hpp"
+#include "tinia/qtobserver/moc/ElementGroup.hpp"
+#include "tinia/qtobserver/utils.hpp"
 #include <QHBoxLayout>
+
+namespace tinia {
 namespace qtobserver {
 
 ElementGroup::ElementGroup(std::string key, bool showLabel,
@@ -46,3 +48,6 @@ void qtobserver::ElementGroup::stateElementModified(policylib::StateElement *sta
    emit setVisibleFromPolicyLib(visible);
 */
 }
+
+} // of namespace tinia
+

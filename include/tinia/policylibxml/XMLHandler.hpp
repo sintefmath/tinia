@@ -4,6 +4,8 @@
 #include "tinia/policylibxml/XMLReader.hpp"
 #include "tinia/policylibxml/ElementHandler.hpp"
 #include <memory>
+
+namespace tinia {
 namespace policylibxml {
 class XMLHandler
 {
@@ -34,4 +36,5 @@ private:
    XMLReader m_xmlReader;
    ElementHandler m_elementHandler;
 };
+}
 }

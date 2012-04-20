@@ -1,5 +1,6 @@
-#include "qtobserver/moc/TabWidgetChildren.hpp"
+#include "tinia/qtobserver/moc/TabWidgetChildren.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 /**
@@ -13,8 +14,11 @@ TabWidgetChildren::TabWidgetChildren(std::string key,
 
 }
 
+
+
+void TabWidgetChildren::stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement)
+{
 }
 
-void qtobserver::TabWidgetChildren::stateSchemaElementModified(policylib::StateSchemaElement *stateSchemaElement)
-{
 } // namespace qtobserver
+} // namespace tinia

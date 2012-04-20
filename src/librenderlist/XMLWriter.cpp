@@ -19,6 +19,7 @@
 
 #include <tinia/librenderlist/XMLWriter.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 template<typename TYPE>
@@ -433,3 +434,4 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
 
 
 } // of librenderlist
+} // of namespace tinia

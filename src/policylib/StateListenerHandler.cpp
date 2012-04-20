@@ -1,5 +1,6 @@
 #include "tinia/policylib/StateListenerHandler.hpp"
 
+namespace tinia {
 void policylib::StateListenerHandler::addStateListener(policylib::StateListener *listener)
 {
    m_listeners.push_back(listener);
@@ -58,3 +59,4 @@ void policylib::StateListenerHandler::releaseEvents()
    }
    m_buffer.clear();
 }
+} // of namespace tinia

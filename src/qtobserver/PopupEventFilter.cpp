@@ -6,6 +6,7 @@
 #include <QPoint>
 #include <QFocusEvent>
 
+namespace tinia {
 namespace qtobserver {
 
 
@@ -73,4 +74,5 @@ PopupEventFilter::eventFilter( QObject* obj, QEvent* event )
 
 
 } // of namespace qtobserver
+} // of namespace tinia
 

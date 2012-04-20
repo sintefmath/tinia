@@ -15,7 +15,7 @@
 #include "Master.hpp"
 
 
-
+namespace tinia {
 namespace Trell {
     using std::vector;
     using std::string;
@@ -706,3 +706,4 @@ Master::getLoad()
 
 
 } // of namespace Trell
+} // of namespace tinia

@@ -6,6 +6,7 @@
 
 #include "tinia/policylib/StateSchemaListener.hpp"
 
+namespace tinia {
 namespace policylib {
 class StateSchemaListenerHandler
 {
@@ -24,5 +25,6 @@ private:
    std::list<StateSchemaListener*> m_listeners;
    std::map<std::string, std::list<StateSchemaListener*> > m_keyListeners;
 };
+}
 }
 #endif // STATESCHEMALISTENERHANDLER_HPP

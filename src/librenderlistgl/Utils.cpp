@@ -4,6 +4,7 @@
 #include <string>
 #include "Utils.hpp"
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -44,3 +45,4 @@ dumpGLFBOStatus( const std::string& log, int line, GLenum status )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

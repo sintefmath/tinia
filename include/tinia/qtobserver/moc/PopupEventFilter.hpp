@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QAbstractButton>
 
+namespace tinia {
 namespace qtobserver {
 
 class PopupEventFilter
@@ -26,3 +27,4 @@ private:
 
 
 } // of namespace qtobserver
+} // of namespace tinia

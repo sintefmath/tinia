@@ -14,6 +14,7 @@
     They are mostly intended for internal-use, but might also be convenient for
     other applications where libxml is used.
   */
+namespace tinia {
 namespace policylibxml {
 
 /** Convenience function to do simple XPath queries. */
@@ -72,7 +73,7 @@ void print(const boost::property_tree::basic_ptree<T, U> &pt) {
 
 
 }
-
+}
 #endif // UTILS_HPP
 
 

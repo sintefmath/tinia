@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/Item.hpp>
 #include <tinia/librenderlist/DataBase.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 /** Object to hold the source code for a shader program. */
@@ -72,3 +73,5 @@ protected:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

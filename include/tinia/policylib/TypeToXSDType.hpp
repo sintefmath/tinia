@@ -5,6 +5,8 @@
 #include "tinia/policylib/Viewer.hpp"
 #include "tinia/policylib/File.hpp"
 
+
+namespace tinia {
 namespace policylib {
 
 /** \class TypeToXSDType
@@ -101,6 +103,7 @@ std::string
 TypeToXSDType<T>::getTypenameDetail() {
     static_assert( sizeof(T) == 0, "By design you must add a specialization for your type." );
     return "";
+}
 }
 }
 #endif // TYPETOXSDTYPE_HPP

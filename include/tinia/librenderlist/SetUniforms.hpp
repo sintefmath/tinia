@@ -8,6 +8,7 @@
 #include <tinia/librenderlist/Shader.hpp>
 #include <tinia/librenderlist/Logger.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 /** Action that sets one or more uniform values of a shader program.
@@ -130,3 +131,5 @@ protected:
 };
 
 } // of namespace librenderlist
+} // of namespace tinia
+

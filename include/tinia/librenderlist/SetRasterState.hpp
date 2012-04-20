@@ -3,6 +3,7 @@
 #include <tinia/librenderlist/RenderList.hpp>
 #include <tinia/librenderlist/Action.hpp>
 
+namespace tinia {
 namespace librenderlist {
 
 
@@ -43,3 +44,5 @@ private:
 
 
 } // of namespace librenderlist
+} // of namespace tinia
+

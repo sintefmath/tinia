@@ -2,6 +2,7 @@
 #include "jobobserver/Job.hpp"
 #include "jobobserver/Observer.hpp"
 
+namespace tinia {
 namespace Trell
 {
 
@@ -14,3 +15,4 @@ public:
 };
 
 } // of namespace Trell
+} // of namespace tinia

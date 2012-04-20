@@ -8,6 +8,7 @@
 #include "tinia/policylib/PolicyLib.hpp"
 #include "tinia/policylib/StateListener.hpp"
 
+namespace tinia {
 namespace qtobserver {
 
 class StringController
@@ -51,4 +52,5 @@ private:
 
 
 
+}
 }

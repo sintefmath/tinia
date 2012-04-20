@@ -1,6 +1,7 @@
 #pragma once
 #include "Job.hpp"
 
+namespace tinia {
 namespace Trell
 {
 

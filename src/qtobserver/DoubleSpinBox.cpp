@@ -1,4 +1,6 @@
-#include "qtobserver/moc/DoubleSpinBox.hpp"
+#include "tinia/qtobserver/moc/DoubleSpinBox.hpp"
+
+namespace tinia {
 namespace qtobserver {
 DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib,
                  QWidget *parent) :
@@ -44,5 +46,6 @@ void qtobserver::DoubleSpinBox::stateElementModified(policylib::StateElement *st
 void qtobserver::DoubleSpinBox::valueSetFromQt(double val)
 {
    m_policyLib->updateElement(m_key, val);
+}
 }
 

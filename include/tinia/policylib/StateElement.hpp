@@ -4,6 +4,8 @@
 #include "tinia/policylib/ElementDataFactory.hpp"
 #include <boost/shared_ptr.hpp>
 #include <string>
+
+namespace tinia {
 namespace policylib {
 class StateElement
 {
@@ -32,6 +34,7 @@ void StateElement::getValue(T& t) const
 {
    // TODO: Type checking
    m_factory.createT( m_data, t );
+}
 }
 }
 #endif // STATEELEMENT_HPP

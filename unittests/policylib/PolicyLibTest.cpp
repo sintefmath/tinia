@@ -23,7 +23,7 @@
 
 
 //BOOST_AUTO_TEST_SUITE( PolicyLib )
-
+using namespace tinia;
 struct PolicyLibFixture {
    PolicyLibFixture() {}
    ~PolicyLibFixture() {}

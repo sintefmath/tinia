@@ -6,6 +6,7 @@
 #include <tinia/policylib/StateListener.hpp>
 #include <memory>
 
+namespace tinia {
 namespace qtobserver {
 // Note: This is *not* a statelistener
 class Button : public QPushButton
@@ -27,5 +28,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_BUTTON_HPP

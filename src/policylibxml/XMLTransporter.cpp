@@ -10,7 +10,7 @@
 
 
 
-
+namespace tinia {
 namespace policylibxml {
 
 using namespace std;
@@ -141,7 +141,7 @@ using namespace std;
 
 }
 
-
+}
 
 
 

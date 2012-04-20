@@ -7,6 +7,7 @@
 
 using namespace std;
 
+namespace tinia {
 namespace policylibxml {
 
 
@@ -565,9 +566,7 @@ xmlNodePtr policylibxml::XMLBuilder::addPopupButton(xmlNodePtr parent, policylib
 }
 
 
-
-
-
+}
 
 
 

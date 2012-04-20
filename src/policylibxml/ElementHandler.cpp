@@ -1,6 +1,6 @@
 #include "tinia/policylibxml/ElementHandler.hpp"
 
-
+namespace tinia {
 policylibxml::ElementHandler::ElementHandler(std::shared_ptr<policylib::PolicyLib> policyLib)
    : m_policylib(policyLib)
 {
@@ -16,4 +16,5 @@ void policylibxml::ElementHandler::updateElementFromPTree(const std::string &key
                                                           const policylib::StringStringPTree &tree)
 {
    m_policylib->updateElementFromPTree(key, tree);
+}
 }

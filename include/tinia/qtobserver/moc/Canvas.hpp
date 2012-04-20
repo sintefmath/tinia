@@ -11,6 +11,8 @@
 #include "tinia/jobobserver/OpenGLJob.hpp"
 #include "tinia/policylib/PolicyLib.hpp"
 #include "tinia/policylib/StateListener.hpp"
+
+namespace tinia {
 namespace qtobserver {
 
 class Canvas : public QGLWidget, public policylib::StateListener
@@ -61,5 +63,5 @@ private:
 };
 
 } // namespace qtobserver
-
+} // namespace tinia
 #endif // QTOBSERVER_CANVAS_HPP

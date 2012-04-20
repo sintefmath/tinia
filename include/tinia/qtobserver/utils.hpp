@@ -3,6 +3,8 @@
 #include <string>
 #include <tinia/policylib/PolicyLib.hpp>
 #include <memory>
+
+namespace tinia {
 namespace qtobserver {
 /**
   Returns the human readable name of the key (by getting the annotation).
@@ -10,5 +12,6 @@ namespace qtobserver {
   */
 std::string prettyName(std::string key, std::shared_ptr<policylib::PolicyLib> policyLib);
 
+}
 }
 #endif // UTILS_HPP

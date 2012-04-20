@@ -3,6 +3,7 @@
 #include "tinia/jobobserver/Job.hpp"
 #include "tinia/policylibxml/XMLHandler.hpp"
 
+namespace tinia {
 namespace Trell {
 
 
@@ -151,3 +152,4 @@ protected:
 
 
 }
+} // of namespace tinia

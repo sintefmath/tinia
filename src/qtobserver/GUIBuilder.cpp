@@ -26,6 +26,7 @@
 #include <QWidget>
 #include <QPushButton>
 
+namespace tinia {
 namespace qtobserver {
 
 namespace pg = policylib::gui;
@@ -575,3 +576,5 @@ QWidget * qtobserver::GUIBuilder::addFileDialogButton(policylib::gui::FileDialog
                                                     m_policyLib, parent);
    return widget;
 }
+
+} // of namespace tinia

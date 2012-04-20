@@ -3,8 +3,9 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "trell/IPCObserver.hpp"
+#include "tinia/trell/IPCObserver.hpp"
 
+namespace tinia {
 namespace Trell {
 
 /** The master job
@@ -192,3 +193,4 @@ protected:
 
 
 } // of namespace Trell
+} // of namespace tinia

@@ -2,6 +2,7 @@
 #include <string>
 #include <tinia/librenderlist/gl/RenderState.hpp>
 
+namespace tinia {
 namespace librenderlist {
 namespace gl {
 
@@ -60,3 +61,4 @@ RenderState::mat4FromPointer( const float* M )
 
 } // of namespace gl
 } // of namespace librenderlist
+} // of namespace tinia

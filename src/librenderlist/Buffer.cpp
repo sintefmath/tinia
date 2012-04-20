@@ -2,7 +2,7 @@
 #include <tinia/librenderlist/DataBase.hpp>
 #include <tinia/librenderlist/Buffer.hpp>
 
-
+namespace tinia {
 namespace librenderlist {
 
 Buffer::Buffer( Id id, DataBase &db, const std::string& name  )
@@ -94,3 +94,4 @@ Buffer::set( const int* data, size_t count )
 
 
 } // of namespace librenderlist
+} // of namespace tinia

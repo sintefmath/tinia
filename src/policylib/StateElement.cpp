@@ -1,4 +1,5 @@
 #include "tinia/policylib/StateElement.hpp"
+namespace tinia {
 policylib::StateElement::StateElement(std::string name, const ElementData &data)
    : m_name(name.c_str()), m_data(data)
 {
@@ -39,4 +40,5 @@ policylib::StateElement::PropertyTree policylib::StateElement::getPropertyTree()
    }
 
    return destPropertyTree;
+}
 }

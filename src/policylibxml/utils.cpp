@@ -3,6 +3,7 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+namespace tinia {
 namespace policylibxml {
 
 
@@ -31,7 +32,7 @@ xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression ) {
 
 }
 
-
+}
 
 
 

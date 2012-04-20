@@ -1,5 +1,6 @@
 #include "tinia/policylib/File.hpp"
 
+namespace tinia {
 namespace policylib {
 
 File::File() : m_fullPath("")
@@ -43,3 +44,4 @@ std::istream& operator>>(std::istream& stream, File& file)
 }
 
 }
+} // of namespace tinia

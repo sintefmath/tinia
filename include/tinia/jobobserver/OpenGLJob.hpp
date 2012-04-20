@@ -1,8 +1,8 @@
-#ifndef OPENGLJOB_HPP
-#define OPENGLJOB_HPP
+#pragma once
 
 #include "tinia/jobobserver/Job.hpp"
 #include <tinia/librenderlist/RenderList.hpp>
+namespace tinia {
 namespace jobobserver {
 class OpenGLJob : public Job
 {
@@ -52,6 +52,6 @@ public:
 protected:
 };
 }
+}
 
-#endif // OPENGLJOB_HPP
 
