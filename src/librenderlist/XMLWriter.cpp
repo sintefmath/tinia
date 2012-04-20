@@ -1,23 +1,23 @@
 #include <sstream>
 #include <typeinfo>
-#include <librenderlist/DataBase.hpp>
-#include <librenderlist/Action.hpp>
-#include <librenderlist/Buffer.hpp>
-#include <librenderlist/Shader.hpp>
-#include <librenderlist/Draw.hpp>
-#include <librenderlist/SetFramebufferState.hpp>
-#include <librenderlist/SetFramebuffer.hpp>
-#include <librenderlist/SetInputs.hpp>
-#include <librenderlist/SetLight.hpp>
-#include <librenderlist/SetInputs.hpp>
-#include <librenderlist/SetLocalCoordSys.hpp>
-#include <librenderlist/SetShader.hpp>
-#include <librenderlist/SetUniforms.hpp>
-#include <librenderlist/SetViewCoordSys.hpp>
-#include <librenderlist/SetPixelState.hpp>
-#include <librenderlist/SetRasterState.hpp>
+#include <tinia/librenderlist/DataBase.hpp>
+#include <tinia/librenderlist/Action.hpp>
+#include <tinia/librenderlist/Buffer.hpp>
+#include <tinia/librenderlist/Shader.hpp>
+#include <tinia/librenderlist/Draw.hpp>
+#include <tinia/librenderlist/SetFramebufferState.hpp>
+#include <tinia/librenderlist/SetFramebuffer.hpp>
+#include <tinia/librenderlist/SetInputs.hpp>
+#include <tinia/librenderlist/SetLight.hpp>
+#include <tinia/librenderlist/SetInputs.hpp>
+#include <tinia/librenderlist/SetLocalCoordSys.hpp>
+#include <tinia/librenderlist/SetShader.hpp>
+#include <tinia/librenderlist/SetUniforms.hpp>
+#include <tinia/librenderlist/SetViewCoordSys.hpp>
+#include <tinia/librenderlist/SetPixelState.hpp>
+#include <tinia/librenderlist/SetRasterState.hpp>
 
-#include <librenderlist/XMLWriter.hpp>
+#include <tinia/librenderlist/XMLWriter.hpp>
 
 namespace librenderlist {
 

@@ -1,6 +1,6 @@
-#include <librenderlist/Logger.hpp>
-#include <librenderlist/gl/RenderShader.hpp>
-#include <librenderlist/Shader.hpp>
+#include <tinia/librenderlist/Logger.hpp>
+#include <tinia/librenderlist/gl/RenderShader.hpp>
+#include <tinia/librenderlist/Shader.hpp>
 #include "Utils.hpp"
 
 namespace librenderlist {

@@ -1,6 +1,6 @@
-#include "qtobserver/moc/FileDialogButton.hpp"
+#include "tinia/qtobserver/moc/FileDialogButton.hpp"
 #include <QFileDialog>
-#include <policylib/File.hpp>
+#include <tinia/policylib/File.hpp>
 namespace qtobserver {
 FileDialogButton::FileDialogButton(std::string key,
                                    bool showValue,

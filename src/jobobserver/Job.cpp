@@ -1,4 +1,4 @@
-#include "jobobserver/Job.hpp"
+#include "tinia/jobobserver/Job.hpp"
 namespace jobobserver {
 
 Job::Job()

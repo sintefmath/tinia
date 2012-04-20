@@ -10,12 +10,12 @@
 #include <cstring>
 
 
-#include "policylib/PolicyLib.hpp"
-#include "policylib/ElementData.hpp"
-#include "policylib/StateListener.hpp"
-#include "policylib/StateSchemaListener.hpp"
-#include "policylib/GUILayout.hpp"
-#include "policylib/File.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policylib/ElementData.hpp"
+#include "tinia/policylib/StateListener.hpp"
+#include "tinia/policylib/StateSchemaListener.hpp"
+#include "tinia/policylib/GUILayout.hpp"
+#include "tinia/policylib/File.hpp"
 
 #include "testutils.hpp"
 

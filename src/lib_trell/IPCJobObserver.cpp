@@ -1,11 +1,11 @@
 #include <iostream>
 #include <cstring>
 #include "trell/IPCJobObserver.hpp"
-#include "policylib/PolicyLock.hpp"
+#include "tinia/policylib/PolicyLock.hpp"
 
 // This should not be included here, but will be fixed when interface is
 // cleaned up (that is when IPCJobObserver is rinsed of all opengl-methods)
-#include "jobobserver/OpenGLJob.hpp"
+#include "tinia/jobobserver/OpenGLJob.hpp"
 
 namespace Trell {
 

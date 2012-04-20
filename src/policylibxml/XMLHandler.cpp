@@ -1,7 +1,7 @@
-#include "policylibxml/XMLHandler.hpp"
-#include "policylib/StateElement.hpp"
-#include "policylib/StateSchemaElement.hpp"
-#include "policylibxml/XMLBuilder.hpp"
+#include "tinia/policylibxml/XMLHandler.hpp"
+#include "tinia/policylib/StateElement.hpp"
+#include "tinia/policylib/StateSchemaElement.hpp"
+#include "tinia/policylibxml/XMLBuilder.hpp"
 #define XMLDEBUG {std::cerr<< __FILE__<<__LINE__ << std::endl;}
 namespace policylibxml {
 XMLHandler::XMLHandler(std::shared_ptr<policylib::PolicyLib> policyLib)

@@ -1,7 +1,7 @@
-#include "jobobserver/Job.hpp"
-#include "jobobserver/OpenGLJob.hpp"
-#include "qtobserver/QTObserver.hpp"
-#include "qtobserver/GUIBuilder.hpp"
+#include "tinia/jobobserver/Job.hpp"
+#include "tinia/jobobserver/OpenGLJob.hpp"
+#include "tinia/qtobserver/QTObserver.hpp"
+#include "tinia/qtobserver/GUIBuilder.hpp"
 #include <QApplication>
 #include <QLayout>
 #include <QLabel>

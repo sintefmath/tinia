@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <type_traits>
 
-#include "policylib/PolicyLib.hpp"
-#include "policylib/Viewer.hpp"
-#include "policylib/utils.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policylib/Viewer.hpp"
+#include "tinia/policylib/utils.hpp"
 #include "testutils.hpp"
 
 using namespace std;

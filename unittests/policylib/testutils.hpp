@@ -1,7 +1,7 @@
 #ifndef TESTUTILS_HPP
 #define TESTUTILS_HPP
 
-#include "policylib/PolicyLib.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
 
 
 

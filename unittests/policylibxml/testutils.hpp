@@ -1,7 +1,7 @@
 #ifndef TESTUTILS_HPP
 #define TESTUTILS_HPP
 
-#include "policylibxml/XMLHandler.hpp"
+#include "tinia/policylibxml/XMLHandler.hpp"
 #include "libxml/tree.h"
 
 struct TestHelper {

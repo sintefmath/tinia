@@ -4,7 +4,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "policylibxml/XMLTransporter.hpp"
+#include "tinia/policylibxml/XMLTransporter.hpp"
 
 
 

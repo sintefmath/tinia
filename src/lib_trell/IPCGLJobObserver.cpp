@@ -1,6 +1,6 @@
 #include <iostream>
-#include <librenderlist/XMLWriter.hpp>
-#include "trell/IPCGLJobObserver.hpp"
+#include <tinia/librenderlist/XMLWriter.hpp>
+#include "tinia/trell/IPCGLJobObserver.hpp"
 
 
 namespace Trell {

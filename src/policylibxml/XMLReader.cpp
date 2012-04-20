@@ -1,6 +1,6 @@
-#include "policylibxml/XMLReader.hpp"
-//#include "policylib/PolicyLib.hpp"
-#include "policylibxml/utils.hpp"
+#include "tinia/policylibxml/XMLReader.hpp"
+//#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policylibxml/utils.hpp"
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>

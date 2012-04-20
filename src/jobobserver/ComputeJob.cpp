@@ -1,5 +1,5 @@
-#include "jobobserver/ComputeJob.hpp"
-#include "policylib/PolicyLib.hpp"
+#include "tinia/jobobserver/ComputeJob.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
 
 namespace jobobserver
 {

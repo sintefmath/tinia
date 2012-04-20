@@ -1,10 +1,10 @@
 #include <iostream>
 #include <string>
-#include <librenderlist/Logger.hpp>
-#include <librenderlist/SetInputs.hpp>
-#include <librenderlist/gl/RenderSetInputs.hpp>
-#include <librenderlist/gl/RenderShader.hpp>
-#include <librenderlist/gl/RenderBuffer.hpp>
+#include <tinia/librenderlist/Logger.hpp>
+#include <tinia/librenderlist/SetInputs.hpp>
+#include <tinia/librenderlist/gl/RenderSetInputs.hpp>
+#include <tinia/librenderlist/gl/RenderShader.hpp>
+#include <tinia/librenderlist/gl/RenderBuffer.hpp>
 #include "Utils.hpp"
 
 namespace librenderlist {

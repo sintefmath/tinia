@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include "policylib/TypeToXSDType.hpp"
+#include "tinia/policylib/TypeToXSDType.hpp"
 
 BOOST_AUTO_TEST_SUITE( TypeToXSDType )
 

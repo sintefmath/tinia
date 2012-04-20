@@ -1,5 +1,5 @@
 #include <boost/test/unit_test.hpp>
-#include "jobobserver/Job.hpp"
+#include "tinia/jobobserver/Job.hpp"
 #include <memory>
 using namespace jobobserver;
 class JobFixture : Job {

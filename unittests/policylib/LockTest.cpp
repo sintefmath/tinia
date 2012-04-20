@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
-#include "policylib/PolicyLib.hpp"
-#include "policylib/PolicyLock.hpp"
-#include "policylib/StateListener.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policylib/PolicyLock.hpp"
+#include "tinia/policylib/StateListener.hpp"
 #include <memory>
 
 class PolicyLibListenerFixture : policylib::StateListener

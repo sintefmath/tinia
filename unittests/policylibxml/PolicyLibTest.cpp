@@ -16,13 +16,13 @@
 #include <libxml/xpathInternals.h>
 
 
-#include "policylib/PolicyLib.hpp"
-#include "policylib/ElementData.hpp"
-#include "policylibxml/XMLTransporter.hpp"
-#include "policylibxml/XMLReader.hpp"
-#include "policylibxml/utils.hpp"
-#include "policylibxml/XMLHandler.hpp"
-#include "policylibxml/ElementHandler.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
+#include "tinia/policylib/ElementData.hpp"
+#include "tinia/policylibxml/XMLTransporter.hpp"
+#include "tinia/policylibxml/XMLReader.hpp"
+#include "tinia/policylibxml/utils.hpp"
+#include "tinia/policylibxml/XMLHandler.hpp"
+#include "tinia/policylibxml/ElementHandler.hpp"
 
 #include "testutils.hpp"
 

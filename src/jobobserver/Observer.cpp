@@ -1,4 +1,4 @@
-#include "jobobserver/Observer.hpp"
+#include "tinia/jobobserver/Observer.hpp"
 namespace jobobserver
 {
 

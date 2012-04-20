@@ -1,7 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/property_tree/ptree.hpp>
-#include "policylib/ElementData.hpp"
+#include "tinia/policylib/ElementData.hpp"
 
 BOOST_AUTO_TEST_SUITE( ElementData )
 

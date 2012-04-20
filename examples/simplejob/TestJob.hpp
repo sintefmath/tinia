@@ -1,8 +1,8 @@
 #pragma once
 #include <GL/glew.h>
-#include <librenderlist/DataBase.hpp>
-#include "jobobserver/OpenGLJob.hpp"
-#include "policylib/StateListener.hpp"
+#include <tinia/librenderlist/DataBase.hpp>
+#include "tinia/jobobserver/OpenGLJob.hpp"
+#include "tinia/policylib/StateListener.hpp"
 class TestJob : public jobobserver::OpenGLJob, public policylib::StateListener
 {
 public:

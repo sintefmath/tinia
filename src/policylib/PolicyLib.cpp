@@ -1,4 +1,4 @@
-#include "policylib/PolicyLib.hpp"
+#include "tinia/policylib/PolicyLib.hpp"
 
 #include <algorithm>
 #include <unordered_map>
@@ -11,9 +11,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "policylib/Viewer.hpp"
+#include "tinia/policylib/Viewer.hpp"
 
-#include "policylib/utils.hpp"
+#include "tinia/policylib/utils.hpp"
 
 namespace policylib {
 

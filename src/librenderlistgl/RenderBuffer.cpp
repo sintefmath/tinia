@@ -1,6 +1,6 @@
-#include <librenderlist/Logger.hpp>
-#include <librenderlist/gl/RenderBuffer.hpp>
-#include <librenderlist/Buffer.hpp>
+#include <tinia/librenderlist/Logger.hpp>
+#include <tinia/librenderlist/gl/RenderBuffer.hpp>
+#include <tinia/librenderlist/Buffer.hpp>
 #include "Utils.hpp"
 
 namespace librenderlist {

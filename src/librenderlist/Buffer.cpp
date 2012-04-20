@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <librenderlist/DataBase.hpp>
-#include <librenderlist/Buffer.hpp>
+#include <tinia/librenderlist/DataBase.hpp>
+#include <tinia/librenderlist/Buffer.hpp>
 
 
 namespace librenderlist {

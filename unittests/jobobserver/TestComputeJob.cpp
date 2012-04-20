@@ -1,4 +1,4 @@
-#include "jobobserver/ComputeJob.hpp"
+#include "tinia/jobobserver/ComputeJob.hpp"
 #include <boost/test/unit_test.hpp>
 
 class TestComputeJob1 : public jobobserver::ComputeJob

@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <librenderlist/Logger.hpp>
-#include <librenderlist/SetUniforms.hpp>
-#include <librenderlist/gl/RenderShader.hpp>
-#include <librenderlist/gl/RenderSetUniforms.hpp>
-#include <librenderlist/gl/RenderState.hpp>
+#include <tinia/librenderlist/Logger.hpp>
+#include <tinia/librenderlist/SetUniforms.hpp>
+#include <tinia/librenderlist/gl/RenderShader.hpp>
+#include <tinia/librenderlist/gl/RenderSetUniforms.hpp>
+#include <tinia/librenderlist/gl/RenderState.hpp>
 #include "Utils.hpp"
 
 namespace librenderlist {

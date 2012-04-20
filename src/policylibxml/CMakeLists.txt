@@ -1,5 +1,5 @@
 FILE( GLOB policyLibXmlSrc "*.cpp" )
-FILE( GLOB policylibXmlHeaders "../../include/policylibxml/*.hpp" )
+FILE( GLOB policylibXmlHeaders "../../include/tinia/policylibxml/*.hpp" )
 
 SET( CPACK_GENERATOR "DEB" )
 SET( CPACK_PACKAGE_NAME "policylibxml" )
@@ -11,14 +11,14 @@ SET( CPACK_COMPONENT_HEADERS_DEPENDS libraries )
 SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
 include ( CPack )
 
-ADD_LIBRARY( policyLibXml SHARED ${policyLibXmlSrc} )
+ADD_LIBRARY( policyLibXml SHARED ${policyLibXmlSrc} ${policyLibXmlHeaders})
 
 TARGET_LINK_LIBRARIES( policyLibXml ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES})
 
 IF(NOT WIN32)
   install( FILES 
     ${policyLibXmlHeaders} 
-    DESTINATION include/policylibxml
+    DESTINATION include/tinia/policylibxml
     COMPONENT policylibxml-dev)
   install( TARGETS  
     policyLibXml LIBRARY 

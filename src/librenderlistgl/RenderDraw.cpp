@@ -1,9 +1,9 @@
 #include <iostream>
-#include <librenderlist/Logger.hpp>
-#include <librenderlist/Draw.hpp>
-#include <librenderlist/gl/RenderDraw.hpp>
-#include <librenderlist/gl/Renderer.hpp>
-#include <librenderlist/gl/RenderBuffer.hpp>
+#include <tinia/librenderlist/Logger.hpp>
+#include <tinia/librenderlist/Draw.hpp>
+#include <tinia/librenderlist/gl/RenderDraw.hpp>
+#include <tinia/librenderlist/gl/Renderer.hpp>
+#include <tinia/librenderlist/gl/RenderBuffer.hpp>
 #include "Utils.hpp"
 
 namespace librenderlist {
