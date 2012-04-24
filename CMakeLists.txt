@@ -114,6 +114,7 @@ include_directories( "./include"
   ${APR_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
+  ${BOOST_INCLUDE_DIRS}
 )
 
 ADD_SUBDIRECTORY( "src/policy" )
