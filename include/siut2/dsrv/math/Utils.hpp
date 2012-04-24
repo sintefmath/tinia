@@ -1,8 +1,12 @@
 /* -*- mode: C++; tab-width:4; c-basic-offset: 4; indent-tabs-mode:nil -*- */
 #pragma once
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+//for Win32
+#ifndef M_2_PI
+#define M_2_PI 1.57079632679489661923
+#endif
 
 namespace siut2 {
 namespace dsrv{
