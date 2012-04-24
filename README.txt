@@ -1,6 +1,14 @@
-Simple test of the git-system in RhodeCode,
-and a file that will be needed later anyways..
+ON LINUX
+To compile, simply issue the following commands:
+   mkdir build
+   cd build
+   cmake ..
+   make 
 
-And now adding a second line to see how the system will handle that.
+To validate, see if examples/simplejob/simple_qt_job starts.
 
-Since it works fine from Explorer when pushing to specified external URL, how about default behaviour...
+To install:
+   make package
+   sudo dpkg -i tinia-0.0.0-Linux.deb
+
+(This might take a while, as it also downloads some javascript components)
