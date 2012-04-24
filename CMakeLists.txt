@@ -7,7 +7,7 @@ ELSE()
   OPTION( SERVER "Build mod_trell and related components?" OFF)
 ENDIF()
 
-OPTION( DEKSTOP "Build QtObserver?" ON)
+OPTION( DESKTOP "Build QtObserver?" ON)
 
 
 OPTION( EXTEND_CMAKE_MODULE_PATH
