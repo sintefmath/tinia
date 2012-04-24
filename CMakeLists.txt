@@ -1,7 +1,14 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
-OPTION( TRELL "Build mod_trell and related components?" ON) 
+IF(NOT WIN32)
+  OPTION( SERVER "Build mod_trell and related components?" ON)
+ELSE()
+  OPTION( SERVER "Build mod_trell and related components?" OFF)
+ENDIF()
+
+OPTION( DEKSTOP "Build QtObserver?" ON)
+
 
 OPTION( EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
@@ -59,34 +66,37 @@ ENDIF()
 FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread  date_time test_exec_monitor)
 
 ##### QT #####
-FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML REQUIRED)
-INCLUDE(${QT_USE_FILE})
-SET(QT_USE_QTOPENGL TRUE)
-SET(QT_USE_QTXML TRUE)
-QT4_WRAP_CPP(qtobserver_HEADERS_MOC ${qtobserver_SOURCES_TO_BE_MOCED} ${qtobserver_SOURCES})
-QT4_WRAP_UI(qtobserver_FORMS_HEADERS ${qtobserver_FORMS})
-ADD_DEFINITIONS(${QT_DEFINITIONS})
-ADD_DEFINITIONS(-DQT_SHARED)
+IF(${DESKTOP})
+  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML REQUIRED)
+  INCLUDE(${QT_USE_FILE})
+  SET(QT_USE_QTOPENGL TRUE)
+  SET(QT_USE_QTXML TRUE)
+  QT4_WRAP_CPP(qtobserver_HEADERS_MOC ${qtobserver_SOURCES_TO_BE_MOCED} ${qtobserver_SOURCES})
+  QT4_WRAP_UI(qtobserver_FORMS_HEADERS ${qtobserver_FORMS})
+  ADD_DEFINITIONS(${QT_DEFINITIONS})
+  ADD_DEFINITIONS(-DQT_SHARED)
+ENDIF()
+
 
 ##### OPENGL #####
 FIND_PACKAGE( OpenGL REQUIRED )
 FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
-FIND_PACKAGE( Freeglut REQUIRED )
 
+IF(${SERVER})
+  FIND_LIBRARY( RT
+    NAMES rt
+    PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
+    )
 
-FIND_LIBRARY( RT
-      NAMES rt
-      PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
-      )
-
-FIND_LIBRARY(LIB_APR
-  NAMES apr-1
-  PATHS "/usr/lib/"
-)
-SET(APACHE_INCLUDE_DIR "/usr/include/apache2")
-SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
-  "/usr/include/apr-1")
+  FIND_LIBRARY(LIB_APR
+    NAMES apr-1
+    PATHS "/usr/lib/"
+    )
+  SET(APACHE_INCLUDE_DIR "/usr/include/apache2")
+  SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
+    "/usr/include/apr-1")
+ENDIF()
 
 include_directories( "./include" 
   ${LIBXML2_INCLUDE_DIR}
@@ -94,21 +104,31 @@ include_directories( "./include"
   ${GLM_INCLUDE_DIR}
   ${APACHE_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR}
+  ${QT_QTOPENGL_INCLUDE_DIR}
 )
 
 ADD_SUBDIRECTORY( "src/policy" )
-ADD_SUBDIRECTORY( "src/policyxml" )
+IF(${SERVER})
+  ADD_SUBDIRECTORY( "src/policyxml" )
+ENDIF()
 ADD_SUBDIRECTORY( "src/librenderlist" )
 ADD_SUBDIRECTORY( "src/librenderlistgl" )
 ADD_SUBDIRECTORY( "src/jobobserver" )
-ADD_SUBDIRECTORY( "src/qtobserver" )
-ADD_SUBDIRECTORY( "src/lib_trell" )
-ADD_SUBDIRECTORY( "src/mod_trell" )
-ADD_SUBDIRECTORY( "src/trell_master" )
+IF(${DESKTOP})
+  ADD_SUBDIRECTORY( "src/qtobserver" )
+ENDIF()
+IF(${SERVER})
+  ADD_SUBDIRECTORY( "src/lib_trell" )
+  ADD_SUBDIRECTORY( "src/mod_trell" )
+  ADD_SUBDIRECTORY( "src/trell_master" )
+ENDIF()
 
 # Unit tests
 ADD_SUBDIRECTORY( "unittests/policy/" )
-ADD_SUBDIRECTORY( "unittests/policyxml/" )
+IF(${SERVER})
+  ADD_SUBDIRECTORY( "unittests/policyxml/" )
+ENDIF()
 ADD_SUBDIRECTORY( "unittests/librenderlist/" )
 ADD_SUBDIRECTORY( "unittests/jobobserver/" )
 
@@ -119,7 +139,7 @@ ADD_SUBDIRECTORY( "examples/simplejob" )
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
 SET( CPACK_GENERATOR "DEB" )
-SET(CPACK_MONOLITHIC_INSTALL 1)
+SET( CPACK_MONOLITHIC_INSTALL 1)
 SET( CPACK_PACKAGE_VERSION ${version_number} )
 SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
 SET( CPACK_COMPONENTS_ALL 
@@ -139,7 +159,6 @@ SET( CPACK_COMPONENTS_ALL
   libtrell-dev
   mod_trell
   )
-SET( CPACK_COMPONENT_POLICYLIB_HEADERS_DEPENDS policylib_libraries )
 SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
 SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
 include ( CPack )
