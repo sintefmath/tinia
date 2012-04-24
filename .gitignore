@@ -1,0 +1,13 @@
+*.user
+*.sdf
+*~
+/Tinia.suo
+/msvc/jobobserver/Debug
+/msvc/jobobserver/Release
+/msvc/policy/Debug
+/msvc/policy/Release
+/msvc/qtobserver/Release
+/msvc/qtobserver/Debug
+/msvc/qtobserver/GeneratedFiles
+/msvc/renderlist/Release
+/msvc/renderlist/Debug

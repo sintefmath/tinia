@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Distribute|Win32">
+      <Configuration>Distribute</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Package|Win32">
+      <Configuration>Package</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9B784825-66F1-4DB3-A3F4-A13E67B2643B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Policy</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)\lib\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)\lib\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(PolicyLib_BOOST_INC_PATH);</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(PolicyLib_BOOST_LIB_PATH);</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(PolicyLib_BOOST_INC_PATH);</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(PolicyLib_BOOST_LIB_PATH);</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\tinia\policy\ElementData.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\ElementDataFactory.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\File.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\GUIElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\Policy.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\PolicyLock.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateSchemaElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\TypeToXSDType.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\utils.hpp" />
+    <ClInclude Include="..\..\include\tinia\policy\Viewer.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\policy\ElementData.cpp" />
+    <ClCompile Include="..\..\src\policy\File.cpp" />
+    <ClCompile Include="..\..\src\policy\Policy.cpp" />
+    <ClCompile Include="..\..\src\policy\PolicyLock.cpp" />
+    <ClCompile Include="..\..\src\policy\StateElement.cpp" />
+    <ClCompile Include="..\..\src\policy\StateListener.cpp" />
+    <ClCompile Include="..\..\src\policy\StateListenerHandler.cpp" />
+    <ClCompile Include="..\..\src\policy\StateSchemaElement.cpp" />
+    <ClCompile Include="..\..\src\policy\StateSchemaListener.cpp" />
+    <ClCompile Include="..\..\src\policy\StateSchemaListenerHandler.cpp" />
+    <ClCompile Include="..\..\src\policy\utils.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

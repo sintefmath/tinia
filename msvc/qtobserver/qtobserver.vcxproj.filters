@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\src\qtobserver\Button.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\GUIBuilder.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\Canvas.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\CheckBox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\ComboBox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\DoubleSpinBox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\ElementGroup.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\EnabledController.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\FileDialogButton.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\HorizontalSlider.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\MainWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_Button.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_VisibilityController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_Button.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_Canvas.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_Canvas.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_CheckBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_CheckBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ComboBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ComboBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_DoubleSpinBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_DoubleSpinBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_ElementGroup.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_ElementGroup.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_EnabledController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_EnabledController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_FileDialogButton.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_FileDialogButton.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_HorizontalSlider.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_HorizontalSlider.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_MainWindow.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_MainWindow.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_PopupEventFilter.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_PopupEventFilter.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_RadioButton.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_RadioButton.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_RadioButtonGroup.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_RadioButtonGroup.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_RadioButtons.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_RadioButtons.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_SpinBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_SpinBox.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_StringController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_StringController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_TabWidgetChildren.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_TabWidgetChildren.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_VisibilityController.cpp">
+      <Filter>GeneratedFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\PopupEventFilter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\QTObserver.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\RadioButton.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\RadioButtonGroup.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\RadioButtons.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\SpinBox.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\StringController.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\TabWidgetChildren.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\utils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\qtobserver\VisibilityController.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\tinia\qtobserver\GUIBuilder.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tinia\qtobserver\QTObserver.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\tinia\qtobserver\utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\Button.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\Canvas.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\CheckBox.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\ComboBox.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\DoubleSpinBox.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\ElementGroup.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\EnabledController.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\FileDialogButton.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\MainWindow.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\HorizontalSlider.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\PopupEventFilter.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\VisibilityController.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\RadioButton.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\RadioButtonGroup.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\RadioButtons.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\SpinBox.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\StringController.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\include\tinia\qtobserver\moc\TabWidgetChildren.hpp">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+      <ParseFiles>true</ParseFiles>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{3ad68fea-60d1-4829-a37f-188b1907f75e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GeneratedFiles">
+      <UniqueIdentifier>{29b8ec96-b96f-417d-998c-aa7b407f27f7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

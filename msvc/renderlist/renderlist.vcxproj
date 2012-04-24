@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Distribute|Win32">
+      <Configuration>Distribute</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Package|Win32">
+      <Configuration>Package</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\tinia\renderlist\Action.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Buffer.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\DataBase.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Draw.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderBuffer.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderDraw.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\Renderer.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderSetInputs.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderSetLocalCoordSys.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderSetShader.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderSetUniforms.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderShader.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\gl\RenderState.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Image.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Item.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Logger.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\RenderList.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetFramebuffer.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetFramebufferState.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetInputs.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetLight.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetLocalCoordSys.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetPixelState.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetRasterState.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetShader.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetUniforms.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\SetViewCoordSys.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\Shader.hpp" />
+    <ClInclude Include="..\..\include\tinia\renderlist\XMLWriter.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\librenderlistgl\RenderBuffer.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderDraw.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\Renderer.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderSetInputs.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderSetShader.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderSetUniforms.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderShader.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\RenderState.cpp" />
+    <ClCompile Include="..\..\src\librenderlistgl\Utils.cpp" />
+    <ClCompile Include="..\..\src\librenderlist\Buffer.cpp" />
+    <ClCompile Include="..\..\src\librenderlist\DataBase.cpp" />
+    <ClCompile Include="..\..\src\librenderlist\RenderList.cpp" />
+    <ClCompile Include="..\..\src\librenderlist\SetUniforms.cpp" />
+    <ClInclude Include="..\..\src\librenderlistgl\Utils.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B0DEAA56-B73E-44D9-B7FE-4354AB4368C5}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>librenderlist</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\lib\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)\lib\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(PolicyLib_BOOST_INC_PATH);$(PolicyLib_GLM_INC_PATH);$(PolicyLib_GLEW_INC_PATH)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(PolicyLib_BOOST_INC_PATH);$(PolicyLib_GLM_INC_PATH);$(PolicyLib_GLEW_INC_PATH)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
