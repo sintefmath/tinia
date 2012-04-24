@@ -14,4 +14,11 @@ IF(NOT WIN32)
     jobobserver LIBRARY 
     DESTINATION lib/ 
     COMPONENT jobobserver)
+ELSE()
+  INSTALL(DIRECTORY include/tinia/jobobserver
+    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN ".git" EXCLUDE)
+  INSTALL(TARGETS jobobserver
+    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()

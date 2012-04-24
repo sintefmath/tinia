@@ -18,4 +18,11 @@ IF(NOT WIN32)
     policy LIBRARY 
     DESTINATION lib/ 
     COMPONENT policy)
+ELSE()
+ INSTALL(DIRECTORY include/tinia/policy
+    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN ".git" EXCLUDE)
+  INSTALL(TARGETS policy
+    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()

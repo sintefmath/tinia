@@ -12,4 +12,11 @@ IF(NOT WIN32)
     renderlist ARCHIVE
     DESTINATION lib/ 
     COMPONENT renderlist)
+ELSE()
+ INSTALL(DIRECTORY include/tinia/renderlist
+    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN ".git" EXCLUDE)
+  INSTALL(TARGETS renderlist
+    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()

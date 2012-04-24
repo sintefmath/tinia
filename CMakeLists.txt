@@ -24,6 +24,14 @@ IF( EXTEND_CMAKE_MODULE_PATH )
                            "../siut"
                            "."
     )
+
+
+IF(WIN32)
+  SET(CMAKE_INSTALL_PREFIX CACHE INTERNAL "")
+  SET(tinia_INSTALL_PREFIX
+    "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia"
+    CACHE PATH "Path to install tinia")
+ENDIF()
 ENDIF( EXTEND_CMAKE_MODULE_PATH )
 
 SET( revision $ENV{GIT_REVISION} )

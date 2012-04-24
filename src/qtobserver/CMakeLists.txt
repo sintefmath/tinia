@@ -44,4 +44,11 @@ IF(NOT WIN32)
   install( FILES ${qtobserver_HEADERS_MOC} ${qtobserver_SOURCES_TO_BE_MOCED}
     DESTINATION include/tinia/qtobserver/moc  COMPONENT qtobserver-dev)
   install( TARGETS QtObserver LIBRARY DESTINATION lib/ COMPONENT qtobserver)
+ELSE()
+ INSTALL(DIRECTORY include/tinia/qtobserver
+    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    FILES_MATCHING PATTERN "*.hpp"
+    PATTERN ".git" EXCLUDE)
+  INSTALL(TARGETS QtObserver
+    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()
