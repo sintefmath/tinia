@@ -9,21 +9,21 @@ QT4_WRAP_CPP(qtobserver_HEADERS_MOC ${qtobserver_SOURCES_TO_BE_MOCED} ${qtobserv
 QT4_WRAP_UI(qtobserver_FORMS_HEADERS ${qtobserver_FORMS})
 
 IF(NOT WIN32)
-  add_library( QtObserver SHARED
+  add_library( qtobserver SHARED
     ${qtobserver_HEADERS}
     ${qtobserver_SOURCES}
     ${qtobserver_HEADERS_MOC}
     ${qtobserver_FORMS_HEADERS}
     )
 ELSE()
-  add_library( QtObserver
+  add_library( qtobserver
     ${qtobserver_HEADERS}
     ${qtobserver_SOURCES}
     ${qtobserver_HEADERS_MOC}
     ${qtobserver_FORMS_HEADERS}
     )
 ENDIF()
-target_link_libraries ( QtObserver
+target_link_libraries ( qtobserver
     renderlist
     renderlistgl
     policy
@@ -43,12 +43,12 @@ IF(NOT WIN32)
     DESTINATION include/tinia/qtobserver  COMPONENT qtobserver-dev)
   install( FILES ${qtobserver_HEADERS_MOC} ${qtobserver_SOURCES_TO_BE_MOCED}
     DESTINATION include/tinia/qtobserver/moc  COMPONENT qtobserver-dev)
-  install( TARGETS QtObserver LIBRARY DESTINATION lib/ COMPONENT qtobserver)
+  install( TARGETS qtobserver LIBRARY DESTINATION lib/ COMPONENT qtobserver)
 ELSE()
  INSTALL(DIRECTORY include/tinia/qtobserver
     DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS QtObserver
+  INSTALL(TARGETS qtobserver
     DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()

@@ -90,7 +90,7 @@ void qtobserver::Canvas::paintGL()
         }
         else {
             if( m_renderlist_renderer == NULL ) {
-                m_renderlist_renderer = new librenderlist::gl::Renderer( *m_renderlist_db );
+                m_renderlist_renderer = new renderlist::gl::Renderer( *m_renderlist_db );
             }
 
             policy::Viewer viewer;

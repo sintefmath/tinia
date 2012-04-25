@@ -6,7 +6,7 @@ IF(${DESKTOP})
     ${test_job_HEADERS}
     )
   TARGET_LINK_LIBRARIES(simple_qt_job
-    QtObserver
+    qtobserver
     renderlist
     renderlistgl
     ${QT_LIBRARIES}
@@ -37,7 +37,7 @@ IF(${SERVER})
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
     policy 
-    policyXml
+    policyxml
     renderlist
     renderlistgl
     jobobserver

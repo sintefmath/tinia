@@ -1,17 +1,17 @@
 #include <GL/glew.h>
-#include <tinia/librenderlist/Buffer.hpp>
-#include <tinia/librenderlist/Draw.hpp>
-#include <tinia/librenderlist/SetViewCoordSys.hpp>
-#include <tinia/librenderlist/Shader.hpp>
-#include <tinia/librenderlist/SetShader.hpp>
-#include <tinia/librenderlist/SetInputs.hpp>
-#include <tinia/librenderlist/SetUniforms.hpp>
-#include <tinia/librenderlist/SetLight.hpp>
-#include <tinia/librenderlist/SetLocalCoordSys.hpp>
-#include <tinia/librenderlist/SetFramebuffer.hpp>
-#include <tinia/librenderlist/SetFramebufferState.hpp>
-#include <tinia/librenderlist/SetPixelState.hpp>
-#include <tinia/librenderlist/SetRasterState.hpp>
+#include <tinia/renderlist/Buffer.hpp>
+#include <tinia/renderlist/Draw.hpp>
+#include <tinia/renderlist/SetViewCoordSys.hpp>
+#include <tinia/renderlist/Shader.hpp>
+#include <tinia/renderlist/SetShader.hpp>
+#include <tinia/renderlist/SetInputs.hpp>
+#include <tinia/renderlist/SetUniforms.hpp>
+#include <tinia/renderlist/SetLight.hpp>
+#include <tinia/renderlist/SetLocalCoordSys.hpp>
+#include <tinia/renderlist/SetFramebuffer.hpp>
+#include <tinia/renderlist/SetFramebufferState.hpp>
+#include <tinia/renderlist/SetPixelState.hpp>
+#include <tinia/renderlist/SetRasterState.hpp>
 
 #include "TestJob.hpp"
 #include "tinia/policy/GUILayout.hpp"
@@ -158,8 +158,8 @@ bool TestJob::init()
        1.f, 0.f, 1.f,  1.f, 1.f, 1.f,
    };
    m_renderlist_db.createBuffer( "wire_cube_pos" )->set( wire_cube_pos, 12*2*3 );
-   m_renderlist_db.createAction<tinia::librenderlist::Draw>( "wire_cube_draw" )
-           ->setNonIndexed( tinia::librenderlist::PRIMITIVE_LINES, 0, 12*2 );
+   m_renderlist_db.createAction<tinia::renderlist::Draw>( "wire_cube_draw" )
+           ->setNonIndexed( tinia::renderlist::PRIMITIVE_LINES, 0, 12*2 );
    // Solid color shader
    std::string solid_vs =
            "uniform mat4 MVP;\n"
@@ -182,20 +182,20 @@ bool TestJob::init()
    m_renderlist_db.createShader( "solid" )
            ->setVertexStage( solid_vs )
            ->setFragmentStage( solid_fs );
-   m_renderlist_db.createAction<tinia::librenderlist::SetShader>( "solid_use" )
+   m_renderlist_db.createAction<tinia::renderlist::SetShader>( "solid_use" )
            ->setShader( "solid" );
-   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_orient" )
+   m_renderlist_db.createAction<tinia::renderlist::SetUniforms>( "solid_orient" )
            ->setShader( "solid" )
-           ->setSemantic( "MVP", tinia::librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
-   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_white" )
+           ->setSemantic( "MVP", tinia::renderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
+   m_renderlist_db.createAction<tinia::renderlist::SetUniforms>( "solid_white" )
            ->setShader( "solid" )
            ->setFloat3( "color", 1.f, 1.f, 1.f );
-   m_renderlist_db.createAction<tinia::librenderlist::SetUniforms>( "solid_green" )
+   m_renderlist_db.createAction<tinia::renderlist::SetUniforms>( "solid_green" )
            ->setShader( "solid" )
            ->setFloat3( "color", 0.f, 1.f, 0.f );
 
    // Combine the wire cube geometry with the solid shader
-   m_renderlist_db.createAction<tinia::librenderlist::SetInputs>( "solid_wire_cube_input" )
+   m_renderlist_db.createAction<tinia::renderlist::SetInputs>( "solid_wire_cube_input" )
            ->setShader( "solid" )
            ->setInput( "position", "wire_cube_pos", 3 );
 
@@ -212,7 +212,7 @@ bool TestJob::init()
        0.f,  0.f,  0.5f,  1.0f,
        0.f,  0.f,  0.f,   1.f,
    };
-   m_renderlist_db.createAction<tinia::librenderlist::SetLocalCoordSys>( "shape0_pos" )
+   m_renderlist_db.createAction<tinia::renderlist::SetLocalCoordSys>( "shape0_pos" )
            ->setOrientation( shape0_from_world, shape0_to_world );
 
    float shape1_to_world[16] = {
@@ -227,7 +227,7 @@ bool TestJob::init()
        0.f,  0.f,  1.f,  0.5f,
        0.f,  0.f,  0.f,   1.f,
    };
-   m_renderlist_db.createAction<tinia::librenderlist::SetLocalCoordSys>( "shape1_pos" )
+   m_renderlist_db.createAction<tinia::renderlist::SetLocalCoordSys>( "shape1_pos" )
            ->setOrientation( shape1_from_world, shape1_to_world );
 
    // Set up draw order
@@ -348,7 +348,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     return true;
 }
 
-const tinia::librenderlist::DataBase*
+const tinia::renderlist::DataBase*
 TestJob::getRenderList( const std::string& session, const std::string& key )
 {
     return &m_renderlist_db;

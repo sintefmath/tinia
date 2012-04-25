@@ -9,7 +9,7 @@ SET( MOD_TRELL_SRC
     "mod_trell_send_xml.c"
     "mod_trell_send_file.c"
     "mod_trell_url_decode.c"
-    "../lib_trell/messenger.c"
+    "../trell/messenger.c"
 )
 
 ADD_LIBRARY( mod_trell SHARED ${MOD_TRELL_SRC} )

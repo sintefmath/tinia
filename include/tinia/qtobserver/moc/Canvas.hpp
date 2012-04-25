@@ -6,7 +6,7 @@
 #include <QString>
 #include <QTime>
 #include <QTimer>
-#include <tinia/librenderlist/gl/Renderer.hpp>
+#include <tinia/renderlist/gl/Renderer.hpp>
 #include <siut2/dsrv/DSRViewer.hpp>
 #include "tinia/jobobserver/OpenGLJob.hpp"
 #include "tinia/policy/Policy.hpp"
@@ -58,8 +58,8 @@ private:
    unsigned int            m_frames;
    QTimer*                 m_redraw_timer;
    int                              m_render_mode;
-   const librenderlist::DataBase*   m_renderlist_db;
-   librenderlist::gl::Renderer*     m_renderlist_renderer;
+   const renderlist::DataBase*   m_renderlist_db;
+   renderlist::gl::Renderer*     m_renderlist_renderer;
 };
 
 } // namespace qtobserver

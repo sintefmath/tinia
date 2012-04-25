@@ -4,22 +4,22 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <siut2/dsrv/FreeglutWindow.h>
-#include <librenderlist/gl/Renderer.hpp>
-#include <librenderlist/DataBase.hpp>
-#include <librenderlist/XMLWriter.hpp>
-#include <librenderlist/Buffer.hpp>
-#include <librenderlist/Draw.hpp>
-#include <librenderlist/SetViewCoordSys.hpp>
-#include <librenderlist/Shader.hpp>
-#include <librenderlist/SetShader.hpp>
-#include <librenderlist/SetInputs.hpp>
-#include <librenderlist/SetUniforms.hpp>
-#include <librenderlist/SetLight.hpp>
-#include <librenderlist/SetLocalCoordSys.hpp>
-#include <librenderlist/SetFramebuffer.hpp>
-#include <librenderlist/SetFramebufferState.hpp>
-#include <librenderlist/SetPixelState.hpp>
-#include <librenderlist/SetRasterState.hpp>
+#include <renderlist/gl/Renderer.hpp>
+#include <renderlist/DataBase.hpp>
+#include <renderlist/XMLWriter.hpp>
+#include <renderlist/Buffer.hpp>
+#include <renderlist/Draw.hpp>
+#include <renderlist/SetViewCoordSys.hpp>
+#include <renderlist/Shader.hpp>
+#include <renderlist/SetShader.hpp>
+#include <renderlist/SetInputs.hpp>
+#include <renderlist/SetUniforms.hpp>
+#include <renderlist/SetLight.hpp>
+#include <renderlist/SetLocalCoordSys.hpp>
+#include <renderlist/SetFramebuffer.hpp>
+#include <renderlist/SetFramebufferState.hpp>
+#include <renderlist/SetPixelState.hpp>
+#include <renderlist/SetRasterState.hpp>
 
 class RenderListViewer : public siut2::dsrv::FreeglutWindow
 {
@@ -58,8 +58,8 @@ public:
             1.f, 0.f, 0.f
         };
         m_db.createBuffer( "line_triangle_pos" )->set( lines, 3*3 );
-        m_db.createAction<librenderlist::Draw>( "line_triangle_draw" )
-            ->setNonIndexed( librenderlist::PRIMITIVE_LINE_LOOP, 0, 3 );
+        m_db.createAction<renderlist::Draw>( "line_triangle_draw" )
+            ->setNonIndexed( renderlist::PRIMITIVE_LINE_LOOP, 0, 3 );
 
         // --- cube geometry
         float cube_pos[36*3] = { 0.f,  1.f, 0.f,  1.f,  1.f, 0.f,  1.f, 0.f, 0.f,  1.f, 0.f, 0.f,
@@ -83,8 +83,8 @@ public:
 
         m_db.createBuffer( "cube_pos" )->set( cube_pos, 3*36 );
         m_db.createBuffer( "cube_nrm" )->set( cube_nrm, 3*36 );
-        m_db.createAction<librenderlist::Draw>( "cube_draw")
-                ->setNonIndexed( librenderlist::PRIMITIVE_TRIANGLES, 0, 36 );
+        m_db.createAction<renderlist::Draw>( "cube_draw")
+                ->setNonIndexed( renderlist::PRIMITIVE_TRIANGLES, 0, 36 );
 
 
         // --- set up solid shader
@@ -105,17 +105,17 @@ public:
                                 "{\n"
                                 "    gl_FragColor = vec4( color, 1.0 );\n"
                                 "}\n" );
-        m_db.createAction<librenderlist::SetShader>( "use_solid")
+        m_db.createAction<renderlist::SetShader>( "use_solid")
             ->setShader( "solid" );
-        m_db.createAction<librenderlist::SetUniforms>( "solid_matrices" )
+        m_db.createAction<renderlist::SetUniforms>( "solid_matrices" )
             ->setShader( "solid" )
-            ->setSemantic( "MVP", librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
-        m_db.createAction<librenderlist::SetUniforms>( "solid_green" )
+            ->setSemantic( "MVP", renderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX );
+        m_db.createAction<renderlist::SetUniforms>( "solid_green" )
             ->setShader( "solid" )
             ->setFloat3( "color", 0.5f, 1.0f, 0.6f );
 
         // --- set up line triangle input for solid rendering
-        m_db.createAction<librenderlist::SetInputs>( "solid_line_inputs" )
+        m_db.createAction<renderlist::SetInputs>( "solid_line_inputs" )
                 ->setShader( "solid" )
                 ->setInput( "position", "line_triangle_pos", 3 );
 
@@ -144,21 +144,21 @@ public:
                                     "    vec3 light_z = normalize( vec3(1,1,1) );\n"
                                     "    gl_FragColor = vec4( color*max(0.1, dot( normalize(es_normal), light_z ) ), 1.0 );\n"
                                     "}\n" );
-        m_db.createAction<librenderlist::SetShader>( "use_phong" )
+        m_db.createAction<renderlist::SetShader>( "use_phong" )
             ->setShader( "phong" );
-        m_db.createAction<librenderlist::SetUniforms>( "phong_matrices" )
+        m_db.createAction<renderlist::SetUniforms>( "phong_matrices" )
             ->setShader( "phong" )
-            ->setSemantic( "MVP", librenderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX )
-            ->setSemantic( "NM", librenderlist::SEMANTIC_NORMAL_MATRIX );
-        m_db.createAction<librenderlist::SetUniforms>( "phong_blue" )
+            ->setSemantic( "MVP", renderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX )
+            ->setSemantic( "NM", renderlist::SEMANTIC_NORMAL_MATRIX );
+        m_db.createAction<renderlist::SetUniforms>( "phong_blue" )
             ->setShader( "phong" )
             ->setFloat3( "color", 0.8f, 0.9f, 1.f );
-        m_db.createAction<librenderlist::SetUniforms>( "phong_red" )
+        m_db.createAction<renderlist::SetUniforms>( "phong_red" )
             ->setShader( "phong" )
             ->setFloat3( "color", 1.0f, 0.5f, 0.4f );
 
         // --- set up cube input for phong rendering
-        m_db.createAction<librenderlist::SetInputs>( "phong_cube_inputs" )
+        m_db.createAction<renderlist::SetInputs>( "phong_cube_inputs" )
             ->setShader( "phong" )
             ->setInput( "position", "cube_pos", 3 )
             ->setInput( "normal", "cube_nrm", 3 );
@@ -168,18 +168,18 @@ public:
 
 
         // --- set up shape orientations
-        m_db.createAction<librenderlist::SetLocalCoordSys>( "shape0_orient" );
-        m_db.createAction<librenderlist::SetLocalCoordSys>( "shape1_orient" );
-        m_db.createAction<librenderlist::SetLocalCoordSys>( "shape2_orient" );
+        m_db.createAction<renderlist::SetLocalCoordSys>( "shape0_orient" );
+        m_db.createAction<renderlist::SetLocalCoordSys>( "shape1_orient" );
+        m_db.createAction<renderlist::SetLocalCoordSys>( "shape2_orient" );
 
 
 
-        m_db.createAction<librenderlist::SetViewCoordSys>( "cam" )
+        m_db.createAction<renderlist::SetViewCoordSys>( "cam" )
                 ->setProjection( P, Pi )
                 ->setOrientation( cfw, ctw );
 
-        m_db.createAction<librenderlist::SetLight>( "light" )
-            ->setType( librenderlist::LIGHT_POINT )
+        m_db.createAction<renderlist::SetLight>( "light" )
+            ->setType( renderlist::LIGHT_POINT )
             ->setIndex( 0 )
             ->setColor( 0.8f, 1.f, 1.f )
             ->setAttenuation( 1.f, 0.f, 0.f )
@@ -187,31 +187,31 @@ public:
             ->setOrientation( lfw, ltw );
 
 
-        m_db.createAction<librenderlist::SetFramebuffer>( "default_fbo" )
+        m_db.createAction<renderlist::SetFramebuffer>( "default_fbo" )
             ->setDefault();
 
-        m_db.createAction<librenderlist::SetPixelState>( "px_state" )
+        m_db.createAction<renderlist::SetPixelState>( "px_state" )
             ->enableDepthTest()
             ->disableBlending();
 
-        m_db.createAction<librenderlist::SetFramebufferState>( "fb_state" )
+        m_db.createAction<renderlist::SetFramebufferState>( "fb_state" )
             ->setColorWritemask( true, true, true )
             ->setDepthWritemask( true );
 
-        m_db.createAction<librenderlist::SetRasterState>( "rs_state" );
+        m_db.createAction<renderlist::SetRasterState>( "rs_state" );
 
 
 
         updateShapePositions();
         updateDrawOrder();
 
-        std::cout << librenderlist::getUpdateXML( &m_db, librenderlist::ENCODING_JSON, 0 );
+        std::cout << renderlist::getUpdateXML( &m_db, renderlist::ENCODING_JSON, 0 );
      }
 
 protected:
-    librenderlist::DataBase     m_db;
-    librenderlist::gl::Renderer m_renderer;
-    librenderlist::Revision     m_has_dumped;
+    renderlist::DataBase     m_db;
+    renderlist::gl::Renderer m_renderer;
+    renderlist::Revision     m_has_dumped;
     bool                        m_shape0_visible;
     bool                        m_shape1_visible;
     bool                        m_shape2_visible;
@@ -256,7 +256,7 @@ protected:
         LTW0 = glm::scale( LTW0, glm::vec3( 0.7f, 0.7f, 0.7f) );
         glm::mat4 LFW0 = glm::inverse( LTW0 );
 
-        m_db.castedItemByName<librenderlist::SetLocalCoordSys*>( "shape0_orient" )
+        m_db.castedItemByName<renderlist::SetLocalCoordSys*>( "shape0_orient" )
             ->setOrientation( glm::value_ptr( LFW0),
                               glm::value_ptr( LTW0 ) );
 
@@ -264,14 +264,14 @@ protected:
         LTW1 = glm::translate( LTW1, m_shape1_position );
         LTW1 = glm::scale( LTW1, glm::vec3( 0.7f, 0.7f, 0.7f) );
         glm::mat4 LFW1 = glm::inverse( LTW1 );
-        m_db.castedItemByName<librenderlist::SetLocalCoordSys*>( "shape1_orient" )
+        m_db.castedItemByName<renderlist::SetLocalCoordSys*>( "shape1_orient" )
             ->setOrientation( glm::value_ptr( LFW1),
                               glm::value_ptr( LTW1 ) );
 
         glm::mat4 LTW2;
         LTW2 = glm::translate( LTW2, m_shape2_position );
         glm::mat4 LFW2 = glm::inverse( LTW2 );
-        m_db.castedItemByName<librenderlist::SetLocalCoordSys*>( "shape2_orient" )
+        m_db.castedItemByName<renderlist::SetLocalCoordSys*>( "shape2_orient" )
             ->setOrientation( glm::value_ptr( LFW2),
                               glm::value_ptr( LTW2 ) );
 
@@ -325,7 +325,7 @@ protected:
     {
         if( m_has_dumped != m_db.latest() ) {
             std::cerr << "--- update --- \n";
-            std::cerr << librenderlist::getUpdateXML( &m_db, librenderlist::ENCODING_JSON, m_has_dumped );
+            std::cerr << renderlist::getUpdateXML( &m_db, renderlist::ENCODING_JSON, m_has_dumped );
             std::cerr << "--- update --- \n";
             m_has_dumped = m_db.latest();
         }

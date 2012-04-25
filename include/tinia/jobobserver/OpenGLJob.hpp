@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tinia/jobobserver/Job.hpp"
-#include <tinia/librenderlist/RenderList.hpp>
+#include <tinia/renderlist/RenderList.hpp>
 namespace tinia {
 namespace jobobserver {
 class OpenGLJob : public Job
@@ -45,7 +45,7 @@ public:
       * \note Invoked by IPC thread.
       */
     virtual
-    const librenderlist::DataBase*
+    const renderlist::DataBase*
     getRenderList( const std::string& session,
                    const std::string& key ) { return NULL; }
 
