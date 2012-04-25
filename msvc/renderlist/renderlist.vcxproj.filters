@@ -1,43 +1,43 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\src\librenderlist\Buffer.cpp">
+    <ClCompile Include="..\..\src\renderlist\Buffer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\Utils.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\Utils.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlist\DataBase.cpp">
+    <ClCompile Include="..\..\src\renderlist\DataBase.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderBuffer.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderBuffer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderDraw.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderDraw.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\Renderer.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\Renderer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlist\RenderList.cpp">
+    <ClCompile Include="..\..\src\renderlist\RenderList.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetInputs.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetInputs.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetShader.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetShader.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetUniforms.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetUniforms.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderShader.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderShader.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderState.cpp">
+    <ClCompile Include="..\..\src\renderlistgl\RenderState.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\librenderlist\SetUniforms.cpp">
+    <ClCompile Include="..\..\src\renderlist\SetUniforms.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -126,7 +126,7 @@
     <ClInclude Include="..\..\include\tinia\renderlist\Shader.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\librenderlistgl\Utils.hpp">
+    <ClInclude Include="..\..\src\renderlistgl\Utils.hpp">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\tinia\renderlist\XMLWriter.hpp">

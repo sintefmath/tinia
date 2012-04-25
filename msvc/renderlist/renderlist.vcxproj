@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -50,20 +50,20 @@
     <ClInclude Include="..\..\include\tinia\renderlist\XMLWriter.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\librenderlistgl\RenderBuffer.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderDraw.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\Renderer.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetInputs.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetShader.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderSetUniforms.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderShader.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\RenderState.cpp" />
-    <ClCompile Include="..\..\src\librenderlistgl\Utils.cpp" />
-    <ClCompile Include="..\..\src\librenderlist\Buffer.cpp" />
-    <ClCompile Include="..\..\src\librenderlist\DataBase.cpp" />
-    <ClCompile Include="..\..\src\librenderlist\RenderList.cpp" />
-    <ClCompile Include="..\..\src\librenderlist\SetUniforms.cpp" />
-    <ClInclude Include="..\..\src\librenderlistgl\Utils.hpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderBuffer.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderDraw.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\Renderer.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetInputs.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetShader.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderSetUniforms.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderShader.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\RenderState.cpp" />
+    <ClCompile Include="..\..\src\renderlistgl\Utils.cpp" />
+    <ClCompile Include="..\..\src\renderlist\Buffer.cpp" />
+    <ClCompile Include="..\..\src\renderlist\DataBase.cpp" />
+    <ClCompile Include="..\..\src\renderlist\RenderList.cpp" />
+    <ClCompile Include="..\..\src\renderlist\SetUniforms.cpp" />
+    <ClInclude Include="..\..\src\renderlistgl\Utils.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B0DEAA56-B73E-44D9-B7FE-4354AB4368C5}</ProjectGuid>

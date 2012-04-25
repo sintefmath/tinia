@@ -2,6 +2,7 @@
 *.sdf
 *~
 /Tinia.suo
+/Tinia.opensdf
 /msvc/jobobserver/Debug
 /msvc/jobobserver/Release
 /msvc/policy/Debug
