@@ -501,6 +501,7 @@ xmlNodePtr policyxml::XMLBuilder::addCanvas(policy::gui::Canvas* element,
 
 
    xmlSetProp(xmlElement, BAD_CAST "boundingboxKey", BAD_CAST element->boundingBoxKey().c_str());
+   xmlSetProp(xmlElement, BAD_CAST "resetViewKey", BAD_CAST element->resetViewKey().c_str());
    return xmlElement;
 }
 
