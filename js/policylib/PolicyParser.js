@@ -444,7 +444,7 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
     
     makeCanvas: function(xml) {
         return new policylib.gui.Canvas(this.getKey(xml), dojo.attr(xml, "renderlistKey"),
-            dojo.attr(xml, "boundingboxKey"));
+            dojo.attr(xml, "boundingboxKey"), dojo.attr(xml, "resetViewKey"));
     },
 
     isGUIElement: function(xml) {

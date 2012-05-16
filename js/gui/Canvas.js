@@ -22,6 +22,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._key = params.key;
         this._renderlistKey = params.renderlistKey;
         this._boundingboxKey = params.boundingboxKey;
+        this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
         this._width = 500;
         this._height = 500;
@@ -105,6 +106,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._trackball.setBoundingBox(value);
             this._updateMatrices();
         }, this);
+        
+        this._policyLib.addLocalListener(this._resetViewKey, function(key, value) {
+            this._trackball = new gui.TrackBallViewer();
+            this._trackball.setSize(this._width, this._height);
+            this._trackball.setBoundingBox(value);
+            this._updateMatrices();
+        });
 
         this._policyLib.addLocalListener(this._renderlistKey, function(key, value) {
             this._getRenderList();

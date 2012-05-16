@@ -304,7 +304,7 @@ dojo.declare("policylib.gui.KeyValue", policylib.gui.Element, {
 });
 
 dojo.declare("policylib.gui.Canvas", policylib.gui.Element, {
-    constructor: function(key, renderlistKey, boundingBoxKey) {
+    constructor: function(key, renderlistKey, boundingBoxKey, resetViewKey) {
         this._key = key;
         if(renderlistKey === undefined) {
             renderlistKey = key + "_renderlist";
@@ -315,6 +315,11 @@ dojo.declare("policylib.gui.Canvas", policylib.gui.Element, {
             boundingBoxKey = "boundingbox";
         }
         this._boundingBoxKey = boundingBoxKey;
+        
+        if(resetViewKey === undefined) {
+            resetViewKey = "resetview_" + key;
+        }
+        this._resetViewKey = resetViewKey;
     },
     
     key: function() { 
@@ -327,6 +332,10 @@ dojo.declare("policylib.gui.Canvas", policylib.gui.Element, {
     
     boundingBoxKey: function() {
         return this._boundingBoxKey;
+    },
+    
+    resetViewKey: function() {
+        return this._resetViewKey;
     },
     
     type: function() {

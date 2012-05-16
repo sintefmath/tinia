@@ -99,6 +99,7 @@ dojo.declare("gui.GUIBuilder", null, {
                                            "policyLib" : this._policyLib,
                                             "localMode" : this._localMode,
                                             "renderListURL" : this._renderListURL,
+                                            "resetViewKey"  : root.resetViewKey(),
                                           "urlHandler" : this._urlHandler,
 					  "showRenderList" : this._showRenderList});
                 
