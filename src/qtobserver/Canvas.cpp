@@ -10,6 +10,7 @@ namespace qtobserver {
 Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
                 std::string                             key,
                 std::string                             boundingBoxKey,
+                const std::string&                      resetViewKey,
                 std::shared_ptr<policy::Policy>   policy,
                 QWidget*                                parent,
                 QGLWidget*                              share_widget,
@@ -19,6 +20,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
                  share_widget ),
       m_key(key),
       m_boundingBoxKey(boundingBoxKey),
+      m_resetViewKey(resetViewKey),
       m_policy(policy),
       m_job(openglJob),
       m_dsrv(NULL),
@@ -42,6 +44,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
 
     connect(this, SIGNAL(updateFromPolicy()), this, SLOT(updateGL()));
     connect(this, SIGNAL(updateDSRV()), this, SLOT(updateDSRVNow()));
+    connect(this, SIGNAL(resetViewFromPolicy()), this, SLOT(resetView()));
     m_policy->addStateListener(this);
     makeCurrent();
 
@@ -149,6 +152,13 @@ void qtobserver::Canvas::setRenderMode( int index )
         m_redraw_timer->start();
         */
     //}
+}
+
+void qtobserver::Canvas::resetView()
+{
+    // Set new bounding boxes
+    updateDSRVNow();
+    m_dsrv->viewAll();
 }
 
 void qtobserver::Canvas::initializeGL()
@@ -280,6 +290,9 @@ void qtobserver::Canvas::stateElementModified(policy::StateElement *stateElement
    if(stateElement->getKey() == m_boundingBoxKey)
    {
       emit updateDSRV();
+   }
+   else if(stateElement->getKey() == m_resetViewKey) {
+       emit resetViewFromPolicy();
    }
    emit updateFromPolicy();
 }

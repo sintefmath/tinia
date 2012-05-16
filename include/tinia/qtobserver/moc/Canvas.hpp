@@ -21,6 +21,7 @@ class Canvas : public QGLWidget, public policy::StateListener
 public:
     explicit Canvas(jobobserver::OpenGLJob* openglJob,
                     std::string key, std::string boundingBoxKey,
+                    const std::string& resetViewKey,
                     std::shared_ptr<policy::Policy> policy,
                     QWidget* parent,
                     QGLWidget* share_widget,
@@ -40,17 +41,20 @@ protected:
    void mouseMoveEvent(QMouseEvent *event);
    void mouseReleaseEvent(QMouseEvent *event);
 signals:
+   void resetViewFromPolicy();
    void updateFromPolicy();
    void updateDSRV();
    void updateFPS( QString fps );
 public slots:
    void updateDSRVNow();
    void setRenderMode( int index );
+   void resetView();
 private:
    void updateMatrices();
    void initializeDSRV();
    std::string m_key;
    std::string m_boundingBoxKey;
+   std::string m_resetViewKey;
    std::shared_ptr<policy::Policy> m_policy;
    jobobserver::OpenGLJob* m_job;
    siut2::dsrv::DSRViewer* m_dsrv;
