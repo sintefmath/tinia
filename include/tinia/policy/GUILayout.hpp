@@ -14,13 +14,13 @@ public:
 
 namespace gui {
 enum Device {
-   WORKSTATION = 1,
-   WEB = 2,
-   DESKTOP = 3,
-   TOUCH_LARGE = 4,
-   TOUCH_SMALL = 8,
-   TOUCH = 4|8,
-   ALL = 16-1
+    WORKSTATION = 1,
+    WEB = 2,
+    DESKTOP = 3,
+    TOUCH_LARGE = 4,
+    TOUCH_SMALL = 8,
+    TOUCH = 4|8,
+    ALL = 16-1
 };
 
 enum ElementType {
@@ -104,10 +104,10 @@ public:
 
 
 private:
-   std::string  m_visibility_key;
-   bool         m_visibility_inverted;
-   std::string  m_enabled_key;
-   bool         m_enabled_inverted;
+    std::string  m_visibility_key;
+    bool         m_visibility_inverted;
+    std::string  m_enabled_key;
+    bool         m_enabled_inverted;
 };
 
 /** Abstract interface class for elements that contains a reference to a policy key. */
@@ -221,8 +221,8 @@ private:
 
 class Tab
         : public Element,
-          public KeyValue,
-          public Container0D<Element>
+        public KeyValue,
+        public Container0D<Element>
 {
 public:
     Tab( const std::string& key, bool show_value = false )
@@ -234,28 +234,28 @@ public:
 
 class TabLayout
         : public Element,
-          public Container1D<Tab>
+        public Container1D<Tab>
 {
 public:
-   virtual const ElementType type() const { return TAB_LAYOUT; }
+    virtual const ElementType type() const { return TAB_LAYOUT; }
 private:
 };
 
 
 class Grid : public Element, public Container2D<Element> {
 public:
-   Grid( size_t height, size_t width)
-       : Element(),
-         Container2D( height, width )
-   {}
+    Grid( size_t height, size_t width)
+        : Element(),
+          Container2D( height, width )
+    {}
 
-   virtual const ElementType type() const {return GRID; }
+    virtual const ElementType type() const {return GRID; }
 };
 
 class PopupButton
         : public Element,
-          public Container0D<Element>,
-          public KeyValue
+        public Container0D<Element>,
+        public KeyValue
 {
 public:
     PopupButton( const std::string& key, const bool show_value )
@@ -271,7 +271,7 @@ public:
   */
 class Label
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
     Label( const std::string& key, const bool show_value=false )
@@ -287,18 +287,18 @@ public:
 class PolicyElement
         : public Element {
 public:
-   /**
+    /**
      \param key the key in the policy this element is supposed to visualize
      */
-   PolicyElement(std::string key)
-      : m_key(key)
-   {
+    PolicyElement(std::string key)
+        : m_key(key)
+    {
 
-   }
+    }
 
-   std::string getKey() { return m_key; }
+    std::string getKey() { return m_key; }
 private:
-   std::string m_key;
+    std::string m_key;
 };
 
 
@@ -307,14 +307,14 @@ private:
   */
 class ComboBox
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
     ComboBox( const std::string& key )
         : KeyValue( key, true )
     {}
 
-   virtual const ElementType type() const { return COMBOBOX; }
+    virtual const ElementType type() const { return COMBOBOX; }
 };
 
 /**
@@ -322,7 +322,7 @@ public:
   */
 class RadioButtons
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
     RadioButtons(std::string key, bool is_horizontal = false )
@@ -330,30 +330,30 @@ public:
           m_is_horizontal( is_horizontal )
     {}
 
-   virtual const ElementType type() const { return RADIOBUTTONS; }
+    virtual const ElementType type() const { return RADIOBUTTONS; }
 
-   const bool horizontal() const { return m_is_horizontal; }
+    const bool horizontal() const { return m_is_horizontal; }
 private:
-   bool m_is_horizontal;
+    bool m_is_horizontal;
 };
 /**
   A simple TextInput class
   */
 class TextInput
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
-   TextInput( const std::string& key )
-       : KeyValue( key, true )
-   {}
+    TextInput( const std::string& key )
+        : KeyValue( key, true )
+    {}
 
-   virtual const ElementType type() const { return TEXTINPUT; }
+    virtual const ElementType type() const { return TEXTINPUT; }
 };
 
 class CheckBox
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
     CheckBox( const std::string& key)
@@ -365,14 +365,14 @@ public:
 
 class SpinBox
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
-   SpinBox( const std::string& key)
-       : KeyValue( key, true )
-   {}
+    SpinBox( const std::string& key)
+        : KeyValue( key, true )
+    {}
 
-   virtual const ElementType type() const { return SPINBOX; }
+    virtual const ElementType type() const { return SPINBOX; }
 };
 
 class Button :
@@ -380,28 +380,28 @@ class Button :
         public KeyValue
 {
 public:
-   Button( const std::string& key )
-       : KeyValue( key, false )
-   {}
+    Button( const std::string& key )
+        : KeyValue( key, false )
+    {}
 
-   virtual const ElementType type() const { return BUTTON; }
+    virtual const ElementType type() const { return BUTTON; }
 };
 
 class HorizontalSlider
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
-   HorizontalSlider( const std::string& key, const bool with_buttons = true )
-       : KeyValue( key, true ),
-         m_with_buttons( with_buttons )
-   {}
+    HorizontalSlider( const std::string& key, const bool with_buttons = true )
+        : KeyValue( key, true ),
+          m_with_buttons( with_buttons )
+    {}
 
-   virtual const ElementType type() const { return HORIZONTAL_SLIDER; }
+    virtual const ElementType type() const { return HORIZONTAL_SLIDER; }
 
-   const bool withButtons() const { return m_with_buttons; }
+    const bool withButtons() const { return m_with_buttons; }
 private:
-   bool     m_with_buttons;
+    bool     m_with_buttons;
 };
 
 
@@ -410,41 +410,41 @@ private:
   */
 class ElementGroup
         : public Element,
-          public KeyValue,
-          public Container0D<Element>
+        public KeyValue,
+        public Container0D<Element>
 {
 public:
-   ElementGroup( const std::string& key,
-                 bool               show_label = true,
-                 bool               show_value = false )
-       : KeyValue(key, show_value ),
-         m_show_label( show_label )
-   {}
+    ElementGroup( const std::string& key,
+                  bool               show_label = true,
+                  bool               show_value = false )
+        : KeyValue(key, show_value ),
+          m_show_label( show_label )
+    {}
 
-   virtual const ElementType type() const { return ELEMENTGROUP; }
+    virtual const ElementType type() const { return ELEMENTGROUP; }
 
-   const bool showLabel() const { return m_show_label; }
+    const bool showLabel() const { return m_show_label; }
 
 private:
-   bool m_show_label;
+    bool m_show_label;
 };
 
 
 class HorizontalLayout
         : public Element,
-          public Container1D<Element>
+        public Container1D<Element>
 {
 public:
-   virtual const ElementType type() const { return HORIZONTAL_LAYOUT; }
+    virtual const ElementType type() const { return HORIZONTAL_LAYOUT; }
 };
 
 
 class VerticalLayout
         : public Element,
-          public Container1D<Element>
+        public Container1D<Element>
 {
 public:
-   virtual const ElementType type() const { return VERTICAL_LAYOUT; }
+    virtual const ElementType type() const { return VERTICAL_LAYOUT; }
 };
 
 
@@ -452,7 +452,7 @@ public:
   Creates a small vertical space
   */
 class VerticalSpace: public Element {
-   virtual const ElementType type() const { return VERTICAL_SPACE; }
+    virtual const ElementType type() const { return VERTICAL_SPACE; }
 };
 
 
@@ -460,13 +460,13 @@ class VerticalSpace: public Element {
   Creates a small horizontal space
   */
 class HorizontalSpace: public Element {
-   virtual const ElementType type() const { return HORIZONTAL_SPACE; }
+    virtual const ElementType type() const { return HORIZONTAL_SPACE; }
 };
 
 
 /** Expanding vertical space. */
 class VerticalExpandingSpace: public Element {
-   virtual const ElementType type() const { return VERTICAL_EXPANDING_SPACE; }
+    virtual const ElementType type() const { return VERTICAL_EXPANDING_SPACE; }
 
 };
 
@@ -474,28 +474,28 @@ class VerticalExpandingSpace: public Element {
 /** Expanding horizontal space. */
 class HorizontalExpandingSpace: public Element {
 public:
-   virtual const ElementType type() const { return HORIZONTAL_EXPANDING_SPACE; }
+    virtual const ElementType type() const { return HORIZONTAL_EXPANDING_SPACE; }
 
 };
 
 class FileDialogButton: public KeyValue, public Element {
 public:
-   FileDialogButton(const std::string &key, bool showValue = false) :
-      KeyValue(key, showValue) {}
-   virtual const ElementType type() const { return FILE_DIALOG_BUTTON; }
+    FileDialogButton(const std::string &key, bool showValue = false) :
+        KeyValue(key, showValue) {}
+    virtual const ElementType type() const { return FILE_DIALOG_BUTTON; }
 };
 
 
 class DoubleSpinBox
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
-   DoubleSpinBox( const std::string& key )
-       : KeyValue( key, true )
-   {}
+    DoubleSpinBox( const std::string& key )
+        : KeyValue( key, true )
+    {}
 
-   virtual const ElementType type() const { return DOUBLE_SPINBOX; }
+    virtual const ElementType type() const { return DOUBLE_SPINBOX; }
 };
 
 
@@ -504,33 +504,41 @@ public:
   */
 class Canvas
         : public Element,
-          public KeyValue
+        public KeyValue
 {
 public:
-   Canvas( const std::string& key )
-       : KeyValue( key, true )
-   {
-      m_boundingbox_key = "boundingbox";
-      m_renderlist_key = key + "_renderlist";
-   }
+    Canvas( const std::string& key )
+        : KeyValue( key, true )
+    {
+        m_boundingbox_key = "boundingbox";
+        m_renderlist_key = key + "_renderlist";
+        m_reset_view_key = key + "_reset_view";
+    }
 
-   Canvas( const std::string&  key,
-           const std::string&  renderlist_key,
-           const std::string&  boundingbox_key )
-      : KeyValue(key, true ),
-        m_renderlist_key( renderlist_key ),
-        m_boundingbox_key( boundingbox_key )
-   {}
+    Canvas( const std::string&  key,
+            const std::string&  renderlist_key,
+            const std::string&  boundingbox_key )
+        : KeyValue(key, true ),
+          m_renderlist_key( renderlist_key ),
+          m_boundingbox_key( boundingbox_key )
+    {
+        m_reset_view_key = key + "_reset_view";
+    }
 
-   virtual const ElementType type() const { return CANVAS; }
+    virtual const ElementType type() const { return CANVAS; }
 
-   virtual const std::string& renderlistKey() const { return m_renderlist_key; }
+    virtual const std::string& renderlistKey() const { return m_renderlist_key; }
 
-   virtual const std::string& boundingBoxKey() const { return m_boundingbox_key; }
+    virtual const std::string& boundingBoxKey() const { return m_boundingbox_key; }
+
+    virtual Canvas* resetViewKey(const std::string& key) { m_reset_view_key = key; return this; }
+    virtual const std::string& resetViewKey() { return m_reset_view_key; }
+
 
 private:
-   std::string m_renderlist_key;
-   std::string m_boundingbox_key;
+    std::string m_renderlist_key;
+    std::string m_boundingbox_key;
+    std::string m_reset_view_key;
 };
 
 
