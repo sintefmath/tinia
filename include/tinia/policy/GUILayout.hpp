@@ -534,7 +534,6 @@ public:
     virtual Canvas* resetViewKey(const std::string& key) { m_reset_view_key = key; return this; }
     virtual const std::string& resetViewKey() { return m_reset_view_key; }
 
-
 private:
     std::string m_renderlist_key;
     std::string m_boundingbox_key;

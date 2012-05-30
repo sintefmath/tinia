@@ -3,6 +3,7 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <array>
+#include <tinia/jobobserver/OpenGLJob.hpp>
 
 namespace tinia {
 namespace qtobserver {
@@ -14,7 +15,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
                 std::shared_ptr<policy::Policy>   policy,
                 QWidget*                                parent,
                 QGLWidget*                              share_widget,
-                bool                                    perf_mode )
+                bool                                    perf_mode)
     : QGLWidget( QGL::DepthBuffer| QGL::DoubleBuffer | QGL::AlphaChannel,
                  parent,
                  share_widget ),
@@ -86,7 +87,7 @@ void qtobserver::Canvas::paintGL()
     }
     else if( m_render_mode == 1 ) {
         //if( m_renderlist_db == NULL ) {
-            m_renderlist_db = m_job->getRenderList( "", m_key );
+        m_renderlist_db = m_job->getRenderList( "", m_key );
         //}
         if( m_renderlist_db == NULL ) {
             m_render_mode = 0;
@@ -128,14 +129,14 @@ void qtobserver::Canvas::paintGL()
 void qtobserver::Canvas::resizeGL(int w, int h)
 {
 
-   policy::Viewer viewer;
-   m_policy->getElementValue(m_key, viewer);
-   viewer.width = w;
-   viewer.height = h;
-   m_policy->updateElement(m_key, viewer);
-   updateDSRV();
+    policy::Viewer viewer;
+    m_policy->getElementValue(m_key, viewer);
+    viewer.width = w;
+    viewer.height = h;
+    m_policy->updateElement(m_key, viewer);
+    updateDSRV();
 
-   updateGL();
+    updateGL();
 
 }
 
@@ -144,7 +145,7 @@ void qtobserver::Canvas::setRenderMode( int index )
     m_render_mode = index;
     updateGL();
     //if( !perf_mode ) {
-        /*// If not
+    /*// If not
         m_redraw_timer = new QTimer;
         connect( m_redraw_timer, SIGNAL(timeout()), this, SLOT(updateGL()) );
         m_redraw_timer->setInterval(0);
@@ -168,138 +169,186 @@ void qtobserver::Canvas::initializeGL()
 
 void qtobserver::Canvas::setPreferredSize()
 {
-   policy::Viewer viewer;
-   m_policy->getElementValue(m_key, viewer);
-   resize(std::max(viewer.width, 640), std::max(viewer.height, 360));
+    policy::Viewer viewer;
+    m_policy->getElementValue(m_key, viewer);
+    resize(std::max(viewer.width, 640), std::max(viewer.height, 360));
 }
 
 void qtobserver::Canvas::resizeEvent(QResizeEvent *event)
 {
-   QGLWidget::resizeEvent(event);
-   setPreferredSize();
+    QGLWidget::resizeEvent(event);
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->resizeEvent(event);
+    }
+#endif
+
+    setPreferredSize();
 }
 
 
 QSizePolicy qtobserver::Canvas::sizePolicy() const
 {
-   return QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    return QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
 
 QSize qtobserver::Canvas::minimumSize() const
 {
-   policy::Viewer viewer;
-   m_policy->getElementValue(m_key, viewer);
-   return QSize(viewer.width, viewer.height);
+    policy::Viewer viewer;
+    m_policy->getElementValue(m_key, viewer);
+    return QSize(viewer.width, viewer.height);
 }
 
 void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
 {
-   switch(event->button())
-   {
-   case Qt::LeftButton:
-      m_dsrv->startMotion(siut2::dsrv::DSRViewer::ROTATE, event->x(), event->y());
-      break;
-   case Qt::MiddleButton:
-       m_dsrv->startMotion(siut2::dsrv::DSRViewer::PAN, event->x(), event->y());
-       break;
-   case Qt::RightButton:
-      m_dsrv->startMotion(siut2::dsrv::DSRViewer::ZOOM, event->x(), event->y());
-      break;
-   }
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->mousePressEvent(event);
+        emit updateFromPolicy();
+    }
+#endif
+    switch(event->button())
+    {
+    case Qt::LeftButton:
+        m_dsrv->startMotion(siut2::dsrv::DSRViewer::ROTATE, event->x(), event->y());
+        break;
+    case Qt::MiddleButton:
+        m_dsrv->startMotion(siut2::dsrv::DSRViewer::PAN, event->x(), event->y());
+        break;
+    case Qt::RightButton:
+        m_dsrv->startMotion(siut2::dsrv::DSRViewer::ZOOM, event->x(), event->y());
+        break;
+    }
 }
 
 void qtobserver::Canvas::mouseMoveEvent(QMouseEvent *event)
 {
-   m_dsrv->motion(event->x(), event->y());
-   updateMatrices();
-   updateGL();
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->mouseMoveEvent(event);
+    }
+#endif
+    m_dsrv->motion(event->x(), event->y());
+    updateMatrices();
+    updateGL();
 }
 
 void qtobserver::Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-   m_dsrv->endMotion(event->x(), event->y());
-   updateMatrices();
-   updateGL();
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->mouseReleaseEvent(event);
+    }
+#endif
+    m_dsrv->endMotion(event->x(), event->y());
+    updateMatrices();
+    updateGL();
+}
+
+void qtobserver::Canvas::keyPressEvent(QKeyEvent *event)
+{
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->keyPressEvent(event);
+        updateGL();
+    }
+#endif
+}
+
+void qtobserver::Canvas::keyReleaseEvent(QKeyEvent *event)
+{
+#ifdef TINIA_PASS_THROUGH
+    if(m_job->passThrough())
+    {
+        m_job->keyReleaseEvent(event);
+        updateGL();
+    }
+#endif
 }
 
 void qtobserver::Canvas::initializeDSRV()
 {
-   // Defaulting to unit cube
-   glm::vec3 max(1,1,1);
-   glm::vec3 min(0,0,0);
-   std::cerr<<"CHECKING FOR BOUNDINGBOXKEY="<<m_boundingBoxKey<<std::endl;
-   if(m_policy->hasElement(m_boundingBoxKey))
-   {
+    // Defaulting to unit cube
+    glm::vec3 max(1,1,1);
+    glm::vec3 min(0,0,0);
+    std::cerr<<"CHECKING FOR BOUNDINGBOXKEY="<<m_boundingBoxKey<<std::endl;
+    if(m_policy->hasElement(m_boundingBoxKey))
+    {
 
-      // (Not really) quick (and absolutely) dirty string to double-conversion
-      std::string bbString = m_policy->getElementValueAsString(m_boundingBoxKey);
-      std::cerr<<"BOUNDINGBOX FROM POLICY: "<< bbString<<std::endl;
-      QString helperString(bbString.c_str());
-      QStringList splitString = helperString.split(' ');
-      int index = 0;
-      for(auto it = splitString.begin(); it!= splitString.end(); it++)
-      {
-         if(index < 3)
-         {
-            min[index++] = it->toDouble();
-         }
-         else
-         {
-            max[(index++)%3] = it->toDouble();
-         }
-      }
-   }
+        // (Not really) quick (and absolutely) dirty string to double-conversion
+        std::string bbString = m_policy->getElementValueAsString(m_boundingBoxKey);
+        std::cerr<<"BOUNDINGBOX FROM POLICY: "<< bbString<<std::endl;
+        QString helperString(bbString.c_str());
+        QStringList splitString = helperString.split(' ');
+        int index = 0;
+        for(auto it = splitString.begin(); it!= splitString.end(); it++)
+        {
+            if(index < 3)
+            {
+                min[index++] = it->toDouble();
+            }
+            else
+            {
+                max[(index++)%3] = it->toDouble();
+            }
+        }
+    }
 
-   if(m_dsrv == NULL)
-   {
-       m_dsrv = new siut2::dsrv::DSRViewer(min, max);
+    if(m_dsrv == NULL)
+    {
+        m_dsrv = new siut2::dsrv::DSRViewer(min, max);
 
-      m_dsrv->setWindowSize(width(), height());
-   }
-   else
-   {
-      m_dsrv->updateViewVolume(min, max);
-      m_dsrv->setWindowSize(width(), height());
-   }
-   updateMatrices();
+        m_dsrv->setWindowSize(width(), height());
+    }
+    else
+    {
+        m_dsrv->updateViewVolume(min, max);
+        m_dsrv->setWindowSize(width(), height());
+    }
+    updateMatrices();
 }
 
 void qtobserver::Canvas::updateMatrices()
 {
-   policy::Viewer viewer;
-   glm::mat4 modelView = m_dsrv->getModelviewMatrix();
-   glm::mat4 projection = m_dsrv->getProjectionMatrix();
-   m_policy->getElementValue(m_key, viewer);
+    policy::Viewer viewer;
+    glm::mat4 modelView = m_dsrv->getModelviewMatrix();
+    glm::mat4 projection = m_dsrv->getProjectionMatrix();
+    m_policy->getElementValue(m_key, viewer);
 
-   // Doing this the hard way
-   for(int i = 0; i < 4; i++)
-   {
-      for (int j= 0; j < 4; j++)
-      {
-         viewer.modelviewMatrix[i*4+j] = modelView[i][j];
-         viewer.projectionMatrix[i*4+j] = projection[i][j];
+    // Doing this the hard way
+    for(int i = 0; i < 4; i++)
+    {
+        for (int j= 0; j < 4; j++)
+        {
+            viewer.modelviewMatrix[i*4+j] = modelView[i][j];
+            viewer.projectionMatrix[i*4+j] = projection[i][j];
 
-      }
-   }
+        }
+    }
 
-   m_policy->updateElement(m_key, viewer);
+    m_policy->updateElement(m_key, viewer);
 }
 
 void qtobserver::Canvas::stateElementModified(policy::StateElement *stateElement)
 {
-   if(stateElement->getKey() == m_boundingBoxKey)
-   {
-      emit updateDSRV();
-   }
-   else if(stateElement->getKey() == m_resetViewKey) {
-       emit resetViewFromPolicy();
-   }
-   emit updateFromPolicy();
+    if(stateElement->getKey() == m_boundingBoxKey)
+    {
+        emit updateDSRV();
+    }
+    else if(stateElement->getKey() == m_resetViewKey) {
+        emit resetViewFromPolicy();
+    }
+    emit updateFromPolicy();
 }
 
 void qtobserver::Canvas::updateDSRVNow()
 {
-   initializeDSRV();
+    initializeDSRV();
 }
 
 } // of namespace tinia
