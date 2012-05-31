@@ -57,6 +57,8 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
         m_redraw_timer->setSingleShot(false);
         m_redraw_timer->start();
     }
+
+    setFocusPolicy(Qt::ClickFocus);
 }
 
 Canvas::~Canvas()

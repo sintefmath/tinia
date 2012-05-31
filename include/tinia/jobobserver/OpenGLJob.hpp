@@ -68,7 +68,7 @@ public:
     /** \deprecated Do not use */
     virtual void keyReleaseEvent(QKeyEvent *) { }
     /** \deprecated Do not use */
-    virtual bool passThrough() { return false; }
+    virtual bool passThrough() { return true; }
 #endif
 
 protected:
