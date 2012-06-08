@@ -127,11 +127,11 @@ int QTObserver::run(int argc, char **argv)
    QDomDocument* dom = new QDomDocument;
    QDomElement gui_layout = dom->createElement( "layout" );
    dom->appendChild( gui_layout );
-   addNode( dom, gui_layout, tree );
+   addNode( dom, gui_layout, tree ); 
    QString foo = dom->toString();
-
-   std::cerr << foo.toStdString() << "\n";
-*/
+   
+   std::cerr << foo.toLocal8Bit() << "\n";
+   */
    return app.exec();
 }
 

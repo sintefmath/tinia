@@ -97,7 +97,7 @@ StringController::textChangeFromQt( const QString& text )
         return;
     }
     if( m_show_value ) {
-        const std::string value = text.toStdString();
+        const std::string value = text.toLocal8Bit();
         if( m_current_value != value ) {
 			try {
 				m_policy->updateElementFromString( m_key, value );

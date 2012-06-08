@@ -59,7 +59,7 @@ qtobserver::ComboBox::~ComboBox()
 
 void qtobserver::ComboBox::activatedChanged(QString value)
 {
-   m_policy->updateElementFromString(m_key, value.toStdString());
+   m_policy->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
 }
 
 } // of namespace tinia

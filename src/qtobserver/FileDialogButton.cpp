@@ -22,7 +22,7 @@ void qtobserver::FileDialogButton::readFile()
                                                    this->text(),
                                                    ".");
    policy::File file;
-   file.fullPath(fileName.toStdString());
+   file.fullPath( std::string( fileName.toLocal8Bit() ) );
    m_policy->updateElement(m_key, file);
 
 }
