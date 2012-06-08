@@ -179,12 +179,12 @@ void qtobserver::Canvas::setPreferredSize()
 void qtobserver::Canvas::resizeEvent(QResizeEvent *event)
 {
     QGLWidget::resizeEvent(event);
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->resizeEvent(event);
     }
-#endif
+
 
     setPreferredSize();
 }
@@ -204,13 +204,13 @@ QSize qtobserver::Canvas::minimumSize() const
 
 void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
 {
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->mousePressEvent(event);
         emit updateFromPolicy();
     }
-#endif
+
     switch(event->button())
     {
     case Qt::LeftButton:
@@ -227,12 +227,12 @@ void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
 
 void qtobserver::Canvas::mouseMoveEvent(QMouseEvent *event)
 {
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->mouseMoveEvent(event);
     }
-#endif
+
     m_dsrv->motion(event->x(), event->y());
     updateMatrices();
     updateGL();
@@ -240,12 +240,12 @@ void qtobserver::Canvas::mouseMoveEvent(QMouseEvent *event)
 
 void qtobserver::Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->mouseReleaseEvent(event);
     }
-#endif
+
     m_dsrv->endMotion(event->x(), event->y());
     updateMatrices();
     updateGL();
@@ -253,24 +253,24 @@ void qtobserver::Canvas::mouseReleaseEvent(QMouseEvent *event)
 
 void qtobserver::Canvas::keyPressEvent(QKeyEvent *event)
 {
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->keyPressEvent(event);
         updateGL();
     }
-#endif
+
 }
 
 void qtobserver::Canvas::keyReleaseEvent(QKeyEvent *event)
 {
-#ifdef TINIA_PASS_THROUGH
+
     if(m_job->passThrough())
     {
         m_job->keyReleaseEvent(event);
         updateGL();
     }
-#endif
+
 }
 
 void qtobserver::Canvas::initializeDSRV()

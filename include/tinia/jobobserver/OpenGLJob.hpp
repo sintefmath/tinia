@@ -2,11 +2,11 @@
 
 #include "tinia/jobobserver/Job.hpp"
 #include <tinia/renderlist/RenderList.hpp>
-#ifdef TINIA_PASS_THROUGH
+
 class QResizeEvent;
 class QKeyEvent;
 class QMouseEvent;
-#endif
+
 namespace tinia {
 namespace jobobserver {
 class OpenGLJob : public Job
@@ -54,7 +54,7 @@ public:
     getRenderList( const std::string& session,
                    const std::string& key ) { return NULL; }
 
-#ifdef TINIA_PASS_THROUGH
+
     /** \deprecated Do not use */
     virtual void resizeEvent(QResizeEvent *event) { }
     /** \deprecated Do not use */
@@ -68,8 +68,8 @@ public:
     /** \deprecated Do not use */
     virtual void keyReleaseEvent(QKeyEvent *) { }
     /** \deprecated Do not use */
-    virtual bool passThrough() { return true; }
-#endif
+    virtual bool passThrough() { return false; }
+
 
 protected:
 };
