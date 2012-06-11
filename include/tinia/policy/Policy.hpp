@@ -195,6 +195,19 @@ The job can use this to get an update meant for the client. This version are for
    void
    addConstrainedElement( std::string key, T value, T minConstraint, T maxConstraint, const std::string annotation="" );
 
+
+   /** Add or updates contraints for an element. To ensure the contraints are valid, the programmer must supply
+     a value in addition to the new constraints.
+      \param key The key for the element
+      \param value The value for the element. The type of the value is deduced from the template parameter.
+      \param minConstraint the minimum-inclusive value of the element.
+      \param maxConstraint the maximum-inclusuve value of the element.
+      \throw std::runtime_error if the constraint is violated.
+     */
+   template<typename T>
+   void
+   updateConstraints( std::string key, T value, T minConstraint, T maxConstraint );
+
    /** Update an element with a new value.
       \param key The key to update.
       \param value The value for the element. The type of the value is deduced from the template parameter.
@@ -456,7 +469,7 @@ Policy::addConstrainedElement( std::string key, T value, T minConstraint, T maxC
    if ( ( value < minConstraint ) ||
         ( value > maxConstraint ) ) {
       std::stringstream ss;
-      ss <<  "Trying to add constrained element " << key << " but " << value << " is outside (" << minConstraint << ", " << maxConstraint << ").";
+      ss <<  "Trying to add constrained element " << key << " but " << value << " is outside [" << minConstraint << ", " << maxConstraint << "].";
       throw std::runtime_error( ss.str() );
    }
 
@@ -688,12 +701,66 @@ Policy::addAnnotation( std::string key, const InputIterator& begin, const InputI
 addAnnotationHelper( key, annotationMap );
 }
 
+template<typename T>
+void
+Policy::updateConstraints( std::string key, T value, T minValue, T maxValue) {
+    if( value > maxValue || value < minValue ) {
+        std::stringstream ss;
+        ss << "Value out of bounds. Value = " << value << ", min = " << minValue << ", max = " << maxValue << ".";
+        throw new std::runtime_error(ss.str());
+    }
 
+    ElementData data;
+    bool emitChange = false;
+    bool emitValueChange = false;
+    { // Lock block
+        scoped_lock(m_selfMutex);
+        auto it = stateHash.find( key );
+        if( it == stateHash.end() ) {
+            std::stringstream ss;
+            ss << "Could not find element with key = \"" << key << "\".";
+            throw std::runtime_error(ss.str());
+        }
 
+        auto& elementData = it->second;
 
+        {
+            std::stringstream ss;
+            ss << minValue;
+            if( ss.str() != elementData.getMinConstraint() ) {
+                emitChange = true;
+            }
+            elementData.setMinConstraint(ss.str());
+        }
+        {
+            std::stringstream ss;
+            ss << maxValue;
+            if( ss.str() != elementData.getMaxConstraint() ) {
+                emitChange = true;
+            }
+            elementData.setMaxConstraint(ss.str());
+        }
+        {
+            std::stringstream ss;
+            ss << value;
+            if( ss.str() != elementData.getStringValue()) {
+                emitValueChange = true;
+            }
+            elementData.setStringValue(ss.str());
+        }
+        if( emitChange || emitValueChange ) {
+            data = elementData;
+        }
+    }
 
+    if(emitChange) {
+        fireStateSchemaElementModified( key, data );
+    }
+    if(emitValueChange) {
+        fireStateElementModified( key, data );
+    }
 }
-}
+} }
 
 #endif // POLICY_HPP
 

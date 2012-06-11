@@ -130,6 +130,9 @@ Policy::addMatrixElement( std::string matrixName, float const* matrixData ) {
    fireStateSchemaElementAdded(matrixName, data);
 }
 
+
+
+
 void
 Policy::updateMatrixValue( std::string key, const float* matrixData ) {
    scoped_lock lock(m_selfMutex);

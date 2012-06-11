@@ -56,6 +56,9 @@ struct SchemaListenerFixture {
       }
       virtual void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
       {
+          modified_key = stateSchemaElement->getKey();
+          modified_max = stateSchemaElement->getMaxConstraint();
+          modified_min = stateSchemaElement->getMinConstraint();
          modified_registered = true;
       }
       bool added_registered;
@@ -63,11 +66,31 @@ struct SchemaListenerFixture {
       bool removed_registered;
       bool modified_registered;
       int added_called_times;
+      std::string modified_key;
+      std::string modified_max;
+      std::string modified_min;
    } schemaListener;
 
 };
 
 
+BOOST_FIXTURE_TEST_CASE(constraintsChange, SchemaListenerFixture)
+{
+    BOOST_CHECK( !schemaListener.modified_registered );
+    BOOST_CHECK( !schemaListener.added_registered );
+    policy.addConstrainedElement("constrained", 0, 0, 10);
+    BOOST_CHECK( schemaListener.added_registered );
+    BOOST_CHECK( schemaListener.modified_registered );
+    schemaListener.modified_registered = false;
+    policy.updateConstraints("constrained", 15, 12, 20);
+    BOOST_CHECK(schemaListener.modified_registered);
+    BOOST_CHECK_EQUAL("constrained", schemaListener.modified_key);
+    BOOST_CHECK_EQUAL("12", schemaListener.modified_min);
+    BOOST_CHECK_EQUAL("20", schemaListener.modified_max);
+
+    BOOST_CHECK_THROW(policy.updateElement("constrained", 0), std::runtime_error);
+
+}
 
 
 BOOST_FIXTURE_TEST_CASE(stateSchemaElementAdded, SchemaListenerFixture)
@@ -388,3 +411,5 @@ BOOST_FIXTURE_TEST_CASE(FileCheckChangePath, PolicyFixture)
    BOOST_CHECK_EQUAL(otherFile.fullPath(), newFile.fullPath());
 
 }
+
+
