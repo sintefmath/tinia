@@ -6,12 +6,13 @@
 #include <tinia/policy/Policy.hpp>
 #include <tinia/policy/StateListener.hpp>
 #include <tinia/policy/StateSchemaElement.hpp>
+#include <tinia/policy/StateSchemaListener.hpp>
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class HorizontalSlider : public QWidget, public policy::StateListener
+class HorizontalSlider : public QWidget, public policy::StateListener, public policy::StateSchemaListener
 {
     Q_OBJECT
 public:
@@ -21,6 +22,10 @@ public:
 
    ~HorizontalSlider();
    void stateElementModified(policy::StateElement *stateElement);
+
+   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
 signals:
    void setValueFromPolicy(int value);
 public slots:

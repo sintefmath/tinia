@@ -46,17 +46,7 @@ const std::unordered_set<std::string> & policy::StateSchemaElement::getEnumerati
    return m_data.getEnumerationSet();
 }
 
-template<typename T>
-void policy::StateSchemaElement::getMaxConstraint(T& t) const
-{
-   //TOOD Write me
-}
 
-template<typename T>
-void policy::StateSchemaElement::getMinConstraint(T& t) const
-{
-   //TOOD Write me
-}
 
 template<typename T>
 void policy::StateSchemaElement::getEnumerationSet(std::unordered_set<T> &enumerationSet) const

@@ -31,6 +31,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 
 
    m_policy->addStateListener(m_key, this);
+   m_policy->addStateSchemaListener(m_key, this);
 
    setLayout(new QHBoxLayout(this));
    layout()->addWidget(m_slider);
@@ -57,6 +58,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 HorizontalSlider::~HorizontalSlider()
 {
    m_policy->removeStateListener(m_key, this);
+   m_policy->removeStateSchemaListener(m_key, this);
 }
 
 }
@@ -72,6 +74,15 @@ void qtobserver::HorizontalSlider::stateElementModified(
    int value;
    stateElement->getValue(value);
    emit setValueFromPolicy(value);
+}
+
+void qtobserver::HorizontalSlider::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+{
+    int max, min;
+    stateSchemaElement->getMinConstraint(min);
+    stateSchemaElement->getMaxConstraint(max);
+    m_slider->setMaximum(max);
+    m_slider->setMinimum(min);
 }
 
 void qtobserver::HorizontalSlider::setValueFromQt(int value)

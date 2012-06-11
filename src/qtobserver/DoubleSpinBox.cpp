@@ -21,6 +21,7 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> po
    }
 
    m_policy->addStateListener(m_key, this);
+   m_policy->addStateSchemaListener(m_key, this);
    double value;
    m_policy->getElementValue<double>(m_key, value);
    setValue(value);
@@ -33,6 +34,7 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> po
 DoubleSpinBox::~DoubleSpinBox()
 {
    m_policy->removeStateListener(m_key, this);
+   m_policy->removeStateSchemaListener(m_key, this);
 }
 }
 
@@ -41,6 +43,16 @@ void qtobserver::DoubleSpinBox::stateElementModified(policy::StateElement *state
    double value;
    m_policy->getElementValue<double>(m_key, value);
    emit setValueFromPolicy(value);
+}
+
+void qtobserver::DoubleSpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+{
+    double max, min;
+    stateSchemaElement->getMinConstraint(min);
+    stateSchemaElement->getMaxConstraint(max);
+    setMaximum(max);
+    setMinimum(min);
+
 }
 
 void qtobserver::DoubleSpinBox::valueSetFromQt(double val)

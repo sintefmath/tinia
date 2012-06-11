@@ -66,6 +66,14 @@ public:
     /** Get the maximum constraint of the data. */
     std::string getMaxConstraint() const;
 
+    /** Get the maximum constraint of the data. */
+    template<typename T>
+    void getMaxConstraint(T& t) const;
+
+    /** Get the minimum constraint of the data. */
+    template<typename T>
+    void getMinConstraint(T& t) const;
+
     /** Return true if the element has no constraints. */
     bool emptyConstraints() const;
 
@@ -194,8 +202,19 @@ ElementData::violatingRestriction( const T& value ) const {
     return restrictionSet.find( sValue ) == restrictionSet.end();
 }
 
+/** Get the maximum constraint of the data. */
+template<typename T>
+void
+ElementData::getMaxConstraint(T& t) const {
+    t = boost::lexical_cast<T>(getMaxConstraint());
+}
 
-
+/** Get the minimum constraint of the data. */
+template<typename T>
+void
+ElementData::getMinConstraint(T& t) const {
+    t = boost::lexical_cast<T>(getMinConstraint());
+}
 }
 }
 #endif // ELEMENTDATA_HPP

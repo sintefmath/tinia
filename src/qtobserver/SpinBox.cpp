@@ -20,6 +20,7 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
 
 
    m_policy->addStateListener(m_key, this);
+   m_policy->addStateSchemaListener(m_key, this);
    int value;
    m_policy->getElementValue<int>(m_key, value);
    setValue(value);
@@ -31,7 +32,17 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
 }
 SpinBox::~SpinBox()
 {
-   m_policy->removeStateListener(m_key, this);
+    m_policy->removeStateListener(m_key, this);
+     m_policy->removeStateSchemaListener(m_key, this);
+}
+
+void SpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+{
+    int max, min;
+    stateSchemaElement->getMinConstraint(min);
+    stateSchemaElement->getMaxConstraint(max);
+    setMaximum(max);
+    setMinimum(min);
 }
 }
 

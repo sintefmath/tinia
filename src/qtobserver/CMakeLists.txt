@@ -13,6 +13,7 @@ IF(NOT WIN32)
     ${qtobserver_HEADERS}
     ${qtobserver_SOURCES}
     ${qtobserver_HEADERS_MOC}
+    ${qtobserver_SOURCES_TO_BE_MOCED}
     ${qtobserver_FORMS_HEADERS}
     )
 ELSE()

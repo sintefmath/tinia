@@ -81,6 +81,18 @@ private:
 
 
 };
+
+template<typename T>
+void StateSchemaElement::getMaxConstraint(T& t) const
+{
+    m_data.getMaxConstraint(t);
+}
+
+template<typename T>
+void policy::StateSchemaElement::getMinConstraint(T& t) const
+{
+    m_data.getMinConstraint(t);
+}
 }
 }
 #endif // STATESCHEMAELEMENT_HPP
