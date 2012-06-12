@@ -8,5 +8,5 @@ echo "Getting JavaScript components"
 old_dir=`pwd`
 cd /var/trell/js/
 sh ./getDojo.sh
-sh ./compile.sh
+#sh ./compile.sh
 cd $old_dir

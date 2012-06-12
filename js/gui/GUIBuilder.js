@@ -212,7 +212,7 @@ dojo.declare("gui.GUIBuilder", null, {
         
         
 
-        return this._addKeyValue(spinBox, root, "value", ["change", "click"]);
+        return this._addMaxMinListeners(this._addKeyValue(spinBox, root, "value", ["change", "click"]), root);
     },
     _makeHorizontalSlider: function(root) {
 
@@ -223,7 +223,7 @@ dojo.declare("gui.GUIBuilder", null, {
             "minimum" : min,
             "style"   : "width: 150px;"
         });
-        return this._addKeyValue(slider, root, "value", "change" );
+        return this._addMaxMinListeners(this._addKeyValue(slider, root, "value", "change" ), root);
     },
     
     _makeVerticalSlider: function(root) {
@@ -235,7 +235,7 @@ dojo.declare("gui.GUIBuilder", null, {
             "minimum" : min,
             "style"   : "height: 150px;"
         });
-        return this._addKeyValue(slider, root, "value", "change");
+        return this._addMaxMinListeners(this._addKeyValue(slider, root, "value", "change"), root);
     },
    
     _makeVerticalLayout: function(root) {
@@ -406,6 +406,16 @@ dojo.declare("gui.GUIBuilder", null, {
         return widget;
     },
     
+    _addMaxMinListeners : function(widget, root) {
+        this._policyLib.addLocalListener(root.key(), function(key, value) {
+            var max = this._policyLib.getMax(key);
+            var min = this._policyLib.getMin(key);
+            widget.set("minimum", this._policyLib.getMin(key));
+            widget.set("maximum", this._policyLib.getMax(key));
+            widget.set("constraints", {"max" : max, "min": min} );
+        }, this);
+        return widget;
+    },
     
     
     

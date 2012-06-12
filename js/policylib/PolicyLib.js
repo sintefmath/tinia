@@ -58,6 +58,22 @@ dojo.declare("policylib.PolicyLib", null, {
         elementData.setMin(min);
     },
     
+    updateConstrainedElement: function(key, min, max) {
+        var elementData = this._getElementData(key);
+        var emitChange = false;
+        if(elementData.getMax() != max) {
+            elementData.setMax(max);
+            emitChange = true;
+        } else if (elementData.getMin() != min) {
+            elementData.setMin(min);
+            emitChange = true;
+        }
+        
+        if(emitChange) {
+            this._notifyListeners(key, elementData);
+        }
+        
+    },
     addListElement: function(type, key, length, list) {
         if(!list) {
             list = [];

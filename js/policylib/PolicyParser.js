@@ -100,8 +100,8 @@ dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
             throw "Missing key in xmlElement = " + xmlElement;
         }
         else if(parent.hasKey(key)) {
-            
-            // Nothing to do here
+            this.updateElement(parent, key, xmlElement);
+            // Nothing more to do here
             return;
         }
         if(nodeName == "element") {
@@ -126,6 +126,24 @@ dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
         
         this.addAnnotation(parent, key, xmlElement);
         
+    },
+    
+    updateElement: function(parent, key, xmlElement) {
+                    console.log("updating element1");
+
+        if( this._isRestricted(xmlElement) ) {
+            console.log("updating element");
+            var minInclusive = this.queryXSD(xmlElement, "minInclusive");
+            var maxInclusive = this.queryXSD(xmlElement, "maxInclusive");
+            if(minInclusive && minInclusive.length > 0 && maxInclusive && 
+                maxInclusive.length > 0) {
+                console.log("max/min found, updating");
+                var max = dojo.attr(maxInclusive[0], "value");
+                var min = dojo.attr(minInclusive[0], "value");
+                
+                parent.updateConstrainedElement(key, min, max);
+            }
+        }
     },
     
     addSimpleElement: function(parent, type, key, xmlElement) {
