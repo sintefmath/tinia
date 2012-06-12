@@ -60,6 +60,16 @@ void policy::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
    {
       (*it)->stateSchemaElementRemoved(element);
    }
+
+   std::string key = element->getKey();
+   if(m_keyListeners.find(key)!=m_keyListeners.end())
+   {
+      auto listeners = m_keyListeners[key];
+      for(auto it = listeners.begin(); it != listeners.end(); it++)
+      {
+         (*it)->stateSchemaElementRemoved(element);
+      }
+   }
 }
 
 void policy::StateSchemaListenerHandler::fireStateSchemaElementModified(
@@ -68,6 +78,16 @@ void policy::StateSchemaListenerHandler::fireStateSchemaElementModified(
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
    {
       (*it)->stateSchemaElementModified(element);
+   }
+
+   std::string key = element->getKey();
+   if(m_keyListeners.find(key)!=m_keyListeners.end())
+   {
+      auto listeners = m_keyListeners[key];
+      for(auto it = listeners.begin(); it != listeners.end(); it++)
+      {
+         (*it)->stateSchemaElementModified(element);
+      }
    }
 }
 }

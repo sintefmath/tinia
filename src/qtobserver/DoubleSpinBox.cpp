@@ -47,6 +47,7 @@ void qtobserver::DoubleSpinBox::stateElementModified(policy::StateElement *state
 
 void qtobserver::DoubleSpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
 {
+    std::cout << "Updating min/max" << std::endl;
     double max, min;
     stateSchemaElement->getMinConstraint(min);
     stateSchemaElement->getMaxConstraint(max);
