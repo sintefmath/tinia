@@ -7,8 +7,10 @@ dojo.require("policylib.StateParser");
 dojo.require("dojox.xml.parser");
 dojo.require("policylib.PolicySender");
 dojo.require("policylib.PolicyReceiver");
+dojo.require("policylib.URLHandler");
 dojo.require("dijit.layout.StackContainer");
 dojo.require("3rdparty/webgl-utils");
+dojo.require("3rdparty.glMatrix");
 
 
 dojo.require("gui.GUIBuilder");
@@ -123,7 +125,8 @@ doh.register("ParserTest", {
         doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
         
         doh.assertTrue(!!policyLib.GUI());
-        doh.assertEqual("viewer", policyLib.GUI().child(1).key());
+
+        doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
     },
    
     parseTwice: function() {
@@ -177,7 +180,7 @@ doh.register("ParserTest", {
         doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
         
         doh.assertTrue(!!policyLib.GUI());
-        doh.assertEqual("viewer", policyLib.GUI().child(1).key());
+        doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
     }
 });
 
@@ -325,7 +328,7 @@ doh.register("BuilderTest", {
         doh.assertEqual(projection, policy.getValue("viewer").getValue("Projection"));
         
         doh.assertTrue(!!policy.GUI());
-        doh.assertEqual("viewer", policy.GUI().child(1).key());
+        doh.assertEqual("viewer", policy.GUI().child(1).child(0,0).key());
         
        
         var xml = dojox.xml.parser.parse(builder.buildXML());
@@ -360,7 +363,8 @@ doh.register("PolicySenderTest", {
     simpleTest: function() {
         var policy = new policylib.PolicyLib();
         policy.addElement("integer", "timestep", 20);
-        var sender = new policylib.PolicySender("../../xml/updateState.xml", policy);
+        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
+        var sender = new policylib.PolicySender(policySenderUrlHandler, policy);
         
         var deferred = new doh.Deferred();
         var started = false;
@@ -416,7 +420,7 @@ doh.register("PolicyReceiverTest", {
             doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
         
             doh.assertTrue(!!policyLib.GUI());
-            doh.assertEqual("viewer", policyLib.GUI().child(1).key());
+            doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
             if(!complete) {
                 deferred.callback(true);
                 complete = true;
@@ -490,6 +494,8 @@ doh.register("GUIBuilderTest", {
     
     
     gridLayoutTest : function() {
+        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
+        
         var policy = new policylib.PolicyLib();
         policy.addElement("string", "key", "value");
         policy.addAnnotation("key", "Annotation");
@@ -497,7 +503,7 @@ doh.register("GUIBuilderTest", {
         var layout = new policylib.gui.Grid();
         layout.setChild(0,0, textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(policy, "", true, policySenderUrlHandler, "");
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
@@ -505,7 +511,8 @@ doh.register("GUIBuilderTest", {
     
     guiFromXML : function() {
         var policy = new policylib.PolicyLib();
-
+        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
+        
         var parser = new policylib.PolicyParser(policy);
         dojo.xhrGet({
             url: "../../xml/getPolicyUpdate.xml",
@@ -521,7 +528,7 @@ doh.register("GUIBuilderTest", {
             }
         });
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(policy, "", true, policySenderUrlHandler, "");
         contentPane.addChild(builder.buildGUI(policy.GUI()));
         
     }

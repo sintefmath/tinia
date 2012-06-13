@@ -39,6 +39,7 @@ dojo.declare("gui.HorizontalLayout", [dijit._Widget, dijit._Container],
             this._children[i].startup();
         }
     }
+    
 });/* 
  * To change this template, choose Tools | Templates
  * and open the template in the editor.

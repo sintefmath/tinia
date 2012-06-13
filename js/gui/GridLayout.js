@@ -20,6 +20,7 @@ dojo.declare("gui.GridLayout", [dijit._Widget], {
             var row = dojo.create("tr");
             for(var j = 0; j < this._GridLayout_width; j++) {
                 var cell = dojo.create("td");
+                
                 this._GridLayout_cells[i][j] = cell;
                 row.appendChild(cell);
             }
@@ -35,6 +36,10 @@ dojo.declare("gui.GridLayout", [dijit._Widget], {
         this._GridLayout_children[this._GridLayout_children.length] = node;
         this._GridLayout_cells[row][col].appendChild(node.domNode);
         this._children[this._children.length] = node;
+    },
+    
+    child: function(i) {
+        return this._children[i];
     },
     
     startup: function() {
