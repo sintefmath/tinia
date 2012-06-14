@@ -17,6 +17,9 @@ dojo.declare("policylib.PolicySender", null, {
         
         dojo.subscribe("/policylib/updateParsed", dojo.hitch(this, function() {
             this._parsingUpdate = false;
+            if(this._repostUpdate) {
+                this._update()
+            }
         }));
     },
     
@@ -27,6 +30,9 @@ dojo.declare("policylib.PolicySender", null, {
     },
     _update: function(key) {
         if(this._parsingUpdate) {
+            this._repostUpdate = true;
+            if(key)
+                this._keys[key] = true;
             return;
         }
         if(key)

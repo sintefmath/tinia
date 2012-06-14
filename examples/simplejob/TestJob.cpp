@@ -304,8 +304,9 @@ void TestJob::stateElementModified(tinia::policy::StateElement *stateElement)
    if(stateElement->getKey() == "myIntBA") {
        int max;
        stateElement->getValue(max);
-       m_policy->updateConstraints("myDouble", max/2., 0., double(max) );
+       m_policy->updateConstraints("myDouble", max/2., 0., double(max));
    }
+
 }
 
 bool TestJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
