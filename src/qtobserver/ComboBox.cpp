@@ -25,7 +25,7 @@ ComboBox::ComboBox(std::string key, std::shared_ptr<policy::Policy> policy,
    }
    m_options.sort();
    addItems(m_options);
-   activated(m_options.indexOf(m_policy->getElementValueAsString(m_key).c_str()));
+   setCurrentIndex(m_options.indexOf(m_policy->getElementValueAsString(m_key).c_str()));
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 }

@@ -41,7 +41,7 @@ bool TestJob::init()
    m_policy->addElement<std::string>("myVal", "THIS WORKS!");
 
    const char* restrictions[] = {"select1", "select2", "select3", "select4"};
-   m_policy->addElementWithRestriction<std::string>("myVal2", "select1",
+   m_policy->addElementWithRestriction<std::string>("myVal2", "select3",
                                                        &restrictions[0], &restrictions[4]);
 
    m_policy->addAnnotation("myVal2", "My special value");
