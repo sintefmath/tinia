@@ -29,7 +29,8 @@ function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, 
                 style: "width: 100%; height: 100%"
             }, dojo.byId("gui"));
 
-
+            if(!isLocal)
+                var sender = new policylib.PolicySender(policySenderUrlHandler, policy);
             var mainWindow = builder.buildGUI(policy.GUI(), policySenderUrlHandler);
 
 
@@ -41,8 +42,7 @@ function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, 
             //     appLayout.startup();
             mainWindow.startup();
 
-            if(!isLocal)
-                var sender = new policylib.PolicySender(policySenderUrlHandler, policy);
+            
             var receiver = new policylib.PolicyReceiver(getPolicyUpdateURL, policy);
             if(!isLocal) {
                 receiver.longPoll();

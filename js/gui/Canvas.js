@@ -105,7 +105,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._policyLib.addLocalListener(this._boundingboxKey, function(key, value) {
             this._trackball.setBoundingBox(value);
             this._updateMatrices();
+            // We'll update the matrices twice, one time after the update is parsed as well
+            this._shouldUpdate = true;
         }, this);
+        
         
         this._policyLib.addLocalListener(this._resetViewKey, function(key, value) {
             this._trackball = new gui.TrackBallViewer();
@@ -120,25 +123,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         if(this._policyLib.hasKey(this._boundingboxKey)) {
             this._trackball.setBoundingBox(this._policyLib.getValue(this._boundingboxKey));
+
         }
 
-        /*
 
-        this._policyLib.addListener(function(key, value) {
-            this._updateMatrices();
-        }, this);
-    dojo.subscribe("/policylib/updateSendPartialComplete", dojo.hitch(this, function() {
-        this._update();
-    }));
-    dojo.subscribe("/policylib/updateSendComplete", dojo.hitch(this, function() {
-        this._update();
-    }));
-
-        */
-
+        
         this._urlHandler.setURL(this._snapshotURL);
         dojo.subscribe("/policylib/updateParsed", dojo.hitch(this, function(params) {
-            this._updateMatrices();
+            if(this._shouldUpdate) {
+                this._updateMatrices();
+            }
+            this._shouldUpdate = false;
         }));
 
         dojo.subscribe("/policylib/updateSendPartialComplete", dojo.hitch(this, function(params) {
