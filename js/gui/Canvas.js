@@ -123,10 +123,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         if(this._policyLib.hasKey(this._boundingboxKey)) {
             this._trackball.setBoundingBox(this._policyLib.getValue(this._boundingboxKey));
-            this._shouldUpdate = true;
         }
 
-
+        // We always want to update after the first parsing
+        this._shouldUpdate = true;
         
         this._urlHandler.setURL(this._snapshotURL);
         dojo.subscribe("/policylib/updateParsed", dojo.hitch(this, function(params) {
