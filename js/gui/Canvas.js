@@ -123,7 +123,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         if(this._policyLib.hasKey(this._boundingboxKey)) {
             this._trackball.setBoundingBox(this._policyLib.getValue(this._boundingboxKey));
-
+            this._shouldUpdate = true;
         }
 
 
