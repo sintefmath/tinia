@@ -47,7 +47,7 @@ ENDIF( NOT  DEFINED build_number )
 SET( version_number "0.${revision}.${build_number}" )
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-        SET(CMAKE_CXX_FLAGS " -DDEBUG -g3 -Wall -fPIC -std=gnu++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
+        SET(CMAKE_CXX_FLAGS " -DDEBUG -g3 -Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
 ENDIF()
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
@@ -92,7 +92,8 @@ IF(${SERVER})
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-  SET(APACHE_INCLUDE_DIR "/usr/include/apache2")
+
+  SET(APACHE_INCLUDE_DIR "/usr/include/apache2" "/usr/include/httpd/")
   SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
     "/usr/include/apr-1")
 ENDIF()
