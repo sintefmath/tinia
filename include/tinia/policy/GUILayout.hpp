@@ -58,7 +58,7 @@ public:
           m_enabled_inverted(false)
     {
     }
-
+    virtual ~Element() {}
     /** \return The ElementType of the widget. */
     virtual const ElementType type() const = 0;
 
