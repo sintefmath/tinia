@@ -21,38 +21,38 @@
 
 #include <QWidget>
 #include <QSlider>
-#include <tinia/policy/Policy.hpp>
-#include <tinia/policy/StateListener.hpp>
-#include <tinia/policy/StateSchemaElement.hpp>
-#include <tinia/policy/StateSchemaListener.hpp>
+#include <tinia/model/ExposedModel.hpp>
+#include <tinia/model/StateListener.hpp>
+#include <tinia/model/StateSchemaElement.hpp>
+#include <tinia/model/StateSchemaListener.hpp>
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class HorizontalSlider : public QWidget, public policy::StateListener, public policy::StateSchemaListener
+class HorizontalSlider : public QWidget, public model::StateListener, public model::StateSchemaListener
 {
     Q_OBJECT
 public:
     explicit HorizontalSlider(std::string key, bool withButtons,
-                              std::shared_ptr<policy::Policy> policy,
+                              std::shared_ptr<model::ExposedModel> model,
                               QWidget *parent = 0);
 
    ~HorizontalSlider();
-   void stateElementModified(policy::StateElement *stateElement);
+   void stateElementModified(model::StateElement *stateElement);
 
-   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
 signals:
-   void setValueFromPolicy(int value);
+   void setValueFromExposedModel(int value);
 public slots:
    void setValueFromQt(int value);
 
 private:
    void addButtons();
    std::string m_key;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    QSlider* m_slider;
 
 };

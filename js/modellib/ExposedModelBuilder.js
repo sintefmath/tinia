@@ -16,20 +16,20 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.provide("policylib.PolicyBuilder");
+dojo.provide("model.ExposedModelBuilder");
 
-dojo.declare("policylib.PolicyBuilder", null, {
-   constructor: function(policyLib) {
-       this._policyLib = policyLib;
+dojo.declare("model.ExposedModelBuilder", null, {
+   constructor: function(modelLib) {
+       this._modelLib = modelLib;
    },
    
    buildXML : function(keys) {
         var xml = "<State>\n";
         if(!keys) {
-            keys = this._policyLib.keys();
+            keys = this._modelLib.keys();
         }
         for(var i = 0; i < keys.length; i++) {
-            xml+=this._makeXML(keys[i], this._policyLib);
+            xml+=this._makeXML(keys[i], this._modelLib);
         }
         xml +="</State>\n";
         return xml;

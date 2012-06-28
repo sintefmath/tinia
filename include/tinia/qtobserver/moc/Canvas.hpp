@@ -27,26 +27,26 @@
 #include <tinia/renderlist/gl/Renderer.hpp>
 #include <siut2/dsrv/DSRViewer.hpp>
 #include "tinia/jobobserver/OpenGLJob.hpp"
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/StateListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/StateListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
-class Canvas : public QGLWidget, public policy::StateListener
+class Canvas : public QGLWidget, public model::StateListener
 {
     Q_OBJECT
 public:
     explicit Canvas(jobobserver::OpenGLJob* openglJob,
                     std::string key, std::string boundingBoxKey,
                     const std::string& resetViewKey,
-                    std::shared_ptr<policy::Policy> policy,
+                    std::shared_ptr<model::ExposedModel> model,
                     QWidget* parent,
                     QGLWidget* share_widget,
                     bool perf_mode = false);
    ~Canvas();
 
-   void stateElementModified(policy::StateElement *stateElement);
+   void stateElementModified(model::StateElement *stateElement);
    void setPreferredSize();
    QSizePolicy sizePolicy() const;
    QSize minimumSize() const;
@@ -61,8 +61,8 @@ protected:
    void keyPressEvent(QKeyEvent *event);
    void keyReleaseEvent(QKeyEvent *);
 signals:
-   void resetViewFromPolicy();
-   void updateFromPolicy();
+   void resetViewFromExposedModel();
+   void updateFromExposedModel();
    void updateDSRV();
    void updateFPS( QString fps );
 public slots:
@@ -75,7 +75,7 @@ private:
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    jobobserver::OpenGLJob* m_job;
    siut2::dsrv::DSRViewer* m_dsrv;
    QTime                   m_last_fps_calc;

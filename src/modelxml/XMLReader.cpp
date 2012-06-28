@@ -16,9 +16,9 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policyxml/XMLReader.hpp"
-//#include "tinia/policy/Policy.hpp"
-#include "tinia/policyxml/utils.hpp"
+#include "tinia/modelxml/XMLReader.hpp"
+//#include "tinia/model/ExposedModel.hpp"
+#include "tinia/modelxml/utils.hpp"
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -29,7 +29,7 @@
 
 using namespace std;
 namespace tinia {
-namespace policyxml
+namespace modelxml
 {
 
 
@@ -141,10 +141,10 @@ XMLReader::XMLReader()
 
     // should be replaced by the version in utils.hpp if that would work... argh...
 
-    void pt_print0(policy::StringStringPTree const& pt, const int level)
+    void pt_print0(model::StringStringPTree const& pt, const int level)
     {
-        policy::StringStringPTree::const_iterator end = pt.end();
-        policy::StringStringPTree::const_iterator it = pt.begin();
+        model::StringStringPTree::const_iterator end = pt.end();
+        model::StringStringPTree::const_iterator it = pt.begin();
 #if 0
         if (it==end) {
             for (int i=0; i<level; i++)
@@ -160,7 +160,7 @@ XMLReader::XMLReader()
         }
     }
 
-    void pt_print(const string &msg, policy::StringStringPTree const& pt)
+    void pt_print(const string &msg, model::StringStringPTree const& pt)
     {
         printf("------------- ptree start ----------- (%s)\n", msg.c_str());
         pt_print0(pt, 0);
@@ -183,10 +183,10 @@ XMLReader::XMLReader()
         if ( top_level_depth>=0 ) { // Ok, "State" was found, continue scanning for named elements...
             bool state_end_found=false, processing_complex_type=false;
             string complex_type_name;
-            policy::StringStringPTree ptree;
+            model::StringStringPTree ptree;
             ptree.add("root", 0);
-            vector<policy::StringStringPTree::iterator> prev_pos; // Recursion through stack-usage
-            policy::StringStringPTree::iterator current_pos = ptree.begin();
+            vector<model::StringStringPTree::iterator> prev_pos; // Recursion through stack-usage
+            model::StringStringPTree::iterator current_pos = ptree.begin();
             int prev_depth = top_level_depth;
 
             while ( !state_end_found ) {

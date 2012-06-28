@@ -21,28 +21,28 @@
 
 #include <QWidget>
 #include <QTableWidget>
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/StateSchemaListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
-class TabWidgetChildren : public QWidget, public policy::StateSchemaListener
+class TabWidgetChildren : public QWidget, public model::StateSchemaListener
 {
     Q_OBJECT
 public:
     explicit TabWidgetChildren(std::string key,
-                               std::shared_ptr<policy::Policy> policy,
+                               std::shared_ptr<model::ExposedModel> model,
                                QTabWidget *parent = 0);
-   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
 
 signals:
 
 public slots:
 private:
-      std::shared_ptr<policy::Policy> m_policy;
+      std::shared_ptr<model::ExposedModel> m_model;
       std::string m_key;
 
 };

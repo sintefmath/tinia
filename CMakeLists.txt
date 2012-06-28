@@ -109,9 +109,9 @@ include_directories( "./include"
   ${BOOST_INCLUDE_DIRS}
 )
 
-ADD_SUBDIRECTORY( "src/policy" )
+ADD_SUBDIRECTORY( "src/model" )
 IF(${SERVER})
-  ADD_SUBDIRECTORY( "src/policyxml" )
+  ADD_SUBDIRECTORY( "src/modelxml" )
 ENDIF()
 ADD_SUBDIRECTORY( "src/renderlist" )
 ADD_SUBDIRECTORY( "src/renderlistgl" )
@@ -126,9 +126,9 @@ IF(${SERVER})
 ENDIF()
 
 # Unit tests
-ADD_SUBDIRECTORY( "unittests/policy/" )
+ADD_SUBDIRECTORY( "unittests/model/" )
 IF(${SERVER})
-  ADD_SUBDIRECTORY( "unittests/policyxml/" )
+  ADD_SUBDIRECTORY( "unittests/modelxml/" )
 ENDIF()
 ADD_SUBDIRECTORY( "unittests/renderlist/" )
 ADD_SUBDIRECTORY( "unittests/jobobserver/" )
@@ -144,10 +144,10 @@ SET( CPACK_MONOLITHIC_INSTALL 1)
 SET( CPACK_PACKAGE_VERSION ${version_number} )
 SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
 SET( CPACK_COMPONENTS_ALL 
-  policylib
-  policylib-dev 
-  policylibxml
-  policylibxml-dev
+  model
+  model-dev 
+  modelxml
+  modelxml-dev
   jobobserver
   jobobserver-dev
   renderlist

@@ -16,16 +16,16 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.require("policylib.URLHandler");
+dojo.require("model.URLHandler");
 
-dojo.require("policylib.PolicyLib");
-dojo.require("policylib.PolicyParser");
-dojo.require("policylib.PolicySender");
-dojo.require("policylib.PolicyReceiver");
+dojo.require("model.ExposedModel");
+dojo.require("model.ExposedModelParser");
+dojo.require("model.ExposedModelSender");
+dojo.require("model.ExposedModelReceiver");
 dojo.require("dijit.layout.BorderContainer");
 dojo.require("gui.GUIBuilder");
-dojo.require("policylib.Logger");
-dojo.require("policylib.gui.GUILayout");
+dojo.require("model.Logger");
+dojo.require("model.gui.GUILayout");
 dojo.require("dijit.layout.BorderContainer");
 dojo.require("dijit.layout.ContentPane");
 dojo.require("dijit.layout.TabContainer");

@@ -24,9 +24,9 @@
 class QMainWindow;
 class QGLWidget;
 namespace tinia {
-namespace policy {
-    class Policy;
-} // of namespace policy
+namespace model {
+    class ExposedModel;
+} // of namespace model
 
 namespace jobobserver {
     class Job;
@@ -66,7 +66,7 @@ private:
     QGLWidget*                              m_root_context;
     jobobserver::Job*                       m_job;
     GUIBuilder*                             m_builder;
-    std::shared_ptr<policy::Policy>   m_policy;
+    std::shared_ptr<model::ExposedModel>   m_model;
     bool                                    m_perf_mode;
     bool                                    m_renderlist_mode;
 };

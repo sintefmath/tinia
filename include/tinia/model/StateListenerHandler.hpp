@@ -18,13 +18,13 @@
 
 #ifndef STATELISTENERHANDLER_HPP
 #define STATELISTENERHANDLER_HPP
-#include "tinia/policy/StateListener.hpp"
+#include "tinia/model/StateListener.hpp"
 #include <vector>
 #include <string>
 #include <map>
 
 namespace tinia {
-namespace policy {
+namespace model {
 class StateListenerHandler
 {
 public:

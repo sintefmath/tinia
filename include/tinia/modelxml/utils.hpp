@@ -28,12 +28,12 @@
 
 
 /** \file utils.hpp
-    This file contains various utilty function that is used throughout policy.
+    This file contains various utilty function that is used throughout model.
     They are mostly intended for internal-use, but might also be convenient for
     other applications where libxml is used.
   */
 namespace tinia {
-namespace policyxml {
+namespace modelxml {
 
 /** Convenience function to do simple XPath queries. */
 xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression );

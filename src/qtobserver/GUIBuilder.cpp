@@ -47,14 +47,14 @@
 namespace tinia {
 namespace qtobserver {
 
-namespace pg = policy::gui;
+namespace pg = model::gui;
 
-GUIBuilder::GUIBuilder( std::shared_ptr<policy::Policy>   policy,
+GUIBuilder::GUIBuilder( std::shared_ptr<model::ExposedModel>   model,
                         jobobserver::Job*                       job,
                         QTObserver*                             observer,
                         const bool                              perf_mode,
                         QGLWidget*                              root_context )
-   : m_policy(policy),
+   : m_model(model),
      m_job(job),
      m_observer( observer ),
      m_perf_mode( perf_mode ),
@@ -63,7 +63,7 @@ GUIBuilder::GUIBuilder( std::shared_ptr<policy::Policy>   policy,
 }
 
 
-QWidget* GUIBuilder::buildGUI(policy::gui::Element* root, QWidget *parent )
+QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
 {
     QWidget* widget = NULL;
 
@@ -85,7 +85,7 @@ QWidget* GUIBuilder::buildGUI(policy::gui::Element* root, QWidget *parent )
         if( text_input != NULL ) {
             widget = new QLineEdit( parent );
             new StringController( widget,
-                                  m_policy,
+                                  m_model,
                                   text_input->key(),
                                   true );
         }
@@ -101,7 +101,7 @@ QWidget* GUIBuilder::buildGUI(policy::gui::Element* root, QWidget *parent )
         if( label != NULL ) {
             widget = new QLabel( parent );
             new StringController( widget,
-                                  m_policy,
+                                  m_model,
                                   label->key(),
                                   label->showValue() );
         }
@@ -184,13 +184,13 @@ QWidget* GUIBuilder::buildGUI(policy::gui::Element* root, QWidget *parent )
 
         if( !root->visibilityKey().empty() ) {
             new VisibilityController( widget,
-                                      m_policy,
+                                      m_model,
                                       root->visibilityKey(),
                                       root->visibilityInverted() );
         }
         if( !root->enabledKey().empty() ) {
             new EnabledController( widget,
-                                   m_policy,
+                                   m_model,
                                    root->enabledKey(),
                                    root->enabledInverted() );
         }
@@ -200,13 +200,13 @@ QWidget* GUIBuilder::buildGUI(policy::gui::Element* root, QWidget *parent )
 }
 
 QWidget*
-GUIBuilder::addPopupButton( policy::gui::PopupButton* root, QWidget* parent )
+GUIBuilder::addPopupButton( model::gui::PopupButton* root, QWidget* parent )
 {
     QString suffix( " " );
     suffix.append( QChar( 0x02ec ) );
     QPushButton* widget = new QPushButton( parent );
     widget->setCheckable( true );
-    new StringController( widget, m_policy, root->key(),root->showValue(), suffix );
+    new StringController( widget, m_model, root->key(),root->showValue(), suffix );
 
     QWidget* foo = buildGUI( root->child(), widget );
     if( foo != NULL ) {
@@ -220,17 +220,17 @@ GUIBuilder::addPopupButton( policy::gui::PopupButton* root, QWidget* parent )
 
 
 QWidget*
-GUIBuilder::addTabLayout(policy::gui::TabLayout *root, QWidget *parent)
+GUIBuilder::addTabLayout(model::gui::TabLayout *root, QWidget *parent)
 {
     QTabWidget* tabWidget = new QTabWidget(parent);
 
     for( size_t i=0; i<root->children(); i++ ) {
-        policy::gui::Tab* tab = root->child( i );
+        model::gui::Tab* tab = root->child( i );
         if( tab != NULL ) {
             QWidget* child = buildGUI( tab->child(), tabWidget );
             if( child != NULL ) {
                 tabWidget->addTab( child,
-                                   QString(prettyName(tab->key(), m_policy).c_str()) );
+                                   QString(prettyName(tab->key(), m_model).c_str()) );
             }
             else {
                 std::cerr << __FILE__ << '@' << __LINE__<< ": ERROR: got nullptr.\n";
@@ -245,7 +245,7 @@ GUIBuilder::addTabLayout(policy::gui::TabLayout *root, QWidget *parent)
 
 
 QWidget*
-GUIBuilder::addHorizontalLayout(policy::gui::HorizontalLayout *root, QWidget *parent)
+GUIBuilder::addHorizontalLayout(model::gui::HorizontalLayout *root, QWidget *parent)
 {
     QWidget* widget = new QWidget(parent);
     doHorizontalLayout( root, widget );
@@ -253,7 +253,7 @@ GUIBuilder::addHorizontalLayout(policy::gui::HorizontalLayout *root, QWidget *pa
 }
 
 QWidget*
-GUIBuilder::addVerticalLayout(policy::gui::VerticalLayout *root, QWidget *parent)
+GUIBuilder::addVerticalLayout(model::gui::VerticalLayout *root, QWidget *parent)
 {
     QWidget* widget = new QWidget(parent);
     doVerticalLayout( root, widget );
@@ -261,23 +261,23 @@ GUIBuilder::addVerticalLayout(policy::gui::VerticalLayout *root, QWidget *parent
 }
 
 void
-GUIBuilder::doHorizontalLayout(policy::gui::HorizontalLayout *root, QWidget *widget)
+GUIBuilder::doHorizontalLayout(model::gui::HorizontalLayout *root, QWidget *widget)
 {
     QHBoxLayout* layout = new QHBoxLayout( widget );
     widget->setLayout( layout );
     widget->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
-    addChildren( static_cast<policy::gui::Container1D<policy::gui::Element>*>( root ),
+    addChildren( static_cast<model::gui::Container1D<model::gui::Element>*>( root ),
                  widget,
                  layout );
 }
 
 void
-GUIBuilder::doVerticalLayout(policy::gui::VerticalLayout *root, QWidget *widget)
+GUIBuilder::doVerticalLayout(model::gui::VerticalLayout *root, QWidget *widget)
 {
     QVBoxLayout* layout = new QVBoxLayout( widget );
     widget->setLayout( layout );
     widget->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
-    addChildren( static_cast<policy::gui::Container1D<policy::gui::Element>*>( root ),
+    addChildren( static_cast<model::gui::Container1D<model::gui::Element>*>( root ),
                  widget,
                  layout );
 }
@@ -288,22 +288,22 @@ GUIBuilder::doVerticalLayout(policy::gui::VerticalLayout *root, QWidget *widget)
 
 
 QLayoutItem*
-GUIBuilder::buildLayoutItem( policy::gui::Element* root )
+GUIBuilder::buildLayoutItem( model::gui::Element* root )
 {
-    policy::gui::VerticalSpace* vspace = dynamic_cast<policy::gui::VerticalSpace*>( root );
+    model::gui::VerticalSpace* vspace = dynamic_cast<model::gui::VerticalSpace*>( root );
     if( vspace != NULL ) {
         return new QSpacerItem(0, 10, QSizePolicy::Minimum, QSizePolicy::Minimum);
     }
-    policy::gui::VerticalExpandingSpace* vexspace = dynamic_cast<policy::gui::VerticalExpandingSpace*>( root );
+    model::gui::VerticalExpandingSpace* vexspace = dynamic_cast<model::gui::VerticalExpandingSpace*>( root );
     if( vexspace != NULL ) {
         return new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
     }
 
-    policy::gui::HorizontalSpace* hspace = dynamic_cast<policy::gui::HorizontalSpace*>( root );
+    model::gui::HorizontalSpace* hspace = dynamic_cast<model::gui::HorizontalSpace*>( root );
     if( hspace != NULL ) {
         return new QSpacerItem(10, 0, QSizePolicy::Minimum, QSizePolicy::Minimum);
     }
-    policy::gui::HorizontalExpandingSpace* hexspace = dynamic_cast<policy::gui::HorizontalExpandingSpace*>( root );
+    model::gui::HorizontalExpandingSpace* hexspace = dynamic_cast<model::gui::HorizontalExpandingSpace*>( root );
     if( hexspace != NULL ) {
         return new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Minimum );
     }
@@ -312,7 +312,7 @@ GUIBuilder::buildLayoutItem( policy::gui::Element* root )
 
 
 QWidget*
-GUIBuilder::addGrid(policy::gui::Grid *root, QWidget *parent)
+GUIBuilder::addGrid(model::gui::Grid *root, QWidget *parent)
 {
     QWidget* grid_widget = new QWidget(parent);
     doGridLayout( root, grid_widget );
@@ -320,14 +320,14 @@ GUIBuilder::addGrid(policy::gui::Grid *root, QWidget *parent)
 }
 
 void
-GUIBuilder::doGridLayout( policy::gui::Grid* root, QWidget* widget )
+GUIBuilder::doGridLayout( model::gui::Grid* root, QWidget* widget )
 {
     QGridLayout* grid_layout = new QGridLayout;
     //grid_layout->setHorizontalSpacing(0);
     //grid_layout->setVerticalSpacing(0);
     //grid_layout->setContentsMargins( 0, 0, 0, 0 );
     widget->setLayout( grid_layout );
-    addChildren( static_cast<policy::gui::Container2D<policy::gui::Element>*>( root ),
+    addChildren( static_cast<model::gui::Container2D<model::gui::Element>*>( root ),
                  widget,
                  grid_layout );
 
@@ -336,31 +336,31 @@ GUIBuilder::doGridLayout( policy::gui::Grid* root, QWidget* widget )
 
 
 QWidget*
-GUIBuilder::addElementGroup(policy::gui::ElementGroup *root, QWidget *parent)
+GUIBuilder::addElementGroup(model::gui::ElementGroup *root, QWidget *parent)
 {
     QGroupBox* widget = new QGroupBox( parent );
     widget->setFlat( true );
 
     const std::string key = root->key();
     if( root->showLabel() && !root->key().empty() ) {
-        widget->setTitle( (prettyName( root->key(), m_policy ) ).c_str() );
+        widget->setTitle( (prettyName( root->key(), m_model ) ).c_str() );
     }
 
-    policy::gui::Element* child = root->child();
+    model::gui::Element* child = root->child();
     if( child != NULL ) {
-        if( child->type() == policy::gui::GRID ) {
-            doGridLayout( static_cast<policy::gui::Grid*>( child ), widget );
+        if( child->type() == model::gui::GRID ) {
+            doGridLayout( static_cast<model::gui::Grid*>( child ), widget );
         }
-        else if( child->type() == policy::gui::HORIZONTAL_LAYOUT ) {
-            doHorizontalLayout( static_cast<policy::gui::HorizontalLayout*>( child ), widget );
+        else if( child->type() == model::gui::HORIZONTAL_LAYOUT ) {
+            doHorizontalLayout( static_cast<model::gui::HorizontalLayout*>( child ), widget );
         }
-        else if( child->type() == policy::gui::VERTICAL_LAYOUT ) {
-            doVerticalLayout( static_cast<policy::gui::VerticalLayout*>( child ), widget );
+        else if( child->type() == model::gui::VERTICAL_LAYOUT ) {
+            doVerticalLayout( static_cast<model::gui::VerticalLayout*>( child ), widget );
         }
         else {
             QHBoxLayout* layout = new QHBoxLayout( widget );
             widget->setLayout( layout );
-            addChildren( static_cast<policy::gui::Container0D<policy::gui::Element>*>( root ),
+            addChildren( static_cast<model::gui::Container0D<model::gui::Element>*>( root ),
                          widget,
                          layout );
         }
@@ -370,7 +370,7 @@ GUIBuilder::addElementGroup(policy::gui::ElementGroup *root, QWidget *parent)
 
 
 QWidget*
-GUIBuilder::addCanvas(policy::gui::Canvas *root, QWidget *parent )
+GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
 {
     QWidget* wrapper = NULL;
 
@@ -391,7 +391,7 @@ GUIBuilder::addCanvas(policy::gui::Canvas *root, QWidget *parent )
                                       root->key(),
                                       root->boundingBoxKey(),
                                       root->resetViewKey(),
-                                      m_policy,
+                                      m_model,
                                       wrapper,
                                       m_root_context,
                                       true );
@@ -429,7 +429,7 @@ GUIBuilder::addCanvas(policy::gui::Canvas *root, QWidget *parent )
                                       root->key(),
                                       root->boundingBoxKey(),
                                       root->resetViewKey(),
-                                      m_policy,
+                                      m_model,
                                       parent,
                                       m_root_context,
                                       false );
@@ -443,66 +443,66 @@ GUIBuilder::addCanvas(policy::gui::Canvas *root, QWidget *parent )
 
 
 QWidget*
-GUIBuilder::addCombobox(policy::gui::ComboBox *root, QWidget *parent)
+GUIBuilder::addCombobox(model::gui::ComboBox *root, QWidget *parent)
 {
-    QWidget* w = new ComboBox(root->key(), m_policy, parent);
+    QWidget* w = new ComboBox(root->key(), m_model, parent);
     w->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
     return w;
 }
 
 QWidget*
-GUIBuilder::addRadiobuttons(policy::gui::RadioButtons *root, QWidget *parent)
+GUIBuilder::addRadiobuttons(model::gui::RadioButtons *root, QWidget *parent)
 {
-    QWidget* w = new RadioButtonGroup(root->key(), m_policy,  root->horizontal(), parent);
+    QWidget* w = new RadioButtonGroup(root->key(), m_model,  root->horizontal(), parent);
     w->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
     return w;
 }
 
 
 QWidget*
-GUIBuilder::addSpinBox(policy::gui::SpinBox *root, QWidget *parent)
+GUIBuilder::addSpinBox(model::gui::SpinBox *root, QWidget *parent)
 {
-   QWidget* w = new SpinBox(root->key(), m_policy, parent);
+   QWidget* w = new SpinBox(root->key(), m_model, parent);
    w->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Minimum );
    return w;
 }
 
 QWidget*
-GUIBuilder::addCheckBox(policy::gui::CheckBox *root, QWidget *parent)
+GUIBuilder::addCheckBox(model::gui::CheckBox *root, QWidget *parent)
 {
-   return new CheckBox(root->key(), m_policy, parent);
+   return new CheckBox(root->key(), m_model, parent);
 }
 
 QWidget*
-GUIBuilder::addButton(policy::gui::Button *root, QWidget *parent)
+GUIBuilder::addButton(model::gui::Button *root, QWidget *parent)
 {
-    return new Button(root->key(), m_policy, parent);
+    return new Button(root->key(), m_model, parent);
 }
 
 QWidget*
-GUIBuilder::addHorizontalSlider(policy::gui::HorizontalSlider *root, QWidget *parent)
+GUIBuilder::addHorizontalSlider(model::gui::HorizontalSlider *root, QWidget *parent)
 {
    return new HorizontalSlider(root->key(), root->withButtons(),
-                                          m_policy, parent);
+                                          m_model, parent);
 }
 
 
 
 QWidget*
-GUIBuilder::addDoubleSpinBox(policy::gui::DoubleSpinBox *root, QWidget *parent)
+GUIBuilder::addDoubleSpinBox(model::gui::DoubleSpinBox *root, QWidget *parent)
 {
-    return new DoubleSpinBox(root->key(), m_policy, parent);
+    return new DoubleSpinBox(root->key(), m_model, parent);
 }
 
 void
-GUIBuilder::addChildren( policy::gui::Container0D<policy::gui::Element>*  container,
+GUIBuilder::addChildren( model::gui::Container0D<model::gui::Element>*  container,
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
-    policy::gui::Element* child = container->child();
+    model::gui::Element* child = container->child();
     QWidget* child_widget = buildGUI( child, widget );
     if( child_widget != NULL ) {
-        if( child->type() == policy::gui::CANVAS ) {
+        if( child->type() == model::gui::CANVAS ) {
             layout->addWidget( child_widget, 1 );
         }
         else {
@@ -515,12 +515,12 @@ GUIBuilder::addChildren( policy::gui::Container0D<policy::gui::Element>*  contai
 }
 
 void
-GUIBuilder::addChildren( policy::gui::Container1D<policy::gui::Element>*  container,
+GUIBuilder::addChildren( model::gui::Container1D<model::gui::Element>*  container,
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
     for( size_t i=0; i<container->children(); i++ ) {
-        policy::gui::Element* child = container->child( i );
+        model::gui::Element* child = container->child( i );
         if( child == NULL ) {
             continue;
         }
@@ -531,7 +531,7 @@ GUIBuilder::addChildren( policy::gui::Container1D<policy::gui::Element>*  contai
         }
         QWidget* child_widget = buildGUI( child, widget );
         if( child_widget != NULL ) {
-            if( child->type() == policy::gui::CANVAS ) {
+            if( child->type() == model::gui::CANVAS ) {
                 layout->addWidget( child_widget, 1 );
             }
             else {
@@ -545,14 +545,14 @@ GUIBuilder::addChildren( policy::gui::Container1D<policy::gui::Element>*  contai
 }
 
 void
-GUIBuilder::addChildren( policy::gui::Container2D<policy::gui::Element>* container,
+GUIBuilder::addChildren( model::gui::Container2D<model::gui::Element>* container,
                          QWidget* widget,
                          QGridLayout* layout )
 {
     for(size_t row = 0; row < container->height(); row++) {
        for(size_t col = 0; col  < container->width(); col++) {
 
-           policy::gui::Element* child = container->child(row, col);
+           model::gui::Element* child = container->child(row, col);
            if( child == NULL ) {
                continue;
            }
@@ -564,17 +564,17 @@ GUIBuilder::addChildren( policy::gui::Container2D<policy::gui::Element>* contain
 
            QWidget* child_widget = buildGUI( child, widget );
            if( child_widget != NULL ) {
-               if( child->type() == policy::gui::CANVAS ) {
+               if( child->type() == model::gui::CANVAS ) {
                    layout->setColumnStretch( col, 1 );
                    layout->setRowStretch( row, 1 );
                }
-               else if( child->type() == policy::gui::GRID ) {
+               else if( child->type() == model::gui::GRID ) {
                    child_widget->layout()->setContentsMargins(0, 0, 0, 0);
                }
-               else if( child->type() == policy::gui::VERTICAL_LAYOUT ) {
+               else if( child->type() == model::gui::VERTICAL_LAYOUT ) {
                    child_widget->layout()->setContentsMargins(0, 0, 0, 0);
                }
-               else if( child->type() == policy::gui::HORIZONTAL_LAYOUT ) {
+               else if( child->type() == model::gui::HORIZONTAL_LAYOUT ) {
                    child_widget->layout()->setContentsMargins(0, 0, 0, 0);
                }
                layout->addWidget( child_widget, row, col );
@@ -589,11 +589,11 @@ GUIBuilder::addChildren( policy::gui::Container2D<policy::gui::Element>* contain
 
 }
 
-QWidget * qtobserver::GUIBuilder::addFileDialogButton(policy::gui::FileDialogButton *root, QWidget *parent)
+QWidget * qtobserver::GUIBuilder::addFileDialogButton(model::gui::FileDialogButton *root, QWidget *parent)
 {
 
    FileDialogButton *widget =  new FileDialogButton(root->key(), root->showValue(),
-                                                    m_policy, parent);
+                                                    m_model, parent);
    return widget;
 }
 

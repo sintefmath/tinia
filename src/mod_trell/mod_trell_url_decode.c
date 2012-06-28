@@ -178,7 +178,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         require_action = 1;
         dispatch_info->m_request = TRELL_REQUEST_RPC_XML;
     }
-    else if( strcmp( dispatch_info->m_requestname, "getPolicyUpdate.xml" ) == 0 ) {
+    else if( strcmp( dispatch_info->m_requestname, "getExposedModelUpdate.xml" ) == 0 ) {
         want_revision = 1;
         dispatch_info->m_request = TRELL_REQUEST_POLICY_UPDATE_XML;
     }

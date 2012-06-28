@@ -22,31 +22,31 @@
 #include <QComboBox>
 #include <QStringList>
 #include <memory>
-#include <tinia/policy/Policy.hpp>
-#include <tinia/policy/StateListener.hpp>
-#include <tinia/policy/StateSchemaListener.hpp>
+#include <tinia/model/ExposedModel.hpp>
+#include <tinia/model/StateListener.hpp>
+#include <tinia/model/StateSchemaListener.hpp>
 
 namespace tinia {
 namespace qtobserver {
 
-class ComboBox : public QComboBox, public policy::StateListener,
-         public policy::StateSchemaListener
+class ComboBox : public QComboBox, public model::StateListener,
+         public model::StateSchemaListener
 {
     Q_OBJECT
 public:
-    explicit ComboBox(std::string key, std::shared_ptr<policy::Policy> policy,
+    explicit ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                       QWidget *parent = 0);
    ~ComboBox();
 
-   void stateElementModified(policy::StateElement *stateElement);
-   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement);
+   void stateElementModified(model::StateElement *stateElement);
+   void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement);
 
 signals:
-   void setStateFromPolicy(int);
-   void clearFromPolicy();
-   void addItemsFromPolicy(const QStringList& list);
+   void setStateFromExposedModel(int);
+   void clearFromExposedModel();
+   void addItemsFromExposedModel(const QStringList& list);
 
 public slots:
 
@@ -54,7 +54,7 @@ private slots:
    void activatedChanged(QString value);
 private:
    QStringList m_options;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
 

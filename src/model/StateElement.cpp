@@ -16,33 +16,33 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/StateElement.hpp"
+#include "tinia/model/StateElement.hpp"
 namespace tinia {
-policy::StateElement::StateElement(std::string name, const ElementData &data)
+model::StateElement::StateElement(std::string name, const ElementData &data)
    : m_name(name.c_str()), m_data(data)
 {
 
 }
 
-policy::StateElement::StateElement() {}
+model::StateElement::StateElement() {}
 
-std::string policy::StateElement::getKey() const
+std::string model::StateElement::getKey() const
 {
    return m_name;
 }
 
 
-std::string policy::StateElement::getXSDType() const
+std::string model::StateElement::getXSDType() const
 {
    return m_data.getXSDType();
 }
 
-std::string policy::StateElement::getStringValue() const
+std::string model::StateElement::getStringValue() const
 {
    return m_data.getStringValue();
 }
 
-policy::StateElement::PropertyTree policy::StateElement::getPropertyTree() const
+model::StateElement::PropertyTree model::StateElement::getPropertyTree() const
 {
    // TODO Make this more effective by implementing a "build on demand"-tree?
    // TODO Make this function return by reference (i.e. make destPropertyTree

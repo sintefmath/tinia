@@ -17,9 +17,9 @@ var long_polling_rev = 0;
 var long_polling_req = null;
 
 function
-handlePolicyUpdate( dom )
+handleExposedModelUpdate( dom )
 {
-    var n = dom.getElementsByTagName('PolicyUpdate')[0];
+    var n = dom.getElementsByTagName('ExposedModelUpdate')[0];
     var r = n.attributes['revision'].nodeValue;
     if( r != null ) {
         long_polling_rev = r;
@@ -44,7 +44,7 @@ doLongPolling()
         }
     }
     long_polling_req = new XMLHttpRequest();
-    long_polling_req.open( "GET", "getPolicyUpdate.xml?revision="+long_polling_rev );
+    long_polling_req.open( "GET", "getExposedModelUpdate.xml?revision="+long_polling_rev );
     long_polling_req.onreadystatechange = function() {
         if( this.readyState == 4 ) {
             if( this.status == 200 ) {
@@ -52,7 +52,7 @@ doLongPolling()
                 if( dump != null ) {
                     dump.value = this.responseText;
                 }
-                handlePolicyUpdate( this.responseXML );
+                handleExposedModelUpdate( this.responseXML );
             }
             else {
                 window.console.log( "no update" );

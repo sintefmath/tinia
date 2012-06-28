@@ -37,7 +37,7 @@ public:
 
   virtual
     size_t
-    getPolicyUpdate( char*               buffer,
+    getExposedModelUpdate( char*               buffer,
                      const size_t        buffer_len,
                      const unsigned int  has_revision );
   virtual

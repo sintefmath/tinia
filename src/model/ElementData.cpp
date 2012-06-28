@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/ElementData.hpp"
+#include "tinia/model/ElementData.hpp"
 
 #include <iostream>
 #include <string>
@@ -28,7 +28,7 @@ using std::endl;
 using std::string;
 
 namespace tinia {
-namespace policy {
+namespace model {
 const int ElementData::LENGTH_NOT_SET = -1;
 const int ElementData::MATRIX_LENGTH = 16;
 
@@ -351,7 +351,7 @@ void ElementData::print(void) const
 
 }
 
-bool policy::ElementData::isComplexType() const
+bool model::ElementData::isComplexType() const
 {
    // Primitive implementation
    return propertyTree.get() != NULL;

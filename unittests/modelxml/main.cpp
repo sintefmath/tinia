@@ -16,5 +16,5 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE PolicyTest
+#define BOOST_TEST_MODULE ExposedModelTest
 #include <boost/test/unit_test.hpp>

@@ -1,28 +1,28 @@
-FILE( GLOB policySrc "*.cpp" )
-FILE( GLOB policyHeaders "../../include/tinia/policy/*.hpp" )
+FILE( GLOB modelSrc "*.cpp" )
+FILE( GLOB modelHeaders "../../include/tinia/model/*.hpp" )
 
 
-ADD_LIBRARY( policy SHARED ${policySrc} ${policyHeaders} )
+ADD_LIBRARY( model SHARED ${modelSrc} ${modelHeaders} )
 
-TARGET_LINK_LIBRARIES( policy ${Boost_LIBRARIES} )
+TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
 
 
 
 
 IF(NOT WIN32)
   install( FILES 
-    ${policyHeaders} 
-    DESTINATION include/tinia/policy  
-    COMPONENT policy-dev)
+    ${modelHeaders} 
+    DESTINATION include/tinia/model  
+    COMPONENT model-dev)
   install( TARGETS  
-    policy LIBRARY 
+    model LIBRARY 
     DESTINATION lib/ 
-    COMPONENT policy)
+    COMPONENT model)
 ELSE()
- INSTALL(DIRECTORY include/tinia/policy
+ INSTALL(DIRECTORY include/tinia/model
     DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS policy
+  INSTALL(TARGETS model
     DESTINATION ${tinia_INSTALL_PREFIX}/lib)
 ENDIF()

@@ -16,11 +16,11 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.provide("policylib.PolicyLib");
+dojo.provide("model.ExposedModel");
 /**
- * This is the client side equivalent of the serverside policylib.
+ * This is the client side equivalent of the serverside model.
  */
-dojo.declare("policylib.PolicyLib", null, {
+dojo.declare("model.ExposedModel", null, {
     constructor: function() {
         this._legalTypes    = ["bool", "integer", "string", "composite", "float", "double"];
         this._listeners      = [];
@@ -57,9 +57,9 @@ dojo.declare("policylib.PolicyLib", null, {
         }
         if(this._elements[key] !== undefined) {
             throw "Trying to add element with key " + key + " but "
-            + "is already in the policy.";
+            + "is already in the model.";
         }
-        this._elements[key] = new policylib.ElementData(type, initialValue);
+        this._elements[key] = new model.ElementData(type, initialValue);
     },
     
     addElementWithRestriction: function(type, key, initialValue, restrictions) {
@@ -97,12 +97,12 @@ dojo.declare("policylib.PolicyLib", null, {
             list = [];
         }
         if(this._elements[key]) {
-            throw "Trying to add "  + key + " but it's already in the policy";
+            throw "Trying to add "  + key + " but it's already in the model";
         }
         if(this._legalTypes.indexOf(type) < 0) {
             throw "Type: " + type + " is not a legal type.";
         }
-        this._elements[key] = new policylib.ElementData("list<"+type+">", list, length);
+        this._elements[key] = new model.ElementData("list<"+type+">", list, length);
     },
     
     hasRestriction: function(key) {
@@ -217,7 +217,7 @@ dojo.declare("policylib.PolicyLib", null, {
         var elementData = this._elements[key];
         if(elementData === undefined) {
             throw "Trying to access element " + key + " but it is not"
-            + " in the policy.";
+            + " in the model.";
         }
         return elementData;
     },
@@ -267,7 +267,7 @@ dojo.declare("policylib.PolicyLib", null, {
     }
 });
 
-dojo.declare("policylib.ElementData", null, {
+dojo.declare("model.ElementData", null, {
 
     constructor: function(type, value, length) {
         this._type = type;
@@ -359,4 +359,4 @@ dojo.declare("policylib.ElementData", null, {
 
 });
 
-dojo.declare("policylib.Composite", policylib.PolicyLib, {});
+dojo.declare("model.Composite", model.ExposedModel, {});

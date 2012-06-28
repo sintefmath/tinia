@@ -19,7 +19,7 @@
 #ifndef TESTUTILS_HPP
 #define TESTUTILS_HPP
 
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 
 
 

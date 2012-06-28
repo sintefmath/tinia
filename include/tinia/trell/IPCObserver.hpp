@@ -23,8 +23,8 @@
 #include "messenger.h"
 #include "trell.h"
 #include "tinia/jobobserver/Observer.hpp"
-#include "tinia/policy/StateListener.hpp"
-#include "tinia/policy/StateSchemaListener.hpp"
+#include "tinia/model/StateListener.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
 
 class JobWrapper;
 namespace tinia {

@@ -17,7 +17,7 @@
  */
 
 #pragma once
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 #include <memory>
 
 namespace tinia {
@@ -41,10 +41,10 @@ public:
 
    void quit();
 
-   virtual std::shared_ptr<policy::Policy> getPolicy();
+   virtual std::shared_ptr<model::ExposedModel> getExposedModel();
 
 protected:
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

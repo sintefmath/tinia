@@ -19,12 +19,12 @@
 #ifndef TESTUTILS_HPP
 #define TESTUTILS_HPP
 
-#include "tinia/policyxml/XMLHandler.hpp"
+#include "tinia/modelxml/XMLHandler.hpp"
 #include "libxml/tree.h"
 
 struct TestHelper {
     template<class T>
-    TestHelper(tinia::policyxml::XMLHandler& handler , T t, bool printDoc = false ) {
+    TestHelper(tinia::modelxml::XMLHandler& handler , T t, bool printDoc = false ) {
         doc = handler.getCompleteDocument();
         if ( printDoc ) {
             xmlSaveFormatFile( "-", doc, 1 );

@@ -19,17 +19,17 @@
 dependencies = {
     layers: [
 	{
-	    name: "policylib.js",
-//	    resourceName: "policylib.layer",
+	    name: "model.js",
+//	    resourceName: "model.layer",
 	    layerDependencies: ["dijit", "dojox"],
-	    dependencies: ["policylib.layer", "dojo", "dijit", "dojox"]
+	    dependencies: ["model.layer", "dojo", "dijit", "dojox"]
 	},
 	
     ],
     prefixes : [
 	["dijit", "../dijit"],
 	["dojox", "../dojox"],
-	["policylib", "../policylib"],
+	["model", "../model"],
 	["gui", "../gui"],
 	["3rdparty", "../3rdparty"],
 	["renderlist", "../renderlist"]

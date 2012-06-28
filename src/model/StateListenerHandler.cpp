@@ -16,19 +16,19 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/StateListenerHandler.hpp"
+#include "tinia/model/StateListenerHandler.hpp"
 
 namespace tinia {
-void policy::StateListenerHandler::addStateListener(policy::StateListener *listener)
+void model::StateListenerHandler::addStateListener(model::StateListener *listener)
 {
    m_listeners.push_back(listener);
 }
-void policy::StateListenerHandler::addStateListener(std::string key, policy::StateListener *listener)
+void model::StateListenerHandler::addStateListener(std::string key, model::StateListener *listener)
 {
    m_keylisteners[key].push_back(listener);
 }
 
-void policy::StateListenerHandler::removeStateListener(std::string key, policy::StateListener *listener)
+void model::StateListenerHandler::removeStateListener(std::string key, model::StateListener *listener)
 {
    m_keylisteners[key].remove(listener);
    if(m_keylisteners[key].size() == 0)
@@ -37,14 +37,14 @@ void policy::StateListenerHandler::removeStateListener(std::string key, policy::
    }
 }
 
-void policy::StateListenerHandler::removeStateListener(policy::StateListener *listener)
+void model::StateListenerHandler::removeStateListener(model::StateListener *listener)
 {
    m_listeners.remove(listener);
 }
 
 
-void policy::StateListenerHandler::fireStateElementModified(
-      policy::StateElement *stateElement)
+void model::StateListenerHandler::fireStateElementModified(
+      model::StateElement *stateElement)
 {
    if(m_isBuffering)
    {
@@ -56,19 +56,19 @@ void policy::StateListenerHandler::fireStateElementModified(
       (*it)->stateElementModified(stateElement);
    }
 
-   std::list<policy::StateListener*> &listeners = m_keylisteners[stateElement->getKey()];
+   std::list<model::StateListener*> &listeners = m_keylisteners[stateElement->getKey()];
    for(auto it = listeners.begin(); it!= listeners.end(); it++)
    {
       (*it)->stateElementModified(stateElement);
    }
 }
 
-void policy::StateListenerHandler::holdEvents()
+void model::StateListenerHandler::holdEvents()
 {
    m_isBuffering = true;
 }
 
-void policy::StateListenerHandler::releaseEvents()
+void model::StateListenerHandler::releaseEvents()
 {
    m_isBuffering = false;
    for(size_t i = 0; i < m_buffer.size(); i++ )

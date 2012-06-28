@@ -19,7 +19,7 @@
 #pragma once
 #include "IPCObserver.hpp"
 #include "tinia/jobobserver/Job.hpp"
-#include "tinia/policyxml/XMLHandler.hpp"
+#include "tinia/modelxml/XMLHandler.hpp"
 
 namespace tinia {
 namespace Trell {
@@ -82,8 +82,8 @@ namespace Trell {
   * }
   *\endcode
   */
-class IPCJobObserver : public IPCObserver, public policy::StateListener,
-      public policy::StateSchemaListener
+class IPCJobObserver : public IPCObserver, public model::StateListener,
+      public model::StateSchemaListener
 {
 public:
 
@@ -133,7 +133,7 @@ protected:
 
     virtual
     bool
-    onGetPolicyUpdate( size_t&             result_size,
+    onGetExposedModelUpdate( size_t&             result_size,
                        char*               buffer,
                        const size_t        buffer_size,
                        const std::string&  session,
@@ -145,15 +145,15 @@ protected:
                    const size_t        buffer_size,
                    const std::string&  session );
 
-    void stateElementModified(policy::StateElement *stateElement);
-    void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement);
-    void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement);
-    void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
+    void stateElementModified(model::StateElement *stateElement);
+    void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement);
+    void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement);
+    void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
 
 protected:
-    std::shared_ptr<policy::Policy>    m_policy;
+    std::shared_ptr<model::ExposedModel>    m_model;
     jobobserver::Job*                        m_job;
-    policyxml::XMLHandler*                m_xmlHandler;
+    modelxml::XMLHandler*                m_xmlHandler;
     volatile bool                            m_updateOngoing;
 
     /** Handles incoming messages (mainly from master job).

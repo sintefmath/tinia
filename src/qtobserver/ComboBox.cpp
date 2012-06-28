@@ -21,63 +21,63 @@
 namespace tinia {
 namespace qtobserver {
 
-ComboBox::ComboBox(std::string key, std::shared_ptr<policy::Policy> policy,
+ComboBox::ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                    QWidget *parent) :
-   QComboBox(parent), m_policy(policy), m_key(key)
+   QComboBox(parent), m_model(model), m_key(key)
 {
    // Set up signals
-   connect(this, SIGNAL(setStateFromPolicy(int)), this,
+   connect(this, SIGNAL(setStateFromExposedModel(int)), this,
            SLOT(setCurrentIndex(int)));
    connect(this, SIGNAL(activated(QString)), this,
            SLOT(activatedChanged(QString)));
 
-   m_policy->addStateListener(m_key, this);
-   m_policy->addStateSchemaListener(m_key, this);
+   m_model->addStateListener(m_key, this);
+   m_model->addStateSchemaListener(m_key, this);
 
 
 
-   auto restrictionSet = m_policy->getRestrictionSet(m_key);
+   auto restrictionSet = m_model->getRestrictionSet(m_key);
    for(auto it = restrictionSet.begin(); it != restrictionSet.end(); it++)
    {
       m_options.append(it->c_str());
    }
    m_options.sort();
    addItems(m_options);
-   setCurrentIndex(m_options.indexOf(m_policy->getElementValueAsString(m_key).c_str()));
+   setCurrentIndex(m_options.indexOf(m_model->getElementValueAsString(m_key).c_str()));
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 }
 
 } // namespace qtobserver
 
-void qtobserver::ComboBox::stateElementModified(policy::StateElement *stateElement)
+void qtobserver::ComboBox::stateElementModified(model::StateElement *stateElement)
 {
    int index = m_options.indexOf(stateElement->getStringValue().c_str());
-   emit setStateFromPolicy(index);
+   emit setStateFromExposedModel(index);
 }
 
-void qtobserver::ComboBox::stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::ComboBox::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::ComboBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::ComboBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::ComboBox::stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::ComboBox::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
 qtobserver::ComboBox::~ComboBox()
 {
-   m_policy->removeStateSchemaListener(m_key, this);
-   m_policy->removeStateListener(m_key, this);
+   m_model->removeStateSchemaListener(m_key, this);
+   m_model->removeStateListener(m_key, this);
 
 }
 
 void qtobserver::ComboBox::activatedChanged(QString value)
 {
-   m_policy->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
+   m_model->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
 }
 
 } // of namespace tinia

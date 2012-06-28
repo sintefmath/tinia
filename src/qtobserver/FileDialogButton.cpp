@@ -18,16 +18,16 @@
 
 #include "tinia/qtobserver/moc/FileDialogButton.hpp"
 #include <QFileDialog>
-#include <tinia/policy/File.hpp>
+#include <tinia/model/File.hpp>
 
 namespace tinia {
 namespace qtobserver {
 FileDialogButton::FileDialogButton(std::string key,
                                    bool showValue,
-                                   std::shared_ptr<policy::Policy> policy,
+                                   std::shared_ptr<model::ExposedModel> model,
                                    QWidget *parent) :
-    QPushButton(parent), m_key(key), m_policy(policy),
-   m_controller(this, m_policy, key, showValue)
+    QPushButton(parent), m_key(key), m_model(model),
+   m_controller(this, m_model, key, showValue)
 {
    connect(this, SIGNAL(clicked()), this, SLOT(readFile()));
 }
@@ -39,9 +39,9 @@ void qtobserver::FileDialogButton::readFile()
    QString fileName = QFileDialog::getOpenFileName(this,
                                                    this->text(),
                                                    ".");
-   policy::File file;
+   model::File file;
    file.fullPath( std::string( fileName.toLocal8Bit() ) );
-   m_policy->updateElement(m_key, file);
+   m_model->updateElement(m_key, file);
 
 }
 } // of namespace tinia

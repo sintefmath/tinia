@@ -20,25 +20,25 @@
 #define QTOBSERVER_CHECKBOX_HPP
 
 #include <QCheckBox>
-#include <tinia/policy/Policy.hpp>
-#include <tinia/policy/StateListener.hpp>
+#include <tinia/model/ExposedModel.hpp>
+#include <tinia/model/StateListener.hpp>
 #include <memory>
 
 namespace tinia {
 namespace qtobserver {
 
-class CheckBox : public QCheckBox, public policy::StateListener
+class CheckBox : public QCheckBox, public model::StateListener
 {
     Q_OBJECT
 public:
-    explicit CheckBox(std::string key, std::shared_ptr<policy::Policy> policy,
+    explicit CheckBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                       QWidget *parent = 0);
    ~CheckBox();
 
-   void stateElementModified(policy::StateElement *stateElement);
+   void stateElementModified(model::StateElement *stateElement);
 
 signals:
-   void setCheckFromPolicy(bool checked);
+   void setCheckFromExposedModel(bool checked);
 
 public slots:
    void setCheckedFromQt(bool checked);
@@ -46,7 +46,7 @@ public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
 
 };
 

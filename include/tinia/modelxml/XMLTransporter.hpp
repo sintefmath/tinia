@@ -19,9 +19,9 @@
 #pragma once
 #include <unordered_map>
 #include <libxml/tree.h>
-#include "tinia/policy/ElementData.hpp"
+#include "tinia/model/ElementData.hpp"
 
-#include "tinia/policyxml/utils.hpp"
+#include "tinia/modelxml/utils.hpp"
 
 
 
@@ -30,7 +30,7 @@
 
 
 namespace tinia {
-namespace policyxml
+namespace modelxml
 {
 
 

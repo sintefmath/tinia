@@ -23,11 +23,11 @@ namespace tinia {
 namespace qtobserver {
 
 EnabledController::EnabledController( QWidget*                               widget,
-                                      std::shared_ptr<policy::Policy>  policy,
+                                      std::shared_ptr<model::ExposedModel>  model,
                                       const std::string&                     key,
                                       const bool                             inverted )
     : QObject( widget ),
-      m_policy( policy ),
+      m_model( model ),
       m_key( key ),
       m_inverted( inverted )
 {
@@ -36,10 +36,10 @@ EnabledController::EnabledController( QWidget*                               wid
     // signal to this object deleteLater slot (but this shouldn't be necessary)
     connect( this, SIGNAL(setWidgetEnabled(bool)), widget, SLOT(setEnabled(bool)) );
 
-    m_policy->addStateListener( m_key, this );
+    m_model->addStateListener( m_key, this );
 
     bool value;
-    m_policy->getElementValue( m_key, value );
+    m_model->getElementValue( m_key, value );
 
     bool enabled = (value && !m_inverted ) || (!value && m_inverted );
     widget->setEnabled( enabled );
@@ -47,11 +47,11 @@ EnabledController::EnabledController( QWidget*                               wid
 
 EnabledController::~EnabledController()
 {
-    m_policy->removeStateListener( m_key, this );
+    m_model->removeStateListener( m_key, this );
 }
 
 void
-EnabledController::stateElementModified(policy::StateElement *stateElement)
+EnabledController::stateElementModified(model::StateElement *stateElement)
 {
     bool value;
     stateElement->getValue( value );

@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 
 #include <algorithm>
 #include <unordered_map>
@@ -29,12 +29,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
-#include "tinia/policy/Viewer.hpp"
+#include "tinia/model/Viewer.hpp"
 
-#include "tinia/policy/utils.hpp"
+#include "tinia/model/utils.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 using std::cout;
 using std::endl;
@@ -43,12 +43,12 @@ using std::vector;
 using std::for_each;
 using std::pair;
 
-Policy::Policy() : revisionNumber( 1 ), m_gui(NULL)
+ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
 {
 }
 
 void
-Policy::incrementRevisionNumber(ElementData &updatedElement) {
+ExposedModel::incrementRevisionNumber(ElementData &updatedElement) {
    updatedElement.setRevisionNumber(revisionNumber);
    ++revisionNumber;
 }
@@ -57,7 +57,7 @@ Policy::incrementRevisionNumber(ElementData &updatedElement) {
 
 
 
-void Policy::updateElementFromString( const std::string &key, const std::string &value )
+void ExposedModel::updateElementFromString( const std::string &key, const std::string &value )
 {
    ElementData data;
    ElementData before;
@@ -82,7 +82,7 @@ void Policy::updateElementFromString( const std::string &key, const std::string 
 
 
 // For debugging purposes
-void Policy::printCurrentState() {
+void ExposedModel::printCurrentState() {
    scoped_lock(m_selfMutex);
    cout << "----------------- Current stateHash ---------------" << endl;
    std::for_each(stateHash.begin(), stateHash.end(),
@@ -96,7 +96,7 @@ cout << "---------------------------------------------------" << endl;
 
 
 // Note the similarity with updateElementFromString. This should be possible to combine...?!
-void Policy::updateElementFromPTree( const std::string &key, const StringStringPTree &value )
+void ExposedModel::updateElementFromPTree( const std::string &key, const StringStringPTree &value )
 {
       scoped_lock lock(m_selfMutex);
       const auto it = stateHash.find( key );
@@ -105,7 +105,7 @@ void Policy::updateElementFromPTree( const std::string &key, const StringStringP
       }
       incrementRevisionNumber(it->second);
       // We jump right past the root, since that is not stored in the ElementData's propertyTree, evidently...
-      // pt_print("argument to Policy::updateElementFromPTree", value.begin()->second);
+      // pt_print("argument to ExposedModel::updateElementFromPTree", value.begin()->second);
       // printCurrentState();
       stateHash[key].setPropertyTreeValue( value.begin()->second );
       ElementData data  =stateHash[key];
@@ -117,13 +117,13 @@ void Policy::updateElementFromPTree( const std::string &key, const StringStringP
 
 
 void
-Policy::addAnnotationHelper( std::string key, std::unordered_map<std::string, std::string> & annotationMap ) {
+ExposedModel::addAnnotationHelper( std::string key, std::unordered_map<std::string, std::string> & annotationMap ) {
    ElementData data;
    {
       scoped_lock(m_selfMutex);
       auto it = stateHash.find( key );
       if ( it == stateHash.end() ) {
-         throw std::runtime_error( "Trying to set annotation for element " + key + " but it is not in the policy." );
+         throw std::runtime_error( "Trying to set annotation for element " + key + " but it is not in the model." );
       }
 
       auto& elementData = it->second;
@@ -137,7 +137,7 @@ Policy::addAnnotationHelper( std::string key, std::unordered_map<std::string, st
 
 
 void
-Policy::addMatrixElement( std::string matrixName, float const* matrixData ) {
+ExposedModel::addMatrixElement( std::string matrixName, float const* matrixData ) {
 
    scoped_lock lock(m_selfMutex);
    addElementErrorChecking( matrixName );
@@ -152,11 +152,11 @@ Policy::addMatrixElement( std::string matrixName, float const* matrixData ) {
 
 
 void
-Policy::updateMatrixValue( std::string key, const float* matrixData ) {
+ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
    scoped_lock lock(m_selfMutex);
    auto it = stateHash.find( key );
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to update matrix " + key + " but it is not in the policy. " );
+      throw std::runtime_error( "Trying to update matrix " + key + " but it is not in the model. " );
    }
 
    auto& elementData = it->second;
@@ -174,7 +174,7 @@ Policy::updateMatrixValue( std::string key, const float* matrixData ) {
 }
 
 void
-Policy::addMatrixHelper(std::string key, const float *matrixData) {
+ExposedModel::addMatrixHelper(std::string key, const float *matrixData) {
    auto elementData = elementFactory.createMatrixElement( matrixData );
    incrementRevisionNumber( elementData );
    stateHash[key] = elementData;
@@ -182,7 +182,7 @@ Policy::addMatrixHelper(std::string key, const float *matrixData) {
 
 
 void
-Policy::addAnnotation( std::string key, std::string annotation ) {
+ExposedModel::addAnnotation( std::string key, std::string annotation ) {
    std::unordered_map<std::string, std::string> annotationMap;
    annotationMap["en"]= annotation;
    addAnnotationHelper( key, annotationMap );
@@ -195,12 +195,12 @@ Policy::addAnnotation( std::string key, std::string annotation ) {
 
 
 void
-Policy::removeElement( std::string key ) {
+ExposedModel::removeElement( std::string key ) {
 
    scoped_lock lock(m_selfMutex);
    auto it = stateHash.find( key );
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( key + " is not in the policy." );
+      throw std::runtime_error( key + " is not in the model." );
    }
    ElementData data = it->second;
    stateHash.erase( it );
@@ -210,30 +210,30 @@ Policy::removeElement( std::string key ) {
 
 
 bool
-Policy::hasElement( std::string elementName ) const {
+ExposedModel::hasElement( std::string elementName ) const {
    scoped_lock(m_selfMutex);
    return stateHash.find( elementName) != stateHash.end();
 }
 
 
 string
-Policy::getElementValueAsString( string key)
+ExposedModel::getElementValueAsString( string key)
 {
    scoped_lock(m_selfMutex);
    const auto key_val = stateHash.find( key );
    if ( key_val == stateHash.end() )
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    return key_val->second.getStringValue();
 }
 
 void
-Policy::getMatrixValue( std::string key, float* matrixData ) const {
+ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
    // Locking whole method
    scoped_lock(m_selfMutex);
 
    const auto it= stateHash.find( key );
    if ( it == stateHash.end() )
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
 
    auto& elementData = it->second;
    if ( elementData.getLength() != ElementData::MATRIX_LENGTH ) {
@@ -249,7 +249,7 @@ Policy::getMatrixValue( std::string key, float* matrixData ) const {
 
 
 // Updates to send *to* the client, version for non-xml-capable jobs/observers.
-void Policy::getPolicyUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned has_revision ) const
+void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned has_revision ) const
 {
    scoped_lock(m_selfMutex);
    updatedElements.resize(0);
@@ -269,77 +269,77 @@ void Policy::getPolicyUpdate(std::vector< std::pair<std::string, ElementData> > 
 
 
 void
-Policy::addElementErrorChecking( std::string key ) const {
+ExposedModel::addElementErrorChecking( std::string key ) const {
    if ( stateHash.find( key ) != stateHash.end() ) {
-      throw std::runtime_error( "Trying to add element " + key + " to the policy, but it is already defined. " );
+      throw std::runtime_error( "Trying to add element " + key + " to the model, but it is already defined. " );
    }
 }
 
 void
-Policy::updateStateHash( std::string key,  ElementData& elementData ) {
+ExposedModel::updateStateHash( std::string key,  ElementData& elementData ) {
    incrementRevisionNumber( elementData );
    stateHash[key] = elementData;
 }
 
 }
 
-void policy::Policy::addStateSchemaListener(
+void model::ExposedModel::addStateSchemaListener(
 
-      policy::StateSchemaListener *listener)
+      model::StateSchemaListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(listener);
 }
 
-void policy::Policy::removeStateSchemaListener(
-      policy::StateSchemaListener *listener)
+void model::ExposedModel::removeStateSchemaListener(
+      model::StateSchemaListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(listener);
 }
 
-void policy::Policy::addStateSchemaListener(std::string key,
+void model::ExposedModel::addStateSchemaListener(std::string key,
 
-      policy::StateSchemaListener *listener)
+      model::StateSchemaListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(key, listener);
 }
 
-void policy::Policy::removeStateSchemaListener(std::string key,
-      policy::StateSchemaListener *listener)
+void model::ExposedModel::removeStateSchemaListener(std::string key,
+      model::StateSchemaListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(key, listener);
 }
 
-void policy::Policy::addStateListener(policy::StateListener *listener)
+void model::ExposedModel::addStateListener(model::StateListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(listener);
 }
 
 
-void policy::Policy::removeStateListener(policy::StateListener *listener)
+void model::ExposedModel::removeStateListener(model::StateListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(listener);
 }
 
-void policy::Policy::addStateListener(std::string key, policy::StateListener *listener)
+void model::ExposedModel::addStateListener(std::string key, model::StateListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(key,    listener);
 }
 
-void policy::Policy::removeStateListener(std::string key, policy::StateListener *listener)
+void model::ExposedModel::removeStateListener(std::string key, model::StateListener *listener)
 {
    scoped_lock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(key, listener);
 }
 
-void policy::Policy::getStateUpdate(
-      std::vector<policy::StateElement> &updatedElements,
+void model::ExposedModel::getStateUpdate(
+      std::vector<model::StateElement> &updatedElements,
       const unsigned int has_revision)
 {
    scoped_lock(m_selfMutex);
@@ -353,8 +353,8 @@ void policy::Policy::getStateUpdate(
    }
 }
 
-void policy::Policy::getStateSchemaUpdate(
-      std::vector<policy::StateSchemaElement> &updatedElements,
+void model::ExposedModel::getStateSchemaUpdate(
+      std::vector<model::StateSchemaElement> &updatedElements,
       const unsigned int has_revision)
 {
    scoped_lock(m_selfMutex);
@@ -369,7 +369,7 @@ void policy::Policy::getStateSchemaUpdate(
 }
 
 
-void policy::Policy::getFullStateSchema(std::vector<policy::StateSchemaElement> &stateSchemaElements)
+void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaElement> &stateSchemaElements)
 {
 
    scoped_lock(m_selfMutex);
@@ -382,7 +382,7 @@ void policy::Policy::getFullStateSchema(std::vector<policy::StateSchemaElement> 
    }
 }
 
-void policy::Policy::getFullState(std::vector<policy::StateElement> &stateElements)
+void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateElements)
 {
    scoped_lock(m_selfMutex);
    for(auto it = stateHash.begin(); it != stateHash.end(); it++)
@@ -391,48 +391,48 @@ void policy::Policy::getFullState(std::vector<policy::StateElement> &stateElemen
    }
 }
 
-void policy::Policy::fireStateSchemaElementAdded(std::string key,
-                                                       const policy::ElementData &data)
+void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
+                                                       const model::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
-   policy::StateSchemaElement element(key, data);
+   model::StateSchemaElement element(key, data);
 
    m_stateSchemaListenerHandler.fireStateSchemaElementAdded(&element);
 }
 
-void policy::Policy::fireStateSchemaElementRemoved(std::string key,
-                                                         const policy::ElementData &data)
+void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
+                                                         const model::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
-   policy::StateSchemaElement element(key, data);
+   model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementRemoved(&element);
 }
 
-void policy::Policy::fireStateSchemaElementModified(std::string key,
-                                                          const policy::ElementData &data)
+void model::ExposedModel::fireStateSchemaElementModified(std::string key,
+                                                          const model::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
-   policy::StateSchemaElement element(key, data);
+   model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementModified(&element);
 }
 
-void policy::Policy::fireStateElementModified(std::string key,
-                                                    const policy::ElementData &data)
+void model::ExposedModel::fireStateElementModified(std::string key,
+                                                    const model::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
-   policy::StateElement element(key, data);
+   model::StateElement element(key, data);
    m_stateListenerHandler.fireStateElementModified(&element);
 }
 
 /**
   \todo Make this dependent on device
   */
-void policy::Policy::setGUILayout(policy::gui::Element *rootElement, int device)
+void model::ExposedModel::setGUILayout(model::gui::Element *rootElement, int device)
 {
    m_gui = rootElement;
 }
 
-policy::gui::Element* policy::Policy::getGUILayout(policy::gui::Device device)
+model::gui::Element* model::ExposedModel::getGUILayout(model::gui::Device device)
 {
    if(m_gui == NULL)
    {
@@ -441,7 +441,7 @@ policy::gui::Element* policy::Policy::getGUILayout(policy::gui::Device device)
    return m_gui;
 }
 
-std::unordered_set<std::string> policy::Policy::getRestrictionSet(std::string key)
+std::unordered_set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 {
    // This returns a deep copy to avoid any possible threading-problems.
    scoped_lock(m_selfMutex);
@@ -454,75 +454,75 @@ std::unordered_set<std::string> policy::Policy::getRestrictionSet(std::string ke
    return destinationSet;
 }
 
-bool policy::Policy::emptyRestrictionSet(std::string key)
+bool model::ExposedModel::emptyRestrictionSet(std::string key)
 {
    scoped_lock(m_selfMutex);
-   // The whole method locks the policy. This could be optimized, but leaving it
+   // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
 
    const auto it = stateHash.find( key );
 
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    }
 
    auto& elementData = it->second;
    return elementData.emptyRestrictionSet();
 }
 
-void policy::Policy::releaseAllListeners()
+void model::ExposedModel::releaseAllListeners()
 {
 }
 
-policy::StateSchemaElement policy::Policy::getStateSchemaElement(std::string key)
+model::StateSchemaElement model::ExposedModel::getStateSchemaElement(std::string key)
 {
-   // The whole method locks the policy. This could be optimized, but leaving it
+   // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
    scoped_lock(m_selfMutex);
 
    const auto it = stateHash.find( key );
 
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    }
 
    auto& elementData = it->second;
    return StateSchemaElement(key, elementData);
 }
 
-std::string policy::Policy::getElementMaxConstraint(std::string key) const
+std::string model::ExposedModel::getElementMaxConstraint(std::string key) const
 {
-   // The whole method locks the policy. This could be optimized, but leaving it
+   // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
    scoped_lock(m_selfMutex);
 
    const auto it = stateHash.find( key );
 
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    }
 
    auto& elementData = it->second;
    return elementData.getMaxConstraint();
 }
 
-std::string policy::Policy::getElementMinConstraint(std::string key) const
+std::string model::ExposedModel::getElementMinConstraint(std::string key) const
 {
-   // The whole method locks the policy. This could be optimized, but leaving it
+   // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
    scoped_lock(m_selfMutex);
 
    const auto it = stateHash.find( key );
 
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    }
 
    auto& elementData = it->second;
    return elementData.getMinConstraint();
 }
 
-void policy::Policy::makeDefaultGUILayout()
+void model::ExposedModel::makeDefaultGUILayout()
 {
    using namespace gui;
    // Make something simple:
@@ -548,17 +548,17 @@ void policy::Policy::makeDefaultGUILayout()
    m_gui = grid;
 }
 
-void policy::Policy::holdStateEvents()
+void model::ExposedModel::holdStateEvents()
 {
    m_stateListenerHandler.holdEvents();
 }
 
-void policy::Policy::releaseStateEvents()
+void model::ExposedModel::releaseStateEvents()
 {
    m_stateListenerHandler.releaseEvents();
 }
 
-policy::Policy::mutex_type& policy::Policy::getPolicyMutex()
+model::ExposedModel::mutex_type& model::ExposedModel::getExposedModelMutex()
 {
    return m_selfMutex;
 }

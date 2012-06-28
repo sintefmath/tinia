@@ -14,15 +14,15 @@ and open the template in the editor.
         <script src="compiled/dojo/dojo.js"></script>
         <script type="text/javascript">
             
-             dojo.registerModulePath("policylib", "../../policylib");
+             dojo.registerModulePath("model", "../../model");
              dojo.registerModulePath("gui", "../../gui");
              dojo.registerModulePath("3rdparty", "../../3rdparty");
              dojo.registerModulePath("renderlist", "../../renderlist");
              
         </script>
         <script src="compiled/dojo/dijit/dijit-all.js"></script>
-        <script type="text/javascript" src="release/dojo/dojo/policylib.js"></script>
-        <script src="policylib/layer.js"></script>
+        <script type="text/javascript" src="release/dojo/dojo/model.js"></script>
+        <script src="model/layer.js"></script>
 
 
 
@@ -48,7 +48,7 @@ and open the template in the editor.
                         renderList = false;
                     }
                 }
-                run(append+"getPolicyUpdate.xml", append+"updateState.xml", append+"getRenderList.xml", isLocal, debug, renderList);
+                run(append+"getExposedModelUpdate.xml", append+"updateState.xml", append+"getRenderList.xml", isLocal, debug, renderList);
             });
         </script>
     </head>

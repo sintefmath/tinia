@@ -18,18 +18,18 @@
 
 #ifndef STATESCHEMALISTENER_HPP
 #define STATESCHEMALISTENER_HPP
-#include "tinia/policy/StateSchemaElement.hpp"
+#include "tinia/model/StateSchemaElement.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 class StateSchemaListener
 {
 public:
-   virtual void stateSchemaElementAdded(policy::StateSchemaElement*
+   virtual void stateSchemaElementAdded(model::StateSchemaElement*
                                         stateSchemaElement) = 0;
-   virtual void stateSchemaElementRemoved(policy::StateSchemaElement*
+   virtual void stateSchemaElementRemoved(model::StateSchemaElement*
                                           stateSchemaElement) = 0;
-   virtual void stateSchemaElementModified(policy::StateSchemaElement*
+   virtual void stateSchemaElementModified(model::StateSchemaElement*
                                            stateSchemaElement) = 0;
 };
 }

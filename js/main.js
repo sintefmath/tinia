@@ -17,20 +17,20 @@
  */
 
 
-dojo.require("policylib.PolicyLib");
-dojo.require("policylib.PolicyParser");
-dojo.require("policylib.PolicySender");
-dojo.require("policylib.PolicyReceiver");
+dojo.require("model.ExposedModel");
+dojo.require("model.ExposedModelParser");
+dojo.require("model.ExposedModelSender");
+dojo.require("model.ExposedModelReceiver");
 dojo.require("dijit.layout.BorderContainer");
 dojo.require("gui.GUIBuilder");
-dojo.require("policylib.Logger");
-dojo.require("policylib.URLHandler");
+dojo.require("model.Logger");
+dojo.require("model.URLHandler");
 
-function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, renderList) {
-    var policy = new policylib.PolicyLib();
-    var parser = new policylib.PolicyParser(policy);
+function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, debug, renderList) {
+    var model = new model.ExposedModel();
+    var parser = new model.ExposedModelParser(model);
     dojo.xhrGet({
-        url: getPolicyUpdateURL,
+        url: getExposedModelUpdateURL,
         handleAs: "xml",
         sync: false,
         load: function(result, ioArgs) {
@@ -38,9 +38,9 @@ function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, 
             dojo.byId("gui").innerHTML ="";
             parser.parseXML(result);
 
-            var policySenderUrlHandler = new policylib.URLHandler(updateStateURL);
-            var builder = new gui.GUIBuilder(policy, renderlistURL, isLocal,
-                                             policySenderUrlHandler, renderList);
+            var modelSenderUrlHandler = new model.URLHandler(updateStateURL);
+            var builder = new gui.GUIBuilder(model, renderlistURL, isLocal,
+                                             modelSenderUrlHandler, renderList);
 
             var appLayout = new dijit.layout.BorderContainer({
                 design: "headline",
@@ -48,8 +48,8 @@ function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, 
             }, dojo.byId("gui"));
 
             if(!isLocal)
-                var sender = new policylib.PolicySender(policySenderUrlHandler, policy);
-            var mainWindow = builder.buildGUI(policy.GUI(), policySenderUrlHandler);
+                var sender = new model.ExposedModelSender(modelSenderUrlHandler, model);
+            var mainWindow = builder.buildGUI(model.GUI(), modelSenderUrlHandler);
 
 
 	    
@@ -61,13 +61,13 @@ function run(getPolicyUpdateURL, updateStateURL, renderlistURL, isLocal, debug, 
             mainWindow.startup();
 
             
-            var receiver = new policylib.PolicyReceiver(getPolicyUpdateURL, policy);
+            var receiver = new model.ExposedModelReceiver(getExposedModelUpdateURL, model);
             if(!isLocal) {
                 receiver.longPoll();
             }
 
             if(debug) {
-                new policylib.Logger(policy);
+                new model.Logger(model);
             }
             console.debug( "BAA" );
             return result;

@@ -23,13 +23,13 @@
 #include <string>
 
 
-#include "tinia/policy/ElementData.hpp"
-#include "tinia/policy/TypeToXSDType.hpp"
+#include "tinia/model/ElementData.hpp"
+#include "tinia/model/TypeToXSDType.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 /** \class ElementDataFactory
     ElementDataFactory is responsible for creating ElementData objects for various types.
@@ -55,7 +55,7 @@ private:
 template<>
 inline
 ElementData
-ElementDataFactory::createElement<policy::Viewer>( const Viewer& value ) const {
+ElementDataFactory::createElement<model::Viewer>( const Viewer& value ) const {
     ElementData elementData;
 
     elementData.setXSDType( "xsd:complexType" );
@@ -83,7 +83,7 @@ ElementDataFactory::createElement<policy::Viewer>( const Viewer& value ) const {
 template<>
 inline
 void
-ElementDataFactory::createT<policy::Viewer>( const ElementData& elementData, Viewer& t ) const {
+ElementDataFactory::createT<model::Viewer>( const ElementData& elementData, Viewer& t ) const {
     const auto& ptree = elementData.getPropertyTree();
 
     createT( ptree.get<ElementData>( "Width"  ), t.width );
@@ -130,7 +130,7 @@ ElementDataFactory::createT( const ElementData& elementData, T& t ) const {
 template<>
 inline
 std::string
-ElementDataFactory::stringify<policy::Viewer>( const Viewer& v ) const {
+ElementDataFactory::stringify<model::Viewer>( const Viewer& v ) const {
     return "";
 }
 

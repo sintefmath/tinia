@@ -70,7 +70,7 @@ enum TrellMessageType {
     /** A suggestion for the job to die. */
     TRELL_MESSAGE_DIE,
 
-    /** Message to query for a policy. */
+    /** Message to query for a model. */
     TRELL_MESSAGE_GET_POLICY_UPDATE,
 
     /** Message with an updated state. */
@@ -98,7 +98,7 @@ typedef struct trell_message
             unsigned int            m_revision;
             char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
             char                    m_tail;
-        }                       m_get_policy_update_payload;
+        }                       m_get_model_update_payload;
 
         struct {
             char                    m_xml[1];
@@ -154,7 +154,7 @@ typedef struct trell_message
 } trell_message_t;
 
 #define TRELL_MSGHDR_SIZE                       (offsetof(trell_message_t, m_payload))
-#define TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE    (offsetof(trell_message_t, m_get_policy_update_payload.m_tail ) )
+#define TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE    (offsetof(trell_message_t, m_get_model_update_payload.m_tail ) )
 #define TRELL_MESSAGE_IMAGE_SIZE                (offsetof(trell_message_t, m_image.m_data))
 #define TRELL_MESSAGE_GET_RENDERLIST_SIZE       (offsetof(trell_message_t, m_get_renderlist.m_tail ) )
 #define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))

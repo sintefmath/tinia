@@ -71,19 +71,19 @@ BOOST_AUTO_TEST_CASE( startAndStop ) {
 
 BOOST_AUTO_TEST_CASE( terminatingJob ) {
 	TestComputeJob1 job;
-	std::shared_ptr<policy::Policy> policy=job.getPolicy();
+	std::shared_ptr<model::ExposedModel> model=job.getExposedModel();
 	
 	job.init();
 	job.start();
 	job.quit();
 	std::string status;
-	policy->getElementValue("status", status);
+	model->getElementValue("status", status);
 	BOOST_CHECK_EQUAL(status, "terminated");
 }
 
 BOOST_AUTO_TEST_CASE( throwingJob ) {
 	ThrowingComputeJob job;
-	std::shared_ptr<policy::Policy> policy=job.getPolicy();
+	std::shared_ptr<model::ExposedModel> model=job.getExposedModel();
 
 	job.init();
 	job.start();
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( throwingJob ) {
 		;
 	}
 	std::string status;
-	policy->getElementValue("status", status);
+	model->getElementValue("status", status);
 	size_t colonPos;
 	colonPos = status.find("failed:");
         BOOST_CHECK_EQUAL(colonPos, 0u);
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE( throwingJob ) {
 
 BOOST_AUTO_TEST_CASE( exitingJob ) {
 	CompletingComputeJob job;
-	std::shared_ptr<policy::Policy> policy=job.getPolicy();
+	std::shared_ptr<model::ExposedModel> model=job.getExposedModel();
 
 	job.init();
 	job.start();
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE( exitingJob ) {
 		;
 	}
 	std::string status;
-	policy->getElementValue("status", status);
+	model->getElementValue("status", status);
 	BOOST_CHECK_EQUAL(status, "finished");
 }
 

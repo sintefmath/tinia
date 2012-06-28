@@ -16,16 +16,16 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.provide("test.policylib.PolicyLibTests");
-dojo.require("policylib.PolicyLib");
-dojo.require("policylib.PolicyParser");
-dojo.require("policylib.gui.GUILayout");
-dojo.require("policylib.PolicyBuilder");
-dojo.require("policylib.StateParser");
+dojo.provide("test.model.ExposedModelTests");
+dojo.require("model.ExposedModel");
+dojo.require("model.ExposedModelParser");
+dojo.require("model.gui.GUILayout");
+dojo.require("model.ExposedModelBuilder");
+dojo.require("model.StateParser");
 dojo.require("dojox.xml.parser");
-dojo.require("policylib.PolicySender");
-dojo.require("policylib.PolicyReceiver");
-dojo.require("policylib.URLHandler");
+dojo.require("model.ExposedModelSender");
+dojo.require("model.ExposedModelReceiver");
+dojo.require("model.URLHandler");
 dojo.require("dijit.layout.StackContainer");
 dojo.require("3rdparty/webgl-utils");
 dojo.require("3rdparty.glMatrix");
@@ -33,77 +33,77 @@ dojo.require("3rdparty.glMatrix");
 
 dojo.require("gui.GUIBuilder");
 
-var policyLib = new policylib.PolicyLib();
+var modelLib = new model.ExposedModel();
 
-doh.register("PolicyLibTests",  {
+doh.register("ExposedModelTests",  {
     revisionTest: function() {
-        var policy = new policylib.PolicyLib();
-        doh.assertEqual(0, policy.getRevision());
-        policy.setRevision(10);
-        doh.assertEqual(10, policy.getRevision());
+        var model = new model.ExposedModel();
+        doh.assertEqual(0, model.getRevision());
+        model.setRevision(10);
+        doh.assertEqual(10, model.getRevision());
     },
     simpleAdd : function() {
-        policyLib.addElement("string", "StringKey", "StringValue");
+        modelLib.addElement("string", "StringKey", "StringValue");
 
-        doh.assertEqual("StringValue", policyLib.getValue("StringKey"));
+        doh.assertEqual("StringValue", modelLib.getValue("StringKey"));
     },
    
     simpleAnnotation: function() {
-        policyLib.addElement("string", "key", "value");
-        policyLib.addAnnotation("key", "A special key");
-        doh.assertEqual("A special key", policyLib.getAnnotation("key"));
+        modelLib.addElement("string", "key", "value");
+        modelLib.addAnnotation("key", "A special key");
+        doh.assertEqual("A special key", modelLib.getAnnotation("key"));
     },
    
     complexAnnotation: function() {
-        policyLib.addElement("string", "ComplexAnnotation_1", "value");
-        policyLib.addAnnotation("ComplexAnnotation_1", {
+        modelLib.addElement("string", "ComplexAnnotation_1", "value");
+        modelLib.addAnnotation("ComplexAnnotation_1", {
             "en": "Some text1"
         });
 
         
-        policyLib.addElement("string", "ComplexAnnotation_2", "value");
-        policyLib.addAnnotation("ComplexAnnotation_2", {
+        modelLib.addElement("string", "ComplexAnnotation_2", "value");
+        modelLib.addAnnotation("ComplexAnnotation_2", {
             "en": "Some text2"
         });
-        doh.assertEqual("Some text2", policyLib.getAnnotation("ComplexAnnotation_2", "en"));
-        doh.assertEqual("Some text1", policyLib.getAnnotation("ComplexAnnotation_1", "en"));
+        doh.assertEqual("Some text2", modelLib.getAnnotation("ComplexAnnotation_2", "en"));
+        doh.assertEqual("Some text1", modelLib.getAnnotation("ComplexAnnotation_1", "en"));
     },
    
     updateElement: function() {
-        policyLib.addElement("integer", "myInt", 45);
-        doh.assertEqual(45, policyLib.getValue("myInt"));
-        policyLib.updateElement("myInt", 100);
-        doh.assertEqual(100, policyLib.getValue("myInt"));
+        modelLib.addElement("integer", "myInt", 45);
+        doh.assertEqual(45, modelLib.getValue("myInt"));
+        modelLib.updateElement("myInt", 100);
+        doh.assertEqual(100, modelLib.getValue("myInt"));
     },
    
     hasKey: function() {
-        doh.assertFalse(policyLib.hasKey("randomKey"));
-        policyLib.addElement("integer", "randomKey", 10);
-        doh.assertTrue(policyLib.hasKey("randomKey"));
+        doh.assertFalse(modelLib.hasKey("randomKey"));
+        modelLib.addElement("integer", "randomKey", 10);
+        doh.assertTrue(modelLib.hasKey("randomKey"));
     },
    
     addElementWithRestriction: function() {
-        policyLib.addElementWithRestriction("string", "RestrictedKey", "value", ["value", "someOtherValue"]);
+        modelLib.addElementWithRestriction("string", "RestrictedKey", "value", ["value", "someOtherValue"]);
        
-        doh.assertTrue(policyLib.hasRestriction("RestrictedKey"));
-        doh.assertEqual(["value", "someOtherValue"], policyLib.getRestriction("RestrictedKey"));                                    
+        doh.assertTrue(modelLib.hasRestriction("RestrictedKey"));
+        doh.assertEqual(["value", "someOtherValue"], modelLib.getRestriction("RestrictedKey"));                                    
     },
    
     addConstrainedElement: function() {
-        policyLib.addConstrainedElement("integer", "somekey", 123, 0, 150);
-        doh.assertEqual(123, policyLib.getValue("somekey"));
-        doh.assertTrue(policyLib.isConstrained("somekey"));
-        doh.assertEqual(150, policyLib.getMax("somekey"));
-        doh.assertEqual(0, policyLib.getMin("somekey"));
+        modelLib.addConstrainedElement("integer", "somekey", 123, 0, 150);
+        doh.assertEqual(123, modelLib.getValue("somekey"));
+        doh.assertTrue(modelLib.isConstrained("somekey"));
+        doh.assertEqual(150, modelLib.getMax("somekey"));
+        doh.assertEqual(0, modelLib.getMin("somekey"));
     }
 });
 
 doh.register("ParserTest", {
     parseSimpleTest: function() {
-        var parser = new policylib.PolicyParser(policyLib);
+        var parser = new model.ExposedModelParser(modelLib);
 
         dojo.xhrGet({
-            url: "../../xml/getPolicyUpdate.xml",
+            url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
             sync: true,
             load: function(result, ioArgs) {
@@ -117,41 +117,41 @@ doh.register("ParserTest", {
                 return result;
             }
         });
-        doh.assertEqual(10456, policyLib.getRevision());
-        doh.assertTrue(policyLib.hasKey("mesh_0"));
-        doh.assertTrue(policyLib.hasKey("boundingbox"));
-        doh.assertTrue(policyLib.hasKey("viewer"));
-        doh.assertTrue(policyLib.hasKey("timestep"));
-        doh.assertTrue(policyLib.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, policyLib.getValue("timestep"));
-        doh.assertTrue(policyLib.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", policyLib.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", policyLib.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", policyLib.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", policyLib.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Some text", policyLib.getValue("kindaAdvanced"));
-        doh.assertEqual("Some other text", policyLib.getValue("alsoKindaAdvanced"));
-        doh.assertEqual("Enable/show advanced dummy fields", policyLib.getAnnotation("showAdvanced", "en"));
-        doh.assertTrue(policyLib.isConstrained("conInt"));
-        doh.assertEqual(0, policyLib.getMin("conInt"));
-        doh.assertEqual(100, policyLib.getMax("conInt"));
+        doh.assertEqual(10456, modelLib.getRevision());
+        doh.assertTrue(modelLib.hasKey("mesh_0"));
+        doh.assertTrue(modelLib.hasKey("boundingbox"));
+        doh.assertTrue(modelLib.hasKey("viewer"));
+        doh.assertTrue(modelLib.hasKey("timestep"));
+        doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, modelLib.getValue("timestep"));
+        doh.assertTrue(modelLib.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", modelLib.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", modelLib.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", modelLib.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Some text", modelLib.getValue("kindaAdvanced"));
+        doh.assertEqual("Some other text", modelLib.getValue("alsoKindaAdvanced"));
+        doh.assertEqual("Enable/show advanced dummy fields", modelLib.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(modelLib.isConstrained("conInt"));
+        doh.assertEqual(0, modelLib.getMin("conInt"));
+        doh.assertEqual(100, modelLib.getMax("conInt"));
         
         var projection = [1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
         
-        doh.assertTrue(!!policyLib.GUI());
+        doh.assertTrue(!!modelLib.GUI());
 
-        doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
+        doh.assertEqual("viewer", modelLib.GUI().child(1).child(0,0).key());
     },
    
     parseTwice: function() {
-        var parser = new policylib.PolicyParser(policyLib);
+        var parser = new model.ExposedModelParser(modelLib);
 
         dojo.xhrGet({
-            url: "../../xml/getPolicyUpdate.xml",
+            url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
             sync: true,
             load: function(result, ioArgs) {
@@ -165,7 +165,7 @@ doh.register("ParserTest", {
         });
 
         dojo.xhrGet({
-            url: "../../xml/getPolicyUpdate.xml",
+            url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
             sync: true,
             load: function(result, ioArgs) {
@@ -177,39 +177,39 @@ doh.register("ParserTest", {
                 return result;
             }
         });
-        doh.assertTrue(policyLib.hasKey("mesh_0"));
-        doh.assertTrue(policyLib.hasKey("boundingbox"));
-        doh.assertTrue(policyLib.hasKey("viewer"));
-        doh.assertTrue(policyLib.hasKey("timestep"));
-        doh.assertTrue(policyLib.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, policyLib.getValue("timestep"));
-        doh.assertTrue(policyLib.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", policyLib.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", policyLib.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", policyLib.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", policyLib.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Enable/show advanced dummy fields", policyLib.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(modelLib.hasKey("mesh_0"));
+        doh.assertTrue(modelLib.hasKey("boundingbox"));
+        doh.assertTrue(modelLib.hasKey("viewer"));
+        doh.assertTrue(modelLib.hasKey("timestep"));
+        doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, modelLib.getValue("timestep"));
+        doh.assertTrue(modelLib.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", modelLib.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", modelLib.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", modelLib.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Enable/show advanced dummy fields", modelLib.getAnnotation("showAdvanced", "en"));
         
         
         var projection = [1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
         
-        doh.assertTrue(!!policyLib.GUI());
-        doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
+        doh.assertTrue(!!modelLib.GUI());
+        doh.assertEqual("viewer", modelLib.GUI().child(1).child(0,0).key());
     }
 });
 
 
 doh.register("GUITest", {
     testElement: function() {
-        var element = new policylib.gui.Element();
+        var element = new model.gui.Element();
         doh.assertFalse(element.visibilityKeyInverted());
         doh.assertFalse(element.enabledKeyInverted());
         
-        var secondElement = new policylib.gui.Element();
+        var secondElement = new model.gui.Element();
         secondElement.setVisibilityKey("visibilitykey");
         doh.assertEqual("visibilitykey", secondElement.visibilityKey());
         
@@ -219,8 +219,8 @@ doh.register("GUITest", {
     
     
     testTab: function() {
-        var tabContent = new policylib.gui.KeyValue("TextInput", "somekey");
-        var tab  = new policylib.gui.Tab("someotherkey");
+        var tabContent = new model.gui.KeyValue("TextInput", "somekey");
+        var tab  = new model.gui.Tab("someotherkey");
         tab.setChild(tabContent);
         
         doh.assertEqual(tabContent, tab.child());
@@ -235,7 +235,7 @@ doh.register("GUITest", {
 
 doh.register("EventTest", {
     simpleEvent: function() {
-        var pol = new policylib.PolicyLib();
+        var pol = new model.ExposedModel();
         pol.addElement("string", "key", "sometext");
         var called = false;
         pol.addLocalListener("key", function() {
@@ -251,7 +251,7 @@ doh.register("EventTest", {
         var context = {
             someValue : false
         };
-        var pol = new policylib.PolicyLib();
+        var pol = new model.ExposedModel();
         pol.addElement("string", "key", "sometext");
         pol.addLocalListener("key", function() {
             context.someValue = true;
@@ -266,7 +266,7 @@ doh.register("EventTest", {
         var context = {
             someValue : false
         };
-        var pol = new policylib.PolicyLib();
+        var pol = new model.ExposedModel();
         pol.addElement("string", "key", "sometext");
         pol.addListener(function() {
             context.someValue = true;
@@ -280,41 +280,41 @@ doh.register("EventTest", {
     
     valueChangedEvent: function() {
         var valueSeen = false;
-        var policy = new policylib.PolicyLib();
-        policy.addElement("bool", "key", false);
-        doh.assertEqual(false, policy.getValue("key"));
-        policy.addLocalListener("key", function(key, value) {
+        var model = new model.ExposedModel();
+        model.addElement("bool", "key", false);
+        doh.assertEqual(false, model.getValue("key"));
+        model.addLocalListener("key", function(key, value) {
             valueSeen = value;
         });
         
-        policy.updateElement("key", true);
+        model.updateElement("key", true);
         doh.assertEqual(true, valueSeen);
     }
 });
 
 doh.register("BuilderTest", {
     testSimpleBuild: function() {
-        var policy = new policylib.PolicyLib();
-        var builder = new policylib.PolicyBuilder(policy);
-        var stateParser = new policylib.StateParser(policy);
-        policy.addElement("string", "key", "sometext");
-        doh.assertEqual("sometext", policy.getValue("key"));
+        var model = new model.ExposedModel();
+        var builder = new model.ExposedModelBuilder(model);
+        var stateParser = new model.StateParser(model);
+        model.addElement("string", "key", "sometext");
+        doh.assertEqual("sometext", model.getValue("key"));
         var xml = builder.buildXML();
         
-        policy.updateElement("key", "someothertext");
-        doh.assertEqual("someothertext", policy.getValue("key"));
+        model.updateElement("key", "someothertext");
+        doh.assertEqual("someothertext", model.getValue("key"));
         
         stateParser.parseXML(dojox.xml.parser.parse(xml));
-        doh.assertEqual("sometext", policy.getValue("key"));
+        doh.assertEqual("sometext", model.getValue("key"));
     },
     
     advancedWithAjax: function() {
-        var policy = new policylib.PolicyLib();
+        var model = new model.ExposedModel();
 
-        var parser = new policylib.PolicyParser(policy);
-        var builder = new policylib.PolicyBuilder(policy);
+        var parser = new model.ExposedModelParser(model);
+        var builder = new model.ExposedModelBuilder(model);
         dojo.xhrGet({
-            url: "../../xml/getPolicyUpdate.xml",
+            url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
             sync: true,
             load: function(result, ioArgs) {
@@ -326,72 +326,72 @@ doh.register("BuilderTest", {
                 return result;
             }
         });
-        doh.assertTrue(policy.hasKey("mesh_0"));
-        doh.assertTrue(policy.hasKey("boundingbox"));
-        doh.assertTrue(policy.hasKey("viewer"));
-        doh.assertTrue(policy.hasKey("timestep"));
-        doh.assertTrue(policy.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, policy.getValue("timestep"));
-        doh.assertTrue(policy.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", policy.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", policy.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", policy.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", policy.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Enable/show advanced dummy fields", policy.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(model.hasKey("mesh_0"));
+        doh.assertTrue(model.hasKey("boundingbox"));
+        doh.assertTrue(model.hasKey("viewer"));
+        doh.assertTrue(model.hasKey("timestep"));
+        doh.assertTrue(model.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, model.getValue("timestep"));
+        doh.assertTrue(model.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", model.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", model.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", model.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", model.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Enable/show advanced dummy fields", model.getAnnotation("showAdvanced", "en"));
         
         var projection = [1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, policy.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, model.getValue("viewer").getValue("Projection"));
         
-        doh.assertTrue(!!policy.GUI());
-        doh.assertEqual("viewer", policy.GUI().child(1).child(0,0).key());
+        doh.assertTrue(!!model.GUI());
+        doh.assertEqual("viewer", model.GUI().child(1).child(0,0).key());
         
        
         var xml = dojox.xml.parser.parse(builder.buildXML());
         
-        policy.updateElement("timestep", 10);
-        doh.assertEqual(10, policy.getValue("timestep"));
-        var stateParser = new policylib.StateParser(policy);
+        model.updateElement("timestep", 10);
+        doh.assertEqual(10, model.getValue("timestep"));
+        var stateParser = new model.StateParser(model);
         
         stateParser.parseXML(xml);
         
         
         
-        doh.assertTrue(policy.hasKey("mesh_0"));
-        doh.assertTrue(policy.hasKey("boundingbox"));
-        doh.assertTrue(policy.hasKey("viewer"));
-        doh.assertTrue(policy.hasKey("timestep"));
-        doh.assertTrue(policy.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, policy.getValue("timestep"));
-        doh.assertTrue(policy.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", policy.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", policy.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", policy.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", policy.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Enable/show advanced dummy fields", policy.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(model.hasKey("mesh_0"));
+        doh.assertTrue(model.hasKey("boundingbox"));
+        doh.assertTrue(model.hasKey("viewer"));
+        doh.assertTrue(model.hasKey("timestep"));
+        doh.assertTrue(model.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, model.getValue("timestep"));
+        doh.assertTrue(model.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", model.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", model.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", model.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", model.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Enable/show advanced dummy fields", model.getAnnotation("showAdvanced", "en"));
         
       
-        doh.assertEqual(projection, policy.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, model.getValue("viewer").getValue("Projection"));
     }
 });
 
-doh.register("PolicySenderTest", {
+doh.register("ExposedModelSenderTest", {
     simpleTest: function() {
-        var policy = new policylib.PolicyLib();
-        policy.addElement("integer", "timestep", 20);
-        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
-        var sender = new policylib.PolicySender(policySenderUrlHandler, policy);
+        var model = new model.ExposedModel();
+        model.addElement("integer", "timestep", 20);
+        var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
+        var sender = new model.ExposedModelSender(modelSenderUrlHandler, model);
         
         var deferred = new doh.Deferred();
         var started = false;
         var completed = false;
-        dojo.subscribe("/policylib/updateSendStart", function() {
+        dojo.subscribe("/model/updateSendStart", function() {
             started = true;
         });
         
-        dojo.subscribe("/policylib/updateSendComplete", function() {
+        dojo.subscribe("/model/updateSendComplete", function() {
             if(!completed) {
                 completed = true;
                 doh.assertTrue(started);
@@ -399,7 +399,7 @@ doh.register("PolicySenderTest", {
             }
         });
         
-        policy.updateElement("timestep", 0);
+        model.updateElement("timestep", 0);
         
     
         
@@ -407,46 +407,46 @@ doh.register("PolicySenderTest", {
     }
 });
 
-doh.register("PolicyReceiverTest", {
+doh.register("ExposedModelReceiverTest", {
     trivialTest: function() {
-        var url = "../../xml/getPolicyUpdate.xml";
-        var policy = new policylib.PolicyLib();
-        var policyReceiver = new policylib.PolicyReceiver(url, policy);
+        var url = "../../xml/getExposedModelUpdate.xml";
+        var model = new model.ExposedModel();
+        var modelReceiver = new model.ExposedModelReceiver(url, model);
         
         var deferred = new doh.Deferred();
         var complete = false;
-        dojo.subscribe("/policylib/updateReceived", function() {
-            doh.assertEqual(10456, policyLib.getRevision());
-            doh.assertTrue(policyLib.hasKey("mesh_0"));
-            doh.assertTrue(policyLib.hasKey("boundingbox"));
-            doh.assertTrue(policyLib.hasKey("viewer"));
-            doh.assertTrue(policyLib.hasKey("timestep"));
-            doh.assertTrue(policyLib.getValue("viewer").hasKey("Width"));
-            doh.assertEqual(33, policyLib.getValue("timestep"));
-            doh.assertTrue(policyLib.hasRestriction("timestep"));
-            doh.assertEqual("Show mesh 2", policyLib.getAnnotation("mesh_2", "en"));
-            doh.assertEqual("Show mesh 1", policyLib.getAnnotation("mesh_1", "en"));
-            doh.assertEqual("Show mesh 0", policyLib.getAnnotation("mesh_0", "en"));
-            doh.assertEqual("Configuration", policyLib.getAnnotation("showConfig", "en"));
+        dojo.subscribe("/model/updateReceived", function() {
+            doh.assertEqual(10456, modelLib.getRevision());
+            doh.assertTrue(modelLib.hasKey("mesh_0"));
+            doh.assertTrue(modelLib.hasKey("boundingbox"));
+            doh.assertTrue(modelLib.hasKey("viewer"));
+            doh.assertTrue(modelLib.hasKey("timestep"));
+            doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
+            doh.assertEqual(33, modelLib.getValue("timestep"));
+            doh.assertTrue(modelLib.hasRestriction("timestep"));
+            doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
+            doh.assertEqual("Show mesh 1", modelLib.getAnnotation("mesh_1", "en"));
+            doh.assertEqual("Show mesh 0", modelLib.getAnnotation("mesh_0", "en"));
+            doh.assertEqual("Configuration", modelLib.getAnnotation("showConfig", "en"));
             doh.assertEqual("Enable/show advanced dummy fields", 
-                policyLib.getAnnotation("showAdvanced", "en"));
+                modelLib.getAnnotation("showAdvanced", "en"));
         
             var projection = [1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, -1.0202020406723022, -1,
             0, 0, -18.5638427734375, 0];
-            doh.assertEqual(projection, policyLib.getValue("viewer").getValue("Projection"));
+            doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
         
-            doh.assertTrue(!!policyLib.GUI());
-            doh.assertEqual("viewer", policyLib.GUI().child(1).child(0,0).key());
+            doh.assertTrue(!!modelLib.GUI());
+            doh.assertEqual("viewer", modelLib.GUI().child(1).child(0,0).key());
             if(!complete) {
                 deferred.callback(true);
                 complete = true;
-                policyReceiver.cancel();
+                modelReceiver.cancel();
             }
         });
         
-        policyReceiver.longPoll();
+        modelReceiver.longPoll();
         return deferred;
     }
 
@@ -455,56 +455,56 @@ doh.register("PolicyReceiverTest", {
 
 doh.register("GUIBuilderTest", {
     simpleTest : function() {
-        var policy = new policylib.PolicyLib();
-        policy.addElement("string", "key", "value");
-        var textInput = new policylib.gui.KeyValue("TextInput", "key");
+        var model = new model.ExposedModel();
+        model.addElement("string", "key", "value");
+        var textInput = new model.gui.KeyValue("TextInput", "key");
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(model);
         contentPane.addChild(builder.buildGUI(textInput));
         doh.assertEqual("value", contentPane.getChildren()[0].getValue());
         
-        policy.updateElement("key", "newvalue");
+        model.updateElement("key", "newvalue");
         doh.assertEqual("newvalue", contentPane.getChildren()[0].getValue());
         
     },
     
     simpleAnnotationTest : function() {
-        var policy = new policylib.PolicyLib();
-        policy.addElement("string", "key", "value");
-        policy.addAnnotation("key", "Annotation");
-        var textInput = new policylib.gui.KeyValue("TextInput", "key", false);
+        var model = new model.ExposedModel();
+        model.addElement("string", "key", "value");
+        model.addAnnotation("key", "Annotation");
+        var textInput = new model.gui.KeyValue("TextInput", "key", false);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(model);
         contentPane.addChild(builder.buildGUI(textInput));
         doh.assertEqual("Annotation", contentPane.getChildren()[0].getValue());
         
-        policy.updateElement("key", "newvalue");
+        model.updateElement("key", "newvalue");
         doh.assertEqual("Annotation", contentPane.getChildren()[0].getValue());
     },
     
     horizontalLayoutTest : function() {
-        var policy = new policylib.PolicyLib();
-        policy.addElement("string", "key", "value");
-        policy.addAnnotation("key", "Annotation");
-        var textInput = new policylib.gui.KeyValue("TextInput", "key", false);
-        var layout = new policylib.gui.HorizontalLayout();
+        var model = new model.ExposedModel();
+        model.addElement("string", "key", "value");
+        model.addAnnotation("key", "Annotation");
+        var textInput = new model.gui.KeyValue("TextInput", "key", false);
+        var layout = new model.gui.HorizontalLayout();
         layout.addChild(textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(model);
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
     },
     
     verticalLayoutTest : function() {
-        var policy = new policylib.PolicyLib();
-        policy.addElement("string", "key", "value");
-        policy.addAnnotation("key", "Annotation");
-        var textInput = new policylib.gui.KeyValue("TextInput", "key", false);
-        var layout = new policylib.gui.VerticalLayout();
+        var model = new model.ExposedModel();
+        model.addElement("string", "key", "value");
+        model.addAnnotation("key", "Annotation");
+        var textInput = new model.gui.KeyValue("TextInput", "key", false);
+        var layout = new model.gui.VerticalLayout();
         layout.addChild(textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy);
+        var builder = new gui.GUIBuilder(model);
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
@@ -512,28 +512,28 @@ doh.register("GUIBuilderTest", {
     
     
     gridLayoutTest : function() {
-        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
+        var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
         
-        var policy = new policylib.PolicyLib();
-        policy.addElement("string", "key", "value");
-        policy.addAnnotation("key", "Annotation");
-        var textInput = new policylib.gui.KeyValue("TextInput", "key", false);
-        var layout = new policylib.gui.Grid();
+        var model = new model.ExposedModel();
+        model.addElement("string", "key", "value");
+        model.addAnnotation("key", "Annotation");
+        var textInput = new model.gui.KeyValue("TextInput", "key", false);
+        var layout = new model.gui.Grid();
         layout.setChild(0,0, textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy, "", true, policySenderUrlHandler, "");
+        var builder = new gui.GUIBuilder(model, "", true, modelSenderUrlHandler, "");
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
     },
     
     guiFromXML : function() {
-        var policy = new policylib.PolicyLib();
-        var policySenderUrlHandler = new policylib.URLHandler("../../xml/updateState.xml");
+        var model = new model.ExposedModel();
+        var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
         
-        var parser = new policylib.PolicyParser(policy);
+        var parser = new model.ExposedModelParser(model);
         dojo.xhrGet({
-            url: "../../xml/getPolicyUpdate.xml",
+            url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
             sync: true,
             load: function(result, ioArgs) {
@@ -546,8 +546,8 @@ doh.register("GUIBuilderTest", {
             }
         });
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(policy, "", true, policySenderUrlHandler, "");
-        contentPane.addChild(builder.buildGUI(policy.GUI()));
+        var builder = new gui.GUIBuilder(model, "", true, modelSenderUrlHandler, "");
+        contentPane.addChild(builder.buildGUI(model.GUI()));
         
     }
 });

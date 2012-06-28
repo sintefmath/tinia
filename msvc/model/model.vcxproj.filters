@@ -1,90 +1,90 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\..\src\policy\ElementData.cpp">
+    <ClCompile Include="..\..\src\model\ElementData.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\utils.cpp">
+    <ClCompile Include="..\..\src\model\utils.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\File.cpp">
+    <ClCompile Include="..\..\src\model\File.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\Policy.cpp">
+    <ClCompile Include="..\..\src\model\ExposedModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\PolicyLock.cpp">
+    <ClCompile Include="..\..\src\model\ExposedModelLock.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateElement.cpp">
+    <ClCompile Include="..\..\src\model\StateElement.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateListener.cpp">
+    <ClCompile Include="..\..\src\model\StateListener.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateListenerHandler.cpp">
+    <ClCompile Include="..\..\src\model\StateListenerHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateSchemaElement.cpp">
+    <ClCompile Include="..\..\src\model\StateSchemaElement.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateSchemaListener.cpp">
+    <ClCompile Include="..\..\src\model\StateSchemaListener.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\policy\StateSchemaListenerHandler.cpp">
+    <ClCompile Include="..\..\src\model\StateSchemaListenerHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\tinia\policy\ElementData.hpp">
+    <ClInclude Include="..\..\include\tinia\model\ElementData.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\ElementDataFactory.hpp">
+    <ClInclude Include="..\..\include\tinia\model\ElementDataFactory.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\File.hpp">
+    <ClInclude Include="..\..\include\tinia\model\File.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\GUIElement.hpp">
+    <ClInclude Include="..\..\include\tinia\model\GUIElement.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListenerHandler.hpp">
+    <ClInclude Include="..\..\include\tinia\model\GUILayoutListenerHandler.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListener.hpp">
+    <ClInclude Include="..\..\include\tinia\model\GUILayoutListener.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\Policy.hpp">
+    <ClInclude Include="..\..\include\tinia\model\ExposedModel.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\PolicyLock.hpp">
+    <ClInclude Include="..\..\include\tinia\model\ExposedModelLock.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateElement.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateElement.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateListener.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateListener.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateListenerHandler.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateListenerHandler.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaElement.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaElement.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListener.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaListener.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListenerHandler.hpp">
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaListenerHandler.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\TypeToXSDType.hpp">
+    <ClInclude Include="..\..\include\tinia\model\TypeToXSDType.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\utils.hpp">
+    <ClInclude Include="..\..\include\tinia\model\utils.hpp">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\tinia\policy\Viewer.hpp">
+    <ClInclude Include="..\..\include\tinia\model\Viewer.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

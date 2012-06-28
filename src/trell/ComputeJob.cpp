@@ -17,7 +17,7 @@
  */
 
 #include "trell/ComputeJob.hpp"
-#include "policy/Policy.hpp"
+#include "model/ExposedModel.hpp"
 
 namespace Trell
 {
@@ -43,18 +43,18 @@ ComputeJob::sendXMLStateToClient( char*               buffer,
 				  size_t &document_length,
 				  const unsigned int  has_revision ) // const
 {
-  std::lock_guard<std::mutex> l(m_policyLock);
-  document_length = m_policy.getPolicyUpdate(buffer, buffer_len, has_revision);
+  std::lock_guard<std::mutex> l(m_modelLock);
+  document_length = m_model.getExposedModelUpdate(buffer, buffer_len, has_revision);
 }
 
 bool
 ComputeJob::updateState( const char*   buffer,
 			 const size_t  buffer_size )
 {
-  std::lock_guard<std::mutex> l(m_policyLock);
+  std::lock_guard<std::mutex> l(m_modelLock);
   std::vector<std::string> updatedKeys;
-  m_policy.updateState(buffer, doc_len, updatedKeys);
-  document_length = m_policy.getPolicyUpdate(buffer, buffer_len, has_revision);
+  m_model.updateState(buffer, doc_len, updatedKeys);
+  document_length = m_model.getExposedModelUpdate(buffer, buffer_len, has_revision);
   m_isNotified = true;
 }
 

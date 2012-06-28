@@ -26,13 +26,13 @@ namespace qtobserver {
   Used templated min max and removed boos lexical cast
   */
 HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
-                                   std::shared_ptr<policy::Policy> policy,
+                                   std::shared_ptr<model::ExposedModel> model,
                                    QWidget *parent) :
-    QWidget(parent), m_key(key), m_policy(policy)
+    QWidget(parent), m_key(key), m_model(model)
 {
    m_slider = new QSlider(Qt::Horizontal, parent);
    // Get max and min
-   policy::StateSchemaElement element = m_policy->getStateSchemaElement(m_key);
+   model::StateSchemaElement element = m_model->getStateSchemaElement(m_key);
    int max = boost::lexical_cast<int>(element.getMaxConstraint());
    int min = boost::lexical_cast<int>(element.getMinConstraint());
    m_slider->setMaximum(max);
@@ -40,7 +40,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 
 
    int value;
-   m_policy->getElementValue<int>(m_key, value);
+   m_model->getElementValue<int>(m_key, value);
    m_slider->setValue(value);
 
 
@@ -48,8 +48,8 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
    m_slider->setTickInterval((max-min)/20.);
 
 
-   m_policy->addStateListener(m_key, this);
-   m_policy->addStateSchemaListener(m_key, this);
+   m_model->addStateListener(m_key, this);
+   m_model->addStateSchemaListener(m_key, this);
 
    setLayout(new QHBoxLayout(this));
    layout()->addWidget(m_slider);
@@ -62,7 +62,7 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
    }
 
    // Do signals
-   connect(this, SIGNAL(setValueFromPolicy(int)), m_slider,
+   connect(this, SIGNAL(setValueFromExposedModel(int)), m_slider,
            SLOT(setValue(int)));
 
    connect(m_slider, SIGNAL(valueChanged(int)), this,
@@ -75,8 +75,8 @@ HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
 }
 HorizontalSlider::~HorizontalSlider()
 {
-   m_policy->removeStateListener(m_key, this);
-   m_policy->removeStateSchemaListener(m_key, this);
+   m_model->removeStateListener(m_key, this);
+   m_model->removeStateSchemaListener(m_key, this);
 }
 
 }
@@ -87,14 +87,14 @@ void qtobserver::HorizontalSlider::addButtons()
 }
 
 void qtobserver::HorizontalSlider::stateElementModified(
-      policy::StateElement *stateElement)
+      model::StateElement *stateElement)
 {
    int value;
    stateElement->getValue(value);
-   emit setValueFromPolicy(value);
+   emit setValueFromExposedModel(value);
 }
 
-void qtobserver::HorizontalSlider::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::HorizontalSlider::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
     int max, min;
     stateSchemaElement->getMinConstraint(min);
@@ -105,7 +105,7 @@ void qtobserver::HorizontalSlider::stateSchemaElementModified(policy::StateSchem
 
 void qtobserver::HorizontalSlider::setValueFromQt(int value)
 {
-   m_policy->updateElement<int>(m_key, value);
+   m_model->updateElement<int>(m_key, value);
 }
 
 

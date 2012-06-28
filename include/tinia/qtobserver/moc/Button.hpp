@@ -20,8 +20,8 @@
 #define QTOBSERVER_BUTTON_HPP
 
 #include <QPushButton>
-#include <tinia/policy/Policy.hpp>
-#include <tinia/policy/StateListener.hpp>
+#include <tinia/model/ExposedModel.hpp>
+#include <tinia/model/StateListener.hpp>
 #include <memory>
 
 namespace tinia {
@@ -31,7 +31,7 @@ class Button : public QPushButton
 {
     Q_OBJECT
 public:
-    explicit Button(std::string key, std::shared_ptr<policy::Policy> policy,
+    explicit Button(std::string key, std::shared_ptr<model::ExposedModel> model,
                     QWidget *parent = 0);
 
    ~Button();
@@ -41,7 +41,7 @@ public slots:
    void clickedButton();
 private:
    std::string m_key;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
 
 };
 

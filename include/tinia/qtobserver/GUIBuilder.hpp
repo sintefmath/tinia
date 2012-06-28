@@ -18,8 +18,8 @@
 
 #ifndef QTOBSERVER_GUIBUILDER_HPP
 #define QTOBSERVER_GUIBUILDER_HPP
-#include "tinia/policy/GUILayout.hpp"
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/GUILayout.hpp"
+#include "tinia/model/ExposedModel.hpp"
 #include "QTObserver.hpp"
 #include "tinia/jobobserver/Job.hpp"
 #include <memory>
@@ -36,7 +36,7 @@ namespace qtobserver {
 class GUIBuilder
 {
 public:
-    GUIBuilder(std::shared_ptr<policy::Policy> policy,
+    GUIBuilder(std::shared_ptr<model::ExposedModel> model,
                jobobserver::Job* job,
                QTObserver* observer,
                const bool perf_mode,
@@ -47,61 +47,61 @@ public:
       \param parent the QWidget to put the GUI in. This assumes that parent
       has a layout.
       */
-    QWidget* buildGUI(policy::gui::Element* root, QWidget* parent );
+    QWidget* buildGUI(model::gui::Element* root, QWidget* parent );
 
 private:
-    std::shared_ptr<policy::Policy>   m_policy;
+    std::shared_ptr<model::ExposedModel>   m_model;
     jobobserver::Job*                       m_job;
     QTObserver*                             m_observer;
     const bool                              m_perf_mode;
     QGLWidget*                              m_root_context;
 
-    QWidget* addTabLayout(policy::gui::TabLayout* root, QWidget* parent);
-    QWidget* addGrid(policy::gui::Grid* root, QWidget* parent );
-    QWidget* addCanvas(policy::gui::Canvas* root, QWidget* parent );
-    QWidget* addCombobox(policy::gui::ComboBox* root, QWidget* parent);
-    QWidget* addRadiobuttons(policy::gui::RadioButtons* root, QWidget* parent);
-    QWidget* addElementGroup(policy::gui::ElementGroup* root, QWidget* parent);
-    QWidget* addSpinBox(policy::gui::SpinBox* root, QWidget* parent);
-    QWidget* addCheckBox(policy::gui::CheckBox* root, QWidget* parent);
-    QWidget* addButton(policy::gui::Button* root, QWidget* parent);
-    QWidget* addHorizontalSlider(policy::gui::HorizontalSlider* root, QWidget* parent);
-    QWidget* addHorizontalLayout(policy::gui::HorizontalLayout* root, QWidget* parent);
-    QWidget* addVerticalLayout(policy::gui::VerticalLayout* root, QWidget* parent);
-    QWidget* addDoubleSpinBox(policy::gui::DoubleSpinBox* root, QWidget* parent);
-    QWidget* addHorizontalSpace(policy::gui::HorizontalSpace* root, QWidget* parent);
-    QWidget* addVerticalSpace(policy::gui::VerticalSpace* root, QWidget* parent);
-    QWidget* addHorizontalExpandingSpace(policy::gui::HorizontalExpandingSpace* root, QWidget* parent);
-    QWidget* addVerticalExpandingSpace(policy::gui::VerticalExpandingSpace* root, QWidget* parent);
-    QWidget* addPopupButton( policy::gui::PopupButton* root, QWidget* parent );
-    QWidget* addFileDialogButton( policy::gui::FileDialogButton* root, QWidget* parent);
+    QWidget* addTabLayout(model::gui::TabLayout* root, QWidget* parent);
+    QWidget* addGrid(model::gui::Grid* root, QWidget* parent );
+    QWidget* addCanvas(model::gui::Canvas* root, QWidget* parent );
+    QWidget* addCombobox(model::gui::ComboBox* root, QWidget* parent);
+    QWidget* addRadiobuttons(model::gui::RadioButtons* root, QWidget* parent);
+    QWidget* addElementGroup(model::gui::ElementGroup* root, QWidget* parent);
+    QWidget* addSpinBox(model::gui::SpinBox* root, QWidget* parent);
+    QWidget* addCheckBox(model::gui::CheckBox* root, QWidget* parent);
+    QWidget* addButton(model::gui::Button* root, QWidget* parent);
+    QWidget* addHorizontalSlider(model::gui::HorizontalSlider* root, QWidget* parent);
+    QWidget* addHorizontalLayout(model::gui::HorizontalLayout* root, QWidget* parent);
+    QWidget* addVerticalLayout(model::gui::VerticalLayout* root, QWidget* parent);
+    QWidget* addDoubleSpinBox(model::gui::DoubleSpinBox* root, QWidget* parent);
+    QWidget* addHorizontalSpace(model::gui::HorizontalSpace* root, QWidget* parent);
+    QWidget* addVerticalSpace(model::gui::VerticalSpace* root, QWidget* parent);
+    QWidget* addHorizontalExpandingSpace(model::gui::HorizontalExpandingSpace* root, QWidget* parent);
+    QWidget* addVerticalExpandingSpace(model::gui::VerticalExpandingSpace* root, QWidget* parent);
+    QWidget* addPopupButton( model::gui::PopupButton* root, QWidget* parent );
+    QWidget* addFileDialogButton( model::gui::FileDialogButton* root, QWidget* parent);
 
     void
-    doGridLayout( policy::gui::Grid* root, QWidget* widget );
+    doGridLayout( model::gui::Grid* root, QWidget* widget );
 
     void
-    doHorizontalLayout( policy::gui::HorizontalLayout* root, QWidget* widget );
+    doHorizontalLayout( model::gui::HorizontalLayout* root, QWidget* widget );
 
     void
-    addChildren( policy::gui::Container0D<policy::gui::Element>* container,
+    addChildren( model::gui::Container0D<model::gui::Element>* container,
                  QWidget* widget,
                  QBoxLayout* layout );
 
     void
-    addChildren( policy::gui::Container1D<policy::gui::Element>* container,
+    addChildren( model::gui::Container1D<model::gui::Element>* container,
                  QWidget* widget,
                  QBoxLayout* layout );
 
     void
-    addChildren( policy::gui::Container2D<policy::gui::Element>* container,
+    addChildren( model::gui::Container2D<model::gui::Element>* container,
                  QWidget* widget,
                  QGridLayout* layout );
 
     void
-    doVerticalLayout( policy::gui::VerticalLayout* root, QWidget* widget );
+    doVerticalLayout( model::gui::VerticalLayout* root, QWidget* widget );
 
     QLayoutItem*
-    buildLayoutItem( policy::gui::Element* root );
+    buildLayoutItem( model::gui::Element* root );
 
 };
 

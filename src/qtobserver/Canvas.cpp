@@ -30,7 +30,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
                 std::string                             key,
                 std::string                             boundingBoxKey,
                 const std::string&                      resetViewKey,
-                std::shared_ptr<policy::Policy>   policy,
+                std::shared_ptr<model::ExposedModel>   model,
                 QWidget*                                parent,
                 QGLWidget*                              share_widget,
                 bool                                    perf_mode)
@@ -40,7 +40,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
       m_key(key),
       m_boundingBoxKey(boundingBoxKey),
       m_resetViewKey(resetViewKey),
-      m_policy(policy),
+      m_model(model),
       m_job(openglJob),
       m_dsrv(NULL),
       m_last_fps_calc( QTime::currentTime() ),
@@ -50,8 +50,8 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
       m_renderlist_db( NULL ),
       m_renderlist_renderer( NULL )
 {
-    policy::Viewer viewer;
-    m_policy->getElementValue(m_key, viewer);
+    model::Viewer viewer;
+    m_model->getElementValue(m_key, viewer);
     setPreferredSize();
     initializeDSRV();
 
@@ -61,10 +61,10 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
         }
     }
 
-    connect(this, SIGNAL(updateFromPolicy()), this, SLOT(updateGL()));
+    connect(this, SIGNAL(updateFromExposedModel()), this, SLOT(updateGL()));
     connect(this, SIGNAL(updateDSRV()), this, SLOT(updateDSRVNow()));
-    connect(this, SIGNAL(resetViewFromPolicy()), this, SLOT(resetView()));
-    m_policy->addStateListener(this);
+    connect(this, SIGNAL(resetViewFromExposedModel()), this, SLOT(resetView()));
+    m_model->addStateListener(this);
     makeCurrent();
 
     if( perf_mode ) {
@@ -81,7 +81,7 @@ Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
 
 Canvas::~Canvas()
 {
-    m_policy->removeStateListener(this);
+    m_model->removeStateListener(this);
     if( m_redraw_timer != NULL ) {
         delete m_redraw_timer;
     }
@@ -117,8 +117,8 @@ void qtobserver::Canvas::paintGL()
                 m_renderlist_renderer = new renderlist::gl::Renderer( *m_renderlist_db );
             }
 
-            policy::Viewer viewer;
-            m_policy->getElementValue( m_key, viewer);
+            model::Viewer viewer;
+            m_model->getElementValue( m_key, viewer);
 
             const float* p = viewer.projectionMatrix.data();
             glm::mat4 P( p[0], p[1], p[2], p[3],
@@ -149,11 +149,11 @@ void qtobserver::Canvas::paintGL()
 void qtobserver::Canvas::resizeGL(int w, int h)
 {
 
-    policy::Viewer viewer;
-    m_policy->getElementValue(m_key, viewer);
+    model::Viewer viewer;
+    m_model->getElementValue(m_key, viewer);
     viewer.width = w;
     viewer.height = h;
-    m_policy->updateElement(m_key, viewer);
+    m_model->updateElement(m_key, viewer);
     updateDSRV();
 
     updateGL();
@@ -189,8 +189,8 @@ void qtobserver::Canvas::initializeGL()
 
 void qtobserver::Canvas::setPreferredSize()
 {
-    policy::Viewer viewer;
-    m_policy->getElementValue(m_key, viewer);
+    model::Viewer viewer;
+    m_model->getElementValue(m_key, viewer);
     resize(std::max(viewer.width, 640), std::max(viewer.height, 360));
 }
 
@@ -215,8 +215,8 @@ QSizePolicy qtobserver::Canvas::sizePolicy() const
 
 QSize qtobserver::Canvas::minimumSize() const
 {
-    policy::Viewer viewer;
-    m_policy->getElementValue(m_key, viewer);
+    model::Viewer viewer;
+    m_model->getElementValue(m_key, viewer);
     return QSize(viewer.width, viewer.height);
 }
 
@@ -226,7 +226,7 @@ void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
     if(m_job->passThrough())
     {
         m_job->mousePressEvent(event);
-        emit updateFromPolicy();
+        emit updateFromExposedModel();
     }
 
     switch(event->button())
@@ -297,11 +297,11 @@ void qtobserver::Canvas::initializeDSRV()
     glm::vec3 max(1,1,1);
     glm::vec3 min(0,0,0);
     std::cerr<<"CHECKING FOR BOUNDINGBOXKEY="<<m_boundingBoxKey<<std::endl;
-    if(m_policy->hasElement(m_boundingBoxKey))
+    if(m_model->hasElement(m_boundingBoxKey))
     {
 
         // (Not really) quick (and absolutely) dirty string to double-conversion
-        std::string bbString = m_policy->getElementValueAsString(m_boundingBoxKey);
+        std::string bbString = m_model->getElementValueAsString(m_boundingBoxKey);
         std::cerr<<"BOUNDINGBOX FROM POLICY: "<< bbString<<std::endl;
         QString helperString(bbString.c_str());
         QStringList splitString = helperString.split(' ');
@@ -335,10 +335,10 @@ void qtobserver::Canvas::initializeDSRV()
 
 void qtobserver::Canvas::updateMatrices()
 {
-    policy::Viewer viewer;
+    model::Viewer viewer;
     glm::mat4 modelView = m_dsrv->getModelviewMatrix();
     glm::mat4 projection = m_dsrv->getProjectionMatrix();
-    m_policy->getElementValue(m_key, viewer);
+    m_model->getElementValue(m_key, viewer);
 
     // Doing this the hard way
     for(int i = 0; i < 4; i++)
@@ -351,19 +351,19 @@ void qtobserver::Canvas::updateMatrices()
         }
     }
 
-    m_policy->updateElement(m_key, viewer);
+    m_model->updateElement(m_key, viewer);
 }
 
-void qtobserver::Canvas::stateElementModified(policy::StateElement *stateElement)
+void qtobserver::Canvas::stateElementModified(model::StateElement *stateElement)
 {
     if(stateElement->getKey() == m_boundingBoxKey)
     {
         emit updateDSRV();
     }
     else if(stateElement->getKey() == m_resetViewKey) {
-        emit resetViewFromPolicy();
+        emit resetViewFromExposedModel();
     }
-    emit updateFromPolicy();
+    emit updateFromExposedModel();
 }
 
 void qtobserver::Canvas::updateDSRVNow()

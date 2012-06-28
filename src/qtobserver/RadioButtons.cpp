@@ -21,9 +21,9 @@
 namespace tinia {
 namespace qtobserver {
 RadioButtons::RadioButtons(std::string key,
-                           std::shared_ptr<policy::Policy> policy,
+                           std::shared_ptr<model::ExposedModel> model,
                            QWidget *parent) :
-   QGroupBox(parent), m_policy(policy), m_key(key)
+   QGroupBox(parent), m_model(model), m_key(key)
 {
 
 }

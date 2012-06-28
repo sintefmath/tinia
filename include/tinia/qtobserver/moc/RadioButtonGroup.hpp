@@ -22,9 +22,9 @@
 #include <QRadioButton>
 #include <QList>
 #include <string>
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/StateListener.hpp"
-#include "tinia/policy/StateSchemaListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/StateListener.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
 #include <memory>
 #include "tinia/qtobserver/moc/RadioButton.hpp"
 
@@ -34,26 +34,26 @@ namespace qtobserver {
   \todo Add support for changing restriction set
 */
 class RadioButtonGroup : public QGroupBox,
-         public policy::StateSchemaListener
+         public model::StateSchemaListener
 {
     Q_OBJECT
 public:
     explicit RadioButtonGroup(std::string key,
-                          std::shared_ptr<policy::Policy> policy,
+                          std::shared_ptr<model::ExposedModel> model,
                               bool horizontal,
                           QWidget *parent = 0);
 
    ~RadioButtonGroup();
 
-   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
 
-   void toggleRadioButtonFromPolicy();
+   void toggleRadioButtonFromExposedModel();
 public slots:
 
 private:
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
 }

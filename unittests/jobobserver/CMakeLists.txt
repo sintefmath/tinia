@@ -5,4 +5,4 @@ ADD_EXECUTABLE( jobobserver_unittest
   ${jobobserverTestSrc} 
   ${jobobserverTestHeaders} )
 
-TARGET_LINK_LIBRARIES( jobobserver_unittest ${Boost_LIBRARIES} policy jobobserver)
+TARGET_LINK_LIBRARIES( jobobserver_unittest ${Boost_LIBRARIES} model jobobserver)

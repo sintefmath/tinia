@@ -18,13 +18,13 @@
 
 #ifndef STATEELEMENT_HPP
 #define STATEELEMENT_HPP
-#include "tinia/policy/ElementData.hpp"
-#include "tinia/policy/ElementDataFactory.hpp"
+#include "tinia/model/ElementData.hpp"
+#include "tinia/model/ElementDataFactory.hpp"
 #include <boost/shared_ptr.hpp>
 #include <string>
 
 namespace tinia {
-namespace policy {
+namespace model {
 class StateElement
 {
 public:

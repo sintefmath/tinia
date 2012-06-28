@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B784825-66F1-4DB3-A3F4-A13E67B2643B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Policy</RootNamespace>
+    <RootNamespace>ExposedModel</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -94,36 +94,36 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\tinia\policy\ElementData.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\ElementDataFactory.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\File.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\GUIElement.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListener.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\GUILayoutListenerHandler.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\Policy.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\PolicyLock.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateElement.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateListener.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateListenerHandler.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaElement.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListener.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\StateSchemaListenerHandler.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\TypeToXSDType.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\utils.hpp" />
-    <ClInclude Include="..\..\include\tinia\policy\Viewer.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\ElementData.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\ElementDataFactory.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\File.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\GUIElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\GUILayoutListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\GUILayoutListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\ExposedModel.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\ExposedModelLock.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaElement.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaListener.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\StateSchemaListenerHandler.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\TypeToXSDType.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\utils.hpp" />
+    <ClInclude Include="..\..\include\tinia\model\Viewer.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\policy\ElementData.cpp" />
-    <ClCompile Include="..\..\src\policy\File.cpp" />
-    <ClCompile Include="..\..\src\policy\Policy.cpp" />
-    <ClCompile Include="..\..\src\policy\PolicyLock.cpp" />
-    <ClCompile Include="..\..\src\policy\StateElement.cpp" />
-    <ClCompile Include="..\..\src\policy\StateListener.cpp" />
-    <ClCompile Include="..\..\src\policy\StateListenerHandler.cpp" />
-    <ClCompile Include="..\..\src\policy\StateSchemaElement.cpp" />
-    <ClCompile Include="..\..\src\policy\StateSchemaListener.cpp" />
-    <ClCompile Include="..\..\src\policy\StateSchemaListenerHandler.cpp" />
-    <ClCompile Include="..\..\src\policy\utils.cpp" />
+    <ClCompile Include="..\..\src\model\ElementData.cpp" />
+    <ClCompile Include="..\..\src\model\File.cpp" />
+    <ClCompile Include="..\..\src\model\ExposedModel.cpp" />
+    <ClCompile Include="..\..\src\model\ExposedModelLock.cpp" />
+    <ClCompile Include="..\..\src\model\StateElement.cpp" />
+    <ClCompile Include="..\..\src\model\StateListener.cpp" />
+    <ClCompile Include="..\..\src\model\StateListenerHandler.cpp" />
+    <ClCompile Include="..\..\src\model\StateSchemaElement.cpp" />
+    <ClCompile Include="..\..\src\model\StateSchemaListener.cpp" />
+    <ClCompile Include="..\..\src\model\StateSchemaListenerHandler.cpp" />
+    <ClCompile Include="..\..\src\model\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

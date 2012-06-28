@@ -16,23 +16,23 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/PolicyLock.hpp"
+#include "tinia/model/ExposedModelLock.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 
-PolicyLock::PolicyLock(std::shared_ptr<Policy>& policy)
-   : m_scoped_lock(policy->getPolicyMutex()),
-     m_policy(policy)
+ExposedModelLock::ExposedModelLock(std::shared_ptr<ExposedModel>& model)
+   : m_scoped_lock(model->getExposedModelMutex()),
+     m_model(model)
 {
-   policy->holdStateEvents();
+   model->holdStateEvents();
 }
 
-PolicyLock::~PolicyLock()
+ExposedModelLock::~ExposedModelLock()
 {
    m_scoped_lock.unlock();
-   m_policy->releaseStateEvents();
+   m_model->releaseStateEvents();
 }
 
-} // namespace policy
+} // namespace model
 } // of namespace tinia

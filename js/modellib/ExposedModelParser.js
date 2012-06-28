@@ -20,15 +20,15 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-dojo.require("policylib.PolicyLib");
-dojo.require("policylib.gui.GUILayout");
-dojo.provide("policylib.PolicyParser");
-dojo.provide("policylib.StateParser");
-dojo.provide("policylib.StateSchemaParser");
-dojo.provide("policylib.GUIParser");
+dojo.require("model.ExposedModel");
+dojo.require("model.gui.GUILayout");
+dojo.provide("model.ExposedModelParser");
+dojo.provide("model.StateParser");
+dojo.provide("model.StateSchemaParser");
+dojo.provide("model.GUIParser");
 
 
-dojo.declare("policylib.XMLHelper", null, {
+dojo.declare("model.XMLHelper", null, {
     queryXSD: function(xml, elementName) {
         var result = dojo.query(elementName, xml);
         if(!result) {
@@ -39,12 +39,12 @@ dojo.declare("policylib.XMLHelper", null, {
 });
 
 
-dojo.declare("policylib.PolicyParser", policylib.XMLHelper, {
-    constructor: function(policyLib) {
-        this._stateSchemaParser = new policylib.StateSchemaParser(policyLib);
-        this._stateParser = new policylib.StateParser(policyLib);
-        this._guiParser = new policylib.GUIParser(policyLib);
-        this._policyLib = policyLib;
+dojo.declare("model.ExposedModelParser", model.XMLHelper, {
+    constructor: function(modelLib) {
+        this._stateSchemaParser = new model.StateSchemaParser(modelLib);
+        this._stateParser = new model.StateParser(modelLib);
+        this._guiParser = new model.GUIParser(modelLib);
+        this._modelLib = modelLib;
     },
     
     parseXML: function(xml) {
@@ -56,17 +56,17 @@ dojo.declare("policylib.PolicyParser", policylib.XMLHelper, {
     
     _addRevision: function(xml) {
         
-        var policyUpdate = this.queryXSD(xml, "PolicyUpdate");
-        if(!policyUpdate || policyUpdate.length == 0) {
+        var modelUpdate = this.queryXSD(xml, "ExposedModelUpdate");
+        if(!modelUpdate || modelUpdate.length == 0) {
             return;
         }
-        var revision = dojo.attr(policyUpdate[0], "revision");
+        var revision = dojo.attr(modelUpdate[0], "revision");
         if(!revision) {
             revision = 0;
         }
         
         revision = revision-0;
-        this._policyLib.setRevision(revision);
+        this._modelLib.setRevision(revision);
     },
     
     // Private
@@ -77,9 +77,9 @@ dojo.declare("policylib.PolicyParser", policylib.XMLHelper, {
 
 
 
-dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
-    constructor: function(policyLib) {
-        this._policyLib = policyLib;
+dojo.declare("model.StateSchemaParser", model.XMLHelper, {
+    constructor: function(modelLib) {
+        this._modelLib = modelLib;
     },
     
     parseXML: function(xml) {
@@ -93,7 +93,7 @@ dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
 
         for(var i = 0; i < elements.length; i++) {
             
-            this.addElement(this._policyLib, elements[i]);
+            this.addElement(this._modelLib, elements[i]);
         }
         
     },
@@ -170,7 +170,7 @@ dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
     
     addComplexElement: function(parent, key, xmlElement) {
         var sequence = this.queryXSD(xmlElement, "sequence");
-        var complexElement = new policylib.Composite();
+        var complexElement = new model.Composite();
 
 
         if(sequence.length == 0) {
@@ -263,9 +263,9 @@ dojo.declare("policylib.StateSchemaParser", policylib.XMLHelper, {
 });
 
 
-dojo.declare("policylib.StateParser", policylib.XMLHelper, {
-    constructor: function(policyLib) {
-        this._policyLib = policyLib;
+dojo.declare("model.StateParser", model.XMLHelper, {
+    constructor: function(modelLib) {
+        this._modelLib = modelLib;
     },
     
     parseXML: function(xml) {
@@ -274,7 +274,7 @@ dojo.declare("policylib.StateParser", policylib.XMLHelper, {
         if(state && state.length > 0) {
             var elements = state[0].childNodes;
             for(var i = 0; i < elements.length; i++) {
-                this.updateElement(this._policyLib, elements[i]);
+                this.updateElement(this._modelLib, elements[i]);
             }
         }
     },
@@ -286,7 +286,7 @@ dojo.declare("policylib.StateParser", policylib.XMLHelper, {
             return;
         }
         if(!parent.hasKey(nodeName)) {
-            throw "Trying to update key " + nodeName + " but it's not in the Policy";
+            throw "Trying to update key " + nodeName + " but it's not in the ExposedModel";
         }
         
 
@@ -325,9 +325,9 @@ dojo.declare("policylib.StateParser", policylib.XMLHelper, {
 });
 
 
-dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
-    constructor: function(policyLib) {
-        this._policyLib = policyLib;
+dojo.declare("model.GUIParser", model.XMLHelper, {
+    constructor: function(modelLib) {
+        this._modelLib = modelLib;
     },
    
     parseXML: function(xml) {
@@ -337,7 +337,7 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
             for(var i = 0; i < children.length; i++) {
                 if(this.isGUIElement(children[i])){
                     var gui = this.makeGUIElement(children[i]);
-                    this._policyLib.setGUI(gui);
+                    this._modelLib.setGUI(gui);
                     return;
                 }
             }
@@ -378,23 +378,23 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
         var space = null;
         switch(type) {
             case 'VerticalSpace':
-                space = new policylib.gui.VerticalSpace();
+                space = new model.gui.VerticalSpace();
                 break;
             case 'VerticalExpandingSpace':
-                space = new policylib.gui.VerticalExpandingSpace();
+                space = new model.gui.VerticalExpandingSpace();
                 break;
             case 'HorizontalSpace':
-                space = new policylib.gui.HorizontalSpace();
+                space = new model.gui.HorizontalSpace();
                 break;
             case 'HorizontalExpandingSpace':
-                space = new policylib.gui.HorizontalExpandingSpace();
+                space = new model.gui.HorizontalExpandingSpace();
                 break;
         }
         return space;
     },
     
     makeGrid: function(xml) {
-        var grid = new policylib.gui.Grid();
+        var grid = new model.gui.Grid();
         var row = 0;
         var col = 0;
         for(var i = 0; i < xml.childNodes.length; i++) {
@@ -423,13 +423,13 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
         var container = null;
         switch(type) {
             case 'HorizontalLayout':
-                container = new policylib.gui.HorizontalLayout();
+                container = new model.gui.HorizontalLayout();
                 break;
             case 'VerticalLayout':
-                container = new policylib.gui.VerticalLayout();
+                container = new model.gui.VerticalLayout();
                 break;
             case 'ElementGroup':
-                container  = new policylib.gui.ElementGroup(this.getKey(xml), this.showValue(xml));
+                container  = new model.gui.ElementGroup(this.getKey(xml), this.showValue(xml));
                 break;
         }
         
@@ -442,14 +442,14 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
     },
    
     makeKeyValue: function(type, xml) {
-        var keyValue = new policylib.gui.KeyValue(type, this.getKey(xml), 
+        var keyValue = new model.gui.KeyValue(type, this.getKey(xml), 
             this.showValue(xml));
         return keyValue;
                                                   
     },
     
     makeTabLayout: function(xml) {
-        var tabLayout = new policylib.gui.TabLayout();
+        var tabLayout = new model.gui.TabLayout();
         
         for(var i = 0; i < xml.childNodes.length; i++) {
             if(this.isGUIElement(xml.childNodes[i])) {
@@ -460,7 +460,7 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
         return tabLayout;
     },
     makePopupButton: function(xml) {
-        var button = new policylib.gui.PopupButton(this.getKey(xml), this.showValue(xml));
+        var button = new model.gui.PopupButton(this.getKey(xml), this.showValue(xml));
         for(var i = 0; i < xml.childNodes.length; i++) {
             if(this.isGUIElement(xml.childNodes[i])) {
                 button.setChild(this.makeGUIElement(xml.childNodes[i]));
@@ -469,7 +469,7 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
         return button;
     },
     makeTab: function(xml) {
-        var tab = new policylib.gui.Tab(this.getKey(xml), this.showValue(xml));
+        var tab = new model.gui.Tab(this.getKey(xml), this.showValue(xml));
         for(var i = 0; i < xml.childNodes.length; i++) {
             if(this.isGUIElement(xml.childNodes[i])) {
                 tab.setChild(this.makeGUIElement(xml.childNodes[i]));
@@ -479,7 +479,7 @@ dojo.declare("policylib.GUIParser", policylib.XMLHelper, {
     },
     
     makeCanvas: function(xml) {
-        return new policylib.gui.Canvas(this.getKey(xml), dojo.attr(xml, "renderlistKey"),
+        return new model.gui.Canvas(this.getKey(xml), dojo.attr(xml, "renderlistKey"),
             dojo.attr(xml, "boundingboxKey"), dojo.attr(xml, "resetViewKey"));
     },
 

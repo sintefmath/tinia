@@ -22,16 +22,16 @@ namespace tinia {
 namespace qtobserver {
 
 RadioButton::RadioButton(std::string value, std::string key,
-                         std::shared_ptr<policy::Policy> policy,
+                         std::shared_ptr<model::ExposedModel> model,
                          QWidget *parent) :
-   QRadioButton(value.c_str(), parent), m_value(value), m_key(key), m_policy(policy)
+   QRadioButton(value.c_str(), parent), m_value(value), m_key(key), m_model(model)
 {
    // Connect signals
    connect(this, SIGNAL(toggled(bool)), this, SLOT(setCheckedFromQt(bool)));
-   connect(this, SIGNAL(setCheckedFromPolicy(bool)), this, SLOT(setChecked(bool)));
+   connect(this, SIGNAL(setCheckedFromExposedModel(bool)), this, SLOT(setChecked(bool)));
 
-   m_policy->addStateListener(m_key, this);
-   if(m_policy->getElementValueAsString(m_key) == m_value)
+   m_model->addStateListener(m_key, this);
+   if(m_model->getElementValueAsString(m_key) == m_value)
    {
       setChecked(true);
    }
@@ -39,7 +39,7 @@ RadioButton::RadioButton(std::string value, std::string key,
 }
 RadioButton::~RadioButton()
 {
-   m_policy->removeStateListener(m_key, this);
+   m_model->removeStateListener(m_key, this);
 }
 }
 
@@ -47,11 +47,11 @@ void qtobserver::RadioButton::setCheckedFromQt(bool checked)
 {
    if(checked)
    {
-      m_policy->updateElementFromString(m_key, m_value);
+      m_model->updateElementFromString(m_key, m_value);
    }
 }
 
-void qtobserver::RadioButton::stateElementModified(policy::StateElement *stateElement)
+void qtobserver::RadioButton::stateElementModified(model::StateElement *stateElement)
 {
    if(stateElement->getStringValue() == m_value)
    {
@@ -61,7 +61,7 @@ void qtobserver::RadioButton::stateElementModified(policy::StateElement *stateEl
       }
       else
       {
-         emit setCheckedFromPolicy(true);
+         emit setCheckedFromExposedModel(true);
       }
 
    }

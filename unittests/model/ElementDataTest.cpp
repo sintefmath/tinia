@@ -19,12 +19,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/property_tree/ptree.hpp>
-#include "tinia/policy/ElementData.hpp"
+#include "tinia/model/ElementData.hpp"
 using namespace tinia;
 BOOST_AUTO_TEST_SUITE( ElementData )
 
 BOOST_AUTO_TEST_CASE( gettersAndSetters ) {
-    policy::ElementData ed;
+    model::ElementData ed;
 
     std::string myString( "ipsum" );
     std::string myType( "xsd:string" );
@@ -59,27 +59,27 @@ BOOST_AUTO_TEST_CASE( gettersAndSetters ) {
 }
 
 BOOST_AUTO_TEST_CASE( emptyConstraints ) {
-    policy::ElementData ed;
+    model::ElementData ed;
 
     BOOST_CHECK( ed.emptyConstraints() );
 }
 
 BOOST_AUTO_TEST_CASE( emptyRestrictions ) {
-    policy::ElementData ed;
+    model::ElementData ed;
 
     BOOST_CHECK( ed.emptyRestrictionSet() );
 }
 
 BOOST_AUTO_TEST_CASE( hasAnnotation ) {
-    policy::ElementData ed;
+    model::ElementData ed;
 
     BOOST_CHECK( ed.emptyAnnotation() );
 }
 
 BOOST_AUTO_TEST_CASE( propertyTree ) {
-    policy::ElementData ed;
+    model::ElementData ed;
 
-    //typedef boost::property_tree::basic_ptree<std::string, policy::ElementData> PropertyTree;
+    //typedef boost::property_tree::basic_ptree<std::string, model::ElementData> PropertyTree;
     auto& pt = ed.getPropertyTree();
     BOOST_CHECK( pt.empty() );
 }

@@ -25,7 +25,7 @@ namespace qtobserver {
   \todo Make this change when the annotation changes
   */
 TabWidgetChildren::TabWidgetChildren(std::string key,
-                                     std::shared_ptr<policy::Policy> policy,
+                                     std::shared_ptr<model::ExposedModel> model,
                                      QTabWidget *parent) :
     QWidget(parent)
 {
@@ -34,7 +34,7 @@ TabWidgetChildren::TabWidgetChildren(std::string key,
 
 
 
-void TabWidgetChildren::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void TabWidgetChildren::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
 }
 

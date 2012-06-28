@@ -19,20 +19,20 @@
 #pragma once
 #include <string>
 #include <memory>
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 namespace tinia {
-namespace policyxml {
+namespace modelxml {
 class ElementHandler
 {
 public:
-   ElementHandler(std::shared_ptr<policy::Policy> policy);
+   ElementHandler(std::shared_ptr<model::ExposedModel> model);
    void updateElementFromString(const std::string& key,
                                 const std::string& stringValue);
    void updateElementFromPTree(const std::string& key,
-                               const policy::StringStringPTree& tree);
+                               const model::StringStringPTree& tree);
 
 private:
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

@@ -20,12 +20,12 @@
 #define TYPETOXSDTYPE_HPP
 
 #include <string>
-#include "tinia/policy/Viewer.hpp"
-#include "tinia/policy/File.hpp"
+#include "tinia/model/Viewer.hpp"
+#include "tinia/model/File.hpp"
 
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 /** \class TypeToXSDType
     TypeToXSDType is responsible for representing the mapping between C++ types and the XML Schema type
@@ -105,14 +105,14 @@ TypeToXSDType<const char*>::getTypenameDetail() {
 template<>
 inline
 std::string
-TypeToXSDType<policy::Viewer>::getTypenameDetail() {
+TypeToXSDType<model::Viewer>::getTypenameDetail() {
     return "complexType";
 }
 
 template<>
 inline
 std::string
-TypeToXSDType<policy::File>::getTypenameDetail() {
+TypeToXSDType<model::File>::getTypenameDetail() {
    return "file";
 }
 

@@ -27,14 +27,14 @@
 
 
 /** \file utils.hpp
-    This file contains various utilty function that is used throughout policy.
+    This file contains various utilty function that is used throughout model.
     They are mostly intended for internal-use, but might also be convenient for
     other applications where libxml is used.
   */
 
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 
 template<typename U>

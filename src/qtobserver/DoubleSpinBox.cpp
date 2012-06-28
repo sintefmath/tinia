@@ -20,12 +20,12 @@
 
 namespace tinia {
 namespace qtobserver {
-DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
+DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
-   QDoubleSpinBox(parent), m_key(key.c_str()), m_policy(policy)
+   QDoubleSpinBox(parent), m_key(key.c_str()), m_model(model)
 {
    // Get max and min
-   policy::StateSchemaElement element = m_policy->getStateSchemaElement(m_key);
+   model::StateSchemaElement element = m_model->getStateSchemaElement(m_key);
    try
    {
       double max = boost::lexical_cast<double>(element.getMaxConstraint());
@@ -38,12 +38,12 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> po
       // Do nothing
    }
 
-   m_policy->addStateListener(m_key, this);
-   m_policy->addStateSchemaListener(m_key, this);
+   m_model->addStateListener(m_key, this);
+   m_model->addStateSchemaListener(m_key, this);
    double value;
-   m_policy->getElementValue<double>(m_key, value);
+   m_model->getElementValue<double>(m_key, value);
    setValue(value);
-   connect(this, SIGNAL(setValueFromPolicy(double)), this,
+   connect(this, SIGNAL(setValueFromExposedModel(double)), this,
            SLOT(setValue(double)));
    connect(this, SIGNAL(valueChanged(double)), this, SLOT(valueSetFromQt(double)));
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -51,19 +51,19 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> po
 }
 DoubleSpinBox::~DoubleSpinBox()
 {
-   m_policy->removeStateListener(m_key, this);
-   m_policy->removeStateSchemaListener(m_key, this);
+   m_model->removeStateListener(m_key, this);
+   m_model->removeStateSchemaListener(m_key, this);
 }
 }
 
-void qtobserver::DoubleSpinBox::stateElementModified(policy::StateElement *stateElement)
+void qtobserver::DoubleSpinBox::stateElementModified(model::StateElement *stateElement)
 {
    double value;
-   m_policy->getElementValue<double>(m_key, value);
-   emit setValueFromPolicy(value);
+   m_model->getElementValue<double>(m_key, value);
+   emit setValueFromExposedModel(value);
 }
 
-void qtobserver::DoubleSpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::DoubleSpinBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
     std::cout << "Updating min/max" << std::endl;
     double max, min;
@@ -76,7 +76,7 @@ void qtobserver::DoubleSpinBox::stateSchemaElementModified(policy::StateSchemaEl
 
 void qtobserver::DoubleSpinBox::valueSetFromQt(double val)
 {
-   m_policy->updateElement(m_key, val);
+   m_model->updateElement(m_key, val);
 }
 }
 

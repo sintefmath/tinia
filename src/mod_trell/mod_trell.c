@@ -130,13 +130,13 @@ static int trell_handler_body(request_rec *r)
             return trell_send_reply_static_file( sconf, r, &dispatch_info );
             break;
         case TRELL_REQUEST_POLICY_UPDATE_XML:
-            return trell_handle_get_policy_update( sconf, r, &dispatch_info );
+            return trell_handle_get_model_update( sconf, r, &dispatch_info );
             break;
         case TRELL_REQUEST_STATE_UPDATE_XML:
             return trell_handle_update_state( sconf, r, &dispatch_info );
             break;
         case TRELL_REQUEST_PNG:
-            // Check if a policy update is piggy-backed on request.
+            // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
                 int rv = trell_handle_update_state( sconf, r, &dispatch_info );
                 if( rv != HTTP_NO_CONTENT ) {
@@ -147,7 +147,7 @@ static int trell_handler_body(request_rec *r)
             return trell_handle_get_snapshot( sconf, r, &dispatch_info );
             break;
         case TRELL_REQUEST_GET_RENDERLIST:
-            // Check if a policy update is piggy-backed on request.
+            // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
                 int rv = trell_handle_update_state( sconf, r, &dispatch_info );
                 if( rv != HTTP_NO_CONTENT ) {

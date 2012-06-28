@@ -14,7 +14,7 @@ IF(${DESKTOP})
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
-    policy
+    model
     jobobserver
     ${Boost_LIBRARIES}
     )
@@ -36,8 +36,8 @@ IF(${SERVER})
     ${Freeglut_LIBRARY}
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
-    policy 
-    policyxml
+    model 
+    modelxml
     renderlist
     renderlistgl
     jobobserver

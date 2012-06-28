@@ -16,4 +16,4 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/StateListener.hpp"
+#include "tinia/model/StateListener.hpp"

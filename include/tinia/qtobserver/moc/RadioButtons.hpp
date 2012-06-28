@@ -22,7 +22,7 @@
 #include <QRadioButton>
 #include <QList>
 #include <string>
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 #include <memory>
 
 namespace tinia {
@@ -33,7 +33,7 @@ class RadioButtons : public QGroupBox
     Q_OBJECT
 public:
     explicit RadioButtons(std::string key,
-                          std::shared_ptr<policy::Policy> policy,
+                          std::shared_ptr<model::ExposedModel> model,
                           QWidget *parent = 0);
 
 signals:
@@ -44,7 +44,7 @@ private slots:
    void buttonChecked(bool);
 
 private:
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
    QList<QRadioButton*> m_buttons;
 };

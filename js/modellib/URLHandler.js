@@ -22,7 +22,7 @@
  */
 
 
-dojo.declare("policylib.URLHandler", null, {
+dojo.declare("model.URLHandler", null, {
     constructor: function(url, params) {
         this._url = "";
         if(params === undefined) {

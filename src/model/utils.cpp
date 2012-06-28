@@ -16,10 +16,10 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/utils.hpp"
+#include "tinia/model/utils.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 }
 }

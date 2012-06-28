@@ -27,14 +27,14 @@
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "tinia/policy/Viewer.hpp"
+#include "tinia/model/Viewer.hpp"
 
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 /** \class ElementData is responsible for storing data and metadata about a state parameter.
-    This class was designed to be a helper class for Policy and is not designed to be used as a standalone-class.
+    This class was designed to be a helper class for ExposedModel and is not designed to be used as a standalone-class.
     */
 class ElementData {
 public:

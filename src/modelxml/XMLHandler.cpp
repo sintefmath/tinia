@@ -16,16 +16,16 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policyxml/XMLHandler.hpp"
-#include "tinia/policy/StateElement.hpp"
-#include "tinia/policy/StateSchemaElement.hpp"
-#include "tinia/policyxml/XMLBuilder.hpp"
+#include "tinia/modelxml/XMLHandler.hpp"
+#include "tinia/model/StateElement.hpp"
+#include "tinia/model/StateSchemaElement.hpp"
+#include "tinia/modelxml/XMLBuilder.hpp"
 #define XMLDEBUG {std::cerr<< __FILE__<<__LINE__ << std::endl;}
 
 namespace tinia {
-namespace policyxml {
-XMLHandler::XMLHandler(std::shared_ptr<policy::Policy> policy)
-   : m_policy(policy), m_elementHandler(policy)
+namespace modelxml {
+XMLHandler::XMLHandler(std::shared_ptr<model::ExposedModel> model)
+   : m_model(model), m_elementHandler(model)
 {
 }
 
@@ -52,26 +52,26 @@ bool XMLHandler::updateState(const char *buffer, const size_t doc_len)
    return true;
 }
 
-size_t XMLHandler::getPolicyUpdate(char *buffer, const size_t buffer_len,
+size_t XMLHandler::getExposedModelUpdate(char *buffer, const size_t buffer_len,
                                    const unsigned int has_revision)
 {
 
 
-   std::vector<policy::StateElement> stateElements;
+   std::vector<model::StateElement> stateElements;
 
-   std::vector<policy::StateSchemaElement> stateSchemaElements;
+   std::vector<model::StateSchemaElement> stateSchemaElements;
 
-   m_policy->getFullStateSchema(stateSchemaElements);
+   m_model->getFullStateSchema(stateSchemaElements);
 
-   m_policy->getStateUpdate(stateElements, has_revision);
+   m_model->getStateUpdate(stateElements, has_revision);
 
    if(stateElements.size() ==0)
    {
       return 0;
    }
 
-   XMLBuilder builder(stateElements, stateSchemaElements, m_policy->getGUILayout(policy::gui::DESKTOP),
-                      m_policy->getRevisionNumber());
+   XMLBuilder builder(stateElements, stateSchemaElements, m_model->getGUILayout(model::gui::DESKTOP),
+                      m_model->getRevisionNumber());
 
    XMLTransporter xmlTransporter;
 
@@ -86,16 +86,16 @@ size_t XMLHandler::getPolicyUpdate(char *buffer, const size_t buffer_len,
 
 }
 
-xmlDocPtr policyxml::XMLHandler::getCompleteDocument()
+xmlDocPtr modelxml::XMLHandler::getCompleteDocument()
 {
-   std::vector<policy::StateElement> stateElements;
-   std::vector<policy::StateSchemaElement> stateSchemaElements;
-   m_policy->getFullStateSchema(stateSchemaElements);
-   m_policy->getStateUpdate(stateElements, 0);
+   std::vector<model::StateElement> stateElements;
+   std::vector<model::StateSchemaElement> stateSchemaElements;
+   m_model->getFullStateSchema(stateSchemaElements);
+   m_model->getStateUpdate(stateElements, 0);
 
 
-   XMLBuilder builder(stateElements, stateSchemaElements, m_policy->getGUILayout(policy::gui::DESKTOP),
-                      m_policy->getRevisionNumber());
+   XMLBuilder builder(stateElements, stateSchemaElements, m_model->getGUILayout(model::gui::DESKTOP),
+                      m_model->getRevisionNumber());
    return builder.getDeltaDocument();
 
 }

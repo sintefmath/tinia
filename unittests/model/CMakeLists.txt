@@ -1,5 +1,5 @@
-FILE( GLOB policyTestHeaders "*.hpp" )
-FILE( GLOB policyTestSrc "*.cpp" )
+FILE( GLOB modelTestHeaders "*.hpp" )
+FILE( GLOB modelTestSrc "*.cpp" )
 
-ADD_EXECUTABLE( policy_unittest ${policyTestSrc} ${policyTestHeaders} )
-TARGET_LINK_LIBRARIES( policy_unittest ${Boost_LIBRARIES} policy )
+ADD_EXECUTABLE( model_unittest ${modelTestSrc} ${modelTestHeaders} )
+TARGET_LINK_LIBRARIES( model_unittest ${Boost_LIBRARIES} model )

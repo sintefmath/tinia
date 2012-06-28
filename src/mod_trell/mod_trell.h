@@ -111,11 +111,11 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info,
   *
   */
 int
-trell_handle_get_policy_update( trell_sconf_t*          sconf,
+trell_handle_get_model_update( trell_sconf_t*          sconf,
                                 request_rec*            r,
                                 trell_dispatch_info_t*  dispatch_info );
 
-/** Handles a policy update from client.
+/** Handles a model update from client.
   *
   * - Checks if method is post, if not return HTTP_METHOD_NOT_ALLOWED.
   * - Checks if for presence and value of content type, if fail return HTTP_BAD_REQUEST.

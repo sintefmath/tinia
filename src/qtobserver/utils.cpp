@@ -19,9 +19,9 @@
 #include "tinia/qtobserver/utils.hpp"
 
 namespace tinia {
-std::string qtobserver::prettyName(std::string key, std::shared_ptr<policy::Policy> policy)
+std::string qtobserver::prettyName(std::string key, std::shared_ptr<model::ExposedModel> model)
 {
-   policy::StateSchemaElement element = policy->getStateSchemaElement(key);
+   model::StateSchemaElement element = model->getStateSchemaElement(key);
    if(element.emptyAnnotation())
    {
       return key;

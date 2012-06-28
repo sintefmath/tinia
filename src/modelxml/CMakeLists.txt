@@ -1,9 +1,9 @@
-FILE( GLOB policyxmlSrc "*.cpp" )
-FILE( GLOB policyxmlHeaders "../../include/tinia/policyxml/*.hpp" )
+FILE( GLOB modelxmlSrc "*.cpp" )
+FILE( GLOB modelxmlHeaders "../../include/tinia/modelxml/*.hpp" )
 
 SET( CPACK_GENERATOR "DEB" )
-SET( CPACK_PACKAGE_NAME "policyxml" )
-SET( CPACK_DEBIAN_PACKAGE_NAME "policyxml" )
+SET( CPACK_PACKAGE_NAME "modelxml" )
+SET( CPACK_DEBIAN_PACKAGE_NAME "modelxml" )
 SET( CPACK_PACKAGE_VERSION ${version_number} )
 SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
 SET( CPACK_COMPONENTS_ALL libraries headers )
@@ -11,17 +11,17 @@ SET( CPACK_COMPONENT_HEADERS_DEPENDS libraries )
 SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
 include ( CPack )
 
-ADD_LIBRARY( policyxml SHARED ${policyxmlSrc} ${policyxmlHeaders})
+ADD_LIBRARY( modelxml SHARED ${modelxmlSrc} ${modelxmlHeaders})
 
-TARGET_LINK_LIBRARIES( policyxml ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES})
+TARGET_LINK_LIBRARIES( modelxml ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES})
 
 IF(NOT WIN32)
   install( FILES 
-    ${policyxmlHeaders} 
-    DESTINATION include/tinia/policyxml
-    COMPONENT policyxml-dev)
+    ${modelxmlHeaders} 
+    DESTINATION include/tinia/modelxml
+    COMPONENT modelxml-dev)
   install( TARGETS  
-    policyxml LIBRARY 
+    modelxml LIBRARY 
     DESTINATION lib/ 
-    COMPONENT policyxml)
+    COMPONENT modelxml)
 ENDIF()

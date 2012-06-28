@@ -17,18 +17,18 @@
  */
 
 #pragma once
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policyxml/XMLTransporter.hpp"
-#include "tinia/policyxml/XMLReader.hpp"
-#include "tinia/policyxml/ElementHandler.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/modelxml/XMLTransporter.hpp"
+#include "tinia/modelxml/XMLReader.hpp"
+#include "tinia/modelxml/ElementHandler.hpp"
 #include <memory>
 
 namespace tinia {
-namespace policyxml {
+namespace modelxml {
 class XMLHandler
 {
 public:
-   XMLHandler(std::shared_ptr<policy::Policy> policy);
+   XMLHandler(std::shared_ptr<model::ExposedModel> model);
 
    /** The job can use this to update the state given new information from the client.
       \param buffer The memory buffer to which the xml document will be written.
@@ -43,13 +43,13 @@ public:
       \param has_revision Base number from which the delta is to be computed. The client needs updates for revisions after this.
       \return The number of bytes actually written. Zero if there was no update at all.
       */
-   size_t getPolicyUpdate(char *buffer, const size_t buffer_len,
+   size_t getExposedModelUpdate(char *buffer, const size_t buffer_len,
                           const unsigned int has_revision );
 
    xmlDocPtr getCompleteDocument();
 
 private:
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
    XMLTransporter m_xmlTransporter;
    XMLReader m_xmlReader;
    ElementHandler m_elementHandler;

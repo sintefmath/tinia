@@ -23,21 +23,21 @@
 #include <QString>
 #include <QAbstractButton>
 #include <string>
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/StateListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/StateListener.hpp"
 
 namespace tinia {
 namespace qtobserver {
 
 class StringController
         : public QObject,
-          public policy::StateListener
+          public model::StateListener
 {
     Q_OBJECT;
 public:
     explicit
     StringController( QWidget*                               widget,
-                      std::shared_ptr<policy::Policy>  policy,
+                      std::shared_ptr<model::ExposedModel>  model,
                       const std::string&                     key,
                       const bool                             show_value,
                       const QString&                         suffix = "" );
@@ -45,11 +45,11 @@ public:
     ~StringController();
 
     void
-    stateElementModified(policy::StateElement *stateElement);
+    stateElementModified(model::StateElement *stateElement);
 
 signals:
     void
-    textChangeFromPolicy( const QString& text );
+    textChangeFromExposedModel( const QString& text );
 
 public slots:
 
@@ -57,7 +57,7 @@ public slots:
     textChangeFromQt( const QString& text );
 
 private:
-    std::shared_ptr<policy::Policy>   m_policy;
+    std::shared_ptr<model::ExposedModel>   m_model;
     const std::string                       m_key;
     const bool                              m_show_value;
     std::string                             m_current_value;

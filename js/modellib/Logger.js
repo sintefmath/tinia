@@ -16,24 +16,24 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.provide("policylib.Logger");
-dojo.declare("policylib.Logger", null, {
-    constructor: function(policyLib) {
+dojo.provide("model.Logger");
+dojo.declare("model.Logger", null, {
+    constructor: function(modelLib) {
         this._log = dojo.hitch(console, console.log);
-        policyLib.addListener(function(key, value) {
-            this._log("policyupdate: key=" + key+", value=", value);
+        modelLib.addListener(function(key, value) {
+            this._log("modelupdate: key=" + key+", value=", value);
         }, this);
         
-        dojo.subscribe("/policylib/updateReceived", dojo.hitch(this, function(message) {
+        dojo.subscribe("/model/updateReceived", dojo.hitch(this, function(message) {
             this._log("updateReceived", message);
         }));
-        dojo.subscribe("/policylib/updateSendStart", dojo.hitch(this, function(message) {
+        dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(message) {
             this._log("updateSendStart", message);
         }));
-        dojo.subscribe("/policylib/updateSendComplete", dojo.hitch(this, function(message) {
+        dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function(message) {
             this._log("updateSendComplete", message);
         }));
-        dojo.subscribe("/policylib/updateSendError", dojo.hitch(this, function(message) {
+        dojo.subscribe("/model/updateSendError", dojo.hitch(this, function(message) {
             this._log("updateSendError", message);
         }));
     }

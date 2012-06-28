@@ -20,12 +20,12 @@
 
 namespace tinia {
 namespace qtobserver {
-SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
+SpinBox::SpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
-   QSpinBox(parent), m_key(key.c_str()), m_policy(policy)
+   QSpinBox(parent), m_key(key.c_str()), m_model(model)
 {
    // Get max and min
-   policy::StateSchemaElement element = m_policy->getStateSchemaElement(m_key);
+   model::StateSchemaElement element = m_model->getStateSchemaElement(m_key);
    try {
 	int maxValue = boost::lexical_cast<int>(element.getMaxConstraint());
 	int minValue = boost::lexical_cast<int>(element.getMinConstraint());
@@ -37,12 +37,12 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
    }
 
 
-   m_policy->addStateListener(m_key, this);
-   m_policy->addStateSchemaListener(m_key, this);
+   m_model->addStateListener(m_key, this);
+   m_model->addStateSchemaListener(m_key, this);
    int value;
-   m_policy->getElementValue<int>(m_key, value);
+   m_model->getElementValue<int>(m_key, value);
    setValue(value);
-   connect(this, SIGNAL(setValueFromPolicy(int)), this,
+   connect(this, SIGNAL(setValueFromExposedModel(int)), this,
            SLOT(setValue(int)));
    connect(this, SIGNAL(valueChanged(int)), this, SLOT(valueSetFromQt(int)));
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -50,11 +50,11 @@ SpinBox::SpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
 }
 SpinBox::~SpinBox()
 {
-    m_policy->removeStateListener(m_key, this);
-     m_policy->removeStateSchemaListener(m_key, this);
+    m_model->removeStateListener(m_key, this);
+     m_model->removeStateSchemaListener(m_key, this);
 }
 
-void SpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void SpinBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
     int max, min;
     stateSchemaElement->getMinConstraint(min);
@@ -64,16 +64,16 @@ void SpinBox::stateSchemaElementModified(policy::StateSchemaElement *stateSchema
 }
 }
 
-void qtobserver::SpinBox::stateElementModified(policy::StateElement *stateElement)
+void qtobserver::SpinBox::stateElementModified(model::StateElement *stateElement)
 {
    int value;
-   m_policy->getElementValue<int>(m_key, value);
-   emit setValueFromPolicy(value);
+   m_model->getElementValue<int>(m_key, value);
+   emit setValueFromExposedModel(value);
 }
 
 void qtobserver::SpinBox::valueSetFromQt(int val)
 {
-   m_policy->updateElement(m_key, val);
+   m_model->updateElement(m_key, val);
 }
 
 } // of namespace tinia

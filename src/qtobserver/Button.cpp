@@ -22,12 +22,12 @@
 namespace tinia {
 namespace qtobserver {
 
-Button::Button(std::string key, std::shared_ptr<policy::Policy> policy,
+Button::Button(std::string key, std::shared_ptr<model::ExposedModel> model,
                QWidget *parent) :
-   QPushButton(parent), m_key(key), m_policy(policy)
+   QPushButton(parent), m_key(key), m_model(model)
 {
    connect(this, SIGNAL(clicked()), this, SLOT(clickedButton()));
-   setText(prettyName(key, m_policy).c_str());
+   setText(prettyName(key, m_model).c_str());
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 }
@@ -40,7 +40,7 @@ Button::~Button()
 
 void qtobserver::Button::clickedButton()
 {
-   m_policy->updateElement<bool>(m_key, true);
+   m_model->updateElement<bool>(m_key, true);
 }
 
 } // of namespace tinia

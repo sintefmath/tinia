@@ -16,9 +16,9 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.provide("policylib.gui.GUILayout");
+dojo.provide("model.gui.GUILayout");
 
-dojo.declare("policylib.gui.Element", null, {
+dojo.declare("model.gui.Element", null, {
     constructor: function() {
         
         this._visibilityKey = null;
@@ -63,28 +63,28 @@ dojo.declare("policylib.gui.Element", null, {
     }
 });
 
-dojo.declare("policylib.gui.HorizontalSpace", policylib.gui.Element, {
+dojo.declare("model.gui.HorizontalSpace", model.gui.Element, {
     type: function() { 
         return "HorizontalSpace";
     }
 });
-dojo.declare("policylib.gui.HorizontalExpandingSpace", policylib.gui.Element, {
+dojo.declare("model.gui.HorizontalExpandingSpace", model.gui.Element, {
     type: function() {
         return "HorizontalExpandingSpace";
     }
 });
-dojo.declare("policylib.gui.VerticalSpace", policylib.gui.Element, {
+dojo.declare("model.gui.VerticalSpace", model.gui.Element, {
     type: function() {
         return "VerticalSpace";
     }
 });
-dojo.declare("policylib.gui.VerticalExpandingSpace", policylib.gui.Element, {
+dojo.declare("model.gui.VerticalExpandingSpace", model.gui.Element, {
     type: function() {
         return "VerticalExpandingSpace";
     }
 });
 
-dojo.declare("policylib.gui.Container0D", policylib.gui.Element, {
+dojo.declare("model.gui.Container0D", model.gui.Element, {
     constructor: function() {
         this._child = null;
     },
@@ -102,7 +102,7 @@ dojo.declare("policylib.gui.Container0D", policylib.gui.Element, {
     }
 });
 
-dojo.declare("policylib.gui.Container1D", policylib.gui.Element, {
+dojo.declare("model.gui.Container1D", model.gui.Element, {
     constructor: function() {
         this._children = [];
     },
@@ -125,7 +125,7 @@ dojo.declare("policylib.gui.Container1D", policylib.gui.Element, {
     
 });
 
-dojo.declare("policylib.gui.Container2D", policylib.gui.Element, {
+dojo.declare("model.gui.Container2D", model.gui.Element, {
     constructor: function() {
         this._children = [];
         this._maxRow = 0;
@@ -184,7 +184,7 @@ dojo.declare("policylib.gui.Container2D", policylib.gui.Element, {
     
 });
 
-dojo.declare("policylib.gui.TabLayout", policylib.gui.Container1D,
+dojo.declare("model.gui.TabLayout", model.gui.Container1D,
 {
     constructor: function() {
     },
@@ -201,7 +201,7 @@ dojo.declare("policylib.gui.TabLayout", policylib.gui.Container1D,
     }
 });
 
-dojo.declare("policylib.gui.Tab", policylib.gui.Container0D, {
+dojo.declare("model.gui.Tab", model.gui.Container0D, {
     constructor: function(key, showValue) {
         this._showValue = !!showValue;
         this._key = key;
@@ -221,7 +221,7 @@ dojo.declare("policylib.gui.Tab", policylib.gui.Container0D, {
     
 });
 
-dojo.declare("policylib.gui.ElementGroup", policylib.gui.Container0D, {
+dojo.declare("model.gui.ElementGroup", model.gui.Container0D, {
     constructor: function(key, showValue) {
         this._showValue = !!showValue;
         this._key = key;
@@ -241,7 +241,7 @@ dojo.declare("policylib.gui.ElementGroup", policylib.gui.Container0D, {
     
 });
 
-dojo.declare("policylib.gui.PopupButton", policylib.gui.Container0D, {
+dojo.declare("model.gui.PopupButton", model.gui.Container0D, {
     constructor: function(key, showValue) {
         this._showValue = !!showValue;
         this._key = key;
@@ -262,7 +262,7 @@ dojo.declare("policylib.gui.PopupButton", policylib.gui.Container0D, {
 });
 
 
-dojo.declare("policylib.gui.HorizontalLayout", policylib.gui.Container1D, {
+dojo.declare("model.gui.HorizontalLayout", model.gui.Container1D, {
 
     
     type: function() {
@@ -272,7 +272,7 @@ dojo.declare("policylib.gui.HorizontalLayout", policylib.gui.Container1D, {
 });
 
 
-dojo.declare("policylib.gui.VerticalLayout", policylib.gui.Container1D, {
+dojo.declare("model.gui.VerticalLayout", model.gui.Container1D, {
 
     
     type: function() {
@@ -281,7 +281,7 @@ dojo.declare("policylib.gui.VerticalLayout", policylib.gui.Container1D, {
     
 });
 
-dojo.declare("policylib.gui.KeyValue", policylib.gui.Element, {
+dojo.declare("model.gui.KeyValue", model.gui.Element, {
     constructor: function(type, key, showValue) {
                            
         this._key = key;
@@ -321,7 +321,7 @@ dojo.declare("policylib.gui.KeyValue", policylib.gui.Element, {
     
 });
 
-dojo.declare("policylib.gui.Canvas", policylib.gui.Element, {
+dojo.declare("model.gui.Canvas", model.gui.Element, {
     constructor: function(key, renderlistKey, boundingBoxKey, resetViewKey) {
         this._key = key;
         if(renderlistKey === undefined) {
@@ -361,7 +361,7 @@ dojo.declare("policylib.gui.Canvas", policylib.gui.Element, {
     }
 });
 
-dojo.declare("policylib.gui.Grid", policylib.gui.Container2D, {
+dojo.declare("model.gui.Grid", model.gui.Container2D, {
     type: function() {
         return "Grid";
     }

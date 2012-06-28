@@ -22,15 +22,15 @@ namespace tinia {
 namespace jobobserver {
 
 Job::Job()
-   : m_policy(new policy::Policy)
+   : m_model(new model::ExposedModel)
 {
 }
 
 }
 
-std::shared_ptr<policy::Policy> jobobserver::Job::getPolicy()
+std::shared_ptr<model::ExposedModel> jobobserver::Job::getExposedModel()
 {
-   return m_policy;
+   return m_model;
 }
 
 bool jobobserver::Job::init()
@@ -50,7 +50,7 @@ bool jobobserver::Job::periodic()
 void jobobserver::Job::quit()
 {
 	cleanup();
-	m_policy->releaseAllListeners();
+	m_model->releaseAllListeners();
 }
 
 }

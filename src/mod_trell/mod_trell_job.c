@@ -187,7 +187,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
 
 
 int
-trell_handle_get_policy_update( trell_sconf_t* sconf,
+trell_handle_get_model_update( trell_sconf_t* sconf,
                                 request_rec* r,
                                 trell_dispatch_info_t*  dispatch_info )
 {
@@ -231,11 +231,11 @@ trell_handle_get_policy_update( trell_sconf_t* sconf,
                 trell_message_t* msg = msgr.m_shmem_ptr;
                 msg->m_type = TRELL_MESSAGE_GET_POLICY_UPDATE;
                 msg->m_size = 0u;
-                msg->m_get_policy_update_payload.m_revision = dispatch_info->m_revision;
-                strncpy( msg->m_get_policy_update_payload.m_session_id,
+                msg->m_get_model_update_payload.m_revision = dispatch_info->m_revision;
+                strncpy( msg->m_get_model_update_payload.m_session_id,
                          dispatch_info->m_sessionid,
                          TRELL_SESSIONID_MAXLENGTH );
-                msg->m_get_policy_update_payload.m_session_id[ TRELL_SESSIONID_MAXLENGTH-1 ] = '\0';
+                msg->m_get_model_update_payload.m_session_id[ TRELL_SESSIONID_MAXLENGTH-1 ] = '\0';
 
                 // post query
                 mrv = messenger_post( &msgr, TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE );

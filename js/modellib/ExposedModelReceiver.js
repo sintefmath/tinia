@@ -16,14 +16,14 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-dojo.require("policylib.PolicyParser");
-dojo.provide("policylib.PolicyReceiver");
+dojo.require("model.ExposedModelParser");
+dojo.provide("model.ExposedModelReceiver");
 
-dojo.declare("policylib.PolicyReceiver", null, {
-    constructor: function(url, policyLib) {
-        this._policyLib = policyLib;
+dojo.declare("model.ExposedModelReceiver", null, {
+    constructor: function(url, modelLib) {
+        this._modelLib = modelLib;
         this._url = url;
-        this._parser = new policylib.PolicyParser(policyLib);
+        this._parser = new model.ExposedModelParser(modelLib);
         this._cancel = false;
     },
    
@@ -42,7 +42,7 @@ dojo.declare("policylib.PolicyReceiver", null, {
             preventCache: true,
             
             content: {
-                revision: this._policyLib.getRevision()
+                revision: this._modelLib.getRevision()
                 },
                 
             handleAs: "xml",
@@ -58,10 +58,10 @@ dojo.declare("policylib.PolicyReceiver", null, {
                     this._postUpdate(0);
                     return response;
                 }
-                dojo.publish("/policylib/updateReceived", [{"response": response,
+                dojo.publish("/model/updateReceived", [{"response": response,
                                                             "ioArgs": ioArgs}]);
                 this._handleUpdate(response);
-                dojo.publish("/policylib/updateParsed", [{"response": response,
+                dojo.publish("/model/updateParsed", [{"response": response,
                                                             "ioArgs": ioArgs}]);
                 this._postUpdate(0);
                 return response; 

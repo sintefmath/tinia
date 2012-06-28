@@ -34,21 +34,21 @@
 
 #include <boost/thread.hpp>
 
-#include "tinia/policy/ElementData.hpp"
-#include "tinia/policy/TypeToXSDType.hpp"
-#include "tinia/policy/ElementDataFactory.hpp"
-#include "tinia/policy/StateListenerHandler.hpp"
-#include "tinia/policy/StateSchemaListenerHandler.hpp"
-#include "tinia/policy/GUILayout.hpp"
+#include "tinia/model/ElementData.hpp"
+#include "tinia/model/TypeToXSDType.hpp"
+#include "tinia/model/ElementDataFactory.hpp"
+#include "tinia/model/StateListenerHandler.hpp"
+#include "tinia/model/StateSchemaListenerHandler.hpp"
+#include "tinia/model/GUILayout.hpp"
 #include <boost/property_tree/ptree.hpp>
-#include "tinia/policy/Viewer.hpp"
+#include "tinia/model/Viewer.hpp"
 
 /** \mainpage
-     Policy is a small library used to create, update and query policies.
-     A policy is a set of typed-parameters with potential restrictions that is sent
+     ExposedModel is a small library used to create, update and query policies.
+     A model is a set of typed-parameters with potential restrictions that is sent
      between a client and a server in a distributed application.
 
-     The values in a policy is expected to change often, and very often contains
+     The values in a model is expected to change often, and very often contains
      GUI-state, short strings or integral values.
 
      \section sec_compilation Compilation and installation
@@ -65,10 +65,10 @@
      Should be enough to compile it. You can optionally issue
      \verbatim
         $ make package \endverbatim
-     Which will build a debian package which installs into /usr/lib and /usr/include/policy .
+     Which will build a debian package which installs into /usr/lib and /usr/include/model .
      This package can be installed on your system with the following command
      \verbatim
-        $ sudo dpkg -i Policy<version>.deb \endverbatim
+        $ sudo dpkg -i ExposedModel<version>.deb \endverbatim
 
     \section sec_example Example
 
@@ -87,24 +87,24 @@
 
   */
 //
-/** \namespace policy Everything in policy resides in the policy namespace.
+/** \namespace model Everything in model resides in the model namespace.
   */
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
 
 struct Viewer; // Forward declaration.
-class PolicyLock; // Forward declartion
+class ExposedModelLock; // Forward declartion
 
-/** Policy is responsible for holding the contents of a policy. */
-class Policy {
-   // The locking mechanism for Policy
-   friend class PolicyLock;
+/** ExposedModel is responsible for holding the contents of a model. */
+class ExposedModel {
+   // The locking mechanism for ExposedModel
+   friend class ExposedModelLock;
 public:
-   typedef class PolicyLock PolicyLock;
-   Policy();
+   typedef class ExposedModelLock ExposedModelLock;
+   ExposedModel();
 
    std::string getElementMaxConstraint(std::string key) const;
    std::string getElementMinConstraint(std::string key) const;
@@ -115,30 +115,30 @@ public:
 
 
    /**
-     Releases _all_ listeners of the policy.
+     Releases _all_ listeners of the model.
      */
    void releaseAllListeners();
 
 
    /**
-     \param key the key of the PolicyElement
+     \param key the key of the ExposedModelElement
      \return true if the element has an empty restriction set, false otherwise
      */
    bool emptyRestrictionSet(std::string key);
 
    /**
-     \param key the key of the PolicyElement
+     \param key the key of the ExposedModelElement
      */
    std::unordered_set<std::string> getRestrictionSet(std::string key);
 
    /**
-      Gets the full Schema in the current policy.
+      Gets the full Schema in the current model.
       \param schemaElements the vector to put the SchemaElements
       */
    void getFullStateSchema(std::vector<StateSchemaElement> &stateSchemaElements);
 
    /**
-      Gets the full State of the current policy.
+      Gets the full State of the current model.
       \param stateElements the vector to put the StateElements.
       */
    void getFullState(std::vector<StateElement> &stateElements);
@@ -171,7 +171,7 @@ The job can use this to get an update meant for the client. This version are for
       \param updatedElements A list of elements that has been updated in the state, relative to the given revision number.
       \param has_revision Base number from which the delta is to be computed. The client needs updates for revisions after this.
       */
-   void getPolicyUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned int has_revision ) const;
+   void getExposedModelUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned int has_revision ) const;
 
 
    /** Add an unconstrained element to the hash. This will update the StateSchema and State with the element.
@@ -182,7 +182,7 @@ The job can use this to get an update meant for the client. This version are for
    void
    addElement( std::string key, T value, const std::string annotation="" );
 
-   /** Add 4x4 matrix to the policy.
+   /** Add 4x4 matrix to the model.
       \param matrixName The name of the matrix.
       \param matrixData pointer to a continious block of memory that is assumed to hold 16 floats in column-major mode.
       \throw std::runtime_error if the matrixName is already in use.
@@ -195,7 +195,7 @@ The job can use this to get an update meant for the client. This version are for
 
    /** Add an annotation to an element. The annotation allows for multiple languages. Each language MUST
         be prefixed with the language code, eg addAnnotation( "timestep", { "en:Time step", "no:Tidssteg" ] );
-        \throw std::runtime_error if the key is not in the policy.
+        \throw std::runtime_error if the key is not in the model.
         \throw std::runtime_error if the annotation strings are not prefixed with a language code.
     */
    template<class InputIterator>
@@ -243,9 +243,9 @@ The job can use this to get an update meant for the client. This version are for
    void
    updateMatrixValue( std::string key, const float* matrixData );
 
-   /** Remove an element from the policy.
+   /** Remove an element from the model.
       \param key Name of element to remove.
-      \throws std::runtime_error if the element is not in the policy.
+      \throws std::runtime_error if the element is not in the model.
       */
    void
    removeElement( std::string key );
@@ -280,9 +280,9 @@ The job can use this to get an update meant for the client. This version are for
                               InputIterator end );
 
 
-   /** Check if an element with the given name is in the policy.
+   /** Check if an element with the given name is in the model.
       \param elementName Name of element.
-      \return true if the element is in the policy, false otherwise.
+      \return true if the element is in the model, false otherwise.
       */
    bool
    hasElement( std::string elementName ) const;
@@ -357,7 +357,7 @@ The job can use this to get an update meant for the client. This version are for
 
    /**
      Sets the GUI (represented by its root element) for the given device. Use
-     policy::gui::Device to specify this.
+     model::gui::Device to specify this.
      */
    void setGUILayout(gui::Element *rootElement, int device);
 
@@ -387,7 +387,7 @@ private:
    template<typename T>
    ElementData& addElementInternal(std::string key, T val);
 
-   /** The revision number for the policy is incremented, and the element that caused this increment gets
+   /** The revision number for the model is incremented, and the element that caused this increment gets
       its revision number set to the global value prior to this incrementation. */
    void incrementRevisionNumber(ElementData &updatedElement);
 
@@ -432,10 +432,10 @@ private:
    mutex_type m_selfMutex;
    mutex_type m_listenerHandlersMutex;
 
-   mutex_type& getPolicyMutex();
+   mutex_type& getExposedModelMutex();
 
    // Temporary GUILayout-structure:
-   policy::gui::Element* m_gui;
+   model::gui::Element* m_gui;
    /**
      Simple method for making a linear GUI system when none is provided by the
      job.
@@ -452,13 +452,13 @@ public:
 template<>
 inline
 std::string
-Policy::stringify<policy::Viewer>( const Viewer& v ) {
+ExposedModel::stringify<model::Viewer>( const Viewer& v ) {
    return "";
 }
 
 template<class T>
 std::string
-Policy::stringify( const T& t ) {
+ExposedModel::stringify( const T& t ) {
    std::stringstream ss;
    ss << t;
 
@@ -467,7 +467,7 @@ Policy::stringify( const T& t ) {
 
 template<typename T>
 void
-Policy::addElement( std::string key, T value, const std::string annotation ) {
+ExposedModel::addElement( std::string key, T value, const std::string annotation ) {
 
    ElementData data;
    {
@@ -483,7 +483,7 @@ Policy::addElement( std::string key, T value, const std::string annotation ) {
 
 template<typename T>
 void
-Policy::addConstrainedElement( std::string key, T value, T minConstraint, T maxConstraint, const std::string annotation ) {
+ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, T maxConstraint, const std::string annotation ) {
    if ( ( value < minConstraint ) ||
         ( value > maxConstraint ) ) {
       std::stringstream ss;
@@ -518,13 +518,13 @@ Policy::addConstrainedElement( std::string key, T value, T minConstraint, T maxC
 
 template<class T, class TContainer>
 void
-Policy::addElementWithRestriction( std::string key, T value, TContainer restrictions ) {
+ExposedModel::addElementWithRestriction( std::string key, T value, TContainer restrictions ) {
    addElementWithRestriction(key, value, restrictions.begin(), restrictions.end());
 }
 
 template<class T, class InputIterator>
 void
-Policy::addElementWithRestriction( std::string key, T value, InputIterator start, InputIterator end) {
+ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator start, InputIterator end) {
    std::unordered_set<T> restrictionSet( start, end );
 
    if ( restrictionSet.find( value ) == restrictionSet.end() ) {
@@ -609,7 +609,7 @@ UpdateElementHelper<false>::operator()( std::string key, ElementData& elementDat
 
 template<class T>
 void
-Policy::updateElementHelper( std::string key, ElementData& elementData, const T& value ) {
+ExposedModel::updateElementHelper( std::string key, ElementData& elementData, const T& value ) {
    // All classes except std::string are assumed to be complexTypes which require specialization
    // in ElementDataFactory for serialization.
    UpdateElementHelper<std::is_class<T>::value && !std::is_same<std::string, T>::value >
@@ -619,7 +619,7 @@ Policy::updateElementHelper( std::string key, ElementData& elementData, const T&
 
 template<typename T>
 void
-Policy::updateElement( std::string key, T value ) {
+ExposedModel::updateElement( std::string key, T value ) {
 
    ElementData data;
    std::string stringValueBeforeUpdate;
@@ -659,15 +659,15 @@ Policy::updateElement( std::string key, T value ) {
 
 template<typename T>
 void
-Policy::getElementValue( std::string key, T& t ) {
-   // The whole method locks the policy. This could be optimized, but leaving it
+ExposedModel::getElementValue( std::string key, T& t ) {
+   // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
    scoped_lock(m_selfMutex);
 
    const auto it = stateHash.find( key );
 
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the policy" );
+      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
    }
 
    auto& elementData = it->second;
@@ -683,7 +683,7 @@ Policy::getElementValue( std::string key, T& t ) {
 }
 
 template<typename T>
-ElementData& policy::Policy::addElementInternal(std::string key,
+ElementData& model::ExposedModel::addElementInternal(std::string key,
                                                       T value)
 {
 
@@ -700,7 +700,7 @@ ElementData& policy::Policy::addElementInternal(std::string key,
 
 template<class InputIterator>
 void
-Policy::addAnnotation( std::string key, const InputIterator& begin, const InputIterator& end ) {
+ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const InputIterator& end ) {
    using std::string;
    std::unordered_map<std::string, std::string> annotationMap;
 
@@ -721,7 +721,7 @@ addAnnotationHelper( key, annotationMap );
 
 template<typename T>
 void
-Policy::updateConstraints( std::string key, T value, T minValue, T maxValue) {
+ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValue) {
     if( value > maxValue || value < minValue ) {
         std::stringstream ss;
         ss << "Value out of bounds. Value = " << value << ", min = " << minValue << ", max = " << maxValue << ".";

@@ -44,7 +44,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._renderListURL = params.renderListURL;
         this._width = 500;
         this._height = 500;
-        this._policyLib = params.policyLib;
+        this._modelLib = params.modelLib;
         this._snapshotURL = params.snapshotURL;
 
         this._localMode = params.localMode;
@@ -69,10 +69,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
 
-        var viewer = this._policyLib.getValue(this._key);
+        var viewer = this._modelLib.getValue(this._key);
         viewer.updateElement("Width", w);
         viewer.updateElement("Height", h);
-        this._policyLib.updateElement(this._key, viewer);
+        this._modelLib.updateElement(this._key, viewer);
 
 
     //this._update();
@@ -120,7 +120,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         this._update();
 
-        this._policyLib.addLocalListener(this._boundingboxKey, function(key, value) {
+        this._modelLib.addLocalListener(this._boundingboxKey, function(key, value) {
             this._trackball.setBoundingBox(value);
             this._updateMatrices();
             // We'll update the matrices twice, one time after the update is parsed as well
@@ -128,33 +128,33 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }, this);
         
         
-        this._policyLib.addLocalListener(this._resetViewKey, function(key, value) {
+        this._modelLib.addLocalListener(this._resetViewKey, function(key, value) {
             this._trackball = new gui.TrackBallViewer();
             this._trackball.setSize(this._width, this._height);
             this._trackball.setBoundingBox(value);
             this._updateMatrices();
         });
 
-        this._policyLib.addLocalListener(this._renderlistKey, function(key, value) {
+        this._modelLib.addLocalListener(this._renderlistKey, function(key, value) {
             this._getRenderList();
         }, this);
 
-        if(this._policyLib.hasKey(this._boundingboxKey)) {
-            this._trackball.setBoundingBox(this._policyLib.getValue(this._boundingboxKey));
+        if(this._modelLib.hasKey(this._boundingboxKey)) {
+            this._trackball.setBoundingBox(this._modelLib.getValue(this._boundingboxKey));
         }
 
         // We always want to update after the first parsing
         this._shouldUpdate = true;
         
         this._urlHandler.setURL(this._snapshotURL);
-        dojo.subscribe("/policylib/updateParsed", dojo.hitch(this, function(params) {
+        dojo.subscribe("/model/updateParsed", dojo.hitch(this, function(params) {
             if(this._shouldUpdate) {
                 this._updateMatrices();
             }
             this._shouldUpdate = false;
         }));
 
-        dojo.subscribe("/policylib/updateSendPartialComplete", dojo.hitch(this, function(params) {
+        dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function(params) {
             // Temporary sanity fix for firefox
             if( ! params.response.substring(params.response.length-1).match(/^[0-9a-zA-z\=\+\/]/)) {
                 params.response = params.response.substring(0, params.response.length-1);
@@ -306,14 +306,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _updateMatrices : function() {
         this._trackball.updateMatrices();
 
-        var viewer = this._policyLib.getValue(this._key);
+        var viewer = this._modelLib.getValue(this._key);
         viewer.updateElement("Projection", this._trackball.getProjection());
         viewer.updateElement("Modelview", this._trackball.getModelView());
 
 
         this._imageLoading = true;
 
-        this._policyLib.updateElement(this._key, viewer);
+        this._modelLib.updateElement(this._key, viewer);
     },
 
     _setAttrWidthHeight : function(node) {

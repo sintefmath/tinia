@@ -25,22 +25,22 @@ namespace tinia {
 namespace qtobserver {
 
 StringController::StringController( QWidget *widget,
-                                    std::shared_ptr<policy::Policy>   policy,
+                                    std::shared_ptr<model::ExposedModel>   model,
                                     const std::string&                      key,
                                     const bool                              show_value,
                                     const QString&                          suffix )
     : QObject( widget ),
-      m_policy( policy ),
+      m_model( model ),
       m_key( key ),
       m_show_value( show_value ),
       m_suffix( suffix ),
       m_button( NULL )
 {
     if( m_show_value ) {
-        m_current_value = m_policy->getElementValueAsString( m_key );
+        m_current_value = m_model->getElementValueAsString( m_key );
     }
     else {
-        policy::StateSchemaElement element = m_policy->getStateSchemaElement(key);
+        model::StateSchemaElement element = m_model->getStateSchemaElement(key);
         if( element.emptyAnnotation() ) {
             m_current_value = m_key;
         }
@@ -61,13 +61,13 @@ StringController::StringController( QWidget *widget,
         line_edit->setText(  QString( m_current_value.c_str() + m_suffix ) );
         connect( line_edit, SIGNAL(textChanged(QString)),
                  this, SLOT(textChangeFromQt(QString)) );
-        connect( this, SIGNAL( textChangeFromPolicy(QString)),
+        connect( this, SIGNAL( textChangeFromExposedModel(QString)),
                 line_edit, SLOT(setText(QString)) );
     }
     QLabel* label = dynamic_cast<QLabel*>( widget );
     if( label != NULL ) {
         label->setText(  QString( m_current_value.c_str() + m_suffix ) );
-        connect( this, SIGNAL( textChangeFromPolicy(QString)),
+        connect( this, SIGNAL( textChangeFromExposedModel(QString)),
                  label, SLOT( setText(QString)) );
     }
     QAbstractButton* button = dynamic_cast<QAbstractButton*>( widget );
@@ -77,7 +77,7 @@ StringController::StringController( QWidget *widget,
     }
 
     if( m_show_value ) {
-        m_policy->addStateListener( m_key, this );
+        m_model->addStateListener( m_key, this );
     }
 
 }
@@ -85,12 +85,12 @@ StringController::StringController( QWidget *widget,
 StringController::~StringController()
 {
     if( m_show_value ) {
-        m_policy->removeStateListener( m_key, this );
+        m_model->removeStateListener( m_key, this );
     }
 }
 
 void
-StringController::stateElementModified( policy::StateElement *state_element )
+StringController::stateElementModified( model::StateElement *state_element )
 {
     const std::string& value = state_element->getStringValue();
     if( value != m_current_value ) {
@@ -100,7 +100,7 @@ StringController::stateElementModified( policy::StateElement *state_element )
             m_button->setText( QString( m_current_value.c_str() + m_suffix ) );
         }
         else {
-            emit textChangeFromPolicy( QString( m_current_value.c_str() + m_suffix ) );
+            emit textChangeFromExposedModel( QString( m_current_value.c_str() + m_suffix ) );
         }
     }
 }
@@ -111,26 +111,26 @@ StringController::textChangeFromQt( const QString& text )
 {
     if( m_suffix.size() != 0 ) {
         // sanity check. When we add sufficies, don't propagate back to
-        // policy.
+        // model.
         return;
     }
     if( m_show_value ) {
       const std::string value( text.toLocal8Bit() );
         if( m_current_value != value ) {
 			try {
-				m_policy->updateElementFromString( m_key, value );
+				m_model->updateElementFromString( m_key, value );
 				m_current_value = value;
 			} catch (...) {
 				if(value == "") {
 					m_current_value = "";
 				}
-				emit textChangeFromPolicy( m_current_value.c_str() );
+				emit textChangeFromExposedModel( m_current_value.c_str() );
 			}
         }
     }
     else {
         // we do not support editing of key annotations
-        emit textChangeFromPolicy( m_current_value.c_str() );
+        emit textChangeFromExposedModel( m_current_value.c_str() );
     }
 }
 

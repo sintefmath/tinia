@@ -22,10 +22,10 @@
 #include <map>
 #include <vector>
 
-#include "tinia/policy/StateSchemaListener.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 class StateSchemaListenerHandler
 {
 public:

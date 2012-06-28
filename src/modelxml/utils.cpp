@@ -16,19 +16,19 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policyxml/utils.hpp"
+#include "tinia/modelxml/utils.hpp"
 
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
 namespace tinia {
-namespace policyxml {
+namespace modelxml {
 
 
 xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression ) {
     auto xpathContext = xmlXPathNewContext( doc );
 
-    xmlXPathRegisterNs( xpathContext, BAD_CAST "tns", BAD_CAST "http://cloudviz.sintef.no/V1/policy" );
+    xmlXPathRegisterNs( xpathContext, BAD_CAST "tns", BAD_CAST "http://cloudviz.sintef.no/V1/model" );
     xmlXPathRegisterNs( xpathContext, BAD_CAST "xsd", BAD_CAST "http://www.w3.org/2001/XMLSchema" );
 
     auto xpathObject = xmlXPathEvalExpression( (xmlChar*)( xpathExpression.c_str() ), xpathContext );

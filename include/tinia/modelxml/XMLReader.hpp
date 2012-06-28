@@ -25,21 +25,21 @@
 #include <libxml/tree.h>
 #include <libxml/xmlreader.h>
 
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/ElementData.hpp"
-#include "tinia/policyxml/utils.hpp"
-#include "tinia/policyxml/ElementHandler.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/ElementData.hpp"
+#include "tinia/modelxml/utils.hpp"
+#include "tinia/modelxml/ElementHandler.hpp"
 #include <boost/property_tree/ptree.hpp>
 
 
 
 namespace tinia {
-namespace policyxml
+namespace modelxml
 {
 
 
     /** \class XMLReader
-     XMLReader is responsible for parsing an xml-document from a policy.
+     XMLReader is responsible for parsing an xml-document from a model.
     */
 
     class XMLReader {
@@ -49,9 +49,9 @@ namespace policyxml
         */
         XMLReader();
 
-        /** For a given libxml2 document describing the policy, set up the state.
+        /** For a given libxml2 document describing the model, set up the state.
             \param doc The XML document.
-            \param policy The Policy object in which to update elements per specification in the XML document.
+            \param model The ExposedModel object in which to update elements per specification in the XML document.
             \return A list of the keys in the state that are updated is returned.
         */
         std::vector<std::string> parseDocument(const xmlDocPtr doc,
@@ -72,7 +72,7 @@ namespace policyxml
             \param section_name The name of the start element which the reader has passed, and of the end element it will stop at.
             \param name The name of the text element if one is found, otherwise the parameter is not changed.
             \param value The value of the text element if one is found, otherwise the parameter is not changed.
-            \param state_end_found Set to true when the State-section of the policy has been read.
+            \param state_end_found Set to true when the State-section of the model has been read.
             \param depth the depth of the named node read.
             \return True if the named node is the head of a complex-type.
         */

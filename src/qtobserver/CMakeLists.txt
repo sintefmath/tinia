@@ -27,7 +27,7 @@ ENDIF()
 target_link_libraries ( qtobserver
     renderlist
     renderlistgl
-    policy
+    model
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
     jobobserver

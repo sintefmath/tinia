@@ -25,10 +25,10 @@ namespace tinia {
 namespace qtobserver {
 
 RadioButtonGroup::RadioButtonGroup(std::string key,
-                           std::shared_ptr<policy::Policy> policy,
+                           std::shared_ptr<model::ExposedModel> model,
                                    bool horizontal,
                            QWidget *parent) :
-   QGroupBox(parent), m_policy(policy), m_key(key)
+   QGroupBox(parent), m_model(model), m_key(key)
 {
    if(horizontal)
    {
@@ -38,13 +38,13 @@ RadioButtonGroup::RadioButtonGroup(std::string key,
    {
       setLayout(new QVBoxLayout());
    }
-   m_policy->addStateSchemaListener(m_key, this);
+   m_model->addStateSchemaListener(m_key, this);
 
    // Populate the buttons
-   auto restrictions = m_policy->getRestrictionSet(m_key);
+   auto restrictions = m_model->getRestrictionSet(m_key);
    for(auto it= restrictions.begin(); it != restrictions.end(); it++)
    {
-      layout()->addWidget(new RadioButton(*it, m_key, m_policy, this));
+      layout()->addWidget(new RadioButton(*it, m_key, m_model, this));
    }
 
    setFlat(true);
@@ -52,7 +52,7 @@ RadioButtonGroup::RadioButtonGroup(std::string key,
 
 RadioButtonGroup::~RadioButtonGroup()
 {
-   m_policy->removeStateSchemaListener(m_key, this);
+   m_model->removeStateSchemaListener(m_key, this);
 }
 
 }
@@ -61,15 +61,15 @@ RadioButtonGroup::~RadioButtonGroup()
 
 
 
-void qtobserver::RadioButtonGroup::stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::RadioButtonGroup::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::RadioButtonGroup::stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::RadioButtonGroup::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::RadioButtonGroup::stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+void qtobserver::RadioButtonGroup::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
    // Do something here eventually
 }

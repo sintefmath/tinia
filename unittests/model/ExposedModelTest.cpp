@@ -28,24 +28,24 @@
 #include <cstring>
 
 
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/ElementData.hpp"
-#include "tinia/policy/StateListener.hpp"
-#include "tinia/policy/StateSchemaListener.hpp"
-#include "tinia/policy/GUILayout.hpp"
-#include "tinia/policy/File.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/ElementData.hpp"
+#include "tinia/model/StateListener.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
+#include "tinia/model/GUILayout.hpp"
+#include "tinia/model/File.hpp"
 
 #include "testutils.hpp"
 
 #include <boost/algorithm/string.hpp>
 
 
-//BOOST_AUTO_TEST_SUITE( Policy )
+//BOOST_AUTO_TEST_SUITE( ExposedModel )
 using namespace tinia;
-struct PolicyFixture {
-   PolicyFixture() {}
-   ~PolicyFixture() {}
-   policy::Policy policy;
+struct ExposedModelFixture {
+   ExposedModelFixture() {}
+   ~ExposedModelFixture() {}
+   model::ExposedModel model;
 };
 
 // This might be a slight abuse of Fixtures. If someone is offended, please do
@@ -53,26 +53,26 @@ struct PolicyFixture {
 struct SchemaListenerFixture {
    SchemaListenerFixture() {
       // Should probably have a add-listener-test as well
-      policy.addStateSchemaListener(&schemaListener);
+      model.addStateSchemaListener(&schemaListener);
    }
    ~SchemaListenerFixture() {}
 
-   policy::Policy policy;
-   class SchemaListener : public policy::StateSchemaListener {
+   model::ExposedModel model;
+   class SchemaListener : public model::StateSchemaListener {
    public:
       SchemaListener() : added_registered(false), removed_registered(false),
          modified_registered(false), added_called_times(0) {}
-      virtual void stateSchemaElementAdded(policy::StateSchemaElement* element)
+      virtual void stateSchemaElementAdded(model::StateSchemaElement* element)
       {
          added_called_times++;
          added_registered = true;
          added_key = element->getKey();
       }
-      virtual void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement)
+      virtual void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
       {
          removed_registered = true;
       }
-      virtual void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement)
+      virtual void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
       {
           modified_key = stateSchemaElement->getKey();
           modified_max = stateSchemaElement->getMaxConstraint();
@@ -96,17 +96,17 @@ BOOST_FIXTURE_TEST_CASE(constraintsChange, SchemaListenerFixture)
 {
     BOOST_CHECK( !schemaListener.modified_registered );
     BOOST_CHECK( !schemaListener.added_registered );
-    policy.addConstrainedElement("constrained", 0, 0, 10);
+    model.addConstrainedElement("constrained", 0, 0, 10);
     BOOST_CHECK( schemaListener.added_registered );
     BOOST_CHECK( schemaListener.modified_registered );
     schemaListener.modified_registered = false;
-    policy.updateConstraints("constrained", 15, 12, 20);
+    model.updateConstraints("constrained", 15, 12, 20);
     BOOST_CHECK(schemaListener.modified_registered);
     BOOST_CHECK_EQUAL("constrained", schemaListener.modified_key);
     BOOST_CHECK_EQUAL("12", schemaListener.modified_min);
     BOOST_CHECK_EQUAL("20", schemaListener.modified_max);
 
-    BOOST_CHECK_THROW(policy.updateElement("constrained", 0), std::runtime_error);
+    BOOST_CHECK_THROW(model.updateElement("constrained", 0), std::runtime_error);
 
 }
 
@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(stateSchemaElementAdded, SchemaListenerFixture)
    BOOST_CHECK(!schemaListener.added_registered);
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 0);
 
-   policy.addElement("myValue", 5);
+   model.addElement("myValue", 5);
    BOOST_CHECK(schemaListener.added_registered);
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 1);
 
@@ -130,8 +130,8 @@ BOOST_FIXTURE_TEST_CASE(stateSchemaElementRemoved, SchemaListenerFixture)
 
    BOOST_CHECK(!schemaListener.removed_registered);
 
-   policy.addElement("myValue", 5);
-   policy.removeElement("myValue");
+   model.addElement("myValue", 5);
+   model.removeElement("myValue");
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 1);
 
    BOOST_CHECK(schemaListener.removed_registered);
@@ -141,8 +141,8 @@ BOOST_FIXTURE_TEST_CASE(stateSchemaElementModified, SchemaListenerFixture)
 {
    BOOST_CHECK(!schemaListener.modified_registered);
 
-   policy.addElement("myValue", 5);
-   policy.addAnnotation("myValue", "My very own value");
+   model.addElement("myValue", 5);
+   model.addAnnotation("myValue", "My very own value");
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 1);
 
    BOOST_CHECK(schemaListener.modified_registered);
@@ -153,24 +153,24 @@ BOOST_FIXTURE_TEST_CASE(stateSchemaElementAddedWithConstraints, SchemaListenerFi
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 0);
 
    BOOST_CHECK(!schemaListener.added_registered);
-   policy.addConstrainedElement("myConstrainedValue", 5, -1, 10);
+   model.addConstrainedElement("myConstrainedValue", 5, -1, 10);
    BOOST_CHECK_EQUAL(schemaListener.added_called_times, 1);
 
    BOOST_CHECK(schemaListener.added_registered);
 }
 
 struct StateListenerFixture {
-   policy::Policy policy;
+   model::ExposedModel model;
    StateListenerFixture()
    {
-      policy.addStateListener(&stateListener);
-      policy.addElement("myValue", 5);
+      model.addStateListener(&stateListener);
+      model.addElement("myValue", 5);
    }
    ~StateListenerFixture()
    {
    }
 
-   class StateListener : public policy::StateListener
+   class StateListener : public model::StateListener
    {
    public:
       StateListener()
@@ -179,7 +179,7 @@ struct StateListenerFixture {
 
       }
 
-      virtual void stateElementModified(policy::StateElement *stateElement)
+      virtual void stateElementModified(model::StateElement *stateElement)
       {
          modified_registered = true;
       }
@@ -190,9 +190,9 @@ struct StateListenerFixture {
 BOOST_FIXTURE_TEST_CASE(stateElementNotModified, StateListenerFixture)
 {
    BOOST_CHECK(!stateListener.modified_registered);
-   policy.addElement("value_not_to_be_changed", 10);
+   model.addElement("value_not_to_be_changed", 10);
    BOOST_CHECK(!stateListener.modified_registered);
-   policy.updateElement("value_not_to_be_changed", 10);
+   model.updateElement("value_not_to_be_changed", 10);
    BOOST_CHECK(!stateListener.modified_registered);
 
 }
@@ -207,18 +207,18 @@ BOOST_FIXTURE_TEST_CASE(stateElementNotModified_Matrices, StateListenerFixture)
    std::copy(&matrix[0], &matrix[16], &copy_of_matrix[0]);
 
    BOOST_CHECK(!stateListener.modified_registered);
-   policy.addMatrixElement("myMatrix", matrix);
+   model.addMatrixElement("myMatrix", matrix);
    BOOST_CHECK(!stateListener.modified_registered);
-   policy.updateMatrixValue("myMatrix", copy_of_matrix);
+   model.updateMatrixValue("myMatrix", copy_of_matrix);
    BOOST_CHECK(!stateListener.modified_registered);
 }
 
 BOOST_FIXTURE_TEST_CASE(stateElementNotModifed_Viewer, StateListenerFixture)
 {
-   policy::Viewer v;
-   policy.addElement("viewer", v);
-   policy::Viewer w;
-   policy.updateElement("viewer", w);
+   model::Viewer v;
+   model.addElement("viewer", v);
+   model::Viewer w;
+   model.updateElement("viewer", w);
 
    // For complex elements we want an update for now
    BOOST_CHECK(stateListener.modified_registered);
@@ -227,56 +227,57 @@ BOOST_FIXTURE_TEST_CASE(stateElementNotModifed_Viewer, StateListenerFixture)
 BOOST_FIXTURE_TEST_CASE(stateElementModified, StateListenerFixture)
 {
    BOOST_CHECK(!stateListener.modified_registered);
-   policy.updateElement("myValue", 10);
+   model.updateElement("myValue", 10);
    BOOST_CHECK(stateListener.modified_registered);
 }
 
-BOOST_FIXTURE_TEST_CASE(restrictionSetCopy, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(restrictionSetCopy, ExposedModelFixture)
 {
    std::vector<std::string> restrictions;
    restrictions.push_back("legal1");
    restrictions.push_back("legal2");
-   policy.addElementWithRestriction<std::string>("myVal", "legal1", restrictions.begin(),
+   model.addElementWithRestriction<std::string>("myVal", "legal1", restrictions.begin(),
                                        restrictions.end());
-   auto restrictions2 = policy.getRestrictionSet("myVal");
+   auto restrictions2 = model.getRestrictionSet("myVal");
+
    BOOST_CHECK_EQUAL_COLLECTIONS(restrictions.begin(), restrictions.end(),
                                  restrictions2.begin(), restrictions2.end());
 
    // Make sure this is a real copy
    restrictions2.erase("legal1");
-   auto restrictions3 = policy.getRestrictionSet("myVal");
+   auto restrictions3 = model.getRestrictionSet("myVal");
    BOOST_CHECK(restrictions3.find("legal1")!=restrictions3.end());
 
-   BOOST_CHECK(!policy.emptyRestrictionSet("myVal"));
+   BOOST_CHECK(!model.emptyRestrictionSet("myVal"));
 }
 
-BOOST_FIXTURE_TEST_CASE(intAddElement, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(intAddElement, ExposedModelFixture)
 {
-   policy.addElement<int>("myValInt", 12);
-   int policyReturnValue;
-   policy.getElementValue<int>("myValInt", policyReturnValue);
-   BOOST_CHECK_EQUAL(12, policyReturnValue);
+   model.addElement<int>("myValInt", 12);
+   int modelReturnValue;
+   model.getElementValue<int>("myValInt", modelReturnValue);
+   BOOST_CHECK_EQUAL(12, modelReturnValue);
 }
-BOOST_FIXTURE_TEST_CASE(getFullStateSchema, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(getFullStateSchema, ExposedModelFixture)
 {
-      policy.addConstrainedElement("Element1", 1, 0, 100);
-      policy.addConstrainedElement("Element2", 2, 0, 100);
+      model.addConstrainedElement("Element1", 1, 0, 100);
+      model.addConstrainedElement("Element2", 2, 0, 100);
 
-      policy.addConstrainedElement("Element3", 3, 0, 100);
+      model.addConstrainedElement("Element3", 3, 0, 100);
 
-      policy.addConstrainedElement("Element4", 4, 0, 100);
+      model.addConstrainedElement("Element4", 4, 0, 100);
 
-      policy.addConstrainedElement("Element5", 5, 0, 100);
+      model.addConstrainedElement("Element5", 5, 0, 100);
 
-      policy.addConstrainedElement("Element6", 6, 0, 100);
+      model.addConstrainedElement("Element6", 6, 0, 100);
 
-      policy.addConstrainedElement("Element7", 7, 0, 100);
+      model.addConstrainedElement("Element7", 7, 0, 100);
 
-      policy.addConstrainedElement("Element8", 8, 0, 100);
-      policy.addConstrainedElement("Element9", 9, 0, 100);
+      model.addConstrainedElement("Element8", 8, 0, 100);
+      model.addConstrainedElement("Element9", 9, 0, 100);
 
-      std::vector<policy::StateSchemaElement> elements;
-      policy.getFullStateSchema(elements);
+      std::vector<model::StateSchemaElement> elements;
+      model.getFullStateSchema(elements);
 
       std::vector<bool> found;
       for(int i = 0; i < 9; i++) found.push_back(false);
@@ -289,7 +290,7 @@ BOOST_FIXTURE_TEST_CASE(getFullStateSchema, PolicyFixture)
          found[i-1] = true;
       }
 
-      policy.getGUILayout(policy::gui::DESKTOP);
+      model.getGUILayout(model::gui::DESKTOP);
 
       std::vector<bool>foundCheck;
       for(int i = 0; i < 9; i++) foundCheck.push_back(true);
@@ -300,26 +301,26 @@ BOOST_FIXTURE_TEST_CASE(getFullStateSchema, PolicyFixture)
 
 }
 
-BOOST_FIXTURE_TEST_CASE(PolicyGUITestCase, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(ExposedModelGUITestCase, ExposedModelFixture)
 {
-   policy::Viewer viewer;
+   model::Viewer viewer;
    viewer.height = 500;
    viewer.width = 500;
-   policy.addElement("viewer", viewer);
-   policy.addElement<bool>("myTab", false);
-      policy.addElement<bool>("myBool", false);
-   policy.addElement<std::string>("myVal", "THIS WORKS!");
+   model.addElement("viewer", viewer);
+   model.addElement<bool>("myTab", false);
+      model.addElement<bool>("myBool", false);
+   model.addElement<std::string>("myVal", "THIS WORKS!");
 
    const char* restrictions[] = {"select1", "select2", "select3", "select4"};
-   policy.addElementWithRestriction<std::string>("myVal2", "select1",
+   model.addElementWithRestriction<std::string>("myVal2", "select1",
                                                        &restrictions[0], &restrictions[4]);
 
-   policy.addConstrainedElement<int>("myIntBA", 5,0, 900);
-   policy.addConstrainedElement<double>("myDouble", 10., 0., 11.);
-   policy.addElement<bool>("myButton", false);
+   model.addConstrainedElement<int>("myIntBA", 5,0, 900);
+   model.addConstrainedElement<double>("myDouble", 10., 0., 11.);
+   model.addElement<bool>("myButton", false);
 
 
-   using namespace policy::gui;
+   using namespace model::gui;
    TabLayout* root = new TabLayout();
    HorizontalLayout *superLayout = new HorizontalLayout();
 
@@ -371,60 +372,60 @@ BOOST_FIXTURE_TEST_CASE(PolicyGUITestCase, PolicyFixture)
    superLayout->addChild(canvasGrid);
 
 
-   policy.setGUILayout(root, DESKTOP);
+   model.setGUILayout(root, DESKTOP);
 
-   std::vector<policy::StateSchemaElement> elements;
-   policy.getFullStateSchema(elements);
+   std::vector<model::StateSchemaElement> elements;
+   model.getFullStateSchema(elements);
 }
 
-BOOST_FIXTURE_TEST_CASE(DefaultLengthCheck, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(DefaultLengthCheck, ExposedModelFixture)
 {
-   policy.addElement("myKey", "myValue");
-   BOOST_CHECK_EQUAL(policy.getStateSchemaElement("myKey").getLength(),
-                     policy::StateSchemaElement::LENGTH_NOT_SET);
+   model.addElement("myKey", "myValue");
+   BOOST_CHECK_EQUAL(model.getStateSchemaElement("myKey").getLength(),
+                     model::StateSchemaElement::LENGTH_NOT_SET);
 }
 
 
 
-BOOST_FIXTURE_TEST_CASE(FileCheck, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(FileCheck, ExposedModelFixture)
 {
-   policy::File myFile;
-   policy.addElement("FileKey", myFile);
+   model::File myFile;
+   model.addElement("FileKey", myFile);
    BOOST_CHECK_EQUAL(myFile.fullPath(), std::string(""));
-   policy::File fileFromPolicy;
-   policy.getElementValue("FileKey", fileFromPolicy);
-   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromPolicy.fullPath());
+   model::File fileFromExposedModel;
+   model.getElementValue("FileKey", fileFromExposedModel);
+   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromExposedModel.fullPath());
 
 }
 
-BOOST_FIXTURE_TEST_CASE(FileCheckWithPath, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(FileCheckWithPath, ExposedModelFixture)
 {
-   policy::File myFile;
+   model::File myFile;
    myFile.fullPath("/some/path/file.ext");
-   policy.addElement("FileKey", myFile);
-    policy::File fileFromPolicy;
-   policy.getElementValue("FileKey", fileFromPolicy);
-   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromPolicy.fullPath());
+   model.addElement("FileKey", myFile);
+    model::File fileFromExposedModel;
+   model.getElementValue("FileKey", fileFromExposedModel);
+   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromExposedModel.fullPath());
    BOOST_CHECK_EQUAL(myFile.fullPath(), "/some/path/file.ext");
 
 }
 
-BOOST_FIXTURE_TEST_CASE(FileCheckChangePath, PolicyFixture)
+BOOST_FIXTURE_TEST_CASE(FileCheckChangePath, ExposedModelFixture)
 {
-   policy::File myFile;
+   model::File myFile;
    myFile.fullPath("/some/path/file.ext");
-   policy.addElement("FileKey", myFile);
-    policy::File fileFromPolicy;
-   policy.getElementValue("FileKey", fileFromPolicy);
-   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromPolicy.fullPath());
+   model.addElement("FileKey", myFile);
+    model::File fileFromExposedModel;
+   model.getElementValue("FileKey", fileFromExposedModel);
+   BOOST_CHECK_EQUAL(myFile.fullPath(), fileFromExposedModel.fullPath());
    BOOST_CHECK_EQUAL(myFile.fullPath(), "/some/path/file.ext");
 
-   policy::File newFile;
+   model::File newFile;
    newFile.fullPath("/some/other/path/file.ext");
-   policy.updateElement("FileKey", newFile);
+   model.updateElement("FileKey", newFile);
 
-   policy::File otherFile;
-   policy.getElementValue("FileKey", otherFile);
+   model::File otherFile;
+   model.getElementValue("FileKey", otherFile);
 
    BOOST_CHECK_EQUAL(otherFile.fullPath(), newFile.fullPath());
 

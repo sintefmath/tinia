@@ -22,7 +22,7 @@
 #include <string>
 
 namespace tinia {
-namespace policy {
+namespace model {
 class GUILayout
 {
 public:
@@ -128,13 +128,13 @@ private:
     bool         m_enabled_inverted;
 };
 
-/** Abstract interface class for elements that contains a reference to a policy key. */
+/** Abstract interface class for elements that contains a reference to a model key. */
 class KeyValue
 {
 public:
     /** Constructor.
       *
-      * \param key         The policy key to show.
+      * \param key         The model key to show.
       * \param show_value  Flag that indicates that this view should show the
       *                    value of the element and not the key itself.
       */
@@ -284,7 +284,7 @@ public:
 };
 
 /**
-  A standard UI-label. This must reference an element in the policy (usually
+  A standard UI-label. This must reference an element in the model (usually
   this will just be the element the Label describes).
   */
 class Label
@@ -302,13 +302,13 @@ public:
 /**
   Abstract base class for all widgets visualizing a state-element
   */
-class PolicyElement
+class ExposedModelElement
         : public Element {
 public:
     /**
-     \param key the key in the policy this element is supposed to visualize
+     \param key the key in the model this element is supposed to visualize
      */
-    PolicyElement(std::string key)
+    ExposedModelElement(std::string key)
         : m_key(key)
     {
 
@@ -321,7 +321,7 @@ private:
 
 
 /**
-  The recommended element used to represent a restricted element in Policy
+  The recommended element used to represent a restricted element in ExposedModel
   */
 class ComboBox
         : public Element,
@@ -336,7 +336,7 @@ public:
 };
 
 /**
-  Radio buttons used to represent a restricted element in Policy
+  Radio buttons used to represent a restricted element in ExposedModel
   */
 class RadioButtons
         : public Element,

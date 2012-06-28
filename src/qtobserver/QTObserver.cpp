@@ -88,7 +88,7 @@ int QTObserver::run(int argc, char **argv)
     if( m_job == NULL ) {
         throw std::runtime_error( "No job set" );
     }
-    m_policy = m_job->getPolicy();
+    m_model = m_job->getExposedModel();
 
 
 
@@ -117,13 +117,13 @@ int QTObserver::run(int argc, char **argv)
        throw new std::runtime_error("Job did not start up properly");
     }
 
-    m_builder = new GUIBuilder( m_policy,
+    m_builder = new GUIBuilder( m_model,
                                 m_job,
                                 this,
                                 m_perf_mode,
                                 m_root_context );
 
-    m_main_window->setCentralWidget( m_builder->buildGUI( m_policy->getGUILayout(policy::gui::DESKTOP),
+    m_main_window->setCentralWidget( m_builder->buildGUI( m_model->getGUILayout(model::gui::DESKTOP),
                                                           NULL ) );
 
 	if( dynamic_cast<jobobserver::OpenGLJob*>( m_job ) ) {
@@ -141,7 +141,7 @@ int QTObserver::run(int argc, char **argv)
    app.setStyleSheet( style );
 */
    /*
-   policy::gui::Element* tree = m_policy->getGUILayout( policy::gui::DESKTOP );
+   model::gui::Element* tree = m_model->getGUILayout( model::gui::DESKTOP );
    QDomDocument* dom = new QDomDocument;
    QDomElement gui_layout = dom->createElement( "layout" );
    dom->appendChild( gui_layout );
@@ -156,12 +156,12 @@ int QTObserver::run(int argc, char **argv)
 
 static
 QDomElement
-addNode( QDomDocument* dom, QDomElement& parent, policy::gui::Element* branch );
+addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch );
 
 template<typename ChildType>
 static
 void
-addChildren( QDomDocument* dom, QDomElement& parent, policy::gui::Container1D<ChildType>* branch )
+addChildren( QDomDocument* dom, QDomElement& parent, model::gui::Container1D<ChildType>* branch )
 {
     for(size_t i=0; i<branch->children(); i++ ) {
         addNode( dom, parent, branch->child(i) );
@@ -170,7 +170,7 @@ addChildren( QDomDocument* dom, QDomElement& parent, policy::gui::Container1D<Ch
 
 static
 void
-addChildren( QDomDocument* dom, QDomElement& parent, policy::gui::Container2D<policy::gui::Element>* branch )
+addChildren( QDomDocument* dom, QDomElement& parent, model::gui::Container2D<model::gui::Element>* branch )
 {
     parent.setAttribute( "width", (uint)branch->width() );
     parent.setAttribute( "height", (uint)branch->height() );
@@ -188,7 +188,7 @@ addChildren( QDomDocument* dom, QDomElement& parent, policy::gui::Container2D<po
 
 static
 void
-addElementAttributes( QDomDocument* dom, QDomElement& node, policy::gui::Element* element )
+addElementAttributes( QDomDocument* dom, QDomElement& node, model::gui::Element* element )
 {
     if( !element->visibilityKey().empty() ) {
         QDomElement n = dom->createElement( "Visibility" );
@@ -212,17 +212,17 @@ addElementAttributes( QDomDocument* dom, QDomElement& node, policy::gui::Element
 
 static
 QDomElement
-addNode( QDomDocument* dom, QDomElement& parent, policy::gui::Element* branch )
+addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch )
 {
-    auto TabLayout = dynamic_cast<policy::gui::TabLayout*>( branch );
+    auto TabLayout = dynamic_cast<model::gui::TabLayout*>( branch );
     if( TabLayout ) {
         QDomElement node = dom->createElement( "TabLayout" );
         addElementAttributes( dom, node, branch );
-        addChildren<policy::gui::Tab>( dom, node, static_cast<policy::gui::Container1D<policy::gui::Tab>*>( TabLayout ) );
+        addChildren<model::gui::Tab>( dom, node, static_cast<model::gui::Container1D<model::gui::Tab>*>( TabLayout ) );
         parent.appendChild( node );
         return node;
     }
-    auto Tab = dynamic_cast<policy::gui::Tab*>( branch );
+    auto Tab = dynamic_cast<model::gui::Tab*>( branch );
     if( Tab ) {
         QDomElement node = dom->createElement( "Tab" );
         addElementAttributes( dom, node, branch );
@@ -230,43 +230,43 @@ addNode( QDomDocument* dom, QDomElement& parent, policy::gui::Element* branch )
         parent.appendChild( node );
         return node;
     }
-    auto Grid = dynamic_cast<policy::gui::Grid*>( branch );
+    auto Grid = dynamic_cast<model::gui::Grid*>( branch );
     if( Grid ) {
         QDomElement node = dom->createElement( "Grid" );
         addElementAttributes( dom, node, branch );
-        addChildren( dom, node, static_cast<policy::gui::Container2D<policy::gui::Element>*>( Grid ) );
+        addChildren( dom, node, static_cast<model::gui::Container2D<model::gui::Element>*>( Grid ) );
         parent.appendChild( node );
         return node;
     }
-    auto TextInput = dynamic_cast<policy::gui::TextInput*>( branch );
+    auto TextInput = dynamic_cast<model::gui::TextInput*>( branch );
     if( TextInput ) {
         QDomElement node = dom->createElement( "TextInput" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto Canvas = dynamic_cast<policy::gui::Canvas*>( branch );
+    auto Canvas = dynamic_cast<model::gui::Canvas*>( branch );
     if( Canvas ) {
         QDomElement node = dom->createElement( "Canvas" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto Label = dynamic_cast<policy::gui::Label*>( branch );
+    auto Label = dynamic_cast<model::gui::Label*>( branch );
     if( Label ) {
         QDomElement node = dom->createElement( "Label" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto ComboBox = dynamic_cast<policy::gui::ComboBox*>( branch );
+    auto ComboBox = dynamic_cast<model::gui::ComboBox*>( branch );
     if( ComboBox ) {
         QDomElement node = dom->createElement( "ComboBox" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto ElementGroup = dynamic_cast<policy::gui::ElementGroup*>( branch );
+    auto ElementGroup = dynamic_cast<model::gui::ElementGroup*>( branch );
     if( ElementGroup ) {
         QDomElement node = dom->createElement( "ElementGroup" );
         addElementAttributes( dom, node, branch );
@@ -274,86 +274,86 @@ addNode( QDomDocument* dom, QDomElement& parent, policy::gui::Element* branch )
         parent.appendChild( node );
         return node;
     }
-    auto RadioButtons = dynamic_cast<policy::gui::RadioButtons*>( branch );
+    auto RadioButtons = dynamic_cast<model::gui::RadioButtons*>( branch );
     if( RadioButtons ) {
         QDomElement node = dom->createElement( "RadioButtons" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto SpinBox = dynamic_cast<policy::gui::SpinBox*>( branch );
+    auto SpinBox = dynamic_cast<model::gui::SpinBox*>( branch );
     if( SpinBox ) {
         QDomElement node = dom->createElement( "SpinBox" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto CheckBox = dynamic_cast<policy::gui::CheckBox*>( branch );
+    auto CheckBox = dynamic_cast<model::gui::CheckBox*>( branch );
     if( CheckBox ) {
         QDomElement node = dom->createElement( "CheckBox" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto Button = dynamic_cast<policy::gui::Button*>( branch );
+    auto Button = dynamic_cast<model::gui::Button*>( branch );
     if( Button ) {
         QDomElement node = dom->createElement( "Button" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto HorizontalSlider = dynamic_cast<policy::gui::HorizontalSlider*>( branch );
+    auto HorizontalSlider = dynamic_cast<model::gui::HorizontalSlider*>( branch );
     if( HorizontalSlider ) {
         QDomElement node = dom->createElement( "HorizontalSlider" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto HorizontalLayout = dynamic_cast<policy::gui::HorizontalLayout*>( branch );
+    auto HorizontalLayout = dynamic_cast<model::gui::HorizontalLayout*>( branch );
     if( HorizontalLayout ) {
         QDomElement node = dom->createElement( "HorizontalLayout" );
         addElementAttributes( dom, node, branch );
-        addChildren<policy::gui::Element>( dom, node, static_cast<policy::gui::Container1D<policy::gui::Element>*>( HorizontalLayout ) );
+        addChildren<model::gui::Element>( dom, node, static_cast<model::gui::Container1D<model::gui::Element>*>( HorizontalLayout ) );
         parent.appendChild( node );
         return node;
     }
-    auto VerticalLayout = dynamic_cast<policy::gui::VerticalLayout*>( branch );
+    auto VerticalLayout = dynamic_cast<model::gui::VerticalLayout*>( branch );
     if( VerticalLayout ) {
         QDomElement node = dom->createElement( "VerticalLayout" );
         addElementAttributes( dom, node, branch );
-        addChildren<policy::gui::Element>( dom, node, static_cast<policy::gui::Container1D<policy::gui::Element>*>( VerticalLayout ) );
+        addChildren<model::gui::Element>( dom, node, static_cast<model::gui::Container1D<model::gui::Element>*>( VerticalLayout ) );
         parent.appendChild( node );
         return node;
     }
-    auto DoubleSpinBox = dynamic_cast<policy::gui::DoubleSpinBox*>( branch );
+    auto DoubleSpinBox = dynamic_cast<model::gui::DoubleSpinBox*>( branch );
     if( DoubleSpinBox ) {
         QDomElement node = dom->createElement( "DoubleSpinBox" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto VerticalSpace = dynamic_cast<policy::gui::VerticalSpace*>( branch );
+    auto VerticalSpace = dynamic_cast<model::gui::VerticalSpace*>( branch );
     if( VerticalSpace ) {
         QDomElement node = dom->createElement( "VerticalSpace" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto VerticalExpandingSpace = dynamic_cast<policy::gui::VerticalExpandingSpace*>( branch );
+    auto VerticalExpandingSpace = dynamic_cast<model::gui::VerticalExpandingSpace*>( branch );
     if( VerticalExpandingSpace ) {
         QDomElement node = dom->createElement( "VerticalExpandingSpace" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto HorizontalSpace = dynamic_cast<policy::gui::HorizontalSpace*>( branch );
+    auto HorizontalSpace = dynamic_cast<model::gui::HorizontalSpace*>( branch );
     if( HorizontalSpace ) {
         QDomElement node = dom->createElement( "HorizontalSpace" );
         addElementAttributes( dom, node, branch );
         parent.appendChild( node );
         return node;
     }
-    auto HorizontalExpandingSpace = dynamic_cast<policy::gui::HorizontalExpandingSpace*>( branch );
+    auto HorizontalExpandingSpace = dynamic_cast<model::gui::HorizontalExpandingSpace*>( branch );
     if( HorizontalExpandingSpace ) {
         QDomElement node = dom->createElement( "HorizontalExpandingSpace" );
         addElementAttributes( dom, node, branch );

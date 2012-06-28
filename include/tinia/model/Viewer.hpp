@@ -23,10 +23,10 @@
 #include <algorithm>
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 /** \struct Viewer
-    Viewer is a POD to be used in client code to fetch viewer-data in and out of a Policy.
+    Viewer is a POD to be used in client code to fetch viewer-data in and out of a ExposedModel.
   */
 struct Viewer {
 

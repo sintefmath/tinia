@@ -37,7 +37,7 @@ public:
    /** Render the view of a given key using the current GL context and bound FBO.
          *
          * \param[in] session  Identity of the client where the request originated.
-         * \param[in] key      The policy-key of the view that should be rendered.
+         * \param[in] key      The model-key of the view that should be rendered.
          * \param[in] fbo      The fbo being rendered to.
          * \param[in] width    The current width of the FBO.
          * \param[in] height   The current height of the FBO.

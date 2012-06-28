@@ -16,23 +16,23 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policyxml/ElementHandler.hpp"
+#include "tinia/modelxml/ElementHandler.hpp"
 
 namespace tinia {
-policyxml::ElementHandler::ElementHandler(std::shared_ptr<policy::Policy> policy)
-   : m_policy(policy)
+modelxml::ElementHandler::ElementHandler(std::shared_ptr<model::ExposedModel> model)
+   : m_model(model)
 {
 }
 
-void policyxml::ElementHandler::updateElementFromString(const std::string& name,
+void modelxml::ElementHandler::updateElementFromString(const std::string& name,
                                                  const std::string& stringValue)
 {
-   m_policy->updateElementFromString(name, stringValue);
+   m_model->updateElementFromString(name, stringValue);
 }
 
-void policyxml::ElementHandler::updateElementFromPTree(const std::string &key,
-                                                          const policy::StringStringPTree &tree)
+void modelxml::ElementHandler::updateElementFromPTree(const std::string &key,
+                                                          const model::StringStringPTree &tree)
 {
-   m_policy->updateElementFromPTree(key, tree);
+   m_model->updateElementFromPTree(key, tree);
 }
 }

@@ -97,7 +97,7 @@ function sendParamUpdate()
     return;
   var val = tagid.value;
   
-  var xml = "<policyupd><paramupd><id>" + id + "</id><val>" + val + "</val></paramupd></policyupd>";
+  var xml = "<modelupd><paramupd><id>" + id + "</id><val>" + val + "</val></paramupd></modelupd>";
   window.console.log( "sendParamUpdate: Going to send: " + xml );
 
   var div = document.getElementById( 'paramUpdateXML' );

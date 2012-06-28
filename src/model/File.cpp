@@ -16,10 +16,10 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/File.hpp"
+#include "tinia/model/File.hpp"
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 File::File() : m_fullPath("")
 {

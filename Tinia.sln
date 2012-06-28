@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qtobserver", "msvc\qtobserver\qtobserver.vcxproj", "{1507DFC6-011F-4FA3-A0DE-2E0C89885F63}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "policy", "msvc\policy\policy.vcxproj", "{9B784825-66F1-4DB3-A3F4-A13E67B2643B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "model", "msvc\model\model.vcxproj", "{9B784825-66F1-4DB3-A3F4-A13E67B2643B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JobObserver", "msvc\jobobserver\jobobserver.vcxproj", "{70AD6BBC-2A98-4141-BA48-6527F82E3427}"
 EndProject

@@ -19,23 +19,23 @@
 #ifndef POLICY_POLICYLOCK_HPP
 #define POLICY_POLICYLOCK_HPP
 #include "boost/thread.hpp"
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 #include <memory>
 
 namespace tinia {
-namespace policy {
-class PolicyLock
+namespace model {
+class ExposedModelLock
 {
 public:
-   PolicyLock(std::shared_ptr<Policy>& policy);
-   ~PolicyLock();
+   ExposedModelLock(std::shared_ptr<ExposedModel>& model);
+   ~ExposedModelLock();
 
 
 private:
-   Policy::scoped_lock m_scoped_lock;
-   std::shared_ptr<Policy> m_policy;
+   ExposedModel::scoped_lock m_scoped_lock;
+   std::shared_ptr<ExposedModel> m_model;
 };
 
-} // namespace policy
+} // namespace model
 } // namespace tinia
 #endif // POLICY_POLICYLOCK_HPP

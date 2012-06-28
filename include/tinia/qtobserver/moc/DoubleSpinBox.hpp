@@ -20,9 +20,9 @@
 #define QTOBSERVER_DOUBLESPINBOX_HPP
 
 #include <QDoubleSpinBox>
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/StateListener.hpp"
-#include "tinia/policy/StateSchemaListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/StateListener.hpp"
+#include "tinia/model/StateSchemaListener.hpp"
 #include <memory>
 
 namespace tinia {
@@ -30,26 +30,26 @@ namespace qtobserver {
 /**
   \todo Use max and min if available.
   */
-class DoubleSpinBox : public QDoubleSpinBox, public policy::StateListener, public policy::StateSchemaListener
+class DoubleSpinBox : public QDoubleSpinBox, public model::StateListener, public model::StateSchemaListener
 {
     Q_OBJECT
 public:
-    explicit DoubleSpinBox(std::string key, std::shared_ptr<policy::Policy> policy,
+    explicit DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                      QWidget *parent = 0);
    ~DoubleSpinBox();
 
-   void stateElementModified(policy::StateElement *stateElement);
-   void stateSchemaElementModified(policy::StateSchemaElement *stateSchemaElement);
-   void stateSchemaElementAdded(policy::StateSchemaElement *stateSchemaElement) {}
-   void stateSchemaElementRemoved(policy::StateSchemaElement *stateSchemaElement) {}
+   void stateElementModified(model::StateElement *stateElement);
+   void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
+   void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement) {}
+   void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement) {}
 signals:
-   void setValueFromPolicy(double val);
+   void setValueFromExposedModel(double val);
 public slots:
    void valueSetFromQt(double val);
 
 private:
    std::string m_key;
-   std::shared_ptr<policy::Policy> m_policy;
+   std::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

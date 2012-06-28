@@ -22,31 +22,31 @@
 using namespace tinia::jobobserver;
 class JobFixture : Job {
 public:
-   JobFixture() { policy = getPolicy();}
+   JobFixture() { model = getExposedModel();}
    ~JobFixture() {}
-   std::shared_ptr<tinia::policy::Policy> policy;
+   std::shared_ptr<tinia::model::ExposedModel> model;
 };
 
 BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
 {
-   policy->addElement("Element1", 1);
-   policy->addElement("Element2", 2);
+   model->addElement("Element1", 1);
+   model->addElement("Element2", 2);
 
-   policy->addElement("Element3", 3);
+   model->addElement("Element3", 3);
 
-   policy->addElement("Element4", 4);
+   model->addElement("Element4", 4);
 
-   policy->addElement("Element5", 5);
+   model->addElement("Element5", 5);
 
-   policy->addElement("Element6", 6);
+   model->addElement("Element6", 6);
 
-   policy->addElement("Element7", 7);
+   model->addElement("Element7", 7);
 
-   policy->addElement("Element8", 8);
-   policy->addElement("Element9", 9);
+   model->addElement("Element8", 8);
+   model->addElement("Element9", 9);
 
-   std::vector<tinia::policy::StateSchemaElement> elements;
-   policy->getFullStateSchema(elements);
+   std::vector<tinia::model::StateSchemaElement> elements;
+   model->getFullStateSchema(elements);
    std::vector<bool> found;
 
    for(int i = 0; i < 9; i++) found.push_back(false);

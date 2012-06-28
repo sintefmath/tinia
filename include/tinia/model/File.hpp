@@ -23,7 +23,7 @@
 #include <sstream>
 
 namespace tinia {
-namespace policy {
+namespace model {
 
 class File
 {

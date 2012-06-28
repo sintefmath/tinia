@@ -4,7 +4,7 @@ SET( TRELL_MASTER_SRC
 )
 
 ADD_EXECUTABLE( trell_master ${TRELL_MASTER_SRC} )
-TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobobserver  ${LIBXML2_LIBRARIES} policy policyxml )
+TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobobserver  ${LIBXML2_LIBRARIES} model modelxml )
 
 
 INSTALL( TARGETS 

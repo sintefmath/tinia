@@ -3,7 +3,7 @@ FILE( GLOB jobobserverHeaders "../../include/tinia/jobobserver/*.hpp" )
 
 ADD_LIBRARY( jobobserver SHARED ${jobobserverSrc} ${jobobserverHeaders} )
 
-TARGET_LINK_LIBRARIES( jobobserver ${Boost_LIBRARIES} policy )
+TARGET_LINK_LIBRARIES( jobobserver ${Boost_LIBRARIES} model )
 
 IF(NOT WIN32)
   install( FILES 

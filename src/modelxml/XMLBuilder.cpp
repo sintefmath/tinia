@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policyxml/XMLBuilder.hpp"
+#include "tinia/modelxml/XMLBuilder.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -26,17 +26,17 @@
 using namespace std;
 
 namespace tinia {
-namespace policyxml {
+namespace modelxml {
 
 
 
 xmlDocPtr
 XMLBuilder::getDeltaDocument() {
    doc = xmlNewDoc( (xmlChar*)( "1.0" ) );
-   root = xmlNewNode( 0, (xmlChar*)( "PolicyUpdate" ) );
+   root = xmlNewNode( 0, (xmlChar*)( "ExposedModelUpdate" ) );
    schema = xmlNewChild( root, 0, BAD_CAST "StateSchema", 0 );
 
-   setPolicyAttributes();
+   setExposedModelAttributes();
 
    xmlDocSetRootElement( doc, root );
 
@@ -51,12 +51,12 @@ XMLBuilder::getDeltaDocument() {
 }
 
 void
-XMLBuilder::setPolicyAttributes() {
-   tns = xmlNewNs( root, BAD_CAST "http://cloudviz.sintef.no/V1/policy", 0 );
+XMLBuilder::setExposedModelAttributes() {
+   tns = xmlNewNs( root, BAD_CAST "http://cloudviz.sintef.no/V1/model", 0 );
    xsi = xmlNewNs( root, BAD_CAST "http://www.w3.org/2001/XMLSchema-instance", BAD_CAST "xsi" );
    xsd = xmlNewNs( schema, BAD_CAST "http://www.w3.org/2001/XMLSchema", BAD_CAST "xsd" );
 
-   xmlSetNsProp( root, xsi, BAD_CAST "schemaLocation", BAD_CAST "http://cloudviz.sintef.no/V1/policy PolicyUpdateSchema.xsd" );
+   xmlSetNsProp( root, xsi, BAD_CAST "schemaLocation", BAD_CAST "http://cloudviz.sintef.no/V1/model ExposedModelUpdateSchema.xsd" );
    xmlSetNsProp( root, tns, BAD_CAST "revision", BAD_CAST boost::lexical_cast<std::string>( revisionNumber ).c_str() );
 }
 
@@ -77,7 +77,7 @@ XMLBuilder::buildSchemaXML() {
 }
 
 void
-XMLBuilder::buildSchemaXMLForElement( xmlNodePtr parent, const std::string& name, const policy::StateSchemaElement& elementData ) {
+XMLBuilder::buildSchemaXMLForElement( xmlNodePtr parent, const std::string& name, const model::StateSchemaElement& elementData ) {
    if ( isComplexElement( elementData ) ) {
       buildComplexTypeSchemaXML( parent, name, elementData );
    } else {
@@ -88,21 +88,21 @@ XMLBuilder::buildSchemaXMLForElement( xmlNodePtr parent, const std::string& name
 
 void
 
-XMLBuilder::buildComplexTypeSchemaXML( xmlNodePtr parent, const std::string& name, const policy::StateSchemaElement& elementData )   {
+XMLBuilder::buildComplexTypeSchemaXML( xmlNodePtr parent, const std::string& name, const model::StateSchemaElement& elementData )   {
    auto elementNode = xmlNewChild( parent, xsd, BAD_CAST "complexType", 0 );
    xmlSetProp( elementNode, BAD_CAST "name", BAD_CAST name.c_str() );
    auto sequenceNode = xmlNewChild( elementNode, xsd, BAD_CAST "sequence", 0 );
 
    const auto& ptree = elementData.getPropertyTree();
 
-   typedef policy::StateSchemaElement::PropertyTree::value_type value_type;
+   typedef model::StateSchemaElement::PropertyTree::value_type value_type;
    for_each( ptree.begin(), ptree.end(), [sequenceNode, this]( const value_type& kv ) {
              buildSchemaXMLForElement( sequenceNode, kv.first, kv.second.data() );
 } );
 }
 
 void
-    XMLBuilder::buildSimpleTypeSchemaXML( xmlNodePtr parent, const std::string& name, const policy::StateSchemaElement& elementData ) {
+    XMLBuilder::buildSimpleTypeSchemaXML( xmlNodePtr parent, const std::string& name, const model::StateSchemaElement& elementData ) {
         auto elementNode = xmlNewChild( parent, xsd, BAD_CAST "element", 0 );
 
         xmlSetProp( elementNode, BAD_CAST "name", BAD_CAST name.c_str() );
@@ -157,7 +157,7 @@ XMLBuilder::buildStateXML( const unsigned rev_number_start ) {
 }
 
 void
-XMLBuilder::buildStateXMLForElement( xmlNodePtr parent, const std::string& name, const policy::StateElement& elementData ) {
+XMLBuilder::buildStateXMLForElement( xmlNodePtr parent, const std::string& name, const model::StateElement& elementData ) {
    auto child = xmlNewChild( parent, 0, BAD_CAST name.c_str(), 0 );
    if ( isComplexElement( elementData ) ) {
       buildComplexElementStateXML( child, elementData );
@@ -167,15 +167,15 @@ XMLBuilder::buildStateXMLForElement( xmlNodePtr parent, const std::string& name,
 }
 
 void
-XMLBuilder::buildSimpleElementStateXML( xmlNodePtr node, const policy::StateElement& elementData ) {
+XMLBuilder::buildSimpleElementStateXML( xmlNodePtr node, const model::StateElement& elementData ) {
    xmlNodeAddContent( node, BAD_CAST elementData.getStringValue().c_str() );
 }
 
 void
-XMLBuilder::buildComplexElementStateXML( xmlNodePtr node, const policy::StateElement& elementData ) {
+XMLBuilder::buildComplexElementStateXML( xmlNodePtr node, const model::StateElement& elementData ) {
    const auto& ptree = elementData.getPropertyTree();
 
-   typedef policy::StateElement::PropertyTree::value_type value_type;
+   typedef model::StateElement::PropertyTree::value_type value_type;
    for_each( ptree.begin(), ptree.end(), [=]( const value_type& kv ) {
          buildStateXMLForElement( node, kv.first, kv.second.data() );
 } );
@@ -200,7 +200,7 @@ bool XMLBuilder::isComplexElement( const T& elementData ) const {
 }
 
 bool
-XMLBuilder::elementLacksRestrictions( const policy::StateSchemaElement& elementData ) const {
+XMLBuilder::elementLacksRestrictions( const model::StateSchemaElement& elementData ) const {
    if ( elementData.emptyConstraints() && elementData.emptyRestrictionSet() && ( elementData.getLength() == elementData.LENGTH_NOT_SET ) ) {
       return true;
    }
@@ -226,7 +226,7 @@ XMLBuilder::buildSimpleGuiLayout_alpha() {
 
    row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
    //   for_each( stateHash.begin(), stateHash.end(),
-   //             [row]( const std::pair<std::string, policy::ElementData>& kv ) {
+   //             [row]( const std::pair<std::string, model::ElementData>& kv ) {
    //             auto cell0 = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
    //         auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );
    //   xmlSetProp( key, BAD_CAST "parameter", BAD_CAST kv.first.c_str() );
@@ -267,7 +267,7 @@ XMLBuilder::buildSimpleGuiLayout() {
       xmlSetProp( value, BAD_CAST "parameter", BAD_CAST it->getKey().c_str() );
    }
    //   for_each( stateHash.begin(), stateHash.end(),
-   //             [grid]( const std::pair<std::string, policy::ElementData>& kv ) {
+   //             [grid]( const std::pair<std::string, model::ElementData>& kv ) {
    //             auto row2 = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
    //         auto cell0 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
    //   auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );
@@ -285,9 +285,9 @@ XMLBuilder::buildSimpleGuiLayout() {
 
 }
 
-policyxml::XMLBuilder::XMLBuilder(const std::vector<policy::StateElement> &stateDelta,
-                                     const std::vector<policy::StateSchemaElement> &stateSchemaDelta,
-                                     policy::gui::Element* rootGUIElement,
+modelxml::XMLBuilder::XMLBuilder(const std::vector<model::StateElement> &stateDelta,
+                                     const std::vector<model::StateSchemaElement> &stateSchemaDelta,
+                                     model::gui::Element* rootGUIElement,
                                      unsigned int revisionNumber)
    : revisionNumber(revisionNumber), m_stateDelta(stateDelta), m_stateSchemaDelta(stateSchemaDelta),
      m_rootGUIElement(rootGUIElement)
@@ -295,12 +295,12 @@ policyxml::XMLBuilder::XMLBuilder(const std::vector<policy::StateElement> &state
 
 }
 
-void policyxml::XMLBuilder::buildGUILayout(policy::gui::Element *root,
+void modelxml::XMLBuilder::buildGUILayout(model::gui::Element *root,
                                               xmlNodePtr parent )
 {
 
 
-   using namespace policy::gui;
+   using namespace model::gui;
    switch(root->type())
    {
    case CANVAS:
@@ -311,55 +311,55 @@ void policyxml::XMLBuilder::buildGUILayout(policy::gui::Element *root,
    case TEXTINPUT:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "TextInput", parent), root);
       break;
    case LABEL:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "Label", parent), root);
       break;
    case COMBOBOX:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "ComboBox", parent), root);
       break;
    case RADIOBUTTONS:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "RadioButtons", parent), root);
       break;
    case SPINBOX:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "SpinBox", parent), root);
       break;
    case CHECKBOX:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "Checkbox", parent), root);
       break;
    case BUTTON:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "Button", parent), root);
       break;
    case HORIZONTAL_SLIDER:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "HorizontalSlider", parent), root);
       break;
    case DOUBLE_SPINBOX:
 
 
-      addVisibilityKeys(addPolicyGUIElement(dynamic_cast<KeyValue*>(root),
+      addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                             "DoubleSpinBox", parent), root);
       break;
 
@@ -414,7 +414,7 @@ void policyxml::XMLBuilder::buildGUILayout(policy::gui::Element *root,
       break;
 
    case POPUP_BUTTON:
-      addVisibilityKeys(addPopupButton(parent, dynamic_cast<policy::gui::PopupButton*>(root)), root);
+      addVisibilityKeys(addPopupButton(parent, dynamic_cast<model::gui::PopupButton*>(root)), root);
       break;
 
    }
@@ -422,7 +422,7 @@ void policyxml::XMLBuilder::buildGUILayout(policy::gui::Element *root,
 
 }
 
-xmlNodePtr policyxml::XMLBuilder::addPolicyGUIElement(policy::gui::KeyValue *element,
+xmlNodePtr modelxml::XMLBuilder::addExposedModelGUIElement(model::gui::KeyValue *element,
                                                    std::string type, xmlNodePtr parent)
 {
 
@@ -433,12 +433,12 @@ xmlNodePtr policyxml::XMLBuilder::addPolicyGUIElement(policy::gui::KeyValue *ele
    return xmlElement;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addElementGroup(policy::gui::ElementGroup *element,
+xmlNodePtr modelxml::XMLBuilder::addElementGroup(model::gui::ElementGroup *element,
                                                             xmlNodePtr parent)
 {
 
 
-   using namespace policy::gui;
+   using namespace model::gui;
    auto xmlElement = xmlNewChild(parent, 0, BAD_CAST "ElementGroup", 0);
    xmlSetProp(xmlElement, BAD_CAST "key", BAD_CAST element->key().c_str());
 
@@ -452,8 +452,8 @@ xmlNodePtr policyxml::XMLBuilder::addElementGroup(policy::gui::ElementGroup *ele
    return xmlElement;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addLayout(std::string type,
-                                               policy::gui::Container1D<policy::gui::Element> *layout,
+xmlNodePtr modelxml::XMLBuilder::addLayout(std::string type,
+                                               model::gui::Container1D<model::gui::Element> *layout,
                                                xmlNodePtr parent)
 {
 
@@ -466,7 +466,7 @@ xmlNodePtr policyxml::XMLBuilder::addLayout(std::string type,
    return element;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addGridLayout(std::string type, policy::gui::Grid *grid, xmlNodePtr parent)
+xmlNodePtr modelxml::XMLBuilder::addGridLayout(std::string type, model::gui::Grid *grid, xmlNodePtr parent)
 {
 
 
@@ -488,9 +488,9 @@ xmlNodePtr policyxml::XMLBuilder::addGridLayout(std::string type, policy::gui::G
    return xmlGrid;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addTabLayout(std::string type, policy::gui::TabLayout *tabLayout, xmlNodePtr parent)
+xmlNodePtr modelxml::XMLBuilder::addTabLayout(std::string type, model::gui::TabLayout *tabLayout, xmlNodePtr parent)
 {
-using namespace policy::gui;
+using namespace model::gui;
    auto element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
 
 
@@ -505,12 +505,12 @@ using namespace policy::gui;
    return element;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addCanvas(policy::gui::Canvas* element,
+xmlNodePtr modelxml::XMLBuilder::addCanvas(model::gui::Canvas* element,
                                                xmlNodePtr parent)
 {
 
 
-   auto xmlElement = addPolicyGUIElement(element, "Canvas", parent);
+   auto xmlElement = addExposedModelGUIElement(element, "Canvas", parent);
 
 
 
@@ -523,7 +523,7 @@ xmlNodePtr policyxml::XMLBuilder::addCanvas(policy::gui::Canvas* element,
    return xmlElement;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addHorizontalLayout(policy::gui::HorizontalLayout *layout, xmlNodePtr parent)
+xmlNodePtr modelxml::XMLBuilder::addHorizontalLayout(model::gui::HorizontalLayout *layout, xmlNodePtr parent)
 {
 
 
@@ -532,7 +532,7 @@ xmlNodePtr policyxml::XMLBuilder::addHorizontalLayout(policy::gui::HorizontalLay
 
 }
 
-xmlNodePtr policyxml::XMLBuilder::addVerticalLayout(policy::gui::VerticalLayout *layout, xmlNodePtr parent)
+xmlNodePtr modelxml::XMLBuilder::addVerticalLayout(model::gui::VerticalLayout *layout, xmlNodePtr parent)
 {
 
 
@@ -541,12 +541,12 @@ xmlNodePtr policyxml::XMLBuilder::addVerticalLayout(policy::gui::VerticalLayout 
 
 }
 
-xmlNodePtr policyxml::XMLBuilder::addSpace(std::string type, xmlNodePtr parent)
+xmlNodePtr modelxml::XMLBuilder::addSpace(std::string type, xmlNodePtr parent)
 {
    return xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
 }
 
-xmlNodePtr policyxml::XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, policy::gui::Element* element)
+xmlNodePtr modelxml::XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, model::gui::Element* element)
 {
    if(element->enabledKey() != "")
    {
@@ -564,8 +564,8 @@ xmlNodePtr policyxml::XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, polic
    return xmlElement;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
-                                              policy::gui::KeyValue *element)
+xmlNodePtr modelxml::XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
+                                              model::gui::KeyValue *element)
 {
    xmlSetProp(xmlElementPtr, BAD_CAST "key", BAD_CAST element->key().c_str());
    xmlSetProp(xmlElementPtr, BAD_CAST "showValue",
@@ -573,9 +573,9 @@ xmlNodePtr policyxml::XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
    return xmlElementPtr;
 }
 
-xmlNodePtr policyxml::XMLBuilder::addPopupButton(xmlNodePtr parent, policy::gui::PopupButton *button)
+xmlNodePtr modelxml::XMLBuilder::addPopupButton(xmlNodePtr parent, model::gui::PopupButton *button)
 {
-   auto buttonXml = addPolicyGUIElement(button, "PopupButton", parent);
+   auto buttonXml = addExposedModelGUIElement(button, "PopupButton", parent);
 
 
    buildGUILayout(button->child(), buttonXml);

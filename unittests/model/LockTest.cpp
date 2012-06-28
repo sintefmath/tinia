@@ -17,41 +17,41 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include "tinia/policy/Policy.hpp"
-#include "tinia/policy/PolicyLock.hpp"
-#include "tinia/policy/StateListener.hpp"
+#include "tinia/model/ExposedModel.hpp"
+#include "tinia/model/ExposedModelLock.hpp"
+#include "tinia/model/StateListener.hpp"
 #include <memory>
 using namespace tinia;
-class PolicyListenerFixture : policy::StateListener
+class ExposedModelListenerFixture : model::StateListener
 {
 public:
-   PolicyListenerFixture() : policy(new policy::Policy()),
+   ExposedModelListenerFixture() : model(new model::ExposedModel()),
       hasSeenEvent(false)
    {
-      policy->addStateListener(this);
+      model->addStateListener(this);
    }
 
-   ~PolicyListenerFixture() { policy->removeStateListener(this); }
+   ~ExposedModelListenerFixture() { model->removeStateListener(this); }
 
-   void stateElementModified(policy::StateElement *stateElement)
+   void stateElementModified(model::StateElement *stateElement)
    {
       hasSeenEvent = true;
    }
 
-   std::shared_ptr<policy::Policy> policy;
+   std::shared_ptr<model::ExposedModel> model;
    bool hasSeenEvent;
 
 };
 
-BOOST_FIXTURE_TEST_CASE(SimpleLockTest, PolicyListenerFixture)
+BOOST_FIXTURE_TEST_CASE(SimpleLockTest, ExposedModelListenerFixture)
 {
    {// Scoped lock
       BOOST_CHECK(!hasSeenEvent);
-      policy::PolicyLock policyLock(policy);
+      model::ExposedModelLock modelLock(model);
       BOOST_CHECK(!hasSeenEvent);
-      policy->addElement("AValueKey", "AValue");
+      model->addElement("AValueKey", "AValue");
       BOOST_CHECK(!hasSeenEvent);
-      policy->updateElement("AValueKey", "ANewValue");
+      model->updateElement("AValueKey", "ANewValue");
       BOOST_CHECK(!hasSeenEvent);
    }
    BOOST_CHECK(hasSeenEvent);

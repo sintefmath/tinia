@@ -32,10 +32,10 @@
 #include <tinia/renderlist/SetRasterState.hpp>
 
 #include "TestJob.hpp"
-#include "tinia/policy/GUILayout.hpp"
+#include "tinia/model/GUILayout.hpp"
 #include <iostream>
 #include <siut2/gl_utils/GLSLtools.hpp>
-#include "tinia/policy/File.hpp"
+#include "tinia/model/File.hpp"
 
 TestJob::TestJob()
 {
@@ -45,39 +45,39 @@ bool TestJob::init()
 {
 
 
-   m_policy->addStateListener(this);
-   tinia::policy::Viewer viewer;
+   m_model->addStateListener(this);
+   tinia::model::Viewer viewer;
    viewer.height = 500;
    viewer.width = 500;
-   m_policy->addElement("viewer", viewer);
-   m_policy->addElement<std::string>( "boundingbox", "-1.1 -1.1 -1.1 1.1 1.1 1.1" );
-   m_policy->addElement<int>( "renderlist", 0 );
+   m_model->addElement("viewer", viewer);
+   m_model->addElement<std::string>( "boundingbox", "-1.1 -1.1 -1.1 1.1 1.1 1.1" );
+   m_model->addElement<int>( "renderlist", 0 );
 
-   m_policy->addElement<bool>("myTab", false);
-   m_policy->addAnnotation("myTab", "My tab");
-      m_policy->addElement<bool>("myBool", false);
-   m_policy->addElement<std::string>("myVal", "THIS WORKS!");
+   m_model->addElement<bool>("myTab", false);
+   m_model->addAnnotation("myTab", "My tab");
+      m_model->addElement<bool>("myBool", false);
+   m_model->addElement<std::string>("myVal", "THIS WORKS!");
 
    const char* restrictions[] = {"select1", "select2", "select3", "select4"};
-   m_policy->addElementWithRestriction<std::string>("myVal2", "select3",
+   m_model->addElementWithRestriction<std::string>("myVal2", "select3",
                                                        &restrictions[0], &restrictions[4]);
 
-   m_policy->addAnnotation("myVal2", "My special value");
+   m_model->addAnnotation("myVal2", "My special value");
 
-   m_policy->addConstrainedElement<int>("myIntBA", 5,0, 900);
-   m_policy->addConstrainedElement<double>("myDouble", 10., 0., 11.);
-   m_policy->addElement<bool>("myButton", false);
+   m_model->addConstrainedElement<int>("myIntBA", 5,0, 900);
+   m_model->addConstrainedElement<double>("myDouble", 10., 0., 11.);
+   m_model->addElement<bool>("myButton", false);
 
-   m_policy->addElement<bool>( "details", true, "Popup" );
+   m_model->addElement<bool>( "details", true, "Popup" );
 
-   m_policy->addAnnotation("myButton", "My pushButton");
+   m_model->addAnnotation("myButton", "My pushButton");
 
-   tinia::policy::File file;
-   m_policy->addElement("SpecialFile", file);
-   m_policy->addAnnotation("SpecialFile", "Open file");
-   m_policy->addElement("SpecialFileName", file.name());
+   tinia::model::File file;
+   m_model->addElement("SpecialFile", file);
+   m_model->addAnnotation("SpecialFile", "Open file");
+   m_model->addElement("SpecialFileName", file.name());
 
-   using namespace tinia::policy::gui;
+   using namespace tinia::model::gui;
    TabLayout* root = new TabLayout();
    HorizontalLayout *superLayout = new HorizontalLayout();
 
@@ -154,7 +154,7 @@ bool TestJob::init()
    verticalLayout->addChild(elemGroup);
    canvasGrid->setChild(1,0, verticalLayout);
    superLayout->addChild(canvasGrid);
-   m_policy->setGUILayout(root, DESKTOP);
+   m_model->setGUILayout(root, DESKTOP);
 
 
 
@@ -264,7 +264,7 @@ bool TestJob::init()
            ->drawOrderAdd( "wire_cube_draw" );
 
    m_renderlist_db.process();
-   m_policy->updateElement<int>( "renderlist", m_renderlist_db.latest() );
+   m_model->updateElement<int>( "renderlist", m_renderlist_db.latest() );
 
    glewInit();
 
@@ -297,10 +297,10 @@ bool TestJob::init()
 
 TestJob::~TestJob()
 {
-   m_policy->removeStateListener(this);
+   m_model->removeStateListener(this);
 }
 
-void TestJob::stateElementModified(tinia::policy::StateElement *stateElement)
+void TestJob::stateElementModified(tinia::model::StateElement *stateElement)
 {
    if(stateElement->getKey() == "myButton")
    {
@@ -308,21 +308,21 @@ void TestJob::stateElementModified(tinia::policy::StateElement *stateElement)
       stateElement->getValue<bool>(value);
       if(value)
       {
-         m_policy->updateElement<bool>("myButton", false);
+         m_model->updateElement<bool>("myButton", false);
          std::cout<<"button clicked"<<std::endl;
       }
    }
    if(stateElement->getKey() == "SpecialFile")
    {
-      tinia::policy::File file;
+      tinia::model::File file;
       stateElement->getValue(file);
-      m_policy->updateElement("SpecialFileName", file.name());
+      m_model->updateElement("SpecialFileName", file.name());
    }
 
    if(stateElement->getKey() == "myIntBA") {
        int max;
        stateElement->getValue(max);
-       m_policy->updateConstraints("myDouble", max/2., 0., double(max));
+       m_model->updateConstraints("myDouble", max/2., 0., double(max));
    }
 
 }
@@ -333,8 +333,8 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     glClear( GL_COLOR_BUFFER_BIT );
 
 	glViewport(0, 0, width, height);
-    tinia::policy::Viewer viewer;
-    m_policy->getElementValue( key, viewer);
+    tinia::model::Viewer viewer;
+    m_model->getElementValue( key, viewer);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf( viewer.projectionMatrix.data() );

@@ -18,13 +18,13 @@
 
 #ifndef STATESCHEMAELEMENT_HPP
 #define STATESCHEMAELEMENT_HPP
-#include "tinia/policy/ElementData.hpp"
+#include "tinia/model/ElementData.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_map>
 #include <string>
 
 namespace tinia {
-namespace policy {
+namespace model {
 class StateSchemaElement
 {
 public:
@@ -107,7 +107,7 @@ void StateSchemaElement::getMaxConstraint(T& t) const
 }
 
 template<typename T>
-void policy::StateSchemaElement::getMinConstraint(T& t) const
+void model::StateSchemaElement::getMinConstraint(T& t) const
 {
     m_data.getMinConstraint(t);
 }

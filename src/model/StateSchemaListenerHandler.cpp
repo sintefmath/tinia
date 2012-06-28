@@ -16,33 +16,33 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/policy/StateSchemaListenerHandler.hpp"
+#include "tinia/model/StateSchemaListenerHandler.hpp"
 
 namespace tinia {
-policy::StateSchemaListenerHandler::StateSchemaListenerHandler()
+model::StateSchemaListenerHandler::StateSchemaListenerHandler()
 {
 }
 
-void policy::StateSchemaListenerHandler::addStateSchemaListener(
-      policy::StateSchemaListener *listener)
+void model::StateSchemaListenerHandler::addStateSchemaListener(
+      model::StateSchemaListener *listener)
 {
    m_listeners.push_back(listener);
 }
 
-void policy::StateSchemaListenerHandler::removeStateSchemaListener(
-      policy::StateSchemaListener *listener)
+void model::StateSchemaListenerHandler::removeStateSchemaListener(
+      model::StateSchemaListener *listener)
 {
    m_listeners.remove(listener);
 }
 
-void policy::StateSchemaListenerHandler::addStateSchemaListener(
-      std::string key, policy::StateSchemaListener *listener)
+void model::StateSchemaListenerHandler::addStateSchemaListener(
+      std::string key, model::StateSchemaListener *listener)
 {
    m_keyListeners[key].push_back(listener);
 }
 
-void policy::StateSchemaListenerHandler::removeStateSchemaListener(
-      std::string key, policy::StateSchemaListener *listener)
+void model::StateSchemaListenerHandler::removeStateSchemaListener(
+      std::string key, model::StateSchemaListener *listener)
 {
    m_keyListeners[key].remove(listener);
    if(m_keyListeners[key].size() ==0)
@@ -51,8 +51,8 @@ void policy::StateSchemaListenerHandler::removeStateSchemaListener(
    }
 }
 
-void policy::StateSchemaListenerHandler::fireStateSchemaElementAdded(
-      policy::StateSchemaElement *element)
+void model::StateSchemaListenerHandler::fireStateSchemaElementAdded(
+      model::StateSchemaElement *element)
 {
 
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
@@ -71,8 +71,8 @@ void policy::StateSchemaListenerHandler::fireStateSchemaElementAdded(
    }
 }
 
-void policy::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
-      policy::StateSchemaElement *element)
+void model::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
+      model::StateSchemaElement *element)
 {
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
    {
@@ -90,8 +90,8 @@ void policy::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
    }
 }
 
-void policy::StateSchemaListenerHandler::fireStateSchemaElementModified(
-      policy::StateSchemaElement *element)
+void model::StateSchemaListenerHandler::fireStateSchemaElementModified(
+      model::StateSchemaElement *element)
 {
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
    {

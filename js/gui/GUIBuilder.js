@@ -48,8 +48,8 @@ dojo.require("gui.Canvas");
 
 
 dojo.declare("gui.GUIBuilder", null, {
-    constructor: function(policyLib, renderListURL, localMode, urlHandler, renderList) {
-        this._policyLib = policyLib;
+    constructor: function(modelLib, renderListURL, localMode, urlHandler, renderList) {
+        this._modelLib = modelLib;
         this._renderListURL = renderListURL;
         this._localMode = !!localMode;
         this._urlHandler = urlHandler;
@@ -114,7 +114,7 @@ dojo.declare("gui.GUIBuilder", null, {
                 element = new gui.Canvas({"key" : root.key(), 
                                           "renderlistKey" : root.renderlistKey(), 
                                            "boundingboxKey": root.boundingBoxKey(),
-                                           "policyLib" : this._policyLib,
+                                           "modelLib" : this._modelLib,
                                             "localMode" : this._localMode,
                                             "renderListURL" : this._renderListURL,
                                             "resetViewKey"  : root.resetViewKey(),
@@ -137,13 +137,13 @@ dojo.declare("gui.GUIBuilder", null, {
     _makeElementGroup: function(root) {
         var heading = dojo.create("b");
         if(root.showValue()) {
-            heading.innerHTML = this._policyLib.getValue(root.key());
-            this._policyLib.addLocalListener(root.key(), function(key, value){
+            heading.innerHTML = this._modelLib.getValue(root.key());
+            this._modelLib.addLocalListener(root.key(), function(key, value){
                 heading.innerHTML = value;
             });
         }
         else {
-            heading.innerHTML = this._policyLib.getAnnotation(root.key());
+            heading.innerHTML = this._modelLib.getAnnotation(root.key());
         }
         var container = new gui.VerticalLayout();
         dojo.style(heading, "padding-top", "5px");
@@ -163,18 +163,18 @@ dojo.declare("gui.GUIBuilder", null, {
         var button = new dijit.form.Button();
         var label = "";
         if(root.showValue()) {
-            this._policyLib.addLocalListener(root.key(), function(key, value) {
+            this._modelLib.addLocalListener(root.key(), function(key, value) {
                 button.set("label", value);
             });
-            label = this._policyLib.getValue(root.key());
+            label = this._modelLib.getValue(root.key());
         }
         else {
-            label = this._policyLib.getAnnotation(root.key());
+            label = this._modelLib.getAnnotation(root.key());
         }
         button.set("label", label);
         button.on("click", dojo.hitch(this, function(event)  {
-            this._policyLib.updateElement(root.key(), false);
-            this._policyLib.updateElement(root.key(), true);
+            this._modelLib.updateElement(root.key(), false);
+            this._modelLib.updateElement(root.key(), true);
         }));
         return button;
     },
@@ -193,7 +193,7 @@ dojo.declare("gui.GUIBuilder", null, {
                 }
 
                 var options = {
-                    "title"      : this._policyLib.getAnnotation(root.child(i).key()),
+                    "title"      : this._modelLib.getAnnotation(root.child(i).key()),
                     "closeable" : false,
                     "selected"  : i==0
                     };
@@ -213,9 +213,9 @@ dojo.declare("gui.GUIBuilder", null, {
     _makeSpinBox: function(root) {
         var spinBox = null;
         var style = "width: 7em;";
-        if(this._policyLib.isConstrained(root.key())) {
-            var max = this._policyLib.getMax(root.key());
-            var min = this._policyLib.getMin(root.key());
+        if(this._modelLib.isConstrained(root.key())) {
+            var max = this._modelLib.getMax(root.key());
+            var min = this._modelLib.getMin(root.key());
             spinBox = new dijit.form.NumberSpinner({
                 constraints : {
                     "max" : max,
@@ -234,8 +234,8 @@ dojo.declare("gui.GUIBuilder", null, {
     },
     _makeHorizontalSlider: function(root) {
 
-        var max = this._policyLib.getMax(root.key());
-        var min = this._policyLib.getMin(root.key());
+        var max = this._modelLib.getMax(root.key());
+        var min = this._modelLib.getMin(root.key());
         var slider = new dijit.form.HorizontalSlider({
             "maximum" : max,
             "minimum" : min,
@@ -246,8 +246,8 @@ dojo.declare("gui.GUIBuilder", null, {
     
     _makeVerticalSlider: function(root) {
 
-        var max = this._policyLib.getMax(root.key());
-        var min = this._policyLib.getMin(root.key());
+        var max = this._modelLib.getMax(root.key());
+        var min = this._modelLib.getMin(root.key());
         var slider = new dijit.form.VerticalSlider({
             "maximum" : max,
             "minimum" : min,
@@ -305,11 +305,11 @@ dojo.declare("gui.GUIBuilder", null, {
     
     _makePopupButton: function(root) {
         var button = dijit.form.DropDownButton();
-        button.set('label', root.showValue() ? this._policyLib.getValue(root.key()) :
-            this._policyLib.getAnnotation(root.key()));
+        button.set('label', root.showValue() ? this._modelLib.getValue(root.key()) :
+            this._modelLib.getAnnotation(root.key()));
         
         if(root.showValue()) {
-            this._policyLib.addLocalListener(root.key(), function(key, value) {
+            this._modelLib.addLocalListener(root.key(), function(key, value) {
                 button.set("label", value);
             });
         }
@@ -324,7 +324,7 @@ dojo.declare("gui.GUIBuilder", null, {
     },
     
     _makeComboBox : function(root) {
-        var restriction = this._policyLib.getRestriction(root.key());
+        var restriction = this._modelLib.getRestriction(root.key());
         var options = [];
         for(var i = 0; i < restriction.length; i++) {
             options[i]=  {
@@ -332,7 +332,7 @@ dojo.declare("gui.GUIBuilder", null, {
                 value: restriction[i], 
                 selected: false
             };
-            if(this._policyLib.getValue(root.key())== options[i].value) {
+            if(this._modelLib.getValue(root.key())== options[i].value) {
                 options.selected = true;
             }
         }
@@ -340,33 +340,33 @@ dojo.declare("gui.GUIBuilder", null, {
             "name": root.key(), 
             "options" : options, 
             maxHeight:100, 
-            selected: this._policyLib.getValue(root.key()), 
-            value: this._policyLib.getValue(root.key())
+            selected: this._modelLib.getValue(root.key()), 
+            value: this._modelLib.getValue(root.key())
         });
         return this._addKeyValue(combobox, root, "value", ["change", "blur"]);
     },
     
     _makeRadioButtons : function(root) {
         var layout = new gui.VerticalLayout();
-        var restriction = this._policyLib.getRestriction(root.key());
+        var restriction = this._modelLib.getRestriction(root.key());
         for(var i = 0; i < restriction.length; i++) {
             (dojo.hitch(this, function() { // For closure (need options and radiobutton)
                 var options = {
-                    name: "policylib."+root.key(), 
+                    name: "model."+root.key(), 
                     value: restriction[i],
                     label: restriction[i], 
                     checked : false
                 };
-                if(options.value == this._policyLib.getValue(root.key())) {
+                if(options.value == this._modelLib.getValue(root.key())) {
                     options.checked = true;
                 }
                 var radioButton = new gui.RadioButtonWithLabel(options);
                 radioButton.on("change", dojo.hitch(this, function(value) {
                     if(value) {
-                        this._policyLib.updateElement(root.key(), options.value);
+                        this._modelLib.updateElement(root.key(), options.value);
                     }
                 }));
-                this._policyLib.addLocalListener(root.key(), function(key, value) {
+                this._modelLib.addLocalListener(root.key(), function(key, value) {
                     if(value == options.value) {
                        
                         radioButton.set("checked", value);
@@ -397,7 +397,7 @@ dojo.declare("gui.GUIBuilder", null, {
                 var currentEvent = event[i];
                 (dojo.hitch(this, function() {
                     widget.on(currentEvent, dojo.hitch(this, function(value) {
-                        this._policyLib.updateElement(root.key(), widget.get(slot));
+                        this._modelLib.updateElement(root.key(), widget.get(slot));
                     }));
                 }))();
             }
@@ -405,31 +405,31 @@ dojo.declare("gui.GUIBuilder", null, {
             (dojo.hitch(this, function() {
                 widget.on("keypress", dojo.hitch(this, function(event) {
                     if(event.keyCode == 13) {
-                        this._policyLib.updateElement(root.key(), widget.get(slot));
+                        this._modelLib.updateElement(root.key(), widget.get(slot));
                     }
                 }));
             }))();
 
             
             
-            this._policyLib.addLocalListener(root.key(), function(key, value) {
+            this._modelLib.addLocalListener(root.key(), function(key, value) {
                 widget.set(slot, value);
             }, this);
             
-            widget.set(slot, this._policyLib.getValue(root.key()));
+            widget.set(slot, this._modelLib.getValue(root.key()));
         } 
         else {
-            widget.set(slot, this._policyLib.getAnnotation(root.key(), "en"));
+            widget.set(slot, this._modelLib.getAnnotation(root.key(), "en"));
         }
         return widget;
     },
     
     _addMaxMinListeners : function(widget, root) {
-        this._policyLib.addLocalListener(root.key(), function(key, value) {
-            var max = this._policyLib.getMax(key);
-            var min = this._policyLib.getMin(key);
-            widget.set("minimum", this._policyLib.getMin(key));
-            widget.set("maximum", this._policyLib.getMax(key));
+        this._modelLib.addLocalListener(root.key(), function(key, value) {
+            var max = this._modelLib.getMax(key);
+            var min = this._modelLib.getMin(key);
+            widget.set("minimum", this._modelLib.getMin(key));
+            widget.set("maximum", this._modelLib.getMax(key));
             widget.set("constraints", {"max" : max, "min": min} );
         }, this);
         return widget;
@@ -439,7 +439,7 @@ dojo.declare("gui.GUIBuilder", null, {
     
     _addVisibilityToggles : function(widget, root) {
         if(root.visibilityKey() && root.visibilityKey().length > 0) {
-            this._policyLib.addLocalListener(root.visibilityKey(), function(key, value) {
+            this._modelLib.addLocalListener(root.visibilityKey(), function(key, value) {
                 if(root.visibilityKeyInverted() == value) {
                     dojo.style(widget.domNode, "display", "none");
                 }
@@ -447,12 +447,12 @@ dojo.declare("gui.GUIBuilder", null, {
                     dojo.style(widget.domNode, "display", "block");
                 }
             });
-            if(this._policyLib.getValue(root.visibilityKey()) == root.visibilityKeyInverted()) {
+            if(this._modelLib.getValue(root.visibilityKey()) == root.visibilityKeyInverted()) {
                 dojo.style(widget.domNode, "display", "none");
             }
         }
         if(root.enabledKey() && root.enabledKey().length > 0) {
-            this._policyLib.addLocalListener(root.enabledKey(), function(key, value) {
+            this._modelLib.addLocalListener(root.enabledKey(), function(key, value) {
                 if(root.enabledKeyInverted() == value) {
                     widget.set("disabled", true);
                 }
@@ -460,7 +460,7 @@ dojo.declare("gui.GUIBuilder", null, {
                     widget.set("disabled", false);
                 }
             });
-            if(this._policyLib.getValue(root.enabledKey()) == root.enabledKeyInverted()) {
+            if(this._modelLib.getValue(root.enabledKey()) == root.enabledKeyInverted()) {
                 widget.set("disabled", true);
             }
             
@@ -471,7 +471,7 @@ dojo.declare("gui.GUIBuilder", null, {
         if(!slot) {
             slot = "label";
         }
-        widget.set(slot, this._policyLib.getAnnotation(root.key()));
+        widget.set(slot, this._modelLib.getAnnotation(root.key()));
         return widget;
     }
 });

@@ -21,7 +21,7 @@
 #include <mutex> 
 #include "Observer.hpp"
 #include "Job.hpp"
-#include "tinia/policy/Policy.hpp"
+#include "tinia/model/ExposedModel.hpp"
 
 namespace tinia {
 namespace Trell
@@ -65,8 +65,8 @@ public:
 protected:
   bool m_isSuicidal;
   int  m_LastStateRead;
-  mutable std::mutex m_policyLock;
-  policy::Policy m_policy;
+  mutable std::mutex m_modelLock;
+  model::ExposedModel m_model;
 
 
 };

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<PolicyUpdate xmlns="http://cloudviz.sintef.no/V1/policy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://cloudviz.sintef.no/V1/policy PolicyUpdateSchema.xsd" revision="10456">
+<ExposedModelUpdate xmlns="http://cloudviz.sintef.no/V1/model" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://cloudviz.sintef.no/V1/model ExposedModelUpdateSchema.xsd" revision="10456">
     <StateSchema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <xsd:schema>
             <xsd:element name="State">
@@ -286,4 +286,4 @@
         </HorizontalLayout>
 
     </GuiLayout>
-</PolicyUpdate>
+</ExposedModelUpdate>
