@@ -18,7 +18,7 @@
 
 #include "tinia/model/StateElement.hpp"
 namespace tinia {
-model::StateElement::StateElement(std::string name, const ElementData &data)
+model::StateElement::StateElement(std::string name, const impl::ElementData &data)
    : m_name(name.c_str()), m_data(data)
 {
 
@@ -49,7 +49,7 @@ model::StateElement::PropertyTree model::StateElement::getPropertyTree() const
    // an object member)?
    PropertyTree destPropertyTree;
 
-   const ElementData::PropertyTree& sourcePropertyTree  = m_data.getPropertyTree();
+   const impl::ElementData::PropertyTree& sourcePropertyTree  = m_data.getPropertyTree();
    for(auto it = sourcePropertyTree.begin(); it!=sourcePropertyTree.end();
        it++)
    {

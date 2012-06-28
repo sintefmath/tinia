@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <libxml/tree.h>
 #include <libxml/xmlreader.h>
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/StateElement.hpp"
 #include "tinia/model/StateSchemaElement.hpp"
 #include "tinia/modelxml/utils.hpp"
@@ -157,7 +157,7 @@ private:
     xmlNsPtr xsi;
     xmlNsPtr tns;
 
-    //const std::unordered_map<std::string, model::ElementData> stateHash;
+    //const std::unordered_map<std::string, model::impl::ElementData> stateHash;
     const unsigned int revisionNumber;
 
 

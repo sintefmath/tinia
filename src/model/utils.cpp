@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/utils.hpp"
+#include "tinia/model/impl/utils.hpp"
 
 namespace tinia {
 namespace model {

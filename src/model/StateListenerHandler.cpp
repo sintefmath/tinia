@@ -16,19 +16,19 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/StateListenerHandler.hpp"
+#include "tinia/model/impl/StateListenerHandler.hpp"
 
 namespace tinia {
-void model::StateListenerHandler::addStateListener(model::StateListener *listener)
+void model::impl::StateListenerHandler::addStateListener(model::StateListener *listener)
 {
    m_listeners.push_back(listener);
 }
-void model::StateListenerHandler::addStateListener(std::string key, model::StateListener *listener)
+void model::impl::StateListenerHandler::addStateListener(std::string key, model::StateListener *listener)
 {
    m_keylisteners[key].push_back(listener);
 }
 
-void model::StateListenerHandler::removeStateListener(std::string key, model::StateListener *listener)
+void model::impl::StateListenerHandler::removeStateListener(std::string key, model::StateListener *listener)
 {
    m_keylisteners[key].remove(listener);
    if(m_keylisteners[key].size() == 0)
@@ -37,13 +37,13 @@ void model::StateListenerHandler::removeStateListener(std::string key, model::St
    }
 }
 
-void model::StateListenerHandler::removeStateListener(model::StateListener *listener)
+void model::impl::StateListenerHandler::removeStateListener(model::StateListener *listener)
 {
    m_listeners.remove(listener);
 }
 
 
-void model::StateListenerHandler::fireStateElementModified(
+void model::impl::StateListenerHandler::fireStateElementModified(
       model::StateElement *stateElement)
 {
    if(m_isBuffering)
@@ -63,12 +63,12 @@ void model::StateListenerHandler::fireStateElementModified(
    }
 }
 
-void model::StateListenerHandler::holdEvents()
+void model::impl::StateListenerHandler::holdEvents()
 {
    m_isBuffering = true;
 }
 
-void model::StateListenerHandler::releaseEvents()
+void model::impl::StateListenerHandler::releaseEvents()
 {
    m_isBuffering = false;
    for(size_t i = 0; i < m_buffer.size(); i++ )
@@ -77,4 +77,5 @@ void model::StateListenerHandler::releaseEvents()
    }
    m_buffer.clear();
 }
+
 } // of namespace tinia

@@ -34,11 +34,11 @@
 
 #include <boost/thread.hpp>
 
-#include "tinia/model/ElementData.hpp"
-#include "tinia/model/TypeToXSDType.hpp"
-#include "tinia/model/ElementDataFactory.hpp"
-#include "tinia/model/StateListenerHandler.hpp"
-#include "tinia/model/StateSchemaListenerHandler.hpp"
+#include "tinia/model/impl/ElementData.hpp"
+#include "tinia/model/impl/TypeToXSDType.hpp"
+#include "tinia/model/impl/ElementDataFactory.hpp"
+#include "tinia/model/impl/StateListenerHandler.hpp"
+#include "tinia/model/impl/StateSchemaListenerHandler.hpp"
 #include "tinia/model/GUILayout.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include "tinia/model/Viewer.hpp"
@@ -76,7 +76,7 @@
 
     In order to extend a complex type, e.g., the Viewer, follow these steps:
     1) Update the data structure (E.g., Viewer.hpp)
-    2) Update the two template specializations for the type in ElementDataFactory.hpp, 'createElement'
+    2) Update the two template specializations for the type in impl::ElementDataFactory.hpp, 'createElement'
        and 'createT'.
 
     These instructions are up to date and tested as of 110912.
@@ -171,7 +171,7 @@ The job can use this to get an update meant for the client. This version are for
       \param updatedElements A list of elements that has been updated in the state, relative to the given revision number.
       \param has_revision Base number from which the delta is to be computed. The client needs updates for revisions after this.
       */
-   void getExposedModelUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned int has_revision ) const;
+   void getExposedModelUpdate(std::vector< std::pair<std::string, impl::ElementData> > &updatedElements, const unsigned int has_revision ) const;
 
 
    /** Add an unconstrained element to the hash. This will update the StateSchema and State with the element.
@@ -385,19 +385,19 @@ private:
   \note: This does *not* lock on the mutex
   */
    template<typename T>
-   ElementData& addElementInternal(std::string key, T val);
+   impl::ElementData& addElementInternal(std::string key, T val);
 
    /** The revision number for the model is incremented, and the element that caused this increment gets
       its revision number set to the global value prior to this incrementation. */
-   void incrementRevisionNumber(ElementData &updatedElement);
+   void incrementRevisionNumber(impl::ElementData &updatedElement);
 
 
    void addAnnotationHelper( std::string element, std::unordered_map<std::string, std::string>& );
 
    void addMatrixHelper( std::string key, const float* matrixData );
 
-   std::unordered_map<std::string, ElementData> stateHash;
-//   std::unordered_map<std::string, ElementData> stateHash;
+   std::unordered_map<std::string, impl::ElementData> stateHash;
+//   std::unordered_map<std::string, impl::ElementData> stateHash;
 
    unsigned int revisionNumber;
 
@@ -405,25 +405,25 @@ private:
         types. Just a wrapper around UpdateElementHelper-class.
        */
    template<class T>
-   void updateElementHelper( std::string key, ElementData& elementData, const T& value );
+   void updateElementHelper( std::string key, impl::ElementData& elementData, const T& value );
 
 
    template<class T>
    std::string stringify( const T& t );
 
    void addElementErrorChecking( std::string key ) const;
-   void updateStateHash( std::string key, ElementData& elmentData );
+   void updateStateHash( std::string key, impl::ElementData& elmentData );
 
-   ElementDataFactory elementFactory;
+   impl::ElementDataFactory elementFactory;
 
 
    // Event handlers
-   StateSchemaListenerHandler m_stateSchemaListenerHandler;
-   StateListenerHandler m_stateListenerHandler;
-   void fireStateSchemaElementAdded(std::string key, const ElementData& data);
-   void fireStateSchemaElementRemoved(std::string key, const ElementData& data);
-   void fireStateSchemaElementModified(std::string key, const ElementData& data);
-   void fireStateElementModified(std::string key, const ElementData& data);
+   impl::StateSchemaListenerHandler m_stateSchemaListenerHandler;
+   impl::StateListenerHandler m_stateListenerHandler;
+   void fireStateSchemaElementAdded(std::string key, const impl::ElementData& data);
+   void fireStateSchemaElementRemoved(std::string key, const impl::ElementData& data);
+   void fireStateSchemaElementModified(std::string key, const impl::ElementData& data);
+   void fireStateElementModified(std::string key, const impl::ElementData& data);
 
 
    // Locking made easy
@@ -469,7 +469,7 @@ template<typename T>
 void
 ExposedModel::addElement( std::string key, T value, const std::string annotation ) {
 
-   ElementData data;
+   impl::ElementData data;
    {
       scoped_lock(m_selfMutex);
       data = addElementInternal(key, value);
@@ -492,10 +492,10 @@ ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, 
    }
 
 
-   ElementData data;
+   impl::ElementData data;
    { // Lock scope
       scoped_lock(m_selfMutex);
-      ElementData& elementData = addElementInternal(key, value);
+      impl::ElementData& elementData = addElementInternal(key, value);
 
       {
          std::stringstream ss;
@@ -543,10 +543,10 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
    }
 
    // The copy given to the listener outside the lock.
-   ElementData data;
+   impl::ElementData data;
    {
       scoped_lock(m_selfMutex);
-      ElementData& elementData = addElementInternal(key, value);
+      impl::ElementData& elementData = addElementInternal(key, value);
       elementData.setRestrictionSet( restrictionStrings );
 
       data = elementData;
@@ -566,24 +566,24 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
   */
 template<bool B>
 struct UpdateElementHelper {
-   UpdateElementHelper( std::unordered_map<std::string, ElementData>& stateHash,
-                        ElementDataFactory& elementFactory )
+   UpdateElementHelper( std::unordered_map<std::string, impl::ElementData>& stateHash,
+                        impl::ElementDataFactory& elementFactory )
       : stateHash( stateHash ),
         elementFactory( elementFactory )
    {}
 
    template<class T>
-   void operator()( std::string key, ElementData& elementData, const T& value );
+   void operator()( std::string key, impl::ElementData& elementData, const T& value );
 
-   std::unordered_map<std::string, ElementData>& stateHash;
-   ElementDataFactory& elementFactory;
+   std::unordered_map<std::string, impl::ElementData>& stateHash;
+   impl::ElementDataFactory& elementFactory;
 };
 
 template<>
 template<class T>
 inline
 void
-UpdateElementHelper<true>::operator()( std::string key, ElementData& elementData, const T& value ) {
+UpdateElementHelper<true>::operator()( std::string key, impl::ElementData& elementData, const T& value ) {
    elementData = elementFactory.createElement( value );
    stateHash[key] = elementData;
 }
@@ -593,7 +593,7 @@ template<>
 template<class T>
 inline
 void
-UpdateElementHelper<false>::operator()( std::string key, ElementData& elementData, const T& value ) {
+UpdateElementHelper<false>::operator()( std::string key, impl::ElementData& elementData, const T& value ) {
    const std::string stringValue = boost::lexical_cast<std::string>( value );
 
    if ( elementData.invalidConstraints( value) ) {
@@ -609,9 +609,9 @@ UpdateElementHelper<false>::operator()( std::string key, ElementData& elementDat
 
 template<class T>
 void
-ExposedModel::updateElementHelper( std::string key, ElementData& elementData, const T& value ) {
+ExposedModel::updateElementHelper( std::string key, impl::ElementData& elementData, const T& value ) {
    // All classes except std::string are assumed to be complexTypes which require specialization
-   // in ElementDataFactory for serialization.
+   // in impl::ElementDataFactory for serialization.
    UpdateElementHelper<std::is_class<T>::value && !std::is_same<std::string, T>::value >
          updater( stateHash, elementFactory );
    updater( key, elementData, value );
@@ -621,7 +621,7 @@ template<typename T>
 void
 ExposedModel::updateElement( std::string key, T value ) {
 
-   ElementData data;
+   impl::ElementData data;
    std::string stringValueBeforeUpdate;
    {// Lock block
       scoped_lock(m_selfMutex);
@@ -632,8 +632,8 @@ ExposedModel::updateElement( std::string key, T value ) {
       }
 
 
-      std::string myType = TypeToXSDType<T>::getTypename();
-      ElementData& elementData = it->second;
+      std::string myType = impl::TypeToXSDType<T>::getTypename();
+      impl::ElementData& elementData = it->second;
       std::string storedType = elementData.getXSDType();
 
       if ( storedType != myType ) {
@@ -671,7 +671,7 @@ ExposedModel::getElementValue( std::string key, T& t ) {
    }
 
    auto& elementData = it->second;
-   auto myType = TypeToXSDType<T>::getTypename();
+   auto myType = impl::TypeToXSDType<T>::getTypename();
    auto storedType = elementData.getXSDType();
    if ( storedType !=  myType ) {
       throw std::runtime_error( "Trying to get element " + key + " as " + myType + " but it is stored as a " + storedType );
@@ -683,7 +683,7 @@ ExposedModel::getElementValue( std::string key, T& t ) {
 }
 
 template<typename T>
-ElementData& model::ExposedModel::addElementInternal(std::string key,
+impl::ElementData& model::ExposedModel::addElementInternal(std::string key,
                                                       T value)
 {
 
@@ -693,7 +693,7 @@ ElementData& model::ExposedModel::addElementInternal(std::string key,
 
    updateStateHash( key, elementData );
 
-   ElementData& data = stateHash[key];
+   impl::ElementData& data = stateHash[key];
    return data;
 }
 
@@ -728,7 +728,7 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
         throw new std::runtime_error(ss.str());
     }
 
-    ElementData data;
+    impl::ElementData data;
     bool emitChange = false;
     bool emitValueChange = false;
     { // Lock block

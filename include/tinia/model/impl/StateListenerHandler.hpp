@@ -25,6 +25,7 @@
 
 namespace tinia {
 namespace model {
+namespace impl {
 class StateListenerHandler
 {
 public:
@@ -43,6 +44,7 @@ private:
     bool m_isBuffering;
 
 };
+}
 }
 }
 #endif // STATELISTENERHANDLER_HPP

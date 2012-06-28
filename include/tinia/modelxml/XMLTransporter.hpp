@@ -19,7 +19,7 @@
 #pragma once
 #include <unordered_map>
 #include <libxml/tree.h>
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 
 #include "tinia/modelxml/utils.hpp"
 

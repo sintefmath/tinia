@@ -35,7 +35,7 @@
 
 namespace tinia {
 namespace model {
-
+namespace impl {
 
 template<typename U>
 void print0(const boost::property_tree::basic_ptree<std::string, U> &pt, const int level) {
@@ -62,6 +62,7 @@ void print(const boost::property_tree::basic_ptree<T, U> &pt) {
 }
 
 
+}
 }
 }
 #endif // UTILS_HPP

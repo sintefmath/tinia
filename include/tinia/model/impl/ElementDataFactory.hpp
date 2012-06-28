@@ -23,13 +23,14 @@
 #include <string>
 
 
-#include "tinia/model/ElementData.hpp"
-#include "tinia/model/TypeToXSDType.hpp"
+#include "tinia/model/impl/ElementData.hpp"
+#include "tinia/model/impl/TypeToXSDType.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace tinia {
 namespace model {
+namespace impl {
 
 /** \class ElementDataFactory
     ElementDataFactory is responsible for creating ElementData objects for various types.
@@ -156,7 +157,7 @@ ElementDataFactory::createMatrix( const ElementData& elementData, float* matrixD
 }
 
 
-
+}
 }
 }
 #endif // ELEMENTDATAFACTORY_HPP

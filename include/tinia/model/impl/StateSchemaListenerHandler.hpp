@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace model {
+namespace impl {
 class StateSchemaListenerHandler
 {
 public:
@@ -43,6 +44,7 @@ private:
    std::list<StateSchemaListener*> m_listeners;
    std::map<std::string, std::list<StateSchemaListener*> > m_keyListeners;
 };
+}
 }
 }
 #endif // STATESCHEMALISTENERHANDLER_HPP

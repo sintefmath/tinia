@@ -35,7 +35,7 @@
 
 
 #include "tinia/model/ExposedModel.hpp"
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 #include "tinia/modelxml/XMLTransporter.hpp"
 #include "tinia/modelxml/XMLReader.hpp"
 #include "tinia/modelxml/utils.hpp"
@@ -46,7 +46,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-using tinia::model::ElementData;
+using tinia::model::impl::ElementData;
 using tinia::modelxml::xpathQuery;
 
 using namespace std;

@@ -226,7 +226,7 @@ XMLBuilder::buildSimpleGuiLayout_alpha() {
 
    row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
    //   for_each( stateHash.begin(), stateHash.end(),
-   //             [row]( const std::pair<std::string, model::ElementData>& kv ) {
+   //             [row]( const std::pair<std::string, model::impl::ElementData>& kv ) {
    //             auto cell0 = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
    //         auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );
    //   xmlSetProp( key, BAD_CAST "parameter", BAD_CAST kv.first.c_str() );
@@ -267,7 +267,7 @@ XMLBuilder::buildSimpleGuiLayout() {
       xmlSetProp( value, BAD_CAST "parameter", BAD_CAST it->getKey().c_str() );
    }
    //   for_each( stateHash.begin(), stateHash.end(),
-   //             [grid]( const std::pair<std::string, model::ElementData>& kv ) {
+   //             [grid]( const std::pair<std::string, model::impl::ElementData>& kv ) {
    //             auto row2 = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
    //         auto cell0 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
    //   auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );

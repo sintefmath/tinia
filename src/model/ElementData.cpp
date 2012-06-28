@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 
 #include <iostream>
 #include <string>
@@ -29,17 +29,17 @@ using std::string;
 
 namespace tinia {
 namespace model {
-const int ElementData::LENGTH_NOT_SET = -1;
-const int ElementData::MATRIX_LENGTH = 16;
+const int impl::ElementData::LENGTH_NOT_SET = -1;
+const int impl::ElementData::MATRIX_LENGTH = 16;
 
-ElementData::ElementData()
+impl::ElementData::ElementData()
 :
   widgetType("textinput"),
-  length( ElementData::LENGTH_NOT_SET )
+  length( impl::ElementData::LENGTH_NOT_SET )
 {}
 
 
-ElementData::ElementData(const ElementData &from)
+impl::ElementData::ElementData(const impl::ElementData &from)
    :
    // Deep copy
      stringValue(from.stringValue.begin(), from.stringValue.end()),
@@ -72,7 +72,7 @@ ElementData::ElementData(const ElementData &from)
           it++)
       {
          propertyTree->push_back(
-                  PropertyTree::value_type(it->first.c_str(), PropertyTree(ElementData(it->second.data()))
+                  PropertyTree::value_type(it->first.c_str(), PropertyTree(impl::ElementData(it->second.data()))
                                            ));
       }
    }
@@ -80,7 +80,7 @@ ElementData::ElementData(const ElementData &from)
 }
 
 template<typename T>
-bool ElementData::isWithinLimits(T& value, const std::string& stringValue) {
+bool impl::ElementData::isWithinLimits(T& value, const std::string& stringValue) {
 	if( !emptyRestrictionSet() ) {
 		bool within = false;
 		std::for_each(getEnumerationSet().begin(), getEnumerationSet().end(), [&stringValue, &within](const std::string allowed) {
@@ -102,7 +102,7 @@ bool ElementData::isWithinLimits(T& value, const std::string& stringValue) {
 }
 
 void
-ElementData::setStringValue( std::string inputString ) {
+impl::ElementData::setStringValue( std::string inputString ) {
     // printf("trying to set string to '%s'...\n", s.c_str()); fflush(stdout);
 
 	// Check if it's compatible
@@ -122,7 +122,7 @@ ElementData::setStringValue( std::string inputString ) {
     stringValue = inputString;
 }
 
-void ElementData::checkValue(const std::string& s) {
+void impl::ElementData::checkValue(const std::string& s) {
 	std::string xsdType = getXSDType();
 	if(xsdType == "xsd:double") {
 		double val = boost::lexical_cast<double>(s);
@@ -159,7 +159,7 @@ void ElementData::checkValue(const std::string& s) {
 // in XMLReader.cpp, should be replaced by that in utils.hpp but it doesn't work?!?!?!?!?!!!!!
 typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
 
-void ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPTree &sspt, const int level )
+void impl::ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPTree &sspt, const int level )
 {
     if ( pt.size() != sspt.size() ) {
 //        pt_print("properties from string-string-ptree", sspt);
@@ -168,11 +168,11 @@ void ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPT
         PropertyTree::iterator            end2  = pt.end();
         PropertyTree::iterator            it2  = pt.begin();
         for (; it2 != end2; it2++) {
-            ElementData ed = it2->second.get_value<ElementData>();
+            impl::ElementData ed = it2->second.get_value<impl::ElementData>();
             ed.print();
         }
 
-        throw std::runtime_error("Huh?! The string-string ptree has a different topology than the string-ElementData ptree.");
+        throw std::runtime_error("Huh?! The string-string ptree has a different topology than the string-impl::ElementData ptree.");
     }
     StringStringPTree::const_iterator end  = sspt.end();
     PropertyTree::iterator            it2  = pt.begin();
@@ -182,7 +182,7 @@ void ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPT
         const string value = it->second.get_value<string>();
 
         // printf("setPropertyTreeValue_r: name=%s, value=%s\n", name.c_str(), value.c_str()); fflush(stdout);
-        ElementData ed = it2->second.get_value<ElementData>();
+        impl::ElementData ed = it2->second.get_value<impl::ElementData>();
         ed.setStringValue( value );
         it2->second.put_value(ed);
         setPropertyTreeValue_r(it2->second, it->second, level + 4);
@@ -190,111 +190,111 @@ void ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPT
 }
 
 
-void ElementData::setPropertyTreeValue( const StringStringPTree &sspt )
+void impl::ElementData::setPropertyTreeValue( const StringStringPTree &sspt )
 {
     setPropertyTreeValue_r(*propertyTree, sspt, 0);
 }
 
 
 std::string
-ElementData::getStringValue() const {
+impl::ElementData::getStringValue() const {
     return stringValue;
 }
 
 std::string
-ElementData::getXSDType() const {
+impl::ElementData::getXSDType() const {
     return xsdType;
 }
 
 void
-ElementData::setXSDType( std::string s ) {
+impl::ElementData::setXSDType( std::string s ) {
     xsdType = s;
 }
 
 std::string
-ElementData::getWidgetType() const {
+impl::ElementData::getWidgetType() const {
     return widgetType;
 }
 
 void
-ElementData::setWidgetType( std::string s ) {
+impl::ElementData::setWidgetType( std::string s ) {
     widgetType = s;
 }
 
 void
-ElementData::setMinConstraint( std::string s ) {
+impl::ElementData::setMinConstraint( std::string s ) {
     minConstraint = s;
 }
 
 std::string
-ElementData::getMinConstraint() const {
+impl::ElementData::getMinConstraint() const {
     return minConstraint;
 }
 
 void
-ElementData::setMaxConstraint( std::string s ) {
+impl::ElementData::setMaxConstraint( std::string s ) {
     maxConstraint = s;
 }
 
 std::string
-ElementData::getMaxConstraint() const {
+impl::ElementData::getMaxConstraint() const {
     return maxConstraint;
 }
 
 void
-ElementData::setRestrictionSet( std::set<std::string>& restrictionSet ) {
+impl::ElementData::setRestrictionSet( std::set<std::string>& restrictionSet ) {
     this->enumerationSet = restrictionSet;
     widgetType = "select";
 }
 
 const std::set<std::string>&
-ElementData::getEnumerationSet() const {
+impl::ElementData::getEnumerationSet() const {
     return enumerationSet;
 }
 
 
 bool
-ElementData::emptyConstraints() const {
+impl::ElementData::emptyConstraints() const {
     return getMinConstraint().empty() && getMinConstraint().empty();
 }
 
 bool
-ElementData::emptyRestrictionSet() const {
+impl::ElementData::emptyRestrictionSet() const {
     return enumerationSet.empty();
 }
 
 bool
-ElementData::emptyAnnotation() const {
+impl::ElementData::emptyAnnotation() const {
     return annotationMap.empty();
 }
 
 void
-ElementData::setAnnotation( std::unordered_map<std::string, std::string>& annotationMap ) {
+impl::ElementData::setAnnotation( std::unordered_map<std::string, std::string>& annotationMap ) {
     this->annotationMap = annotationMap;
 }
 
 const std::unordered_map<std::string, std::string>&
-ElementData::getAnnotation() const {
+impl::ElementData::getAnnotation() const {
     return annotationMap;
 }
 
 void
-ElementData::setLength( unsigned int i ) {
+impl::ElementData::setLength( unsigned int i ) {
     length = i;
 }
 
 int
-ElementData::getLength() const {
+impl::ElementData::getLength() const {
     return length;
 }
 
 void
-ElementData::initializePropertyTree() {
+impl::ElementData::initializePropertyTree() {
     propertyTree.reset( new PropertyTree() );
 }
 
-ElementData::PropertyTree&
-ElementData::getPropertyTree() {
+impl::ElementData::PropertyTree&
+impl::ElementData::getPropertyTree() {
     if ( propertyTree.get() == 0 ) {
         initializePropertyTree();
     }
@@ -302,8 +302,8 @@ ElementData::getPropertyTree() {
     return *propertyTree;
 }
 
-const ElementData::PropertyTree&
-ElementData::getPropertyTree() const {
+const impl::ElementData::PropertyTree&
+impl::ElementData::getPropertyTree() const {
     if ( propertyTree.get() == 0 ) {
         throw std::runtime_error( "Trying the get a property tree but it is not initialized" );
     }
@@ -311,14 +311,14 @@ ElementData::getPropertyTree() const {
 }
 
 
-void ElementData::print0(const PropertyTree &pt, const int level) const
+void impl::ElementData::print0(const PropertyTree &pt, const int level) const
 {
     PropertyTree::const_iterator end = pt.end();
     for (PropertyTree::const_iterator it = pt.begin(); it != end; ++it) {
         for (int i=0; i<level; i++)
             cout << " ";
         PropertyTree val = it->second;
-        ElementData d = val.get_value<ElementData>();
+        impl::ElementData d = val.get_value<impl::ElementData>();
         std::cout << it->first << ": " << d.getStringValue() << std::endl;
         //std::cout << it->first << ": " << "ugh" << std::endl;
         print0(it->second, level + 4);
@@ -327,7 +327,7 @@ void ElementData::print0(const PropertyTree &pt, const int level) const
 
 
 // For debugging
-void ElementData::print(void) const
+void impl::ElementData::print(void) const
 {
     printf("    xsdType=%s, widgetType=%s ", xsdType.c_str(), widgetType.c_str());
     const bool complextype = (xsdType.compare("xsd:complexType") == 0);
@@ -351,7 +351,7 @@ void ElementData::print(void) const
 
 }
 
-bool model::ElementData::isComplexType() const
+bool model::impl::ElementData::isComplexType() const
 {
    // Primitive implementation
    return propertyTree.get() != NULL;

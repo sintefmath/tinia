@@ -1,5 +1,5 @@
 FILE( GLOB modelSrc "*.cpp" )
-FILE( GLOB modelHeaders "../../include/tinia/model/*.hpp" )
+FILE( GLOB_RECURSE modelHeaders "../../include/tinia/model/*.hpp")
 
 
 ADD_LIBRARY( model SHARED ${modelSrc} ${modelHeaders} )

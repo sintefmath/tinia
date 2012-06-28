@@ -18,7 +18,7 @@
 
 #ifndef STATESCHEMAELEMENT_HPP
 #define STATESCHEMAELEMENT_HPP
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_map>
 #include <string>
@@ -31,7 +31,7 @@ public:
    typedef boost::property_tree::basic_ptree<std::string, StateSchemaElement> PropertyTree;
 
    StateSchemaElement();
-   StateSchemaElement(std::string key, const ElementData data);
+   StateSchemaElement(std::string key, const impl::ElementData data);
 
    /** Gets the key(name) of the element**/
    std::string getKey() const;
@@ -83,7 +83,7 @@ public:
 
 
    /** Get the current length restriction.
-     \return The current length restriction. Returns ElementData::LENGTH_NOT_SET when no length property is active.
+     \return The current length restriction. Returns impl::ElementData::LENGTH_NOT_SET when no length property is active.
      */
    int getLength() const;
 
@@ -95,7 +95,7 @@ public:
    static const int MATRIX_LENGTH = 16;
 private:
    std::string m_key;
-   ElementData m_data;
+   impl::ElementData m_data;
 
 
 };

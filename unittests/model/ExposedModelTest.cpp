@@ -29,7 +29,7 @@
 
 
 #include "tinia/model/ExposedModel.hpp"
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/StateListener.hpp"
 #include "tinia/model/StateSchemaListener.hpp"
 #include "tinia/model/GUILayout.hpp"

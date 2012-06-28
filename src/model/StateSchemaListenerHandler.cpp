@@ -16,32 +16,32 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/StateSchemaListenerHandler.hpp"
+#include "tinia/model/impl/StateSchemaListenerHandler.hpp"
 
 namespace tinia {
-model::StateSchemaListenerHandler::StateSchemaListenerHandler()
+model::impl::StateSchemaListenerHandler::StateSchemaListenerHandler()
 {
 }
 
-void model::StateSchemaListenerHandler::addStateSchemaListener(
+void model::impl::StateSchemaListenerHandler::addStateSchemaListener(
       model::StateSchemaListener *listener)
 {
    m_listeners.push_back(listener);
 }
 
-void model::StateSchemaListenerHandler::removeStateSchemaListener(
+void model::impl::StateSchemaListenerHandler::removeStateSchemaListener(
       model::StateSchemaListener *listener)
 {
    m_listeners.remove(listener);
 }
 
-void model::StateSchemaListenerHandler::addStateSchemaListener(
+void model::impl::StateSchemaListenerHandler::addStateSchemaListener(
       std::string key, model::StateSchemaListener *listener)
 {
    m_keyListeners[key].push_back(listener);
 }
 
-void model::StateSchemaListenerHandler::removeStateSchemaListener(
+void model::impl::StateSchemaListenerHandler::removeStateSchemaListener(
       std::string key, model::StateSchemaListener *listener)
 {
    m_keyListeners[key].remove(listener);
@@ -51,7 +51,7 @@ void model::StateSchemaListenerHandler::removeStateSchemaListener(
    }
 }
 
-void model::StateSchemaListenerHandler::fireStateSchemaElementAdded(
+void model::impl::StateSchemaListenerHandler::fireStateSchemaElementAdded(
       model::StateSchemaElement *element)
 {
 
@@ -71,7 +71,7 @@ void model::StateSchemaListenerHandler::fireStateSchemaElementAdded(
    }
 }
 
-void model::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
+void model::impl::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
       model::StateSchemaElement *element)
 {
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
@@ -90,7 +90,7 @@ void model::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
    }
 }
 
-void model::StateSchemaListenerHandler::fireStateSchemaElementModified(
+void model::impl::StateSchemaListenerHandler::fireStateSchemaElementModified(
       model::StateSchemaElement *element)
 {
    for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)

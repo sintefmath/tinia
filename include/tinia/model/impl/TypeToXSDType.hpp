@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace model {
+namespace impl {
 
 /** \class TypeToXSDType
     TypeToXSDType is responsible for representing the mapping between C++ types and the XML Schema type
@@ -121,6 +122,7 @@ std::string
 TypeToXSDType<T>::getTypenameDetail() {
     static_assert( sizeof(T) == 0, "By design you must add a specialization for your type." );
     return "";
+}
 }
 }
 }

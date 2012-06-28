@@ -26,7 +26,7 @@
 #include <libxml/xmlreader.h>
 
 #include "tinia/model/ExposedModel.hpp"
-#include "tinia/model/ElementData.hpp"
+#include "tinia/model/impl/ElementData.hpp"
 #include "tinia/modelxml/utils.hpp"
 #include "tinia/modelxml/ElementHandler.hpp"
 #include <boost/property_tree/ptree.hpp>

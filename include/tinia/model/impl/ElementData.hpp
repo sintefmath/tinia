@@ -33,6 +33,7 @@
 
 namespace tinia {
 namespace model {
+namespace impl {
 
 /** \class ElementData is responsible for storing data and metadata about a state parameter.
     This class was designed to be a helper class for ExposedModel and is not designed to be used as a standalone-class.
@@ -233,6 +234,7 @@ template<typename T>
 void
 ElementData::getMinConstraint(T& t) const {
     t = boost::lexical_cast<T>(getMinConstraint());
+}
 }
 }
 }

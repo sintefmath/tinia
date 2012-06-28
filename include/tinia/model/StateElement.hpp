@@ -18,8 +18,8 @@
 
 #ifndef STATEELEMENT_HPP
 #define STATEELEMENT_HPP
-#include "tinia/model/ElementData.hpp"
-#include "tinia/model/ElementDataFactory.hpp"
+#include "tinia/model/impl/ElementData.hpp"
+#include "tinia/model/impl/ElementDataFactory.hpp"
 #include <boost/shared_ptr.hpp>
 #include <string>
 
@@ -31,7 +31,7 @@ public:
    typedef boost::property_tree::basic_ptree<std::string, StateElement> PropertyTree;
 
    StateElement();
-   StateElement(std::string name, const ElementData& data);
+   StateElement(std::string name, const impl::ElementData& data);
 
    std::string getKey() const;
    std::string getXSDType() const;
@@ -44,8 +44,8 @@ public:
 
 private:
    std::string m_name;
-   ElementData m_data;
-   ElementDataFactory m_factory;
+   impl::ElementData m_data;
+   impl::ElementDataFactory m_factory;
 };
 template<typename T>
 void StateElement::getValue(T& t) const

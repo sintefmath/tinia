@@ -22,7 +22,7 @@ namespace tinia {
 namespace model {
 const int StateSchemaElement::LENGTH_NOT_SET=-1;
 StateSchemaElement::StateSchemaElement() {}
-StateSchemaElement::StateSchemaElement(std::string key, const ElementData data)
+StateSchemaElement::StateSchemaElement(std::string key, const impl::ElementData data)
    : m_key(key.c_str()), m_data(data)
 {
 }
@@ -80,7 +80,7 @@ model::StateSchemaElement::PropertyTree
    // an object member)?
    model::StateSchemaElement::PropertyTree destPropertyTree;
 
-   const model::ElementData::PropertyTree& sourcePropertyTree  = m_data.getPropertyTree();
+   const model::impl::ElementData::PropertyTree& sourcePropertyTree  = m_data.getPropertyTree();
    for(auto it = sourcePropertyTree.begin(); it!=sourcePropertyTree.end();
        it++)
    {

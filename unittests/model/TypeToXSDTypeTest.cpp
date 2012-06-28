@@ -17,37 +17,37 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include "tinia/model/TypeToXSDType.hpp"
+#include "tinia/model/impl/TypeToXSDType.hpp"
 using namespace tinia;
 BOOST_AUTO_TEST_SUITE( TypeToXSDType )
 
 BOOST_AUTO_TEST_CASE( intMapping ) {
-    std::string typeString = model::TypeToXSDType<int>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<int>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:integer" );
 }
 
 BOOST_AUTO_TEST_CASE( floatMapping ) {
-    std::string typeString = model::TypeToXSDType<float>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<float>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:float" );
 }
 
 BOOST_AUTO_TEST_CASE( doubleMapping ) {
-    std::string typeString = model::TypeToXSDType<double>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<double>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:double" );
 }
 
 BOOST_AUTO_TEST_CASE( stringMapping ) {
-    std::string typeString = model::TypeToXSDType<std::string>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<std::string>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:string" );
 }
 
 BOOST_AUTO_TEST_CASE( charpointerMapping ) {
-    std::string typeString = model::TypeToXSDType<char*>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<char*>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:string" );
 }
 
 BOOST_AUTO_TEST_CASE( constCharpointerMapping ) {
-    std::string typeString = model::TypeToXSDType<const char*>::getTypename();
+    std::string typeString = model::impl::TypeToXSDType<const char*>::getTypename();
     BOOST_CHECK_EQUAL( typeString, "xsd:string" );
 }
 

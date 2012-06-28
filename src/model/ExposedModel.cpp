@@ -31,7 +31,7 @@
 
 #include "tinia/model/Viewer.hpp"
 
-#include "tinia/model/utils.hpp"
+#include "tinia/model/impl/utils.hpp"
 
 namespace tinia {
 namespace model {
@@ -48,7 +48,7 @@ ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
 }
 
 void
-ExposedModel::incrementRevisionNumber(ElementData &updatedElement) {
+ExposedModel::incrementRevisionNumber(impl::ElementData &updatedElement) {
    updatedElement.setRevisionNumber(revisionNumber);
    ++revisionNumber;
 }
@@ -59,8 +59,8 @@ ExposedModel::incrementRevisionNumber(ElementData &updatedElement) {
 
 void ExposedModel::updateElementFromString( const std::string &key, const std::string &value )
 {
-   ElementData data;
-   ElementData before;
+   impl::ElementData data;
+   impl::ElementData before;
 
    {// Lock scope
       scoped_lock(m_selfMutex);
@@ -86,7 +86,7 @@ void ExposedModel::printCurrentState() {
    scoped_lock(m_selfMutex);
    cout << "----------------- Current stateHash ---------------" << endl;
    std::for_each(stateHash.begin(), stateHash.end(),
-                 [this]( std::pair<std::string, ElementData> kv ) {
+                 [this]( std::pair<std::string, impl::ElementData> kv ) {
                  cout << kv.first << " (" << kv.second.getXSDType() << ") : " << endl;
          kv.second.print();
 }
@@ -104,11 +104,11 @@ void ExposedModel::updateElementFromPTree( const std::string &key, const StringS
          throw std::runtime_error( "Trying to update element " + key + " but it is not yet added" );
       }
       incrementRevisionNumber(it->second);
-      // We jump right past the root, since that is not stored in the ElementData's propertyTree, evidently...
+      // We jump right past the root, since that is not stored in the impl::ElementData's propertyTree, evidently...
       // pt_print("argument to ExposedModel::updateElementFromPTree", value.begin()->second);
       // printCurrentState();
       stateHash[key].setPropertyTreeValue( value.begin()->second );
-      ElementData data  =stateHash[key];
+      impl::ElementData data  =stateHash[key];
       lock.unlock();
 
       // For now we don't add checking for complex types
@@ -118,7 +118,7 @@ void ExposedModel::updateElementFromPTree( const std::string &key, const StringS
 
 void
 ExposedModel::addAnnotationHelper( std::string key, std::unordered_map<std::string, std::string> & annotationMap ) {
-   ElementData data;
+   impl::ElementData data;
    {
       scoped_lock(m_selfMutex);
       auto it = stateHash.find( key );
@@ -143,7 +143,7 @@ ExposedModel::addMatrixElement( std::string matrixName, float const* matrixData 
    addElementErrorChecking( matrixName );
 
    addMatrixHelper( matrixName, matrixData );
-   ElementData data = stateHash[matrixName];
+   impl::ElementData data = stateHash[matrixName];
    lock.unlock();
    fireStateSchemaElementAdded(matrixName, data);
 }
@@ -160,12 +160,12 @@ ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
    }
 
    auto& elementData = it->second;
-   if ( elementData.getLength() != ElementData::MATRIX_LENGTH ) {
+   if ( elementData.getLength() != impl::ElementData::MATRIX_LENGTH ) {
       throw std::runtime_error( "Trying to get element " + key + " as a matrix, but it is not defined as one" );
    }
-   ElementData before = elementData;
+   impl::ElementData before = elementData;
    addMatrixHelper( key, matrixData );
-   ElementData data = stateHash[key];
+   impl::ElementData data = stateHash[key];
    lock.unlock();
    if(data.getStringValue() != before.getStringValue())
    {
@@ -202,7 +202,7 @@ ExposedModel::removeElement( std::string key ) {
    if ( it == stateHash.end() ) {
       throw std::runtime_error( key + " is not in the model." );
    }
-   ElementData data = it->second;
+   impl::ElementData data = it->second;
    stateHash.erase( it );
    lock.unlock();
    fireStateSchemaElementRemoved(key, data);
@@ -236,7 +236,7 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
       throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
 
    auto& elementData = it->second;
-   if ( elementData.getLength() != ElementData::MATRIX_LENGTH ) {
+   if ( elementData.getLength() != impl::ElementData::MATRIX_LENGTH ) {
       throw std::runtime_error( "Trying to get element " + key + " as a matrix, but it is not defined as one" );
    }
 
@@ -249,13 +249,13 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
 
 
 // Updates to send *to* the client, version for non-xml-capable jobs/observers.
-void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, ElementData> > &updatedElements, const unsigned has_revision ) const
+void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, impl::ElementData> > &updatedElements, const unsigned has_revision ) const
 {
    scoped_lock(m_selfMutex);
    updatedElements.resize(0);
    std::for_each(stateHash.begin(), stateHash.end(),
-                 [has_revision /* , this */, &updatedElements ]( std::pair<std::string, ElementData> kv ) {
-                 ElementData& elementData = kv.second;
+                 [has_revision /* , this */, &updatedElements ]( std::pair<std::string, impl::ElementData> kv ) {
+                 impl::ElementData& elementData = kv.second;
          // printf("Current rev=%d, rev_0=%d, element(%s) has rev=%d\n", revisionNumber, has_revision, kv.first.c_str(), elementData.getRevisionNumber());
          if ( elementData.getRevisionNumber() >= has_revision )
          // printf("going to add (%s, %s)\n", kv.first.c_str(), elementData.getStringValue().c_str() );
@@ -276,7 +276,7 @@ ExposedModel::addElementErrorChecking( std::string key ) const {
 }
 
 void
-ExposedModel::updateStateHash( std::string key,  ElementData& elementData ) {
+ExposedModel::updateStateHash( std::string key,  impl::ElementData& elementData ) {
    incrementRevisionNumber( elementData );
    stateHash[key] = elementData;
 }
@@ -345,7 +345,7 @@ void model::ExposedModel::getStateUpdate(
    scoped_lock(m_selfMutex);
    for(auto it = stateHash.begin(); it!=stateHash.end(); it++)
    {
-      ElementData& data = it->second;
+      impl::ElementData& data = it->second;
       if(data.getRevisionNumber()>=has_revision)
       {
          updatedElements.push_back(StateElement(it->first, data));
@@ -360,7 +360,7 @@ void model::ExposedModel::getStateSchemaUpdate(
    scoped_lock(m_selfMutex);
    for(auto it = stateHash.begin(); it!=stateHash.end(); it++)
    {
-      ElementData& data = it->second;
+      impl::ElementData& data = it->second;
       if(data.getRevisionNumber()>=has_revision)
       {
          updatedElements.push_back(StateSchemaElement(it->first, data));
@@ -377,7 +377,7 @@ void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaEleme
    for(auto it = stateHash.begin(); it != stateHash.end(); it++)
    {
       std::string key(it->first.c_str());
-      ElementData data = it->second;
+      impl::ElementData data = it->second;
       stateSchemaElements.push_back(StateSchemaElement(key, data));
    }
 }
@@ -387,12 +387,12 @@ void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateEl
    scoped_lock(m_selfMutex);
    for(auto it = stateHash.begin(); it != stateHash.end(); it++)
    {
-      stateElements.push_back(StateElement(it->first, ElementData(it->second)));
+      stateElements.push_back(StateElement(it->first, impl::ElementData(it->second)));
    }
 }
 
 void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
-                                                       const model::ElementData &data)
+                                                       const model::impl::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
@@ -401,7 +401,7 @@ void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
 }
 
 void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
-                                                         const model::ElementData &data)
+                                                         const model::impl::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
@@ -409,7 +409,7 @@ void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
 }
 
 void model::ExposedModel::fireStateSchemaElementModified(std::string key,
-                                                          const model::ElementData &data)
+                                                          const model::impl::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
@@ -417,7 +417,7 @@ void model::ExposedModel::fireStateSchemaElementModified(std::string key,
 }
 
 void model::ExposedModel::fireStateElementModified(std::string key,
-                                                    const model::ElementData &data)
+                                                    const model::impl::ElementData &data)
 {
    scoped_lock(m_listenerHandlersMutex);
    model::StateElement element(key, data);
@@ -530,7 +530,7 @@ void model::ExposedModel::makeDefaultGUILayout()
    int index = 0;
    for(auto it = stateHash.begin(); it != stateHash.end(); it++)
    {
-      ElementData& data = it->second;
+      impl::ElementData& data = it->second;
       std::string t = data.getWidgetType();
       if(t=="textinput")
       {

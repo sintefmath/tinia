@@ -23,7 +23,7 @@
 
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/Viewer.hpp"
-#include "tinia/model/utils.hpp"
+#include "tinia/model/impl/utils.hpp"
 #include "testutils.hpp"
 
 using namespace std;
