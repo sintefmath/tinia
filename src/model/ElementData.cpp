@@ -242,12 +242,12 @@ ElementData::getMaxConstraint() const {
 }
 
 void
-ElementData::setRestrictionSet( std::unordered_set<std::string>& restrictionSet ) {
+ElementData::setRestrictionSet( std::set<std::string>& restrictionSet ) {
     this->enumerationSet = restrictionSet;
     widgetType = "select";
 }
 
-const std::unordered_set<std::string>&
+const std::set<std::string>&
 ElementData::getEnumerationSet() const {
     return enumerationSet;
 }
@@ -338,7 +338,7 @@ void ElementData::print(void) const
         printf("[simple type] \tval=%s\n", getStringValue().c_str());
         if (!emptyRestrictionSet()) {
             printf("        Restriction set:");
-            const std::unordered_set<std::string> restr = getEnumerationSet();
+            const std::set<std::string> restr = getEnumerationSet();
             for( auto it = restr.begin(); it!=restr.end(); it++) {
                 cout << " " << *it;
             }

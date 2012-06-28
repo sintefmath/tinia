@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE( gettersAndSetters ) {
     ed.setMaxConstraint( "42" );
     BOOST_CHECK_EQUAL( ed.getMaxConstraint(), "42" );
 
-    std::unordered_set<std::string> restrictionSet;
+    std::set<std::string> restrictionSet;
 	restrictionSet.insert("wireframe");
 	restrictionSet.insert("solid");
     ed.setRestrictionSet( restrictionSet );

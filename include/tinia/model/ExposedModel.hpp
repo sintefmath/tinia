@@ -129,7 +129,7 @@ public:
    /**
      \param key the key of the ExposedModelElement
      */
-   std::unordered_set<std::string> getRestrictionSet(std::string key);
+   std::set<std::string> getRestrictionSet(std::string key);
 
    /**
       Gets the full Schema in the current model.
@@ -525,7 +525,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, TContainer re
 template<class T, class InputIterator>
 void
 ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator start, InputIterator end) {
-   std::unordered_set<T> restrictionSet( start, end );
+   std::set<T> restrictionSet( start, end );
 
    if ( restrictionSet.find( value ) == restrictionSet.end() ) {
       std::stringstream ss;
@@ -533,7 +533,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
       throw std::runtime_error( ss.str() );
    }
 
-   std::unordered_set<std::string> restrictionStrings;
+   std::set<std::string> restrictionStrings;
 
    for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); it++)
    {

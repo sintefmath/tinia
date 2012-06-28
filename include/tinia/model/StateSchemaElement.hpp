@@ -68,14 +68,14 @@ public:
    const std::unordered_map<std::string, std::string>& getAnnotation() const;
 
 
-   const std::unordered_set<std::string>& getEnumerationSet() const;
+   const std::set<std::string>& getEnumerationSet() const;
 
    /**
      Gets the enumeration set of the element.
      \param enumerationSet the set to put the result
      */
    template<typename T>
-   void getEnumerationSet(std::unordered_set<T> &enumerationSet) const;
+   void getEnumerationSet(std::set<T> &enumerationSet) const;
 
    /** Get the property tree. */
    PropertyTree

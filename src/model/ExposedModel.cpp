@@ -441,11 +441,11 @@ model::gui::Element* model::ExposedModel::getGUILayout(model::gui::Device device
    return m_gui;
 }
 
-std::unordered_set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
+std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 {
    // This returns a deep copy to avoid any possible threading-problems.
    scoped_lock(m_selfMutex);
-   std::unordered_set<std::string> destinationSet;
+   std::set<std::string> destinationSet;
    auto sourceSet = stateHash[key].getEnumerationSet();
    for(auto it = sourceSet.begin(); it!=sourceSet.end(); it++)
    {

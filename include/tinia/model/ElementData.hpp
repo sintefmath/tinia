@@ -26,6 +26,7 @@
 #include <iostream>
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <boost/lexical_cast.hpp>
+#include <set>
 
 #include "tinia/model/Viewer.hpp"
 
@@ -107,10 +108,10 @@ public:
     bool emptyRestrictionSet() const;
 
     /** Set the restriction set. */
-    void setRestrictionSet( std::unordered_set<std::string>& restrictionSet );
+    void setRestrictionSet( std::set<std::string>& restrictionSet );
 
     /** Get a reference to the enumerationSet. */
-    const std::unordered_set<std::string>& getEnumerationSet() const;
+    const std::set<std::string>& getEnumerationSet() const;
 
     /** Return true if there is no annotation set for the element. */
     bool emptyAnnotation() const;
@@ -172,7 +173,7 @@ private:
     std::string widgetType;
     std::string minConstraint;
     std::string maxConstraint;
-    std::unordered_set<std::string> enumerationSet;
+    std::set<std::string> enumerationSet;
     std::unordered_map<std::string, std::string> annotationMap;
     int preChangeRevisionNumber; // The revision number just prior to updating this element
     int length;

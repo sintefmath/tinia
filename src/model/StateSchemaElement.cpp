@@ -59,7 +59,7 @@ model::StateSchemaElement::getAnnotation() const
    return m_data.getAnnotation();
 }
 
-const std::unordered_set<std::string> & model::StateSchemaElement::getEnumerationSet() const
+const std::set<std::string> & model::StateSchemaElement::getEnumerationSet() const
 {
    return m_data.getEnumerationSet();
 }
@@ -67,7 +67,7 @@ const std::unordered_set<std::string> & model::StateSchemaElement::getEnumeratio
 
 
 template<typename T>
-void model::StateSchemaElement::getEnumerationSet(std::unordered_set<T> &enumerationSet) const
+void model::StateSchemaElement::getEnumerationSet(std::set<T> &enumerationSet) const
 {
    // TODO Write me
 }
