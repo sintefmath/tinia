@@ -27,6 +27,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class RadioButtons : public QGroupBox
 {
@@ -48,6 +49,8 @@ private:
    std::string m_key;
    QList<QRadioButton*> m_buttons;
 };
+
+}
 }
 }
 #endif // QTOBSERVER_RADIOBUTTONS_HPP

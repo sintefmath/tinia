@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 
 PopupEventFilter::PopupEventFilter( QWidget* watch, QAbstractButton* toggle )
@@ -91,6 +92,7 @@ PopupEventFilter::eventFilter( QObject* obj, QEvent* event )
 }
 
 
+}
 } // of namespace qtobserver
 } // of namespace tinia
 

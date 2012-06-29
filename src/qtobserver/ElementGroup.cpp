@@ -17,11 +17,12 @@
  */
 
 #include "tinia/qtobserver/moc/ElementGroup.hpp"
-#include "tinia/qtobserver/utils.hpp"
+#include "tinia/qtobserver/impl/utils.hpp"
 #include <QHBoxLayout>
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 ElementGroup::ElementGroup(std::string key, bool showLabel,
                            std::shared_ptr<model::ExposedModel> model,
@@ -56,9 +57,9 @@ ElementGroup::~ElementGroup()
 {
 //   m_model->removeStateListener(m_key, this);
 }
-}
 
-void qtobserver::ElementGroup::stateElementModified(model::StateElement *stateElement)
+
+void ElementGroup::stateElementModified(model::StateElement *stateElement)
 {
 /*
     bool visible;
@@ -67,5 +68,7 @@ void qtobserver::ElementGroup::stateElementModified(model::StateElement *stateEl
 */
 }
 
-} // of namespace tinia
+}
+}
+}// of namespace tinia
 

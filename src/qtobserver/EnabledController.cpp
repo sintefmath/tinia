@@ -21,6 +21,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 EnabledController::EnabledController( QWidget*                               widget,
                                       std::shared_ptr<model::ExposedModel>  model,
@@ -60,6 +61,6 @@ EnabledController::stateElementModified(model::StateElement *stateElement)
     emit setWidgetEnabled( enabled );
 }
 
-
+}
 } // of namespace qtobserver
 } // of namespace tinia

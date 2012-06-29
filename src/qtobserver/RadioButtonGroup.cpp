@@ -23,6 +23,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 RadioButtonGroup::RadioButtonGroup(std::string key,
                            std::shared_ptr<model::ExposedModel> model,
@@ -55,22 +56,18 @@ RadioButtonGroup::~RadioButtonGroup()
    m_model->removeStateSchemaListener(m_key, this);
 }
 
-}
-
-
-
-
-
-void qtobserver::RadioButtonGroup::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
+void RadioButtonGroup::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::RadioButtonGroup::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
+void RadioButtonGroup::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::RadioButtonGroup::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
+void RadioButtonGroup::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
    // Do something here eventually
+}
+}
 }
 } // of namespace tinia

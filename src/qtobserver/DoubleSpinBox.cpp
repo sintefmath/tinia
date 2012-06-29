@@ -20,6 +20,8 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
+
 DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
    QDoubleSpinBox(parent), m_key(key.c_str()), m_model(model)
@@ -49,21 +51,22 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedMode
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 }
+
 DoubleSpinBox::~DoubleSpinBox()
 {
    m_model->removeStateListener(m_key, this);
    m_model->removeStateSchemaListener(m_key, this);
 }
-}
 
-void qtobserver::DoubleSpinBox::stateElementModified(model::StateElement *stateElement)
+
+void DoubleSpinBox::stateElementModified(model::StateElement *stateElement)
 {
    double value;
    m_model->getElementValue<double>(m_key, value);
    emit setValueFromExposedModel(value);
 }
 
-void qtobserver::DoubleSpinBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
+void DoubleSpinBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
     std::cout << "Updating min/max" << std::endl;
     double max, min;
@@ -74,9 +77,12 @@ void qtobserver::DoubleSpinBox::stateSchemaElementModified(model::StateSchemaEle
 
 }
 
-void qtobserver::DoubleSpinBox::valueSetFromQt(double val)
+void DoubleSpinBox::valueSetFromQt(double val)
 {
    m_model->updateElement(m_key, val);
+}
+
+}
 }
 }
 

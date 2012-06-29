@@ -30,6 +30,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 /**
   \todo Add support for changing restriction set
 */
@@ -56,6 +57,7 @@ private:
    std::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
+}
 }
 }
 #endif // QTOBSERVER_RADIOBUTTONS_HPP

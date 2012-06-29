@@ -29,6 +29,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class HorizontalSlider : public QWidget, public model::StateListener, public model::StateSchemaListener
 {
@@ -57,6 +58,7 @@ private:
 
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_HORIZONTALSLIDER_HPP

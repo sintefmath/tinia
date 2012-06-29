@@ -32,7 +32,7 @@
 #include "tinia/qtobserver/moc/StringController.hpp"
 #include "tinia/qtobserver/moc/PopupEventFilter.hpp"
 #include "tinia/qtobserver/moc/FileDialogButton.hpp"
-#include "tinia/qtobserver/utils.hpp"
+#include "tinia/qtobserver/impl/utils.hpp"
 #include <QLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -43,11 +43,9 @@
 #include <QObject>
 #include <QWidget>
 #include <QPushButton>
-
+using namespace tinia::qtobserver::impl;
 namespace tinia {
 namespace qtobserver {
-
-namespace pg = model::gui;
 
 GUIBuilder::GUIBuilder( std::shared_ptr<model::ExposedModel>   model,
                         jobobserver::Job*                       job,
@@ -67,21 +65,20 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
 {
     QWidget* widget = NULL;
 
-
     if( widget == NULL ) {
-        pg::TabLayout* tab_layout = dynamic_cast<pg::TabLayout*>( root );
+        model::gui::TabLayout* tab_layout = dynamic_cast<model::gui::TabLayout*>( root );
         if( tab_layout != NULL ) {
             widget = addTabLayout( tab_layout, parent );
         }
     }
     if( widget == NULL ) {
-        pg::Grid* grid = dynamic_cast<pg::Grid*>( root );
+        model::gui::Grid* grid = dynamic_cast<model::gui::Grid*>( root );
         if( grid != NULL ) {
             widget = addGrid( grid, parent );
         }
     }
     if( widget == NULL ) {
-        pg::TextInput* text_input = dynamic_cast<pg::TextInput*>( root );
+        model::gui::TextInput* text_input = dynamic_cast<model::gui::TextInput*>( root );
         if( text_input != NULL ) {
             widget = new QLineEdit( parent );
             new StringController( widget,
@@ -91,13 +88,13 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
         }
     }
     if( widget == NULL ) {
-        pg::Canvas* canvas = dynamic_cast<pg::Canvas*>( root );
+        model::gui::Canvas* canvas = dynamic_cast<model::gui::Canvas*>( root );
         if( canvas != NULL ) {
             widget = addCanvas( canvas, parent );
         }
     }
     if( widget == NULL ) {
-        pg::Label* label = dynamic_cast<pg::Label*>( root );
+        model::gui::Label* label = dynamic_cast<model::gui::Label*>( root );
         if( label != NULL ) {
             widget = new QLabel( parent );
             new StringController( widget,
@@ -107,73 +104,73 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
         }
     }
     if( widget == NULL ) {
-        pg::ComboBox* combobox = dynamic_cast<pg::ComboBox*>( root );
+        model::gui::ComboBox* combobox = dynamic_cast<model::gui::ComboBox*>( root );
         if( combobox != NULL ) {
             widget = addCombobox( combobox, parent);
         }
     }
     if( widget == NULL ) {
-        pg::ElementGroup* element_group = dynamic_cast<pg::ElementGroup*>( root );
+        model::gui::ElementGroup* element_group = dynamic_cast<model::gui::ElementGroup*>( root );
         if( element_group != NULL ) {
             widget = addElementGroup( element_group, parent);
         }
     }
     if( widget == NULL ) {
-        pg::RadioButtons* radio_buttons = dynamic_cast<pg::RadioButtons*>( root );
+        model::gui::RadioButtons* radio_buttons = dynamic_cast<model::gui::RadioButtons*>( root );
         if( radio_buttons != NULL ) {
             widget = addRadiobuttons( radio_buttons, parent);
         }
     }
     if( widget == NULL ) {
-        pg::SpinBox* spin_box = dynamic_cast<pg::SpinBox*>( root );
+        model::gui::SpinBox* spin_box = dynamic_cast<model::gui::SpinBox*>( root );
         if( spin_box != NULL ) {
             widget = addSpinBox( spin_box, parent);
         }
     }
     if( widget == NULL ) {
-        pg::CheckBox* check_box = dynamic_cast<pg::CheckBox*>( root );
+        model::gui::CheckBox* check_box = dynamic_cast<model::gui::CheckBox*>( root );
         if( check_box != NULL ) {
             widget = addCheckBox( check_box, parent);
         }
     }
     if( widget == NULL ) {
-        pg::Button* button = dynamic_cast<pg::Button*>( root );
+        model::gui::Button* button = dynamic_cast<model::gui::Button*>( root );
         if( button != NULL ) {
             widget = addButton( button, parent);
         }
     }
     if( widget == NULL ) {
-        pg::HorizontalSlider* horizontal_slider = dynamic_cast<pg::HorizontalSlider*>( root );
+        model::gui::HorizontalSlider* horizontal_slider = dynamic_cast<model::gui::HorizontalSlider*>( root );
         if( horizontal_slider != NULL ) {
             widget = addHorizontalSlider( horizontal_slider, parent);
         }
     }
     if( widget == NULL ) {
-        pg::HorizontalLayout* horizontal_layout = dynamic_cast<pg::HorizontalLayout*>( root );
+        model::gui::HorizontalLayout* horizontal_layout = dynamic_cast<model::gui::HorizontalLayout*>( root );
         if( horizontal_layout != NULL ) {
             widget = addHorizontalLayout( horizontal_layout, parent);
         }
     }
     if( widget == NULL ) {
-        pg::VerticalLayout* vertical_layout = dynamic_cast<pg::VerticalLayout*>( root );
+        model::gui::VerticalLayout* vertical_layout = dynamic_cast<model::gui::VerticalLayout*>( root );
         if( vertical_layout != NULL ) {
             widget = addVerticalLayout( vertical_layout, parent);
         }
     }
     if( widget == NULL ) {
-        pg::DoubleSpinBox* double_spinbox = dynamic_cast<pg::DoubleSpinBox*>( root );
+        model::gui::DoubleSpinBox* double_spinbox = dynamic_cast<model::gui::DoubleSpinBox*>( root );
         if( double_spinbox != NULL ) {
             widget = addDoubleSpinBox( double_spinbox, parent);
         }
     }
     if( widget == NULL ) {
-        pg::PopupButton* popup_button = dynamic_cast<pg::PopupButton*>( root );
+        model::gui::PopupButton* popup_button = dynamic_cast<model::gui::PopupButton*>( root );
         if( popup_button != NULL ) {
             widget = addPopupButton( popup_button, parent );
         }
     }
     if(widget == NULL ) {
-       pg::FileDialogButton* file_dialog_button = dynamic_cast<pg::FileDialogButton*>( root );
+       model::gui::FileDialogButton* file_dialog_button = dynamic_cast<model::gui::FileDialogButton*>( root );
        if(file_dialog_button != NULL)
        {
           widget = addFileDialogButton(file_dialog_button, parent);
@@ -206,13 +203,13 @@ GUIBuilder::addPopupButton( model::gui::PopupButton* root, QWidget* parent )
     suffix.append( QChar( 0x02ec ) );
     QPushButton* widget = new QPushButton( parent );
     widget->setCheckable( true );
-    new StringController( widget, m_model, root->key(),root->showValue(), suffix );
+    new impl::StringController( widget, m_model, root->key(),root->showValue(), suffix );
 
     QWidget* foo = buildGUI( root->child(), widget );
     if( foo != NULL ) {
         foo->setObjectName( "popup" );
         foo->setStyleSheet( "QWidget#popup { border: 1px solid black }");
-        new PopupEventFilter( foo, widget );
+        new tinia::qtobserver::impl::PopupEventFilter( foo, widget );
     }
     return widget;
 }
@@ -387,7 +384,7 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
         row->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
         row_layout->setContentsMargins( 0, 0, 0, 0 );
 
-        Canvas * canvas = new Canvas( static_cast<jobobserver::OpenGLJob*>(m_job),
+        tinia::qtobserver::impl::Canvas * canvas = new tinia::qtobserver::impl::Canvas( static_cast<jobobserver::OpenGLJob*>(m_job),
                                       root->key(),
                                       root->boundingBoxKey(),
                                       root->resetViewKey(),
@@ -425,7 +422,7 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
         wrapper->layout()->addWidget( row );
     }
     else {
-        Canvas * canvas = new Canvas( static_cast<jobobserver::OpenGLJob*>(m_job),
+        tinia::qtobserver::impl::Canvas * canvas = new tinia::qtobserver::impl::Canvas( static_cast<jobobserver::OpenGLJob*>(m_job),
                                       root->key(),
                                       root->boundingBoxKey(),
                                       root->resetViewKey(),
@@ -586,10 +583,7 @@ GUIBuilder::addChildren( model::gui::Container2D<model::gui::Element>* container
     }
 }
 
-
-}
-
-QWidget * qtobserver::GUIBuilder::addFileDialogButton(model::gui::FileDialogButton *root, QWidget *parent)
+QWidget * GUIBuilder::addFileDialogButton(model::gui::FileDialogButton *root, QWidget *parent)
 {
 
    FileDialogButton *widget =  new FileDialogButton(root->key(), root->showValue(),
@@ -597,4 +591,6 @@ QWidget * qtobserver::GUIBuilder::addFileDialogButton(model::gui::FileDialogButt
    return widget;
 }
 
+
+}
 } // of namespace tinia

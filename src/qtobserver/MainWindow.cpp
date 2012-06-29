@@ -22,6 +22,8 @@
 #include <QHBoxLayout>
 namespace tinia {
 namespace qtobserver {
+namespace impl {
+
 
 MainWindow::MainWindow(QWidget *parent) :
    QMainWindow(parent)
@@ -38,17 +40,19 @@ MainWindow::~MainWindow()
 {
 }
 
-}
 
-void qtobserver::MainWindow::clearDrawWidget(QWidget* newWidget)
+
+void MainWindow::clearDrawWidget(QWidget* newWidget)
 {
    delete m_drawWidget;
    centralWidget()->layout()->addWidget(newWidget);
    newWidget->show();
 }
-void qtobserver::MainWindow::clearDrawWidget(){
+void MainWindow::clearDrawWidget(){
    setCentralWidget(new QWidget());
 }
 
+}
+}
 } // of namespace tinia
 

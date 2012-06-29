@@ -20,7 +20,7 @@
 
 namespace tinia {
 namespace qtobserver {
-
+namespace impl {
 ComboBox::ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                    QWidget *parent) :
    QComboBox(parent), m_model(model), m_key(key)
@@ -48,36 +48,37 @@ ComboBox::ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
 
 }
 
-} // namespace qtobserver
 
-void qtobserver::ComboBox::stateElementModified(model::StateElement *stateElement)
+void ComboBox::stateElementModified(model::StateElement *stateElement)
 {
    int index = m_options.indexOf(stateElement->getStringValue().c_str());
    emit setStateFromExposedModel(index);
 }
 
-void qtobserver::ComboBox::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
+void ComboBox::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::ComboBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
+void ComboBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-void qtobserver::ComboBox::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
+void ComboBox::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 }
 
-qtobserver::ComboBox::~ComboBox()
+ComboBox::~ComboBox()
 {
    m_model->removeStateSchemaListener(m_key, this);
    m_model->removeStateListener(m_key, this);
 
 }
 
-void qtobserver::ComboBox::activatedChanged(QString value)
+void ComboBox::activatedChanged(QString value)
 {
    m_model->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
 }
 
-} // of namespace tinia
+}
+}
+}

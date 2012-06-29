@@ -23,6 +23,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 StringController::StringController( QWidget *widget,
                                     std::shared_ptr<model::ExposedModel>   model,
@@ -134,6 +135,6 @@ StringController::textChangeFromQt( const QString& text )
     }
 }
 
-
+}
 } // of namespace qtobserver
 } // of namespace tinia

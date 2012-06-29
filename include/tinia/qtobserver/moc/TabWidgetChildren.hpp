@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class TabWidgetChildren : public QWidget, public model::StateSchemaListener
 {
@@ -47,6 +48,7 @@ private:
 
 };
 
+}
 } // namespace qtobserver
 } // of namespace tinia
 #endif // QTOBSERVER_TABWIDGETCHILDREN_HPP

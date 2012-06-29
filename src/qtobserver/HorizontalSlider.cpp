@@ -22,6 +22,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 /**
   Used templated min max and removed boos lexical cast
   */
@@ -79,14 +80,12 @@ HorizontalSlider::~HorizontalSlider()
    m_model->removeStateSchemaListener(m_key, this);
 }
 
-}
-
-void qtobserver::HorizontalSlider::addButtons()
+void HorizontalSlider::addButtons()
 {
 
 }
 
-void qtobserver::HorizontalSlider::stateElementModified(
+void HorizontalSlider::stateElementModified(
       model::StateElement *stateElement)
 {
    int value;
@@ -94,7 +93,7 @@ void qtobserver::HorizontalSlider::stateElementModified(
    emit setValueFromExposedModel(value);
 }
 
-void qtobserver::HorizontalSlider::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
+void HorizontalSlider::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
     int max, min;
     stateSchemaElement->getMinConstraint(min);
@@ -103,10 +102,12 @@ void qtobserver::HorizontalSlider::stateSchemaElementModified(model::StateSchema
     m_slider->setMinimum(min);
 }
 
-void qtobserver::HorizontalSlider::setValueFromQt(int value)
+void HorizontalSlider::setValueFromQt(int value)
 {
    m_model->updateElement<int>(m_key, value);
 }
 
 
+}
+}
 } // of namespace tinia

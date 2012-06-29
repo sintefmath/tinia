@@ -32,6 +32,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class Canvas : public QGLWidget, public model::StateListener
 {
@@ -86,6 +87,7 @@ private:
    renderlist::gl::Renderer*     m_renderlist_renderer;
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_CANVAS_HPP

@@ -20,6 +20,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 VisibilityController::VisibilityController( QWidget*                               widget,
                                             std::shared_ptr<model::ExposedModel>  model,
@@ -59,6 +60,6 @@ VisibilityController::stateElementModified(model::StateElement *stateElement)
     emit setWidgetVisible( visible );
 }
 
-
+}
 } // of namespace qtobserver
 } // of namespace tinia

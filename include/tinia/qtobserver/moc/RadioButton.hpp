@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class RadioButton : public QRadioButton, public model::StateListener
 {
@@ -49,6 +50,7 @@ private:
 
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_RADIOBUTTON_HPP

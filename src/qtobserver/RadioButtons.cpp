@@ -20,6 +20,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 RadioButtons::RadioButtons(std::string key,
                            std::shared_ptr<model::ExposedModel> model,
                            QWidget *parent) :
@@ -28,10 +29,10 @@ RadioButtons::RadioButtons(std::string key,
 
 }
 
-}
-
-void qtobserver::RadioButtons::buttonChecked(bool)
+void RadioButtons::buttonChecked(bool)
 {
 }
 
+}
+}
 } // of namespace tinia

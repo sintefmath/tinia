@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class EnabledController : public QObject, public model::StateListener
 {
@@ -53,6 +54,6 @@ protected:
 };
 
 
-
+}
 } // of namespace qtobserver
 } // of namespace tinia

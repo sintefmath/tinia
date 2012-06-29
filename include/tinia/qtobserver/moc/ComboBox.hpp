@@ -28,6 +28,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class ComboBox : public QComboBox, public model::StateListener,
          public model::StateSchemaListener
@@ -58,6 +59,7 @@ private:
    std::string m_key;
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 

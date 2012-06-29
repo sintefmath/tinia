@@ -22,7 +22,7 @@
 #include <QMainWindow>
 namespace tinia {
 namespace qtobserver {
-
+namespace impl {
 
 class MainWindow : public QMainWindow
 {
@@ -37,7 +37,7 @@ private:
    QWidget *m_drawWidget;
 };
 
-
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_MAINWINDOW_HPP

@@ -17,10 +17,11 @@
  */
 
 #include "tinia/qtobserver/moc/Button.hpp"
-#include "tinia/qtobserver/utils.hpp"
+#include "tinia/qtobserver/impl/utils.hpp"
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 Button::Button(std::string key, std::shared_ptr<model::ExposedModel> model,
                QWidget *parent) :
@@ -36,11 +37,11 @@ Button::~Button()
 {
 }
 
-}
-
-void qtobserver::Button::clickedButton()
+void Button::clickedButton()
 {
    m_model->updateElement<bool>(m_key, true);
 }
 
-} // of namespace tinia
+}
+}
+}

@@ -25,6 +25,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 Canvas::Canvas( jobobserver::OpenGLJob*                 openglJob,
                 std::string                             key,
@@ -87,9 +88,8 @@ Canvas::~Canvas()
     }
 }
 
-}
 
-void qtobserver::Canvas::paintGL()
+void Canvas::paintGL()
 {
     m_frames++;
     QTime current_time = QTime::currentTime();
@@ -146,7 +146,7 @@ void qtobserver::Canvas::paintGL()
     }
 }
 
-void qtobserver::Canvas::resizeGL(int w, int h)
+void Canvas::resizeGL(int w, int h)
 {
 
     model::Viewer viewer;
@@ -160,7 +160,7 @@ void qtobserver::Canvas::resizeGL(int w, int h)
 
 }
 
-void qtobserver::Canvas::setRenderMode( int index )
+void Canvas::setRenderMode( int index )
 {
     m_render_mode = index;
     updateGL();
@@ -175,26 +175,26 @@ void qtobserver::Canvas::setRenderMode( int index )
     //}
 }
 
-void qtobserver::Canvas::resetView()
+void Canvas::resetView()
 {
     // Set new bounding boxes
     updateDSRVNow();
     m_dsrv->viewAll();
 }
 
-void qtobserver::Canvas::initializeGL()
+void Canvas::initializeGL()
 {
 
 }
 
-void qtobserver::Canvas::setPreferredSize()
+void Canvas::setPreferredSize()
 {
     model::Viewer viewer;
     m_model->getElementValue(m_key, viewer);
     resize(std::max(viewer.width, 640), std::max(viewer.height, 360));
 }
 
-void qtobserver::Canvas::resizeEvent(QResizeEvent *event)
+void Canvas::resizeEvent(QResizeEvent *event)
 {
     QGLWidget::resizeEvent(event);
 
@@ -208,19 +208,19 @@ void qtobserver::Canvas::resizeEvent(QResizeEvent *event)
 }
 
 
-QSizePolicy qtobserver::Canvas::sizePolicy() const
+QSizePolicy Canvas::sizePolicy() const
 {
     return QSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 }
 
-QSize qtobserver::Canvas::minimumSize() const
+QSize Canvas::minimumSize() const
 {
     model::Viewer viewer;
     m_model->getElementValue(m_key, viewer);
     return QSize(viewer.width, viewer.height);
 }
 
-void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
+void Canvas::mousePressEvent(QMouseEvent *event)
 {
 
     if(m_job->passThrough())
@@ -243,7 +243,7 @@ void qtobserver::Canvas::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void qtobserver::Canvas::mouseMoveEvent(QMouseEvent *event)
+void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
 
     if(m_job->passThrough())
@@ -256,7 +256,7 @@ void qtobserver::Canvas::mouseMoveEvent(QMouseEvent *event)
     updateGL();
 }
 
-void qtobserver::Canvas::mouseReleaseEvent(QMouseEvent *event)
+void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
 
     if(m_job->passThrough())
@@ -269,7 +269,7 @@ void qtobserver::Canvas::mouseReleaseEvent(QMouseEvent *event)
     updateGL();
 }
 
-void qtobserver::Canvas::keyPressEvent(QKeyEvent *event)
+void Canvas::keyPressEvent(QKeyEvent *event)
 {
 
     if(m_job->passThrough())
@@ -280,7 +280,7 @@ void qtobserver::Canvas::keyPressEvent(QKeyEvent *event)
 
 }
 
-void qtobserver::Canvas::keyReleaseEvent(QKeyEvent *event)
+void Canvas::keyReleaseEvent(QKeyEvent *event)
 {
 
     if(m_job->passThrough())
@@ -291,7 +291,7 @@ void qtobserver::Canvas::keyReleaseEvent(QKeyEvent *event)
 
 }
 
-void qtobserver::Canvas::initializeDSRV()
+void Canvas::initializeDSRV()
 {
     // Defaulting to unit cube
     glm::vec3 max(1,1,1);
@@ -333,7 +333,7 @@ void qtobserver::Canvas::initializeDSRV()
     updateMatrices();
 }
 
-void qtobserver::Canvas::updateMatrices()
+void Canvas::updateMatrices()
 {
     model::Viewer viewer;
     glm::mat4 modelView = m_dsrv->getModelviewMatrix();
@@ -354,7 +354,7 @@ void qtobserver::Canvas::updateMatrices()
     m_model->updateElement(m_key, viewer);
 }
 
-void qtobserver::Canvas::stateElementModified(model::StateElement *stateElement)
+void Canvas::stateElementModified(model::StateElement *stateElement)
 {
     if(stateElement->getKey() == m_boundingBoxKey)
     {
@@ -366,9 +366,11 @@ void qtobserver::Canvas::stateElementModified(model::StateElement *stateElement)
     emit updateFromExposedModel();
 }
 
-void qtobserver::Canvas::updateDSRVNow()
+void Canvas::updateDSRVNow()
 {
     initializeDSRV();
 }
 
-} // of namespace tinia
+}
+}
+}

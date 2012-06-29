@@ -20,6 +20,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 /**
   \todo Make this change when the annotation changes
@@ -38,5 +39,6 @@ void TabWidgetChildren::stateSchemaElementModified(model::StateSchemaElement *st
 {
 }
 
+}
 } // namespace qtobserver
 } // namespace tinia

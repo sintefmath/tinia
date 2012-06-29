@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 class FileDialogButton : public QPushButton
 {
     Q_OBJECT
@@ -44,6 +45,7 @@ private:
    StringController m_controller;
 };
 
+}
 }
 }
 #endif // FILEDIALOGBUTTON_HPP

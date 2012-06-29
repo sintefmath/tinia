@@ -27,6 +27,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 /**
   \todo Use max and min if available.
   */
@@ -51,6 +52,7 @@ private:
    std::string m_key;
    std::shared_ptr<model::ExposedModel> m_model;
 };
+}
 }
 }
 #endif // QTOBSERVER_DOUBLESPINBOX_HPP

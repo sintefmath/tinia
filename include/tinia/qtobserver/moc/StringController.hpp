@@ -28,6 +28,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class StringController
         : public QObject,
@@ -65,10 +66,6 @@ private:
     QAbstractButton*                        m_button;
 };
 
-
-
-
-
-
+}
 }
 }

@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class CheckBox : public QCheckBox, public model::StateListener
 {
@@ -50,6 +51,7 @@ private:
 
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_CHECKBOX_HPP

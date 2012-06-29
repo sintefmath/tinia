@@ -22,6 +22,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 FileDialogButton::FileDialogButton(std::string key,
                                    bool showValue,
                                    std::shared_ptr<model::ExposedModel> model,
@@ -32,9 +33,7 @@ FileDialogButton::FileDialogButton(std::string key,
    connect(this, SIGNAL(clicked()), this, SLOT(readFile()));
 }
 
-}
-
-void qtobserver::FileDialogButton::readFile()
+void FileDialogButton::readFile()
 {
    QString fileName = QFileDialog::getOpenFileName(this,
                                                    this->text(),
@@ -43,5 +42,8 @@ void qtobserver::FileDialogButton::readFile()
    file.fullPath( std::string( fileName.toLocal8Bit() ) );
    m_model->updateElement(m_key, file);
 
+}
+
+}
 }
 } // of namespace tinia

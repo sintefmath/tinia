@@ -16,10 +16,13 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/qtobserver/utils.hpp"
+#include "tinia/qtobserver/impl/utils.hpp"
 
 namespace tinia {
-std::string qtobserver::prettyName(std::string key, std::shared_ptr<model::ExposedModel> model)
+namespace qtobserver {
+namespace impl {
+
+std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> model)
 {
    model::StateSchemaElement element = model->getStateSchemaElement(key);
    if(element.emptyAnnotation())
@@ -34,4 +37,6 @@ std::string qtobserver::prettyName(std::string key, std::shared_ptr<model::Expos
 
 }
 
+}
+}
 }

@@ -17,10 +17,11 @@
  */
 
 #include "tinia/qtobserver/moc/CheckBox.hpp"
-#include "tinia/qtobserver/utils.hpp"
+#include "tinia/qtobserver/impl/utils.hpp"
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 CheckBox::CheckBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                    QWidget *parent) :
@@ -42,18 +43,20 @@ CheckBox::~CheckBox()
 {
    m_model->removeStateListener(m_key, this);
 }
-}
 
-void qtobserver::CheckBox::setCheckedFromQt(bool checked)
+
+void CheckBox::setCheckedFromQt(bool checked)
 {
    m_model->updateElement<bool>(m_key, checked);
 }
 
-void qtobserver::CheckBox::stateElementModified(model::StateElement *stateElement)
+void CheckBox::stateElementModified(model::StateElement *stateElement)
 {
    bool checked;
    stateElement->getValue(checked);
    emit setCheckFromExposedModel(checked);
 }
 
-} // of namespace tinia
+}
+}
+}

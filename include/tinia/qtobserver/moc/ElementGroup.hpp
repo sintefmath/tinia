@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class ElementGroup : public QGroupBox, public model::StateListener
 {
@@ -46,6 +47,7 @@ private:
    std::shared_ptr<model::ExposedModel> m_model;
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_ELEMENTGROUP_HPP

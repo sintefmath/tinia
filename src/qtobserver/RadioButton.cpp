@@ -20,6 +20,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 RadioButton::RadioButton(std::string value, std::string key,
                          std::shared_ptr<model::ExposedModel> model,
@@ -41,9 +42,9 @@ RadioButton::~RadioButton()
 {
    m_model->removeStateListener(m_key, this);
 }
-}
 
-void qtobserver::RadioButton::setCheckedFromQt(bool checked)
+
+void RadioButton::setCheckedFromQt(bool checked)
 {
    if(checked)
    {
@@ -51,7 +52,7 @@ void qtobserver::RadioButton::setCheckedFromQt(bool checked)
    }
 }
 
-void qtobserver::RadioButton::stateElementModified(model::StateElement *stateElement)
+void RadioButton::stateElementModified(model::StateElement *stateElement)
 {
    if(stateElement->getStringValue() == m_value)
    {
@@ -67,4 +68,6 @@ void qtobserver::RadioButton::stateElementModified(model::StateElement *stateEle
    }
 }
 
+}
+}
 } // of namespace tinia

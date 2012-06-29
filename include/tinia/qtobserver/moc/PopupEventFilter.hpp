@@ -24,6 +24,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 
 class PopupEventFilter
         : public QObject
@@ -43,6 +44,6 @@ private:
 };
 
 
-
+}
 } // of namespace qtobserver
 } // of namespace tinia

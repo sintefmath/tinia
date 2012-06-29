@@ -26,6 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
 // Note: This is *not* a statelistener
 class Button : public QPushButton
 {
@@ -45,6 +46,7 @@ private:
 
 };
 
+}
 } // namespace qtobserver
 } // namespace tinia
 #endif // QTOBSERVER_BUTTON_HPP

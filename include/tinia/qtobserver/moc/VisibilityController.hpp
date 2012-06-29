@@ -26,7 +26,7 @@
 
 namespace tinia {
 namespace qtobserver {
-
+namespace impl {
 /** Controller object that lets a widget's visibilty follow a model element.
   *
   * This object attaches itself to the widget, and continues to follow the
@@ -57,5 +57,6 @@ protected:
     const bool                              m_inverted;
 };
 
+}
 } // of namespace qtobserver
 } // of namespace tinia

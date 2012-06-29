@@ -20,6 +20,9 @@
 
 namespace tinia {
 namespace qtobserver {
+namespace impl {
+
+
 SpinBox::SpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
    QSpinBox(parent), m_key(key.c_str()), m_model(model)
@@ -62,18 +65,20 @@ void SpinBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaE
     setMaximum(max);
     setMinimum(min);
 }
-}
 
-void qtobserver::SpinBox::stateElementModified(model::StateElement *stateElement)
+
+void SpinBox::stateElementModified(model::StateElement *stateElement)
 {
    int value;
    m_model->getElementValue<int>(m_key, value);
    emit setValueFromExposedModel(value);
 }
 
-void qtobserver::SpinBox::valueSetFromQt(int val)
+void SpinBox::valueSetFromQt(int val)
 {
    m_model->updateElement(m_key, val);
 }
 
+}
+}
 } // of namespace tinia
