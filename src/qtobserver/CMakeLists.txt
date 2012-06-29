@@ -1,4 +1,4 @@
-FILE(GLOB qtobserver_HEADERS "../../include/tinia/qtobserver/*.h" "../../include/tinia/qtobserver/*.hpp")
+FILE(GLOB_RECURSE qtobserver_HEADERS "../../include/tinia/qtobserver/*.h" "../../include/tinia/qtobserver/*.hpp")
 FILE(GLOB qtobserver_SOURCES "*.c" "*.cpp")
 FILE(GLOB qtobserver_FORMS "*.ui")
 FILE(GLOB qtobserver_SOURCES_TO_BE_MOCED
