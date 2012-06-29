@@ -23,13 +23,6 @@
 
 namespace tinia {
 namespace model {
-class GUILayout
-{
-public:
-    GUILayout();
-
-};
-
 namespace gui {
 enum Device {
     WORKSTATION = 1,
