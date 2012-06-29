@@ -27,15 +27,16 @@
 
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/impl/ElementData.hpp"
-#include "tinia/modelxml/utils.hpp"
-#include "tinia/modelxml/ElementHandler.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
+#include "tinia/model/impl/xml/ElementHandler.hpp"
 #include <boost/property_tree/ptree.hpp>
 
 
 
 namespace tinia {
-namespace modelxml
-{
+namespace model {
+namespace impl {
+namespace xml {
 
 
     /** \class XMLReader
@@ -87,9 +88,8 @@ namespace modelxml
 
 }
 }
-
-
-
+}
+}
 
 
 

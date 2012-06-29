@@ -36,18 +36,18 @@
 
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/impl/ElementData.hpp"
-#include "tinia/modelxml/XMLTransporter.hpp"
-#include "tinia/modelxml/XMLReader.hpp"
-#include "tinia/modelxml/utils.hpp"
-#include "tinia/modelxml/XMLHandler.hpp"
-#include "tinia/modelxml/ElementHandler.hpp"
+#include "tinia/model/impl/xml/XMLTransporter.hpp"
+#include "tinia/model/impl/xml/XMLReader.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
+#include "tinia/model/impl/xml/XMLHandler.hpp"
+#include "tinia/model/impl/xml/ElementHandler.hpp"
 
 #include "testutils.hpp"
 
 #include <boost/algorithm/string.hpp>
 
 using tinia::model::impl::ElementData;
-using tinia::modelxml::xpathQuery;
+using tinia::model::impl::xml::xpathQuery;
 
 using namespace std;
 
@@ -69,12 +69,12 @@ struct Fixture {
     ~Fixture() {}
 
     std::shared_ptr<tinia::model::ExposedModel> model;
-    tinia::modelxml::XMLTransporter xmlTransporter;
+    tinia::model::impl::xml::XMLTransporter xmlTransporter;
     // There is an xmlTransporter in model, but we are not allowed to access that one directly,
     // something we want to do for testing purposes.
-    tinia::modelxml::XMLReader xmlReader;
-    tinia::modelxml::XMLHandler xmlHandler;
-   tinia::modelxml::ElementHandler elementHandler;
+    tinia::model::impl::xml::XMLReader xmlReader;
+    tinia::model::impl::xml::XMLHandler xmlHandler;
+    tinia::model::impl::xml::ElementHandler elementHandler;
     const std::string xsd;
     const std::string xsi;
     const std::string tns;
@@ -228,7 +228,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
         BOOST_REQUIRE( xmlHasProp( minInclusive, BAD_CAST "value" ) );
 
         int readMinValue = 0;
-        tinia::modelxml::getXmlPropAsType( minInclusive, "value", readMinValue );
+        tinia::model::impl::xml::getXmlPropAsType( minInclusive, "value", readMinValue );
 
         BOOST_CHECK_EQUAL( readMinValue, minValue );
     }
@@ -240,7 +240,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
         BOOST_REQUIRE( xmlHasProp( maxInclusive, BAD_CAST "value" ) );
 
         int readMaxValue = 0;
-        tinia::modelxml::getXmlPropAsType( maxInclusive, "value", readMaxValue );
+        tinia::model::impl::xml::getXmlPropAsType( maxInclusive, "value", readMaxValue );
         BOOST_CHECK_EQUAL( readMaxValue, maxValue );
 
     }
@@ -319,7 +319,7 @@ BOOST_FIXTURE_TEST_CASE( addMatrixElementXMLContents, AddMatrixFixture ) {
         BOOST_REQUIRE( projectionMatrix != 0 );
 
         std::string stringContents;
-        tinia::modelxml::getXmlNodeContentAsType( projectionMatrix, stringContents );
+        tinia::model::impl::xml::getXmlNodeContentAsType( projectionMatrix, stringContents );
 
         vector<string> splitted;
         boost::split( splitted, stringContents, boost::is_any_of(" ") );
@@ -346,7 +346,7 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
         auto model = doc->children;
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
 
-        tinia::modelxml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
+        tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
 
         xmlFreeDoc( doc );
     }
@@ -359,7 +359,7 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
         auto doc = xmlHandler.getCompleteDocument();
         auto model = doc->children;
 
-        tinia::modelxml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
+        tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
 
         BOOST_CHECK_GT( revisionNumbers[1], revisionNumbers[0] );
 
@@ -375,14 +375,14 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumberOnUpdate, Fixture ) {
 
     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
-        tinia::modelxml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
+        tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
     } );
 
     model->updateElement( elementName, 64 );
 
     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
-        tinia::modelxml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
+        tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
     } );
 
     BOOST_CHECK_GT( revisionNumbers[1], revisionNumbers[0] );
@@ -398,7 +398,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
         auto node = xpathQuery( doc, "//" + elementName  );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
-        tinia::modelxml::getXmlNodeContentAsType( node, readValue );
+        tinia::model::impl::xml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( startValue, readValue );
     } );
 
@@ -409,7 +409,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
         auto node = xpathQuery( doc, "//" + elementName );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
-        tinia::modelxml::getXmlNodeContentAsType( node, readValue );
+        tinia::model::impl::xml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( updatedValue, readValue );
     } );
 }
@@ -611,7 +611,7 @@ BOOST_FIXTURE_TEST_CASE( AddAnnotationResult, AnnotationFixture ) {
         BOOST_REQUIRE( node != 0 );
 
         std::string readAnnotation;
-        tinia::modelxml::getXmlNodeContentAsType( node, readAnnotation );
+        tinia::model::impl::xml::getXmlNodeContentAsType( node, readAnnotation );
         BOOST_CHECK_EQUAL( readAnnotation, annotation );
     } );
 }

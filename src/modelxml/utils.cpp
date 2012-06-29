@@ -16,13 +16,16 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/modelxml/utils.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
 
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 
 
 xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression ) {
@@ -49,7 +52,8 @@ xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression ) {
 
 
 }
-
+}
+}
 }
 
 

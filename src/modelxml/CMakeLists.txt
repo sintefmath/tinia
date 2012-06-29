@@ -1,5 +1,5 @@
 FILE( GLOB modelxmlSrc "*.cpp" )
-FILE( GLOB modelxmlHeaders "../../include/tinia/modelxml/*.hpp" )
+FILE( GLOB modelxmlHeaders "../../include/tinia/impl/xml/*.hpp" )
 
 SET( CPACK_GENERATOR "DEB" )
 SET( CPACK_PACKAGE_NAME "modelxml" )

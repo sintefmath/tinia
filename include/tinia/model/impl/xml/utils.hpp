@@ -33,7 +33,10 @@
     other applications where libxml is used.
   */
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 
 /** Convenience function to do simple XPath queries. */
 xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression );
@@ -90,6 +93,8 @@ void print(const boost::property_tree::basic_ptree<T, U> &pt) {
 }
 
 
+}
+}
 }
 }
 #endif // UTILS_HPP

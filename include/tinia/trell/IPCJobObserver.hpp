@@ -19,7 +19,7 @@
 #pragma once
 #include "IPCObserver.hpp"
 #include "tinia/jobobserver/Job.hpp"
-#include "tinia/modelxml/XMLHandler.hpp"
+#include "tinia/model/impl/xml/XMLHandler.hpp"
 
 namespace tinia {
 namespace Trell {
@@ -153,7 +153,7 @@ protected:
 protected:
     std::shared_ptr<model::ExposedModel>    m_model;
     jobobserver::Job*                        m_job;
-    modelxml::XMLHandler*                m_xmlHandler;
+    model::impl::xml::XMLHandler*                m_xmlHandler;
     volatile bool                            m_updateOngoing;
 
     /** Handles incoming messages (mainly from master job).

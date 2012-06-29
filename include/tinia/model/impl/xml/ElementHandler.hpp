@@ -21,7 +21,10 @@
 #include <memory>
 #include "tinia/model/ExposedModel.hpp"
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 class ElementHandler
 {
 public:
@@ -34,5 +37,7 @@ public:
 private:
    std::shared_ptr<model::ExposedModel> m_model;
 };
+}
+}
 }
 }

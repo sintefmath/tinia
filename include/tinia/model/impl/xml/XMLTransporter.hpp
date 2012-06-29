@@ -21,7 +21,7 @@
 #include <libxml/tree.h>
 #include "tinia/model/impl/ElementData.hpp"
 
-#include "tinia/modelxml/utils.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
 
 
 
@@ -30,8 +30,9 @@
 
 
 namespace tinia {
-namespace modelxml
-{
+namespace model {
+namespace impl {
+namespace xml {
 
 
 /** \class XMLTransporter
@@ -86,7 +87,8 @@ private:
 
 };
 
-
+}
+}
 }
 }
 

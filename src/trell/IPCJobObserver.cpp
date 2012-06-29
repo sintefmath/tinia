@@ -57,7 +57,7 @@ IPCJobObserver::init( const std::string& xml )
 {
     bool ipcObserverResponse = IPCObserver::init( xml );
     bool jobResponse = m_job->init( );
-    m_xmlHandler = new modelxml::XMLHandler(m_job->getExposedModel());
+    m_xmlHandler = new model::impl::xml::XMLHandler(m_job->getExposedModel());
 
     return ipcObserverResponse && jobResponse;
 }

@@ -18,13 +18,16 @@
 
 #pragma once
 #include "tinia/model/ExposedModel.hpp"
-#include "tinia/modelxml/XMLTransporter.hpp"
-#include "tinia/modelxml/XMLReader.hpp"
-#include "tinia/modelxml/ElementHandler.hpp"
+#include "tinia/model/impl/xml/XMLTransporter.hpp"
+#include "tinia/model/impl/xml/XMLReader.hpp"
+#include "tinia/model/impl/xml/ElementHandler.hpp"
 #include <memory>
 
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 class XMLHandler
 {
 public:
@@ -54,5 +57,7 @@ private:
    XMLReader m_xmlReader;
    ElementHandler m_elementHandler;
 };
+}
+}
 }
 }

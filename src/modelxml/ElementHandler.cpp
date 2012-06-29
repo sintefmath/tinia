@@ -16,21 +16,21 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/modelxml/ElementHandler.hpp"
+#include "tinia/model/impl/xml/ElementHandler.hpp"
 
 namespace tinia {
-modelxml::ElementHandler::ElementHandler(std::shared_ptr<model::ExposedModel> model)
+model::impl::xml::ElementHandler::ElementHandler(std::shared_ptr<model::ExposedModel> model)
    : m_model(model)
 {
 }
 
-void modelxml::ElementHandler::updateElementFromString(const std::string& name,
+void model::impl::xml::ElementHandler::updateElementFromString(const std::string& name,
                                                  const std::string& stringValue)
 {
    m_model->updateElementFromString(name, stringValue);
 }
 
-void modelxml::ElementHandler::updateElementFromPTree(const std::string &key,
+void model::impl::xml::ElementHandler::updateElementFromPTree(const std::string &key,
                                                           const model::StringStringPTree &tree)
 {
    m_model->updateElementFromPTree(key, tree);

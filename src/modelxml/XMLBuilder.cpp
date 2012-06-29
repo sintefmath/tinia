@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/modelxml/XMLBuilder.hpp"
+#include "tinia/model/impl/xml/XMLBuilder.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -26,8 +26,9 @@
 using namespace std;
 
 namespace tinia {
-namespace modelxml {
-
+namespace model {
+namespace impl {
+namespace xml {
 
 
 xmlDocPtr
@@ -283,9 +284,9 @@ XMLBuilder::buildSimpleGuiLayout() {
 
 
 
-}
 
-modelxml::XMLBuilder::XMLBuilder(const std::vector<model::StateElement> &stateDelta,
+
+XMLBuilder::XMLBuilder(const std::vector<model::StateElement> &stateDelta,
                                      const std::vector<model::StateSchemaElement> &stateSchemaDelta,
                                      model::gui::Element* rootGUIElement,
                                      unsigned int revisionNumber)
@@ -295,7 +296,7 @@ modelxml::XMLBuilder::XMLBuilder(const std::vector<model::StateElement> &stateDe
 
 }
 
-void modelxml::XMLBuilder::buildGUILayout(model::gui::Element *root,
+void XMLBuilder::buildGUILayout(model::gui::Element *root,
                                               xmlNodePtr parent )
 {
 
@@ -422,7 +423,7 @@ void modelxml::XMLBuilder::buildGUILayout(model::gui::Element *root,
 
 }
 
-xmlNodePtr modelxml::XMLBuilder::addExposedModelGUIElement(model::gui::KeyValue *element,
+xmlNodePtr XMLBuilder::addExposedModelGUIElement(model::gui::KeyValue *element,
                                                    std::string type, xmlNodePtr parent)
 {
 
@@ -433,7 +434,7 @@ xmlNodePtr modelxml::XMLBuilder::addExposedModelGUIElement(model::gui::KeyValue 
    return xmlElement;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addElementGroup(model::gui::ElementGroup *element,
+xmlNodePtr XMLBuilder::addElementGroup(model::gui::ElementGroup *element,
                                                             xmlNodePtr parent)
 {
 
@@ -452,7 +453,7 @@ xmlNodePtr modelxml::XMLBuilder::addElementGroup(model::gui::ElementGroup *eleme
    return xmlElement;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addLayout(std::string type,
+xmlNodePtr XMLBuilder::addLayout(std::string type,
                                                model::gui::Container1D<model::gui::Element> *layout,
                                                xmlNodePtr parent)
 {
@@ -466,7 +467,7 @@ xmlNodePtr modelxml::XMLBuilder::addLayout(std::string type,
    return element;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addGridLayout(std::string type, model::gui::Grid *grid, xmlNodePtr parent)
+xmlNodePtr XMLBuilder::addGridLayout(std::string type, model::gui::Grid *grid, xmlNodePtr parent)
 {
 
 
@@ -488,7 +489,7 @@ xmlNodePtr modelxml::XMLBuilder::addGridLayout(std::string type, model::gui::Gri
    return xmlGrid;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addTabLayout(std::string type, model::gui::TabLayout *tabLayout, xmlNodePtr parent)
+xmlNodePtr XMLBuilder::addTabLayout(std::string type, model::gui::TabLayout *tabLayout, xmlNodePtr parent)
 {
 using namespace model::gui;
    auto element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
@@ -505,7 +506,7 @@ using namespace model::gui;
    return element;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addCanvas(model::gui::Canvas* element,
+xmlNodePtr XMLBuilder::addCanvas(model::gui::Canvas* element,
                                                xmlNodePtr parent)
 {
 
@@ -523,7 +524,7 @@ xmlNodePtr modelxml::XMLBuilder::addCanvas(model::gui::Canvas* element,
    return xmlElement;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addHorizontalLayout(model::gui::HorizontalLayout *layout, xmlNodePtr parent)
+xmlNodePtr XMLBuilder::addHorizontalLayout(model::gui::HorizontalLayout *layout, xmlNodePtr parent)
 {
 
 
@@ -532,7 +533,7 @@ xmlNodePtr modelxml::XMLBuilder::addHorizontalLayout(model::gui::HorizontalLayou
 
 }
 
-xmlNodePtr modelxml::XMLBuilder::addVerticalLayout(model::gui::VerticalLayout *layout, xmlNodePtr parent)
+xmlNodePtr XMLBuilder::addVerticalLayout(model::gui::VerticalLayout *layout, xmlNodePtr parent)
 {
 
 
@@ -541,12 +542,12 @@ xmlNodePtr modelxml::XMLBuilder::addVerticalLayout(model::gui::VerticalLayout *l
 
 }
 
-xmlNodePtr modelxml::XMLBuilder::addSpace(std::string type, xmlNodePtr parent)
+xmlNodePtr XMLBuilder::addSpace(std::string type, xmlNodePtr parent)
 {
    return xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
 }
 
-xmlNodePtr modelxml::XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, model::gui::Element* element)
+xmlNodePtr XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, model::gui::Element* element)
 {
    if(element->enabledKey() != "")
    {
@@ -564,7 +565,7 @@ xmlNodePtr modelxml::XMLBuilder::addVisibilityKeys(xmlNodePtr xmlElement, model:
    return xmlElement;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
+xmlNodePtr XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
                                               model::gui::KeyValue *element)
 {
    xmlSetProp(xmlElementPtr, BAD_CAST "key", BAD_CAST element->key().c_str());
@@ -573,7 +574,7 @@ xmlNodePtr modelxml::XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
    return xmlElementPtr;
 }
 
-xmlNodePtr modelxml::XMLBuilder::addPopupButton(xmlNodePtr parent, model::gui::PopupButton *button)
+xmlNodePtr XMLBuilder::addPopupButton(xmlNodePtr parent, model::gui::PopupButton *button)
 {
    auto buttonXml = addExposedModelGUIElement(button, "PopupButton", parent);
 
@@ -584,30 +585,7 @@ xmlNodePtr modelxml::XMLBuilder::addPopupButton(xmlNodePtr parent, model::gui::P
 
 }
 
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
+}
+}

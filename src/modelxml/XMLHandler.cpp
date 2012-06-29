@@ -16,14 +16,17 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/modelxml/XMLHandler.hpp"
+#include "tinia/model/impl/xml/XMLHandler.hpp"
 #include "tinia/model/StateElement.hpp"
 #include "tinia/model/StateSchemaElement.hpp"
-#include "tinia/modelxml/XMLBuilder.hpp"
+#include "tinia/model/impl/xml/XMLBuilder.hpp"
 #define XMLDEBUG {std::cerr<< __FILE__<<__LINE__ << std::endl;}
 
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 XMLHandler::XMLHandler(std::shared_ptr<model::ExposedModel> model)
    : m_model(model), m_elementHandler(model)
 {
@@ -84,9 +87,9 @@ size_t XMLHandler::getExposedModelUpdate(char *buffer, const size_t buffer_len,
    return bytes_written;
 }
 
-}
 
-xmlDocPtr modelxml::XMLHandler::getCompleteDocument()
+
+xmlDocPtr XMLHandler::getCompleteDocument()
 {
    std::vector<model::StateElement> stateElements;
    std::vector<model::StateSchemaElement> stateSchemaElements;
@@ -98,5 +101,9 @@ xmlDocPtr modelxml::XMLHandler::getCompleteDocument()
                       m_model->getRevisionNumber());
    return builder.getDeltaDocument();
 
+}
+
+}
+}
 }
 }

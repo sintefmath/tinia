@@ -22,14 +22,17 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "tinia/modelxml/XMLTransporter.hpp"
+#include "tinia/model/impl/xml/XMLTransporter.hpp"
 
 
 
 
 
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 
 using namespace std;
 
@@ -158,7 +161,8 @@ using namespace std;
 
 
 }
-
+}
+}
 }
 
 

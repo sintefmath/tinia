@@ -16,9 +16,9 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/modelxml/XMLReader.hpp"
+#include "tinia/model/impl/xml/XMLReader.hpp"
 //#include "tinia/model/ExposedModel.hpp"
-#include "tinia/modelxml/utils.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -29,10 +29,9 @@
 
 using namespace std;
 namespace tinia {
-namespace modelxml
-{
-
-
+namespace model {
+namespace impl {
+namespace xml {
 
 
 XMLReader::XMLReader()
@@ -233,6 +232,8 @@ XMLReader::XMLReader()
 
 
 
+}
+}
 }
 }
 

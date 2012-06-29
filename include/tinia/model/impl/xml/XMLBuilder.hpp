@@ -24,11 +24,14 @@
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/StateElement.hpp"
 #include "tinia/model/StateSchemaElement.hpp"
-#include "tinia/modelxml/utils.hpp"
+#include "tinia/model/impl/xml/utils.hpp"
 #include "tinia/model/GUILayout.hpp"
 
 namespace tinia {
-namespace modelxml {
+namespace model {
+namespace impl {
+namespace xml {
+
 
 /** \class XMLBuilder
      XMLBuilder is responsible for generating an xml-document from a model.
@@ -165,5 +168,7 @@ private:
     const std::vector<model::StateSchemaElement> &m_stateSchemaDelta;
     model::gui::Element* m_rootGUIElement;
 };
+}
+}
 }
 }
