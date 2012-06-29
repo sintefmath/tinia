@@ -37,6 +37,8 @@
 #include <siut2/gl_utils/GLSLtools.hpp>
 #include "tinia/model/File.hpp"
 
+namespace tinia {
+namespace example {
 TestJob::TestJob()
 {
 }
@@ -377,4 +379,6 @@ const tinia::renderlist::DataBase*
 TestJob::getRenderList( const std::string& session, const std::string& key )
 {
     return &m_renderlist_db;
+}
+}
 }

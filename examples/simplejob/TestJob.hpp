@@ -21,6 +21,8 @@
 #include <tinia/renderlist/DataBase.hpp>
 #include "tinia/jobobserver/OpenGLJob.hpp"
 #include "tinia/model/StateListener.hpp"
+namespace tinia {
+namespace example {
 class TestJob : public tinia::jobobserver::OpenGLJob, public tinia::model::StateListener
 {
 public:
@@ -46,3 +48,5 @@ private:
     GLuint                      m_gpgpu_quad_vertex_array;
     GLuint                      m_gpgpu_quad_buffer;
 };
+}
+}
