@@ -51,7 +51,7 @@ using tinia::model::impl::xml::xpathQuery;
 
 using namespace std;
 
-
+using namespace tinia::tests;
 BOOST_AUTO_TEST_SUITE( ExposedModelXml )
 namespace {
 struct Fixture {

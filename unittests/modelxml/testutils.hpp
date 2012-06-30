@@ -21,7 +21,7 @@
 
 #include "tinia/model/impl/xml/XMLHandler.hpp"
 #include "libxml/tree.h"
-
+namespace tinia { namespace tests {
 struct TestHelper {
     template<class T>
     TestHelper(tinia::model::impl::xml::XMLHandler& handler , T t, bool printDoc = false ) {
@@ -39,5 +39,5 @@ struct TestHelper {
 
     xmlDocPtr doc;
 };
-
+}}
 #endif // TESTUTILS_HPP
