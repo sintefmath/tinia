@@ -32,7 +32,7 @@
 #include "tinia/trell/messenger.h"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 static std::list<IPCObserver*> instances;
 

@@ -26,7 +26,7 @@
 #include "tinia/jobobserver/OpenGLJob.hpp"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 
 IPCJobObserver::IPCJobObserver( bool is_master )
@@ -250,9 +250,9 @@ IPCJobObserver::handle( trell_message* msg, size_t buf_size )
 
 
 
-} // of namespace Trell
+} // of namespace trell
 
-void Trell::IPCJobObserver::stateElementModified(model::StateElement *stateElement)
+void trell::IPCJobObserver::stateElementModified(model::StateElement *stateElement)
 {
    // We only want to do something if we're not updating the model ourselves
    // (otherwise we'll post an update on completion)
@@ -263,7 +263,7 @@ void Trell::IPCJobObserver::stateElementModified(model::StateElement *stateEleme
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
+void trell::IPCJobObserver::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)
@@ -272,7 +272,7 @@ void Trell::IPCJobObserver::stateSchemaElementAdded(model::StateSchemaElement *s
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
+void trell::IPCJobObserver::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)
@@ -281,7 +281,7 @@ void Trell::IPCJobObserver::stateSchemaElementRemoved(model::StateSchemaElement 
    }
 }
 
-void Trell::IPCJobObserver::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
+void trell::IPCJobObserver::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
 
    if(m_updateOngoing)

@@ -29,7 +29,7 @@ main( int argc, char** argv )
         exit( EXIT_FAILURE );
     }
 
-    tinia::Trell::Master m(true, argv[3] );
+    tinia::trell::Master m(true, argv[3] );
     m.run( 3, argv );
     exit( EXIT_SUCCESS );
 }

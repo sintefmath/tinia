@@ -22,7 +22,7 @@
 #include "tinia/model/impl/xml/XMLHandler.hpp"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 
 /** Base class for non-interactive trell jobs (i.e. compute jobs).
@@ -37,7 +37,7 @@ namespace Trell {
   * #include <iostream>
   * #include "IPCJobObserver.hpp"
   *
-  * class MyJob : public Trell::Job
+  * class MyJob : public trell::Job
   * {
   * public:
   *     void
@@ -55,7 +55,7 @@ namespace Trell {
   *     bool
   *     init()
   *     {
-  *         if( Trell::Job::init() ) {
+  *         if( trell::Job::init() ) {
   *             boost::thread t( boost::ref( *this ) );
   *             worker = boost::move( t );
   *             return true;
@@ -69,7 +69,7 @@ namespace Trell {
   *     cleanup()
   *     {
   *         worker.join();
-  *         Trell::Job::cleanup();
+  *         trell::Job::cleanup();
   *     }
   * };
   *

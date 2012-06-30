@@ -21,7 +21,7 @@
 #include <thread> 
 
 namespace tinia {
-namespace Trell
+namespace trell
 {
 
   class Observer;
@@ -59,5 +59,5 @@ protected:
 
 
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia

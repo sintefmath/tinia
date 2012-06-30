@@ -20,7 +20,7 @@
 #include "Job.hpp"
 
 namespace tinia {
-namespace Trell
+namespace trell
 {
 
 class NonInteractiveJob : public Job
@@ -47,4 +47,4 @@ public:
 
 };
 
-} // of namespace Trell
+} // of namespace trell

@@ -24,7 +24,7 @@
 #include "tinia/trell/IPCObserver.hpp"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 /** The master job
   *
@@ -210,5 +210,5 @@ protected:
 };
 
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia

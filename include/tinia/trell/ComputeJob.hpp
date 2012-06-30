@@ -24,7 +24,7 @@
 #include "tinia/model/ExposedModel.hpp"
 
 namespace tinia {
-namespace Trell
+namespace trell
 {
 
   class ComputeJob : public Job
@@ -73,5 +73,5 @@ protected:
 
 
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia

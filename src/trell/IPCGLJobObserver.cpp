@@ -21,7 +21,7 @@
 #include "tinia/trell/IPCGLJobObserver.hpp"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 
 IPCGLJobObserver::IPCGLJobObserver(bool is_master)
@@ -302,6 +302,6 @@ IPCGLJobObserver::checkForGLError() const
 }
 #undef FOO
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia
 

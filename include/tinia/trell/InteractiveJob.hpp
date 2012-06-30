@@ -21,7 +21,7 @@
 #include "jobobserver/Observer.hpp"
 
 namespace tinia {
-namespace Trell
+namespace trell
 {
 
 class InteractiveJob : public jobobserver::Job
@@ -32,5 +32,5 @@ public:
 
 };
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia

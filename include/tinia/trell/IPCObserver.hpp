@@ -28,7 +28,7 @@
 
 class JobWrapper;
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 /** Base class implementing message-passing destination point.
   *
@@ -267,5 +267,5 @@ private:
 };
 
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia

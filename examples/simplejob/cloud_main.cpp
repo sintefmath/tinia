@@ -21,7 +21,7 @@
 int main(int argc, char** argv)
 {
     using namespace tinia::example;
-    tinia::Trell::IPCGLJobObserver *trellObserver = new tinia::Trell::IPCGLJobObserver();
+    tinia::trell::IPCGLJobObserver *trellObserver = new tinia::trell::IPCGLJobObserver();
     TestJob *testJob = new TestJob();
     trellObserver->setJob(testJob);
 

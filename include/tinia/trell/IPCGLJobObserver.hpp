@@ -26,7 +26,7 @@
 #include "IPCJobObserver.hpp"
 
 namespace tinia {
-namespace Trell {
+namespace trell {
 
 class IPCGLJobObserver : public IPCJobObserver
 {
@@ -93,5 +93,5 @@ private:
 };
 
 
-} // of namespace Trell
+} // of namespace trell
 } // of namespace tinia
