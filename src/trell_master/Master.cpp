@@ -35,6 +35,7 @@
 
 namespace tinia {
 namespace trell {
+namespace impl {
     using std::vector;
     using std::string;
 namespace {
@@ -723,6 +724,6 @@ Master::getLoad()
 
 
 
-
+} // of namespace impl
 } // of namespace trell
 } // of namespace tinia

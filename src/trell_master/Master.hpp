@@ -25,7 +25,7 @@
 
 namespace tinia {
 namespace trell {
-
+namespace impl {
 /** The master job
   *
   * The job management is offloaded from mod_trell to a specific master job. The
@@ -209,6 +209,6 @@ protected:
 
 };
 
-
+}
 } // of namespace trell
 } // of namespace tinia
