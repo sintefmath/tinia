@@ -53,7 +53,7 @@ using namespace std;
 
 
 BOOST_AUTO_TEST_SUITE( ExposedModelXml )
-
+namespace {
 struct Fixture {
     Fixture() :
        model(new tinia::model::ExposedModel()),
@@ -79,7 +79,7 @@ struct Fixture {
     const std::string xsi;
     const std::string tns;
 };
-
+}
 
 /** Check the overall structure of the generated xml-document. */
 BOOST_FIXTURE_TEST_CASE( getCompleteDocument,Fixture ) {

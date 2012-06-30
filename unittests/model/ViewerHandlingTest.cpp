@@ -31,7 +31,7 @@ using namespace tinia;
 using namespace model;
 
 BOOST_AUTO_TEST_SUITE( ViewerHandlingTest )
-
+namespace {
 struct ViewerFixture {
     ViewerFixture() :
         xsd( "http://www.w3.org/2001/XMLSchema" ),
@@ -48,6 +48,7 @@ struct ViewerFixture {
     const std::string xsi;
     const std::string tns;
 };
+}
 
 BOOST_FIXTURE_TEST_CASE( addgetViewer, ViewerFixture ) {
     viewer.height += 1;

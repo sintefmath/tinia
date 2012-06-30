@@ -40,8 +40,9 @@
 #include <boost/algorithm/string.hpp>
 
 
-//BOOST_AUTO_TEST_SUITE( ExposedModel )
+
 using namespace tinia;
+namespace  {
 struct ExposedModelFixture {
    ExposedModelFixture() {}
    ~ExposedModelFixture() {}
@@ -91,6 +92,7 @@ struct SchemaListenerFixture {
 
 };
 
+}
 
 BOOST_FIXTURE_TEST_CASE(constraintsChange, SchemaListenerFixture)
 {

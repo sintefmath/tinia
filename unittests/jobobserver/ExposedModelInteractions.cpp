@@ -20,12 +20,14 @@
 #include "tinia/jobobserver/Job.hpp"
 #include <memory>
 using namespace tinia::jobobserver;
+namespace  {
 class JobFixture : Job {
 public:
    JobFixture() { model = getExposedModel();}
    ~JobFixture() {}
    std::shared_ptr<tinia::model::ExposedModel> model;
 };
+}
 
 BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
 {

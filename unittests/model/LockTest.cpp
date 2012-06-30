@@ -22,6 +22,7 @@
 #include "tinia/model/StateListener.hpp"
 #include <memory>
 using namespace tinia;
+namespace {
 class ExposedModelListenerFixture : model::StateListener
 {
 public:
@@ -42,6 +43,7 @@ public:
    bool hasSeenEvent;
 
 };
+}
 
 BOOST_FIXTURE_TEST_CASE(SimpleLockTest, ExposedModelListenerFixture)
 {

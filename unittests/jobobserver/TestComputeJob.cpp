@@ -20,7 +20,7 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace tinia;
-
+namespace {
 class TestComputeJob1 : public jobobserver::ComputeJob
 {
 public:
@@ -58,6 +58,7 @@ public:
 	{
 	}
 };
+}
 
 
 BOOST_AUTO_TEST_SUITE( ComputeJob )
