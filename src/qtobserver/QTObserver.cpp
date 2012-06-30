@@ -153,7 +153,7 @@ int QTObserver::run(int argc, char **argv)
    return app.exec();
 }
 
-
+namespace  {
 static
 QDomElement
 addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch );
@@ -367,7 +367,7 @@ addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch )
 
 
 
-
+}
 
 }// namespace qtobserver
 } // of namespace tinia
