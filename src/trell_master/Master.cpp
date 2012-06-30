@@ -37,7 +37,7 @@ namespace tinia {
 namespace trell {
     using std::vector;
     using std::string;
-
+namespace {
 static const std::string ret_header  = "<?xml version=\"1.0\"?>"
                                        "<reply "
                                        " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
@@ -47,6 +47,7 @@ static const std::string ret_footer  = "</reply>";
 static const std::string ret_pong    = ret_header + "<pong/>" + ret_footer;
 static const std::string ret_success = ret_header + "<result>SUCCESS</result>" + ret_footer;
 static const std::string ret_failure = ret_header + "<result>FAILURE</result>" + ret_footer;
+}
 
 Master::Master( bool for_real, const char* application_root )
     : IPCObserver( true ),

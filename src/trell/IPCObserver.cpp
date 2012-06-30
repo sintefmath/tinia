@@ -34,8 +34,9 @@
 namespace tinia {
 namespace trell {
 
+namespace {
 static std::list<IPCObserver*> instances;
-
+}
 
 
 
@@ -235,7 +236,7 @@ IPCObserver::shutdown()
     m_cleanup_pid = -1;
 }
 
-
+namespace {
 static void cleanup_handler( int )
 {
     for( auto it=instances.begin(); it!=instances.end(); ++it ) {
@@ -261,6 +262,7 @@ static void usr1_handler( int sig )
     std::cerr << "usr1_handler.\n";
 
 //    signal( SIGUSR1, usr1_handler );
+}
 }
 
 
