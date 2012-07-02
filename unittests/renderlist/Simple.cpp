@@ -66,6 +66,7 @@ struct Fixture
 
 BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
 {
+#ifndef WIN32
     tinia::renderlist::Revision r = 0;
 
 
@@ -221,6 +222,7 @@ BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
     m_db.deleteBuffer( buf0->id() );
     r = dumpChanges( r );
 */
+#endif
 }
 
 
