@@ -1,5 +1,11 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+# Set shared for linux:
+IF(NOT WIN32)
+    IF(NOT DEFINED ${BUILD_SHARED_LIBS})
+        SET(BUILD_SHARED_LIBS ON)
+    ENDIF()
+ENDIF()
 
 IF(NOT WIN32)
   OPTION( SERVER "Build mod_trell and related components?" ON)

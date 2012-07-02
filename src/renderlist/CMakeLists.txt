@@ -1,6 +1,7 @@
 FILE( GLOB renderlist_SRC "*.cpp" )
 FILE( GLOB renderlist_HEADERS "../../include/tinia/renderlist/*.hpp")
-ADD_LIBRARY( renderlist ${renderlist_SRC} ${renderlist_HEADERS} )
+
+ADD_LIBRARY( renderlist STATIC ${renderlist_SRC} ${renderlist_HEADERS} )
 TARGET_LINK_LIBRARIES( renderlist )
 
 IF(NOT WIN32)
