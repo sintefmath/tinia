@@ -7,7 +7,7 @@ ELSE()
   OPTION( SERVER "Build mod_trell and related components?" OFF)
 ENDIF()
 
-OPTION( DESKTOP "Build qtobserver?" ON)
+OPTION( DESKTOP "Build qtcontroller?" ON)
 
 
 OPTION( EXTEND_CMAKE_MODULE_PATH
@@ -72,8 +72,8 @@ IF(${DESKTOP})
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
   SET(QT_USE_QTXML TRUE)
-  QT4_WRAP_CPP(qtobserver_HEADERS_MOC ${qtobserver_SOURCES_TO_BE_MOCED} ${qtobserver_SOURCES})
-  QT4_WRAP_UI(qtobserver_FORMS_HEADERS ${qtobserver_FORMS})
+  QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
+  QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
   ADD_DEFINITIONS(${QT_DEFINITIONS})
   ADD_DEFINITIONS(-DQT_SHARED)
 ENDIF()
@@ -117,9 +117,9 @@ IF(${SERVER})
 ENDIF()
 ADD_SUBDIRECTORY( "src/renderlist" )
 ADD_SUBDIRECTORY( "src/renderlistgl" )
-ADD_SUBDIRECTORY( "src/jobobserver" )
+ADD_SUBDIRECTORY( "src/jobcontroller" )
 IF(${DESKTOP})
-  ADD_SUBDIRECTORY( "src/qtobserver" )
+  ADD_SUBDIRECTORY( "src/qtcontroller" )
 ENDIF()
 IF(${SERVER})
   ADD_SUBDIRECTORY( "src/trell" )
@@ -133,7 +133,7 @@ IF(${SERVER})
   ADD_SUBDIRECTORY( "unittests/modelxml/" )
 ENDIF()
 ADD_SUBDIRECTORY( "unittests/renderlist/" )
-ADD_SUBDIRECTORY( "unittests/jobobserver/" )
+ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
 
 # Examples
 ADD_SUBDIRECTORY( "examples/rlview/" )
@@ -150,14 +150,14 @@ SET( CPACK_COMPONENTS_ALL
   model-dev 
   modelxml
   modelxml-dev
-  jobobserver
-  jobobserver-dev
+  jobcontroller
+  jobcontroller-dev
   renderlist
   renderlist-dev
   renderlistgl
   renderlistgl-dev
-  qtobserver
-  qtobserver-dev
+  qtcontroller
+  qtcontroller-dev
   libtrell
   libtrell-dev
   mod_trell

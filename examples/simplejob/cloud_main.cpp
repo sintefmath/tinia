@@ -17,14 +17,14 @@
      */
 
 #include "TestJob.hpp"
-#include "tinia/trell/IPCGLJobObserver.hpp"
+#include "tinia/trell/IPCGLJobController.hpp"
 int main(int argc, char** argv)
 {
     using namespace tinia::example;
-    tinia::trell::IPCGLJobObserver *trellObserver = new tinia::trell::IPCGLJobObserver();
+    tinia::trell::IPCGLJobController *trellController = new tinia::trell::IPCGLJobController();
     TestJob *testJob = new TestJob();
-    trellObserver->setJob(testJob);
+    trellController->setJob(testJob);
 
-    trellObserver->run(argc, argv);
+    trellController->run(argc, argv);
     exit(EXIT_SUCCESS);
 }

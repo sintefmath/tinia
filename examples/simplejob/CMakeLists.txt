@@ -6,7 +6,7 @@ IF(${DESKTOP})
     ${test_job_HEADERS}
     )
   TARGET_LINK_LIBRARIES(simple_qt_job
-    qtobserver
+    qtcontroller
     renderlist
     renderlistgl
     ${QT_LIBRARIES}
@@ -15,7 +15,7 @@ IF(${DESKTOP})
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
     model
-    jobobserver
+    jobcontroller
     ${Boost_LIBRARIES}
     )
 ENDIF()
@@ -40,7 +40,7 @@ IF(${SERVER})
     modelxml
     renderlist
     renderlistgl
-    jobobserver
+    jobcontroller
     trell
     )
 

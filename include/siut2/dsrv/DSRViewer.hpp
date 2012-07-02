@@ -517,7 +517,7 @@ m_camera_state_curr.m_model_view = glm::translate( glm::mat4(), cam_pos );
                 polarDecomposition( R, A, A );
                 m_camera_state_curr.m_orientation = glm::quat_cast( R );
 
-                // extract observer position, calc coi, and transform to world
+                // extract controller position, calc coi, and transform to world
                 glm::vec3 op = -translation( modelview );
 
                 if( guess_bbox ) {
