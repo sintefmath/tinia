@@ -27,6 +27,9 @@ IF( EXTEND_CMAKE_MODULE_PATH )
 
 
 IF(WIN32)
+  ADD_DEFINITIONS( -DBOOST_ALL_NO_LIB )
+  ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
+  ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
   SET(CMAKE_INSTALL_PREFIX CACHE INTERNAL "")
   SET(tinia_INSTALL_PREFIX
     "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia"
@@ -53,7 +56,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 ENDIF()
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
-        SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
+        #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
 	#CAREFUL, this will append the above string for each time CMAKE is run!
 ENDIF()
 
@@ -64,7 +67,10 @@ IF(NOT WIN32)
 ENDIF()
 
 ##### BOOST #####
-FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread  date_time test_exec_monitor)
+set(BOOST_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED      ON)
+set(Boost_USE_STATIC_RUNTIME    OFF)
+FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time  )
 
 ##### QT #####
 IF(${DESKTOP})
@@ -108,7 +114,11 @@ include_directories( "./include"
   ${APR_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
-  ${BOOST_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+)
+
+link_directories(
+  ${Boost_LIBRARY_DIRS}
 )
 
 ADD_SUBDIRECTORY( "src/model" )
