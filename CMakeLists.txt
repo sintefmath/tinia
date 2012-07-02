@@ -15,7 +15,7 @@ OPTION( EXTEND_CMAKE_MODULE_PATH
         ON )
 IF( EXTEND_CMAKE_MODULE_PATH )
     SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                           "./cmake/Modules"
+                           ${CMAKE_SOURCE_DIR}/cmake/Modules
                            "~/cmake/Modules"
                            #"$ENV{HOMEPATH}/cmake/Modules"
                            ${CMAKE_INSTALL_PREFIX}/share/cmake/Modules
@@ -31,6 +31,8 @@ IF(WIN32)
   SET(tinia_INSTALL_PREFIX
     "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia"
     CACHE PATH "Path to install tinia")
+ SET(CMAKE_PREFIX_PATH 
+	"$ENV{TINIA_3RDPARTY}/glm;$ENV{TINIA_3RDPARTY}/glew;$ENV{TINIA_3RDPARTY}/boost" )
 ENDIF()
 ENDIF( EXTEND_CMAKE_MODULE_PATH )
 
