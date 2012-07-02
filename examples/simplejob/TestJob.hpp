@@ -19,11 +19,11 @@
 #pragma once
 #include <GL/glew.h>
 #include <tinia/renderlist/DataBase.hpp>
-#include "tinia/jobobserver/OpenGLJob.hpp"
+#include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/model/StateListener.hpp"
 namespace tinia {
 namespace example {
-class TestJob : public tinia::jobobserver::OpenGLJob, public tinia::model::StateListener
+class TestJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
 {
 public:
     TestJob();
@@ -36,8 +36,8 @@ public:
     /** Database for renderlist.
       *
       * Desktop jobs doesn't usually provide render lists (as they are normally
-      * not used by qtobserver). However, for debug purposes it is possible to
-      * tell qtobserver to use render lists, so we have included code to
+      * not used by qtcontroller). However, for debug purposes it is possible to
+      * tell qtcontroller to use render lists, so we have included code to
       * demonstrate this.
       */
     const tinia::renderlist::DataBase*

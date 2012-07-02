@@ -21,7 +21,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include "tinia/trell/IPCObserver.hpp"
+#include "tinia/trell/IPCController.hpp"
 
 namespace tinia {
 namespace trell {
@@ -32,7 +32,7 @@ namespace impl {
   * master job creates new jobs, kills jobs, and monitors the jobs.
   *
   */
-class Master : public IPCObserver
+class Master : public IPCController
 {
 public:
 

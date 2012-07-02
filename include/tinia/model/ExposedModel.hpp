@@ -166,7 +166,7 @@ public:
 
 
    /**
-The job can use this to get an update meant for the client. This version are for desktop-jobs/observers that do
+The job can use this to get an update meant for the client. This version are for desktop-jobs/controllers that do
       not have xml capability.
       \param updatedElements A list of elements that has been updated in the state, relative to the given revision number.
       \param has_revision Base number from which the delta is to be computed. The client needs updates for revisions after this.
@@ -288,7 +288,7 @@ The job can use this to get an update meant for the client. This version are for
    hasElement( std::string elementName ) const;
 
    /** Returning the revision number.
- \deprecated An observer should implement its own revision scheme.
+ \deprecated An controller should implement its own revision scheme.
 */
    inline int getRevisionNumber(void) const { scoped_lock(m_selfMutex); return revisionNumber; }
 

@@ -248,7 +248,7 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
 
 
 
-// Updates to send *to* the client, version for non-xml-capable jobs/observers.
+// Updates to send *to* the client, version for non-xml-capable jobs/controllers.
 void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, impl::ElementData> > &updatedElements, const unsigned has_revision ) const
 {
    scoped_lock(m_selfMutex);

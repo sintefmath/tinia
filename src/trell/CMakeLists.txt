@@ -1,7 +1,7 @@
 SET( LIB_TRELL_SRC
-    "IPCGLJobObserver.cpp"
-    "IPCObserver.cpp"
-    "IPCJobObserver.cpp"
+    "IPCGLJobController.cpp"
+    "IPCController.cpp"
+    "IPCJobController.cpp"
     "messenger.c"
 )
 
@@ -9,7 +9,7 @@ FILE( GLOB LIB_TRELL_HEADERS "../../include/tinia/trell/*.hpp" "../../include/ti
   
 
 ADD_LIBRARY( trell ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
-TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobobserver)
+TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobcontroller)
 
 INSTALL( TARGETS trell
   LIBRARY DESTINATION lib

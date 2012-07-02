@@ -51,7 +51,7 @@ static const std::string ret_failure = ret_header + "<result>FAILURE</result>" +
 }
 
 Master::Master( bool for_real, const char* application_root )
-    : IPCObserver( true ),
+    : IPCController( true ),
       m_for_real( for_real ),
       m_application_root( application_root )
 {
@@ -166,7 +166,7 @@ Master::handle( trell_message* msg, size_t buf_size )
 bool
 Master::init( const std::string& xml )
 {
-    if( IPCObserver::init(xml) ) {
+    if( IPCController::init(xml) ) {
         snarfMasterState();
         return true;
     }
@@ -179,7 +179,7 @@ bool
 Master::periodic()
 {
     std::cerr << "Periodic func...\n";
-    bool ret = IPCObserver::periodic();
+    bool ret = IPCController::periodic();
     dumpMasterState();
     for( auto it=m_jobs.begin(); it!=m_jobs.end(); ++it ) {
         if( !( (it->second.m_state == TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY) ||
@@ -200,7 +200,7 @@ void
 Master::cleanup()
 {
     dumpMasterState();
-    IPCObserver::cleanup();
+    IPCController::cleanup();
 }
 
 bool
