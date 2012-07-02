@@ -11,7 +11,7 @@ SET( CPACK_COMPONENT_HEADERS_DEPENDS libraries )
 SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
 include ( CPack )
 
-ADD_LIBRARY( modelxml SHARED ${modelxmlSrc} ${modelxmlHeaders})
+ADD_LIBRARY( modelxml ${modelxmlSrc} ${modelxmlHeaders})
 
 TARGET_LINK_LIBRARIES( modelxml ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES})
 

@@ -1,7 +1,7 @@
 FILE( GLOB jobobserverSrc "*.cpp" )
 FILE( GLOB jobobserverHeaders "../../include/tinia/jobobserver/*.hpp" )
 
-ADD_LIBRARY( jobobserver SHARED ${jobobserverSrc} ${jobobserverHeaders} )
+ADD_LIBRARY( jobobserver ${jobobserverSrc} ${jobobserverHeaders} )
 
 TARGET_LINK_LIBRARIES( jobobserver ${Boost_LIBRARIES} model )
 

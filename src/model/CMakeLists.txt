@@ -2,12 +2,9 @@ FILE( GLOB modelSrc "*.cpp" )
 FILE( GLOB_RECURSE modelHeaders "../../include/tinia/model/*.hpp")
 
 
-ADD_LIBRARY( model SHARED ${modelSrc} ${modelHeaders} )
+ADD_LIBRARY( model ${modelSrc} ${modelHeaders} )
 
 TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
-
-
-
 
 IF(NOT WIN32)
   install( FILES 

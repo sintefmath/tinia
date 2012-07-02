@@ -12,7 +12,7 @@ SET( MOD_TRELL_SRC
     "../trell/messenger.c"
 )
 
-ADD_LIBRARY( mod_trell SHARED ${MOD_TRELL_SRC} )
+ADD_LIBRARY( mod_trell ${MOD_TRELL_SRC} )
 TARGET_LINK_LIBRARIES( mod_trell ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
 
 INSTALL( TARGETS mod_trell
