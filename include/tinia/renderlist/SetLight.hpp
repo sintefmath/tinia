@@ -126,7 +126,7 @@ private:
         m_attenuation[0] = 1.f;
         m_attenuation[1] = 0.f;
         m_attenuation[2] = 0.f;
-        m_falloff[0] = 3.14;
+        m_falloff[0] = 3.14f;
         m_falloff[1] = 0.0;
         std::copy_n( unit, 16, m_from_world );
         std::copy_n( unit, 16, m_to_world );
