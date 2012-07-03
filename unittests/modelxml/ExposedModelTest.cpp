@@ -548,15 +548,15 @@ BOOST_FIXTURE_TEST_CASE( AddStringWithRestriction, Fixture ) {
     BOOST_REQUIRE( model->hasElement( elementName ) );
 
     BOOST_CHECK_NO_THROW( model->updateElement( elementName, "wireframe" ) );
-    BOOST_CHECK_THROW( model->updateElement( elementName, "texture" ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->updateElement<std::string>( elementName, "texture" ), tinia::model::RestrictionException );
 
     std::string texture( "texture" );
-    BOOST_CHECK_THROW( model->updateElement( elementName, texture ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->updateElement( elementName, texture ), tinia::model::RestrictionException );
 }
 
 BOOST_FIXTURE_TEST_CASE( AddStringWithRestrictionNotInList, Fixture ) {
   std::vector<std::string> restrictions({"bar", "gaz"});
-    BOOST_CHECK_THROW( model->addElementWithRestriction<std::string>( "foobar", "foo", restrictions ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->addElementWithRestriction<std::string>( "foobar", "foo", restrictions ), tinia::model::RestrictionException );
 }
 
 BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
