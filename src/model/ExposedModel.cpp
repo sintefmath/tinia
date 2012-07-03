@@ -32,6 +32,7 @@
 #include "tinia/model/Viewer.hpp"
 
 #include "tinia/model/impl/utils.hpp"
+#include <tinia/model/exceptions/KeyNotFoundException.hpp>
 
 namespace tinia {
 namespace model {
@@ -441,12 +442,31 @@ model::gui::Element* model::ExposedModel::getGUILayout(model::gui::Device device
    return m_gui;
 }
 
+model::impl::ElementData &model::ExposedModel::findElementInternal(const std::string &key)
+{
+    auto result = stateHash.find(key);
+    if ( result == stateHash.end() ) {
+        throw KeyNotFoundException(key);
+    }
+    return result->second;
+}
+
+const model::impl::ElementData &model::ExposedModel::findElementInternal(const std::string &key) const
+{
+    auto result = stateHash.find(key);
+    if ( result == stateHash.end() ) {
+        throw KeyNotFoundException(key);
+    }
+    return result->second;
+}
+
+
 std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 {
    // This returns a deep copy to avoid any possible threading-problems.
    scoped_lock(m_selfMutex);
    std::set<std::string> destinationSet;
-   auto sourceSet = stateHash[key].getEnumerationSet();
+   auto sourceSet = findElementInternal(key).getEnumerationSet();
    for(auto it = sourceSet.begin(); it!=sourceSet.end(); it++)
    {
       destinationSet.insert(it->c_str());
@@ -457,16 +477,9 @@ std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 bool model::ExposedModel::emptyRestrictionSet(std::string key)
 {
    scoped_lock(m_selfMutex);
-   // The whole method locks the model. This could be optimized, but leaving it
-   // like this for now.
 
-   const auto it = stateHash.find( key );
 
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   }
-
-   auto& elementData = it->second;
+   auto& elementData = findElementInternal(key);
    return elementData.emptyRestrictionSet();
 }
 
@@ -480,13 +493,7 @@ model::StateSchemaElement model::ExposedModel::getStateSchemaElement(std::string
    // like this for now.
    scoped_lock(m_selfMutex);
 
-   const auto it = stateHash.find( key );
-
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   }
-
-   auto& elementData = it->second;
+   auto& elementData = findElementInternal(key);
    return StateSchemaElement(key, elementData);
 }
 
@@ -496,13 +503,8 @@ std::string model::ExposedModel::getElementMaxConstraint(std::string key) const
    // like this for now.
    scoped_lock(m_selfMutex);
 
-   const auto it = stateHash.find( key );
 
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   }
-
-   auto& elementData = it->second;
+   const auto& elementData = findElementInternal(key);
    return elementData.getMaxConstraint();
 }
 
@@ -512,13 +514,7 @@ std::string model::ExposedModel::getElementMinConstraint(std::string key) const
    // like this for now.
    scoped_lock(m_selfMutex);
 
-   const auto it = stateHash.find( key );
-
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   }
-
-   auto& elementData = it->second;
+   const auto& elementData = findElementInternal(key);
    return elementData.getMinConstraint();
 }
 

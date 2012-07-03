@@ -9,7 +9,7 @@ public:
 
     }
 
-    std::string key() {
+    const std::string& key() const {
         return m_key;
     }
 

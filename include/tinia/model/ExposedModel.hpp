@@ -370,6 +370,17 @@ The job can use this to get an update meant for the client. This version are for
 
 
 private:
+
+   /**
+    * Finds the element in the Model, throws if it isn't found
+    */
+   impl::ElementData& findElementInternal(const std::string& key);
+
+   /**
+    * Finds the element in the Model, throws if it isn't found
+    */
+   const impl::ElementData& findElementInternal(const std::string& key) const;
+
    /**
      Holds the StateEvents until releaseStateEvents is called
      */
