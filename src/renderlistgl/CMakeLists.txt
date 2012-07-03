@@ -16,9 +16,9 @@ IF(NOT WIN32)
     COMPONENT renderlistgl)
 ELSE()
  INSTALL(DIRECTORY include/tinia/renderlist/gl
-    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/renderlist/
+    DESTINATION nclude/tinia/renderlist/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
   INSTALL(TARGETS renderlistgl
-    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
+    DESTINATION lib)
 ENDIF()

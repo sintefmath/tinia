@@ -17,9 +17,9 @@ IF(NOT WIN32)
     COMPONENT model)
 ELSE()
  INSTALL(DIRECTORY include/tinia/model
-    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    DESTINATION include/tinia/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
   INSTALL(TARGETS model
-    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
+    DESTINATION lib)
 ENDIF()

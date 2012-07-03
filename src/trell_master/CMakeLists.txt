@@ -9,7 +9,7 @@ TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobcontr
 
 INSTALL( TARGETS 
   trell_master
-  RUNTIME DESTINATION "/var/trell/bin"
+  RUNTIME DESTINATION var/trell/bin
     COMPONENT mod_trell
     PERMISSIONS WORLD_READ WORLD_EXECUTE OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE
 )

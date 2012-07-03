@@ -16,9 +16,9 @@ IF(NOT WIN32)
     COMPONENT jobcontroller)
 ELSE()
   INSTALL(DIRECTORY include/tinia/jobcontroller
-    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    DESTINATION include/tinia/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
   INSTALL(TARGETS jobcontroller
-    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
+    DESTINATION lib)
 ENDIF()
