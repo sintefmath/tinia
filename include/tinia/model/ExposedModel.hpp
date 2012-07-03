@@ -43,6 +43,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include "tinia/model/Viewer.hpp"
 #include <tinia/model/exceptions/BoundsExceededException.hpp>
+#include <tinia/model/exceptions/RestrictionException.hpp>
+#include <tinia/model/exceptions/TypeException.hpp>
 
 /** \mainpage
      ExposedModel is a small library used to create, update and query policies.
@@ -186,7 +188,7 @@ The job can use this to get an update meant for the client. This version are for
    /** Add 4x4 matrix to the model.
       \param matrixName The name of the matrix.
       \param matrixData pointer to a continious block of memory that is assumed to hold 16 floats in column-major mode.
-      \throw std::runtime_error if the matrixName is already in use.
+      \throw model::tinia::ExistingKeyException if the matrixName is already in use.
       */
    void addMatrixElement( std::string matrixName, float const* matrixData );
 
@@ -196,8 +198,8 @@ The job can use this to get an update meant for the client. This version are for
 
    /** Add an annotation to an element. The annotation allows for multiple languages. Each language MUST
         be prefixed with the language code, eg addAnnotation( "timestep", { "en:Time step", "no:Tidssteg" ] );
-        \throw std::runtime_error if the key is not in the model.
-        \throw std::runtime_error if the annotation strings are not prefixed with a language code.
+        \throw tinia::model::KeyNotFoundException if the key is not in the model.
+        \throw std::invalid_argument if the annotation strings are not prefixed with a language code.
     */
    template<class InputIterator>
    void
@@ -208,7 +210,7 @@ The job can use this to get an update meant for the client. This version are for
       \param value The value for the element. The type of the value is deduced from the template parameter.
       \param minConstraint the minimum-inclusive value of the element.
       \param maxConstraint the maximum-inclusuve value of the element.
-      \throw std::runtime_error if the constraint is violated.
+      \throw tinia::model::BoundsExceededException if the constraint is violated.
      */
    template<typename T>
    void
@@ -221,7 +223,7 @@ The job can use this to get an update meant for the client. This version are for
       \param value The value for the element. The type of the value is deduced from the template parameter.
       \param minConstraint the minimum-inclusive value of the element.
       \param maxConstraint the maximum-inclusuve value of the element.
-      \throw std::runtime_error if the constraint is violated.
+      \throw tinia::model::BoundsExceededException if the constraint is violated.
      */
    template<typename T>
    void
@@ -230,7 +232,8 @@ The job can use this to get an update meant for the client. This version are for
    /** Update an element with a new value.
       \param key The key to update.
       \param value The value for the element. The type of the value is deduced from the template parameter.
-      \throws std::runtime_error if the key does not exist or is of another type.
+      \throws KeyNotFoundException if the key does not exist
+      \throws TypeException if the types does not match
       */
    template<typename T>
    void
@@ -239,14 +242,15 @@ The job can use this to get an update meant for the client. This version are for
    /** Update a matrix with a new value.
       \param key The key to update
       \param matrixData Pointer to a continious block of memory that can holds 16 floats.
-      \throw std::runtime_error if the key does not exist or is not added as a matrix.
+      \throw KeyNotFoundException if the key does not exist
+      \throw TypeException if the element was something other than a matrix
       */
    void
    updateMatrixValue( std::string key, const float* matrixData );
 
    /** Remove an element from the model.
       \param key Name of element to remove.
-      \throws std::runtime_error if the element is not in the model.
+      \throws KeyNotFoundException if the element is not in the model.
       */
    void
    removeElement( std::string key );
@@ -262,7 +266,8 @@ The job can use this to get an update meant for the client. This version are for
    /** Get the contents of a matrix.
       \param key Name of an element added as a matrix.
       \param matrixData Pointer to a continious block of memory that can hold at least 16 floats.
-      \throw std::runtime_error if the key does not exist or is not added as a matrix.
+      \throw KeyNotFoundException if the key does not exist
+      \throw TypeException if the element is not added as a matrix.
       */
    void
    getMatrixValue( std::string key, float* matrixData ) const;
@@ -343,7 +348,7 @@ The job can use this to get an update meant for the client. This version are for
    /** Update an element with a new value given as a string.
      \param key The key to update.
      \param value The value for the element. The type of the value is already known, since this is an update only.
-     \throws std::runtime_error if the key does not exist.
+     \throws KeyNotFoundException if the key does not exist.
      */
    void updateElementFromString( const std::string &key, const std::string &value );
 
@@ -351,7 +356,8 @@ The job can use this to get an update meant for the client. This version are for
    /** Update an element with a new value given as a ptree containing ptrees and finally (name, value)-pairs.
      \param key The key to update.
      \param value The value for the element. The type of the value is already known, since this is an update only.
-     \throws std::runtime_error if the key does not exist or if the value-tree has the wrong topology.
+     \throws KeyNotFoundException if the key does not exist.
+     \throws std::runtime_error if the value-tree has the wrong topology.
      */
    void updateElementFromPTree( const std::string &key, const StringStringPTree &value );
 
@@ -535,9 +541,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
    std::set<T> restrictionSet( start, end );
 
    if ( restrictionSet.find( value ) == restrictionSet.end() ) {
-      std::stringstream ss;
-      ss << "Trying to add element with restriction, but the given value " << value << " is not in restriction list";
-      throw std::runtime_error( ss.str() );
+       throw RestrictionException(boost::lexical_cast<std::string>(value));
    }
 
    std::set<std::string> restrictionStrings;
@@ -608,7 +612,7 @@ UpdateElementHelper<false>::operator()( std::string key, impl::ElementData& elem
    }
 
    if ( elementData.violatingRestriction(  value ) ) {
-      throw std::runtime_error( "Value " + stringValue + " is not in restrictionlist" );
+       throw RestrictionException(value);
    }
 
    stateHash[key].setStringValue( stringValue );
@@ -640,7 +644,7 @@ ExposedModel::updateElement( std::string key, T value ) {
       std::string storedType = elementData.getXSDType();
 
       if ( storedType != myType ) {
-         throw std::runtime_error( "Trying to update an element with type " + storedType + " with a value of type " + myType );
+          throw TypeException(myType, storedType);
       }
       stringValueBeforeUpdate = elementData.getStringValue();
       updateElementHelper( key, elementData, value );
@@ -672,7 +676,7 @@ ExposedModel::getElementValue( std::string key, T& t ) {
    auto myType = impl::TypeToXSDType<T>::getTypename();
    auto storedType = elementData.getXSDType();
    if ( storedType !=  myType ) {
-      throw std::runtime_error( "Trying to get element " + key + " as " + myType + " but it is stored as a " + storedType );
+       throw TypeException(myType, storedType);
    }
 
 
@@ -705,7 +709,7 @@ ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const 
    std::for_each( begin, end, [&]( std::string s ) {
                   auto pos = s.find( ":" );
          if ( pos == string::npos ) {
-      throw std::runtime_error( "Trying to set annotation that is not qualified with language code." );
+      throw std::invalid_argument( "Trying to set annotation that is not qualified with language code." );
    }
 
    string lang( s.begin(), s.begin() + pos );

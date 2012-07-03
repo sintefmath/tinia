@@ -255,7 +255,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedDoubleOutsideRange, Fixture ) {
     double minValue = -100.0;
     double d = maxValue + 1;
 
-    BOOST_CHECK_THROW( model->addConstrainedElement( "aDouble", d, minValue, maxValue ), std::runtime_error );
+    BOOST_CHECK_THROW( model->addConstrainedElement( "aDouble", d, minValue, maxValue ), std::invalid_argument  );
 }
 
 struct AddMatrixFixture : public Fixture {
@@ -272,7 +272,7 @@ struct AddMatrixFixture : public Fixture {
 
 BOOST_FIXTURE_TEST_CASE( addMatrixElement, AddMatrixFixture ) {
     BOOST_CHECK( model->hasElement( matrixName ) );
-    BOOST_CHECK_THROW( model->addMatrixElement( matrixName, myMatrix.data() ), std::runtime_error );
+    BOOST_CHECK_THROW( model->addMatrixElement( matrixName, myMatrix.data() ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( updateMatrixElement, AddMatrixFixture ) {
@@ -293,9 +293,9 @@ BOOST_FIXTURE_TEST_CASE( readMatrixElement, AddMatrixFixture ) {
     model->getMatrixValue( matrixName, v.data() );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( v.begin(), v.end(), myMatrix.begin(), myMatrix.end() );
-    BOOST_CHECK_THROW( model->getMatrixValue( "notAMatrixName", v.data() ), std::runtime_error );
+    BOOST_CHECK_THROW( model->getMatrixValue( "notAMatrixName", v.data() ), std::invalid_argument );
     model->addElement( "AnInt", -4 );
-    BOOST_CHECK_THROW( model->getMatrixValue( "AnInt", v.data() ), std::runtime_error );
+    BOOST_CHECK_THROW( model->getMatrixValue( "AnInt", v.data() ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( matrixSchemaDefinition, AddMatrixFixture ) {
@@ -415,15 +415,15 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
 }
 
 BOOST_FIXTURE_TEST_CASE( UpdatedElementThatIsNotAdded, Fixture ) {
-   BOOST_CHECK_THROW( model->updateElement( "sneakyVariable", 3.1514 ), std::runtime_error );
+   BOOST_CHECK_THROW( model->updateElement( "sneakyVariable", 3.1514 ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElementWithOtherType, Fixture ) {
     std::string elementName = "isovalue";
     model->addElement( elementName, 42 );
 
-    //BOOST_CHECK_THROW( model->updateElement( elementName, 3.1415d ), std::runtime_error );
-    BOOST_CHECK_THROW( model->updateElement( elementName, 3.1415 ), std::runtime_error );
+    //BOOST_CHECK_THROW( model->updateElement( elementName, 3.1415d ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->updateElement( elementName, 3.1415 ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( UpdateElementOutsideConstriant, Fixture ) {
@@ -432,7 +432,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateElementOutsideConstriant, Fixture ) {
     const std::string elementName = "timestep";
     model->addConstrainedElement( elementName, 40, minValue, maxValue );
 
-    BOOST_CHECK_THROW( model->updateElement( elementName, maxValue + 1 ), std::runtime_error );
+    BOOST_CHECK_THROW( model->updateElement( elementName, maxValue + 1 ), std::invalid_argument );
 
 }
 
@@ -440,7 +440,7 @@ BOOST_FIXTURE_TEST_CASE( AddElementTwice, Fixture ) {
     std::string elementName = "isovalue";
     BOOST_CHECK_NO_THROW( model->addElement( elementName, 42 ) );
 
-    BOOST_CHECK_THROW( model->addElement( elementName, 42 ), std::runtime_error );
+    BOOST_CHECK_THROW( model->addElement( elementName, 42 ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( RemoveElement, Fixture ) {
@@ -448,14 +448,14 @@ BOOST_FIXTURE_TEST_CASE( RemoveElement, Fixture ) {
     int elementValue = 1;
 
     // We throw if element is not in model
-    BOOST_CHECK_THROW( model->removeElement( elementName ), std::runtime_error );
+    BOOST_CHECK_THROW( model->removeElement( elementName ), std::invalid_argument );
 
     // Add and remove element
     model->addElement( elementName, elementValue );
     BOOST_CHECK_NO_THROW( model->removeElement( elementName ) );
 
     // Check that it is removed
-    BOOST_CHECK_THROW( model->removeElement( elementName ), std::runtime_error );
+    BOOST_CHECK_THROW( model->removeElement( elementName ), std::invalid_argument );
 
 }
 
@@ -468,7 +468,7 @@ BOOST_FIXTURE_TEST_CASE( GetIntegerElementValue, Fixture ) {
     model->getElementValue( elementName, readValue );
     BOOST_CHECK_EQUAL( readValue, elementValue );
 
-    BOOST_CHECK_THROW( model->getElementValue( "aNameNotThere", readValue ), std::runtime_error );
+    BOOST_CHECK_THROW( model->getElementValue( "aNameNotThere", readValue ), std::invalid_argument );
 }
 
 
@@ -548,15 +548,15 @@ BOOST_FIXTURE_TEST_CASE( AddStringWithRestriction, Fixture ) {
     BOOST_REQUIRE( model->hasElement( elementName ) );
 
     BOOST_CHECK_NO_THROW( model->updateElement( elementName, "wireframe" ) );
-    BOOST_CHECK_THROW( model->updateElement( elementName, "texture" ), std::runtime_error );
+    BOOST_CHECK_THROW( model->updateElement( elementName, "texture" ), std::invalid_argument );
 
     std::string texture( "texture" );
-    BOOST_CHECK_THROW( model->updateElement( elementName, texture ), std::runtime_error );
+    BOOST_CHECK_THROW( model->updateElement( elementName, texture ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( AddStringWithRestrictionNotInList, Fixture ) {
   std::vector<std::string> restrictions({"bar", "gaz"});
-    BOOST_CHECK_THROW( model->addElementWithRestriction<std::string>( "foobar", "foo", restrictions ), std::runtime_error );
+    BOOST_CHECK_THROW( model->addElementWithRestriction<std::string>( "foobar", "foo", restrictions ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
@@ -596,7 +596,7 @@ struct AnnotationFixture : public Fixture {
 
 BOOST_FIXTURE_TEST_CASE( AddAnnotation, AnnotationFixture ) {
     // Check that we throw if we add an anotation that is not there.
-    BOOST_CHECK_THROW( model->addAnnotation( elementName, annotation ), std::runtime_error );
+    BOOST_CHECK_THROW( model->addAnnotation( elementName, annotation ), std::invalid_argument );
 
     model->addElement( elementName, 10 );
     BOOST_CHECK_NO_THROW( model->addAnnotation( elementName, annotation ) );

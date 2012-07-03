@@ -22,6 +22,7 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
+#include <tinia/model/exceptions/RestrictionException.hpp>
 
 using std::cout;
 using std::endl;
@@ -127,28 +128,28 @@ void impl::ElementData::checkValue(const std::string& s) {
 	if(xsdType == "xsd:double") {
 		double val = boost::lexical_cast<double>(s);
 		if( !isWithinLimits(val, s) ) {
-			throw std::runtime_error("Value = " + s + " is not within limits");
+            throw RestrictionException(s);
 		}
 	} 
 	else if(xsdType == "xsd:float") {
 		float val = boost::lexical_cast<float>(s);
 
 		if( !isWithinLimits(val, s) ) {
-			throw std::runtime_error("Value = " + s + " is not within limits");
+            throw RestrictionException(s);
 		}
 	} 
 	else if(xsdType == "xsd:bool") {
 		bool val = boost::lexical_cast<bool>(s);
 
 		if( !isWithinLimits(val, s) ) {
-			throw std::runtime_error("Value = " + s + " is not within limits");
+            throw RestrictionException(s);
 		}
 	}
 	else if(xsdType == "xsd:integer") {
 		int val = boost::lexical_cast<int>(s);
 
 		if( !isWithinLimits(val, s) ) {
-			throw std::runtime_error("Value = " + s + " is not within limits");
+            throw RestrictionException(s);
 		}
 	}
 }

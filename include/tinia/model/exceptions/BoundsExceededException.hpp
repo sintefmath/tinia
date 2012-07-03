@@ -49,15 +49,15 @@ public:
         // Do nothing
     }
 
-    std::string getMaximum() {
+    std::string maximum() {
         return m_max;
     }
 
-    std::string getMinimum() {
+    std::string minimum() {
         return m_min;
     }
 
-    std::string getValue() {
+    std::string value() {
         return m_value;
     }
 
@@ -68,9 +68,9 @@ private:
         return ss.str();
     }
 
+    std::string m_value;
     std::string m_min;
     std::string m_max;
-    std::string m_value;
 };
 
 namespace impl {

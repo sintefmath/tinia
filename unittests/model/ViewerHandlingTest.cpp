@@ -63,7 +63,7 @@ BOOST_FIXTURE_TEST_CASE( addgetViewer, ViewerFixture ) {
 
     Viewer readViewer;
 
-    BOOST_CHECK_THROW( model.getElementValue( "anInt", readViewer ), std::runtime_error );
+    BOOST_CHECK_THROW( model.getElementValue( "anInt", readViewer ), std::invalid_argument );
 
     model.getElementValue( "viewer1", readViewer );
     BOOST_CHECK_EQUAL( viewer.height, readViewer.height );

@@ -33,6 +33,7 @@
 
 #include "tinia/model/impl/utils.hpp"
 #include <tinia/model/exceptions/KeyNotFoundException.hpp>
+#include <tinia/model/exceptions/ExistingKeyException.hpp>
 
 namespace tinia {
 namespace model {
@@ -146,14 +147,10 @@ ExposedModel::addMatrixElement( std::string matrixName, float const* matrixData 
 void
 ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
    scoped_lock lock(m_selfMutex);
-   auto it = stateHash.find( key );
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to update matrix " + key + " but it is not in the model. " );
-   }
 
-   auto& elementData = it->second;
+   auto& elementData = findElementInternal(key);
    if ( elementData.getLength() != impl::ElementData::MATRIX_LENGTH ) {
-      throw std::runtime_error( "Trying to get element " + key + " as a matrix, but it is not defined as one" );
+       throw TypeException("Matrix", elementData.getXSDType());
    }
    impl::ElementData before = elementData;
    addMatrixHelper( key, matrixData );
@@ -192,7 +189,7 @@ ExposedModel::removeElement( std::string key ) {
    scoped_lock lock(m_selfMutex);
    auto it = stateHash.find( key );
    if ( it == stateHash.end() ) {
-      throw std::runtime_error( key + " is not in the model." );
+       throw KeyNotFoundException(key);
    }
    impl::ElementData data = it->second;
    stateHash.erase( it );
@@ -252,7 +249,7 @@ void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, imp
 void
 ExposedModel::addElementErrorChecking( std::string key ) const {
    if ( stateHash.find( key ) != stateHash.end() ) {
-      throw std::runtime_error( "Trying to add element " + key + " to the model, but it is already defined. " );
+       throw ExistingKeyException(key);
    }
 }
 
