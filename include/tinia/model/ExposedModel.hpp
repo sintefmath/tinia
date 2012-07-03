@@ -42,6 +42,7 @@
 #include "tinia/model/GUILayout.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include "tinia/model/Viewer.hpp"
+#include <tinia/model/exceptions/BoundsExceededException.hpp>
 
 /** \mainpage
      ExposedModel is a small library used to create, update and query policies.
@@ -495,12 +496,7 @@ ExposedModel::addElement( std::string key, T value, const std::string annotation
 template<typename T>
 void
 ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, T maxConstraint, const std::string annotation ) {
-   if ( ( value < minConstraint ) ||
-        ( value > maxConstraint ) ) {
-      std::stringstream ss;
-      ss <<  "Trying to add constrained element " << key << " but " << value << " is outside [" << minConstraint << ", " << maxConstraint << "].";
-      throw std::runtime_error( ss.str() );
-   }
+    impl::checkBounds(value, minConstraint, maxConstraint);
 
 
    impl::ElementData data;
@@ -608,7 +604,7 @@ UpdateElementHelper<false>::operator()( std::string key, impl::ElementData& elem
    const std::string stringValue = boost::lexical_cast<std::string>( value );
 
    if ( elementData.invalidConstraints( value) ) {
-      throw std::runtime_error( "Value " + stringValue + " is outside constraints." );
+       throw BoundsExceededException(boost::lexical_cast<std::string>(value), elementData.getMinConstraint(), elementData.getMaxConstraint());
    }
 
    if ( elementData.violatingRestriction(  value ) ) {
@@ -636,15 +632,11 @@ ExposedModel::updateElement( std::string key, T value ) {
    std::string stringValueBeforeUpdate;
    {// Lock block
       scoped_lock(m_selfMutex);
-      const auto it = stateHash.find( key );
 
-      if ( it == stateHash.end() ) {
-         throw std::runtime_error( "Trying to update element " + key + " but it is not already added" );
-      }
 
 
       std::string myType = impl::TypeToXSDType<T>::getTypename();
-      impl::ElementData& elementData = it->second;
+      impl::ElementData& elementData = findElementInternal(key);
       std::string storedType = elementData.getXSDType();
 
       if ( storedType != myType ) {
@@ -675,13 +667,8 @@ ExposedModel::getElementValue( std::string key, T& t ) {
    // like this for now.
    scoped_lock(m_selfMutex);
 
-   const auto it = stateHash.find( key );
 
-   if ( it == stateHash.end() ) {
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   }
-
-   auto& elementData = it->second;
+   auto& elementData = findElementInternal(key);
    auto myType = impl::TypeToXSDType<T>::getTypename();
    auto storedType = elementData.getXSDType();
    if ( storedType !=  myType ) {
@@ -744,14 +731,8 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     bool emitValueChange = false;
     { // Lock block
         scoped_lock(m_selfMutex);
-        auto it = stateHash.find( key );
-        if( it == stateHash.end() ) {
-            std::stringstream ss;
-            ss << "Could not find element with key = \"" << key << "\".";
-            throw std::runtime_error(ss.str());
-        }
 
-        auto& elementData = it->second;
+        auto& elementData = findElementInternal(key);
 
         {
             std::stringstream ss;

@@ -108,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(constraintsChange, SchemaListenerFixture)
     BOOST_CHECK_EQUAL("12", schemaListener.modified_min);
     BOOST_CHECK_EQUAL("20", schemaListener.modified_max);
 
-    BOOST_CHECK_THROW(model.updateElement("constrained", 0), std::runtime_error);
+    BOOST_CHECK_THROW(model.updateElement("constrained", 0), std::invalid_argument);
 
 }
 

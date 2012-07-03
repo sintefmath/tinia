@@ -65,14 +65,12 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
 
    {// Lock scope
       scoped_lock(m_selfMutex);
-      const auto it = stateHash.find( key );
-      if ( it == stateHash.end() ) {
-         throw std::runtime_error( "Trying to update element " + key + " but it is not yet added" );
-      }
-      before = it->second;
-      incrementRevisionNumber(it->second);
-      it->second.setStringValue( value );
-      data = it->second;
+
+      auto element = findElementInternal(key);
+      before = element;
+      incrementRevisionNumber(element);
+      element.setStringValue( value );
+      data = element;
    }
 
    if(before.getStringValue() != data.getStringValue())
@@ -100,16 +98,13 @@ cout << "---------------------------------------------------" << endl;
 void ExposedModel::updateElementFromPTree( const std::string &key, const StringStringPTree &value )
 {
       scoped_lock lock(m_selfMutex);
-      const auto it = stateHash.find( key );
-      if ( it == stateHash.end() ) {
-         throw std::runtime_error( "Trying to update element " + key + " but it is not yet added" );
-      }
-      incrementRevisionNumber(it->second);
+    auto& element = findElementInternal(key);
+      incrementRevisionNumber(element);
       // We jump right past the root, since that is not stored in the impl::ElementData's propertyTree, evidently...
       // pt_print("argument to ExposedModel::updateElementFromPTree", value.begin()->second);
       // printCurrentState();
-      stateHash[key].setPropertyTreeValue( value.begin()->second );
-      impl::ElementData data  =stateHash[key];
+      element.setPropertyTreeValue( value.begin()->second );
+      impl::ElementData data  = element;
       lock.unlock();
 
       // For now we don't add checking for complex types
@@ -122,12 +117,8 @@ ExposedModel::addAnnotationHelper( std::string key, std::unordered_map<std::stri
    impl::ElementData data;
    {
       scoped_lock(m_selfMutex);
-      auto it = stateHash.find( key );
-      if ( it == stateHash.end() ) {
-         throw std::runtime_error( "Trying to set annotation for element " + key + " but it is not in the model." );
-      }
 
-      auto& elementData = it->second;
+      auto& elementData = findElementInternal(key);
       elementData.setAnnotation( annotationMap );
 
       // Copy
@@ -221,10 +212,7 @@ string
 ExposedModel::getElementValueAsString( string key)
 {
    scoped_lock(m_selfMutex);
-   const auto key_val = stateHash.find( key );
-   if ( key_val == stateHash.end() )
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
-   return key_val->second.getStringValue();
+   return findElementInternal(key).getStringValue();
 }
 
 void
@@ -232,16 +220,8 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
    // Locking whole method
    scoped_lock(m_selfMutex);
 
-   const auto it= stateHash.find( key );
-   if ( it == stateHash.end() )
-      throw std::runtime_error( "Trying to get element " + key + " but it is not in the model" );
 
-   auto& elementData = it->second;
-   if ( elementData.getLength() != impl::ElementData::MATRIX_LENGTH ) {
-      throw std::runtime_error( "Trying to get element " + key + " as a matrix, but it is not defined as one" );
-   }
-
-   elementFactory.createMatrix( elementData, matrixData );
+   elementFactory.createMatrix( findElementInternal(key), matrixData );
 
 }
 
