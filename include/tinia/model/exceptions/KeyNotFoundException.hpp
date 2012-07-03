@@ -9,6 +9,10 @@ public:
 
     }
 
+    ~KeyNotFoundException() throw() {
+        // Do nothing;
+    }
+
     const std::string& key() const {
         return m_key;
     }
