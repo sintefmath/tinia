@@ -28,6 +28,10 @@ namespace tinia { namespace model {
 
         }
 
+        ~TypeException() throw() {
+
+        }
+
         std::string actual() {
             return m_actual;
         }

@@ -36,6 +36,10 @@ public:
 
     }
 
+    ~RestrictionException() throw() {
+
+    }
+
     const std::string value() const {
         return m_value;
     }
