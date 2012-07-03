@@ -44,6 +44,11 @@ public:
         ;
     }
 
+    // We need this to be compliant with std::invalid_argument
+    ~BoundsExceededException() throw() {
+        // Do nothing
+    }
+
     std::string getMaximum() {
         return m_max;
     }
