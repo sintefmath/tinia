@@ -720,11 +720,7 @@ addAnnotationHelper( key, annotationMap );
 template<typename T>
 void
 ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValue) {
-    if( value > maxValue || value < minValue ) {
-        std::stringstream ss;
-        ss << "Value out of bounds. Value = " << value << ", min = " << minValue << ", max = " << maxValue << ".";
-        throw new std::runtime_error(ss.str());
-    }
+    impl::checkBounds(value, minValue, maxValue);
 
     impl::ElementData data;
     bool emitChange = false;
