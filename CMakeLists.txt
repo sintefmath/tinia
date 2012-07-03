@@ -97,6 +97,11 @@ FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 
 IF(${SERVER})
+
+  FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
+    HINTS "/usr/include/apache2" "/usr/include/httpd/" 
+  )
+  
   FIND_LIBRARY( RT
     NAMES rt
     PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
@@ -106,8 +111,7 @@ IF(${SERVER})
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-
-  SET(APACHE_INCLUDE_DIR "/usr/include/apache2" "/usr/include/httpd/")
+    
   SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
     "/usr/include/apr-1")
 ENDIF()
