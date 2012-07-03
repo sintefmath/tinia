@@ -37,10 +37,7 @@ IF(WIN32)
   ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
   ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
   SET(CMAKE_INSTALL_PREFIX CACHE INTERNAL "")
-  SET(tinia_INSTALL_PREFIX
-    "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia"
-    CACHE PATH "Path to install tinia")
- SET(CMAKE_PREFIX_PATH 
+  SET(CMAKE_PREFIX_PATH 
 	"$ENV{TINIA_3RDPARTY}/glm;$ENV{TINIA_3RDPARTY}/glew;$ENV{TINIA_3RDPARTY}/boost" )
 ENDIF()
 ENDIF( EXTEND_CMAKE_MODULE_PATH )
@@ -97,6 +94,11 @@ FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 
 IF(${SERVER})
+
+  FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
+    HINTS "/usr/include/apache2" "/usr/include/httpd/" 
+  )
+  
   FIND_LIBRARY( RT
     NAMES rt
     PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
@@ -106,8 +108,7 @@ IF(${SERVER})
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-
-  SET(APACHE_INCLUDE_DIR "/usr/include/apache2" "/usr/include/httpd/")
+    
   SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
     "/usr/include/apr-1")
 ENDIF()

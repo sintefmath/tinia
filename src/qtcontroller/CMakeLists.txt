@@ -47,9 +47,9 @@ IF(NOT WIN32)
   install( TARGETS qtcontroller LIBRARY DESTINATION lib/ COMPONENT qtcontroller)
 ELSE()
  INSTALL(DIRECTORY include/tinia/qtcontroller
-    DESTINATION ${tinia_INSTALL_PREFIX}/include/tinia/
+    DESTINATION include/tinia/
     FILES_MATCHING PATTERN "*.hpp"
     PATTERN ".git" EXCLUDE)
   INSTALL(TARGETS qtcontroller
-    DESTINATION ${tinia_INSTALL_PREFIX}/lib)
+    DESTINATION lib)
 ENDIF()

@@ -46,7 +46,7 @@ IF(${SERVER})
 
   INSTALL(TARGETS
     test_job RUNTIME
-    DESTINATION /var/trell/apps/test_job/bin/
+    DESTINATION var/trell/apps/test_job/bin/
     COMPONENT mod_trell
     )
 ENDIF()
