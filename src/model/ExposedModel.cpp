@@ -67,7 +67,7 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
    {// Lock scope
       scoped_lock(m_selfMutex);
 
-      auto element = findElementInternal(key);
+      auto& element = findElementInternal(key);
       before = element;
       incrementRevisionNumber(element);
       element.setStringValue( value );
@@ -217,7 +217,10 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
    // Locking whole method
    scoped_lock(m_selfMutex);
 
-
+   auto& elementData = findElementInternal(key);
+   if (elementData.getLength() != impl::ElementData::MATRIX_LENGTH) {
+       throw TypeException(elementData.getXSDType(), "Matrix");
+   }
    elementFactory.createMatrix( findElementInternal(key), matrixData );
 
 }
