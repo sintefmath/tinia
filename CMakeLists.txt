@@ -151,6 +151,7 @@ IF(${SERVER})
 ENDIF()
 ADD_SUBDIRECTORY( "unittests/renderlist/" )
 ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
+ADD_SUBDIRECTORY( "unittests/qtjobcontroller/" )
 
 # Examples
 ADD_SUBDIRECTORY( "examples/rlview/" )
