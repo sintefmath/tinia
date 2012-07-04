@@ -22,7 +22,7 @@
 namespace tinia { namespace model {
 class RestrictionException : std::invalid_argument {
 public:
-    RestrictionException(const std::string& value)
+    explicit RestrictionException(const std::string& value)
         : std::invalid_argument(makeWhat(value))
     {
         ;
