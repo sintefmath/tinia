@@ -28,6 +28,8 @@ namespace tinia { namespace model {
 
         }
 
+        // We need this to be complaint with invalid_argument (need to explicitly state
+        // that we throw nothing)
         ~TypeException() throw() {
 
         }

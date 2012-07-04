@@ -44,7 +44,8 @@ public:
         ;
     }
 
-    // We need this to be compliant with std::invalid_argument
+    // We need this to be complaint with invalid_argument (need to explicitly state
+    // that we throw nothing)
     ~BoundsExceededException() throw() {
         // Do nothing
     }
