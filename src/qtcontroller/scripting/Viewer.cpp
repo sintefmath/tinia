@@ -72,6 +72,7 @@ QScriptValue Viewer::getElementValue(const QString &key)
     return QScriptValue();
 }
 
+
 } // namespace scripting
 } // namespace qtobserver
 } // namespace tinia

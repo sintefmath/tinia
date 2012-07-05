@@ -278,5 +278,39 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
 
 
 
+BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
+
+    tinia::model::Viewer v;
+    v.height = 100;
+    v.width = 42;
+    for(int i = 0; i < 16; ++i) {
+        v.modelviewMatrix[i] = i + 1;
+        v.projectionMatrix[i] = 16 - i;
+    }
+    model->addElement("viewer", v);
+    for(int i = 0; i < 16; ++i) {
+        QString fetchModelView = "(function(model) { return model.getElementValue('viewer').getElementValue('modelviewMatrix')[" + QString::number(i) + "]; })";
+        auto fetchModelViewFunction = eng.evaluate(fetchModelView);
+        auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+        BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
+
+
+        QString fetchProjection = "(function(model) {  return model.getElementValue('viewer').getElementValue('projectionMatrix')[" + QString::number(i)+ "]; })";
+        auto fetchProjectionFunction = eng.evaluate(fetchProjection);
+        auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+        BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
+    }
+
+    QString fetchHeight = "(function(model) { return model.getElementValue('viewer').getElementValue('height'); })";
+    BOOST_CHECK_EQUAL(100, eng.evaluate(fetchHeight).call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel)).toNumber());
+
+    QString fetchWidth = "(function(model) { return model.getElementValue('viewer').getElementValue('width'); })";
+    BOOST_CHECK_EQUAL(42, eng.evaluate(fetchWidth).call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel)).toNumber());
+
+
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
