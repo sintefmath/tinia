@@ -42,7 +42,14 @@ void ExposedModel::updateElement(const QString &key, int value)
 
 void ExposedModel::updateElement(const QString &key, double value)
 {
-    m_model->updateElement(key.toStdString(), value);
+    // Here we actually need to check the type, since it could be an int,
+    // as QtScript treats them all as doubles.
+    if(m_model->getStateSchemaElement(key.toStdString()).getXSDType()=="xsd:integer") {
+        updateElement(key, int(value));
+    }
+    else {
+        m_model->updateElement(key.toStdString(), value);
+    }
 }
 
 void ExposedModel::updateElement(const QString &key, bool value)
