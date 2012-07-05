@@ -17,11 +17,7 @@ public:
 signals:
     
 public slots:
-    void updateElement(const QString& key, const QString& value);
-    void updateElement(const QString& key, int value);
-    void updateElement(const QString& key, double value);
-    void updateElement(const QString& key, bool value);
-    void updateElement(const QString& key, Viewer* v);
+    void updateElement(const QString& key, QScriptValue value);
 
     QScriptValue getElementValue(const QString& key);
 

@@ -64,11 +64,6 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithoutScriptBool, ModelScriptingFixture) {
     bool newValue;
     model->getElementValue("key", newValue);
     BOOST_CHECK_EQUAL(true, newValue);
-
-    // Also test string conversion:
-    scriptingModel.updateElement("key", QString("0"));
-    model->getElementValue("key", newValue);
-    BOOST_CHECK_EQUAL(false, newValue);
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptString, ModelScriptingFixture) {
@@ -308,6 +303,31 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
     BOOST_CHECK_EQUAL(42, eng.evaluate(fetchWidth).call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel)).toNumber());
 
 
+    // Now we update from javascript
+    QString script = "(function(model) { "
+            "var viewer = model.getElementValue('viewer');"
+            "viewer.updateElement('projectionMatrix', "
+            "    Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)); "
+            "viewer.updateElement('modelviewMatrix', "
+            "    Array(16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)); "
+            "viewer.updateElement('width', 100);"
+            "viewer.updateElement('height', 42);"
+
+            "model.updateElement('viewer', viewer);"
+
+            "})";
+
+    auto function = eng.evaluate(script);
+    function.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+
+
+    tinia::model::Viewer modelViewer;
+    model->getElementValue("viewer", modelViewer);
+
+    for(int i = 0; i < 16; ++i) {
+        BOOST_CHECK_EQUAL(modelViewer. modelviewMatrix[i], 16 - i );
+        BOOST_CHECK_EQUAL(modelViewer. projectionMatrix[i], i + 1);
+    }
 }
 
 

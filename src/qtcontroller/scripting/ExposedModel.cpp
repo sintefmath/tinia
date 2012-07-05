@@ -12,7 +12,7 @@ ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
 {
 }
 
-void ExposedModel::updateElement(const QString &key, const QString &value)
+void ExposedModel::updateElement(const QString &key, QScriptValue value)
 {
     auto schemaElement = m_model->getStateSchemaElement(key.toStdString());
     auto type = schemaElement.getXSDType();
@@ -23,46 +23,23 @@ void ExposedModel::updateElement(const QString &key, const QString &value)
 
 
     if (type == std::string("double")) {
-        updateElement(key, boost::lexical_cast<double>(value.toStdString()));
+        m_model->updateElement(key.toStdString(), double(value.toNumber()));
     }
     else if(type==std::string("integer"))  {
-        updateElement(key, boost::lexical_cast<int>(value.toStdString()));
+        m_model->updateElement(key.toStdString(), int(value.toNumber()));
     }
     else if(type==std::string("bool")) {
-        updateElement(key, boost::lexical_cast<bool>(value.toStdString()));
+        m_model->updateElement(key.toStdString(), value.toBool());
     }
     else if(type==std::string("string")) {
-        m_model->updateElement(key.toStdString(), value.toStdString());
+        m_model->updateElement(key.toStdString(), value.toString().toStdString());
+    }
+    else if(type==std::string("complexType")) {
+        m_model->updateElement(key.toStdString(), static_cast<Viewer*>(value.toQObject())->viewer());
     }
 
 }
 
-void ExposedModel::updateElement(const QString &key, int value)
-{
-    m_model->updateElement(key.toStdString(), value);
-}
-
-void ExposedModel::updateElement(const QString &key, double value)
-{
-    // Here we actually need to check the type, since it could be an int,
-    // as QtScript treats them all as doubles.
-    if(m_model->getStateSchemaElement(key.toStdString()).getXSDType()=="xsd:integer") {
-        updateElement(key, int(value));
-    }
-    else {
-        m_model->updateElement(key.toStdString(), value);
-    }
-}
-
-void ExposedModel::updateElement(const QString &key, bool value)
-{
-    m_model->updateElement(key.toStdString(), value);
-}
-
-void ExposedModel::updateElement(const QString &key, Viewer *v)
-{
-    m_model->updateElement(key.toStdString(), v->viewer());
-}
 
 QScriptValue ExposedModel::getElementValue(const QString &key)
 {
