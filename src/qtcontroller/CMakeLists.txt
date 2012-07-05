@@ -1,16 +1,22 @@
 FILE(GLOB_RECURSE qtcontroller_HEADERS "../../include/tinia/qtcontroller/*.h" "../../include/tinia/qtcontroller/*.hpp")
 FILE(GLOB_RECURSE qtcontroller_SOURCES "*.c" "*.cpp")
+
+
+FILE(GLOB qtcontroller_RESOURCES "*.qrc")
 FILE(GLOB qtcontroller_FORMS "*.ui")
 FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/moc/*.hpp"
     "../../include/tinia/qtcontroller/moc/*.h"
     "../../include/tinia/qtcontroller/scripting/*.hpp")
 
+
+QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
 QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
 
 IF(NOT WIN32)
-  add_library( qtcontroller 
+  add_library( qtcontroller
+    ${qtcontroller_QRC_SOURCES}
     ${qtcontroller_HEADERS}
     ${qtcontroller_SOURCES}
     ${qtcontroller_HEADERS_MOC}
@@ -19,6 +25,7 @@ IF(NOT WIN32)
     )
 ELSE()
   add_library( qtcontroller
+    ${qtcontroller_QRC_SOURCES}
     ${qtcontroller_HEADERS}
     ${qtcontroller_SOURCES}
     ${qtcontroller_HEADERS_MOC}

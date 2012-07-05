@@ -16,13 +16,9 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_ALTERNATIVE_INIT_API
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 #include <QFile>
 #include <QtScript>
-#include <QCoreApplication>
 
 #include <stdexcept>
 
@@ -31,39 +27,9 @@ namespace {
 using namespace std;
 
 using namespace boost::unit_test;
-struct SetupQtApplication {
-    QCoreApplication app;
 
-    SetupQtApplication()
-        : app( framework::master_test_suite().argc, framework::master_test_suite().argv )
-    {
-        ;
-    }
-};
-
-struct BringUpJavaScript {
-    QScriptEngine engine;
-    QScriptValue object;
-
-    BringUpJavaScript( QString fileName ) {
-        QFile scriptFile( fileName );
-        BOOST_ASSERT( scriptFile.open( QIODevice::ReadOnly ) );
-        BOOST_ASSERT( true );
-
-        QTextStream stream(&scriptFile);
-        auto contents = stream.readAll();
-        scriptFile.close();
-        object = engine.evaluate( contents, fileName );
-
-        /*auto func = object.property( "foo" );
-
-        auto lineEditVal = engine.newQObject( ui->lineEdit );
-       // auto result = func.call( object, QScriptValueList() << lineEditVal );
-       */
-    }
-};
-
-void testJs( QString fileName ) {
+BOOST_AUTO_TEST_CASE( testJS ) {
+    QString fileName = ":scripting/gl-matrix.js";
     QScriptEngine engine;
 
     QFile scriptFile( fileName );
@@ -86,13 +52,14 @@ void testJs( QString fileName ) {
     BOOST_TEST_MESSAGE("FROM JS: " + result1.toString().toStdString());
     //BOOST_TEST_MESSAGE( ((QList<double>*)result1.toQObject())->at(0) );
 }
-
+}
 //BOOST_AUTO_TEST_CASE( javascriptinterop )
 //{
 //    BOOST_TEST_MESSAGE( "Hello" );
 //    BOOST_ASSERT( false );
 //}
 
+/*
 bool
 init_unit_test_suite() {
     QString params[] = { ":orig/gl-matrix.js", ":orig/gl-matrix-min.js", ":ours/glMatrix.js" };
@@ -111,3 +78,4 @@ main( int argc, char* argv[] )
     return ::boost::unit_test::unit_test_main( &init_unit_test_suite, argc, argv );
 }
 
+*/

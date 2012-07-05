@@ -18,4 +18,18 @@
 
 #define BOOST_TEST_MODULE qtcontrollerTest
 #include <boost/test/unit_test.hpp>
+#include <QApplication>
+
+struct SetupQtApplication {
+    QCoreApplication app;
+
+    SetupQtApplication()
+        : app( boost::unit_test::framework::master_test_suite().argc, boost::unit_test::framework::master_test_suite().argv )
+    {
+        ;
+    }
+};
+
+
+BOOST_GLOBAL_FIXTURE( SetupQtApplication );
 
