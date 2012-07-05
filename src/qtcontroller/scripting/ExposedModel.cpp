@@ -37,14 +37,17 @@ void ExposedModel::updateElement(const QString &key, const QString &value)
 
 void ExposedModel::updateElement(const QString &key, int value)
 {
+    m_model->updateElement(key.toStdString(), value);
 }
 
 void ExposedModel::updateElement(const QString &key, double value)
 {
+    m_model->updateElement(key.toStdString(), value);
 }
 
 void ExposedModel::updateElement(const QString &key, bool value)
 {
+    m_model->updateElement(key.toStdString(), value);
 }
 
 } // namespace scripting
