@@ -20,16 +20,27 @@
 #include <boost/test/unit_test.hpp>
 #include <QApplication>
 
+
+namespace tinia {
+namespace test {
+
 struct SetupQtApplication {
     QCoreApplication app;
 
+    static char* argv;
+    static int argc;
+
     SetupQtApplication()
-        : app( boost::unit_test::framework::master_test_suite().argc, boost::unit_test::framework::master_test_suite().argv )
+        : app(argc, &argv)
     {
         ;
     }
 };
 
+char* SetupQtApplication::argv = "bleh";
+int SetupQtApplication::argc = 1;
+}}
 
+using namespace tinia::test;
 BOOST_GLOBAL_FIXTURE( SetupQtApplication );
 
