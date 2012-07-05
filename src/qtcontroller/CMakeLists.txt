@@ -1,9 +1,10 @@
 FILE(GLOB_RECURSE qtcontroller_HEADERS "../../include/tinia/qtcontroller/*.h" "../../include/tinia/qtcontroller/*.hpp")
-FILE(GLOB qtcontroller_SOURCES "*.c" "*.cpp")
+FILE(GLOB_RECURSE qtcontroller_SOURCES "*.c" "*.cpp")
 FILE(GLOB qtcontroller_FORMS "*.ui")
 FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/moc/*.hpp"
-    "../../include/tinia/qtcontroller/moc/*.h")
+    "../../include/tinia/qtcontroller/moc/*.h"
+    "../../include/tinia/qtcontroller/scripting/*.hpp")
 
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
 QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
