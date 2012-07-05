@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/orig">
+        <file>gl-matrix.js</file>
+        <file>gl-matrix-min.js</file>
+    </qresource>
+    <qresource prefix="/ours">
+        <file>glMatrix.js</file>
+    </qresource>
+</RCC>
