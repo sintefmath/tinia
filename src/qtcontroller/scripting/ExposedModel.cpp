@@ -57,6 +57,37 @@ void ExposedModel::updateElement(const QString &key, bool value)
     m_model->updateElement(key.toStdString(), value);
 }
 
+QScriptValue ExposedModel::getElementValue(const QString &key)
+{
+    auto schemaElement = m_model->getStateSchemaElement(key.toStdString());
+    auto type = schemaElement.getXSDType();
+    if(type.find("xsd:") != std::string::npos) {
+        type = type.substr(4);
+    }
+
+    if (type == std::string("double")) {
+        double value;
+        m_model->getElementValue(key.toStdString(), value);
+        return QScriptValue(value);
+    }
+    if (type == std::string("integer")) {
+        int value;
+        m_model->getElementValue(key.toStdString(), value);
+        return QScriptValue(value);
+    }
+    if (type == std::string("bool")) {
+        bool value;
+        m_model->getElementValue(key.toStdString(), value);
+        return QScriptValue(value);
+    }
+    if (type == std::string("string")) {
+        std::string value;
+        m_model->getElementValue(key.toStdString(), value);
+        return QScriptValue(QString(value.c_str()));
+    }
+    return QScriptValue();
+}
+
 } // namespace scripting
 } // namespace qtcontroller
 } // namespace tinia

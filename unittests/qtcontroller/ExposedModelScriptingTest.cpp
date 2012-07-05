@@ -139,6 +139,61 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptBool, ModelScriptingFixture) {
     BOOST_CHECK_EQUAL(true, newValue);
 }
 
+BOOST_FIXTURE_TEST_CASE(GetElementValueString, ModelScriptingFixture) {
+    model->addElement<std::string>("key", "value");
+
+    QScriptEngine eng;
+    auto scriptObject = eng.newQObject(&scriptingModel);
+    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL("value", result.toString().toStdString());
+}
+
+BOOST_FIXTURE_TEST_CASE(GetElementValueInt, ModelScriptingFixture) {
+    model->addElement<int>("key", 42);
+
+    QScriptEngine eng;
+    auto scriptObject = eng.newQObject(&scriptingModel);
+    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL(42, result.toNumber());
+
+    // Also ensure the type is correct:
+    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL("number", typeResult.toString().toStdString());
+}
+
+BOOST_FIXTURE_TEST_CASE(GetElementValueDouble, ModelScriptingFixture) {
+    model->addElement<double>("key", 42.5);
+
+    QScriptEngine eng;
+    auto scriptObject = eng.newQObject(&scriptingModel);
+    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL(42.5, result.toNumber());
+
+    // Also ensure the type is correct:
+    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL("number", typeResult.toString().toStdString());
+}
+
+BOOST_FIXTURE_TEST_CASE(GetElementValueBool, ModelScriptingFixture) {
+    model->addElement<bool>("key", true);
+
+    QScriptEngine eng;
+    auto scriptObject = eng.newQObject(&scriptingModel);
+    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL(true, result.toBool());
+
+    // Also ensure the type is correct:
+    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    BOOST_CHECK_EQUAL("boolean", typeResult.toString().toStdString());
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

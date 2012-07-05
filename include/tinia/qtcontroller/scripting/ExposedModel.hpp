@@ -1,7 +1,7 @@
 #pragma once
 #include <QObject>
 #include <tinia/model/ExposedModel.hpp>
-
+#include <QtScript>
 namespace tinia {
 namespace qtcontroller {
 namespace scripting {
@@ -19,6 +19,8 @@ public slots:
     void updateElement(const QString& key, int value);
     void updateElement(const QString& key, double value);
     void updateElement(const QString& key, bool value);
+
+    QScriptValue getElementValue(const QString& key);
 
 
 private:
