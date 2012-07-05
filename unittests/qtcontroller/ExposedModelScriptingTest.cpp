@@ -269,7 +269,11 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
         BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
     }
 
+    QString fetchHeight = "(function(viewer) { return viewer.getElementValue('height'); })";
+    BOOST_CHECK_EQUAL(100, eng.evaluate(fetchHeight).call(QScriptValue(), QScriptValueList() << eng.newQObject(&v)).toNumber());
 
+    QString fetchWidth = "(function(viewer) { return viewer.getElementValue('width'); })";
+    BOOST_CHECK_EQUAL(42, eng.evaluate(fetchWidth).call(QScriptValue(), QScriptValueList() << eng.newQObject(&v)).toNumber());
 }
 
 
