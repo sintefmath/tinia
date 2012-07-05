@@ -8,8 +8,10 @@ namespace {
 struct ModelScriptingFixture {
     std::shared_ptr<tinia::model::ExposedModel> model;
     tinia::qtcontroller::scripting::ExposedModel scriptingModel;
+    QScriptEngine eng;
+
     ModelScriptingFixture()
-        : model(new tinia::model::ExposedModel()), scriptingModel(model)
+        : model(new tinia::model::ExposedModel()), scriptingModel(model, &eng)
     {
         ;
     }
@@ -70,7 +72,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithoutScriptBool, ModelScriptingFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptString, ModelScriptingFixture) {
-    QScriptEngine eng;
+
     model->addElement<std::string>("key", "value");
     auto scriptObject = eng.newQObject(&scriptingModel);
     auto function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 'newValue'); })");
@@ -82,7 +84,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptString, ModelScriptingFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptInt, ModelScriptingFixture) {
-    QScriptEngine eng;
+
     model->addElement<int>("key", 0);
     auto scriptObject = eng.newQObject(&scriptingModel);
 
@@ -102,7 +104,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptInt, ModelScriptingFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptDouble, ModelScriptingFixture) {
-    QScriptEngine eng;
+
     model->addElement<double>("key", 0.0);
     auto scriptObject = eng.newQObject(&scriptingModel);
 
@@ -121,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptDouble, ModelScriptingFixture) {
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptBool, ModelScriptingFixture) {
-    QScriptEngine eng;
+
     model->addElement<bool>("key", true);
     auto scriptObject = eng.newQObject(&scriptingModel);
 
@@ -142,7 +144,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptBool, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(GetElementValueString, ModelScriptingFixture) {
     model->addElement<std::string>("key", "value");
 
-    QScriptEngine eng;
+
     auto scriptObject = eng.newQObject(&scriptingModel);
     auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
     auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
@@ -152,7 +154,7 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueString, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(GetElementValueInt, ModelScriptingFixture) {
     model->addElement<int>("key", 42);
 
-    QScriptEngine eng;
+
     auto scriptObject = eng.newQObject(&scriptingModel);
     auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
     auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
@@ -167,7 +169,7 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueInt, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(GetElementValueDouble, ModelScriptingFixture) {
     model->addElement<double>("key", 42.5);
 
-    QScriptEngine eng;
+
     auto scriptObject = eng.newQObject(&scriptingModel);
     auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
     auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
@@ -182,7 +184,7 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueDouble, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(GetElementValueBool, ModelScriptingFixture) {
     model->addElement<bool>("key", true);
 
-    QScriptEngine eng;
+
     auto scriptObject = eng.newQObject(&scriptingModel);
     auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
     auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
@@ -193,6 +195,83 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueBool, ModelScriptingFixture) {
     auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL("boolean", typeResult.toString().toStdString());
 }
+
+BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithoutScript, ModelScriptingFixture) {
+    tinia::qtcontroller::scripting::Viewer v(&eng);
+    QString modelView("Array(");
+    for(int i = 0; i < 16; ++i) {
+        modelView += QString::number(i);
+        if( i  < 15 ) {
+            modelView +=", ";
+        }
+    }
+    modelView += ")";
+
+    v.updateElement("modelviewMatrix", eng.evaluate(modelView));
+
+    QString projection("Array(");
+    for(int i = 0; i < 16; ++i) {
+        projection += QString::number(15 - i);
+        if( i  < 15 ) {
+            projection +=", ";
+        }
+    }
+    projection += ")";
+
+    v.updateElement("projectionMatrix", eng.evaluate(projection));
+
+    v.updateElement("height", QScriptValue(100));
+    v.updateElement("width", QScriptValue(42));
+
+    tinia::model::Viewer modelViewer = v.viewer();
+
+    for(int i = 0; i < 16; ++i) {
+        BOOST_CHECK_EQUAL(modelViewer. modelviewMatrix[i], i);
+        BOOST_CHECK_EQUAL(modelViewer. projectionMatrix[i], 15-i);
+    }
+    BOOST_CHECK_EQUAL(modelViewer.height, 100);
+    BOOST_CHECK_EQUAL(modelViewer.width, 42);
+}
+
+BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture) {
+    tinia::qtcontroller::scripting::Viewer v(&eng);
+
+    QString script = "(function(viewer) { "
+            "viewer.updateElement('modelviewMatrix', "
+            "    Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)); "
+            "viewer.updateElement('projectionMatrix', "
+            "    Array(16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)); "
+            "viewer.updateElement('height', 100);"
+            "viewer.updateElement('width', 42);"
+            "})";
+
+    auto function = eng.evaluate(script);
+    function.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
+
+    tinia::model::Viewer modelViewer = v.viewer();
+
+    for(int i = 0; i < 16; ++i) {
+        BOOST_CHECK_EQUAL(modelViewer. modelviewMatrix[i], i + 1);
+        BOOST_CHECK_EQUAL(modelViewer. projectionMatrix[i], 16-i);
+    }
+    BOOST_CHECK_EQUAL(modelViewer.height, 100);
+    BOOST_CHECK_EQUAL(modelViewer.width, 42);
+    for(int i = 0; i < 16; ++i) {
+        QString fetchModelView = "(function(viewer) { return viewer.getElementValue('modelviewMatrix')[" + QString::number(i) + "]; })";
+        auto fetchModelViewFunction = eng.evaluate(fetchModelView);
+        auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
+        BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
+
+
+        QString fetchProjection = "(function(viewer) { return viewer.getElementValue('projectionMatrix')[" + QString::number(i)+ "]; })";
+        auto fetchProjectionFunction = eng.evaluate(fetchProjection);
+        auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
+        BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
+    }
+
+
+}
+
 
 
 

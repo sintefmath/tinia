@@ -1,21 +1,29 @@
-#ifndef TINIA_QTOBSERVER_SCRIPTING_VIEWER_HPP
-#define TINIA_QTOBSERVER_SCRIPTING_VIEWER_HPP
-
+#pragma once
 #include <QObject>
+#include <tinia/model/Viewer.hpp>
+#include <QtScript>
 
 namespace tinia {
-namespace qtobserver {
+namespace qtcontroller {
 namespace scripting {
 
 class Viewer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Viewer(QObject *parent = 0);
-    
+    explicit Viewer(QScriptEngine* engine, QObject *parent = 0);
+    tinia::model::Viewer& viewer();
+
 signals:
     
 public slots:
+     void updateElement(const QString& key, QScriptValue value);
+     QScriptValue getElementValue(const QString& key);
+
+private:
+     QScriptEngine* m_engine;
+     tinia::model::Viewer m_viewer;
+
     
 };
 
@@ -23,4 +31,3 @@ public slots:
 } // namespace qtobserver
 } // namespace tinia
 
-#endif // TINIA_QTOBSERVER_SCRIPTING_VIEWER_HPP

@@ -5,8 +5,10 @@ namespace qtcontroller {
 namespace scripting {
 
 
-ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model, QObject *parent) :
-    QObject(parent), m_model(model)
+ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
+                           QScriptEngine *engine,
+                           QObject *parent)
+    : QObject(parent), m_engine(engine), m_model(model)
 {
 }
 
@@ -57,6 +59,11 @@ void ExposedModel::updateElement(const QString &key, bool value)
     m_model->updateElement(key.toStdString(), value);
 }
 
+void ExposedModel::updateElement(const QString &key, Viewer *v)
+{
+    m_model->updateElement(key.toStdString(), v->viewer());
+}
+
 QScriptValue ExposedModel::getElementValue(const QString &key)
 {
     auto schemaElement = m_model->getStateSchemaElement(key.toStdString());
@@ -84,6 +91,11 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
         std::string value;
         m_model->getElementValue(key.toStdString(), value);
         return QScriptValue(QString(value.c_str()));
+    }
+    if (type == std::string("Viewer")) {
+        auto v = new Viewer(m_engine, this);
+        m_model->getElementValue(key.toStdString(), v->viewer());
+        return m_engine->newQObject(v);
     }
     return QScriptValue();
 }
