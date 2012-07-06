@@ -21,62 +21,78 @@
 #include <QtScript>
 
 #include <stdexcept>
-
+#include <tinia/qtcontroller/scripting/utils.hpp>
 namespace {
 
 using namespace std;
 
 using namespace boost::unit_test;
 
-BOOST_AUTO_TEST_CASE( testJS ) {
-    QString fileName = ":javascript/scripting/gl-matrix.js";
+BOOST_AUTO_TEST_CASE( TestIncludeGlMatrix ) {
+
     QScriptEngine engine;
+    tinia::qtcontroller::scripting::addGlMatrix(engine);
 
-    QFile scriptFile( fileName );
-    BOOST_ASSERT( scriptFile.open( QIODevice::ReadOnly ) );
-#if 0
-    QTextStream stream(&scriptFile);
-    auto contents = stream.readAll();
-    scriptFile.close();
+    // This should now work:
+    BOOST_CHECK_EQUAL(1,
+        engine.evaluate("((vec3.createFrom(0,1,2))[1])").toNumber());
 
-    auto object = engine.evaluate( contents, fileName );
-    auto result1 = engine.evaluate("vec3.createFrom(1.123456789123456,2,3)");
-
-
-    //auto r = engine.fromScriptValue<QObjectList>(result1);
-    BOOST_TEST_MESSAGE(result1.property(0).toNumber());
-    std::stringstream ss;
-             ss.precision(16);
-    ss << result1.property(0).toNumber();
-    BOOST_TEST_MESSAGE("FROM SS: " + ss.str());
-    BOOST_TEST_MESSAGE("FROM JS: " + result1.toString().toStdString());
-    //BOOST_TEST_MESSAGE( ((QList<double>*)result1.toQObject())->at(0) );
-#endif
-}
-}
-//BOOST_AUTO_TEST_CASE( javascriptinterop )
-//{
-//    BOOST_TEST_MESSAGE( "Hello" );
-//    BOOST_ASSERT( false );
-//}
-
-/*
-bool
-init_unit_test_suite() {
-    QString params[] = { ":orig/gl-matrix.js", ":orig/gl-matrix-min.js", ":ours/glMatrix.js" };
-    boost::unit_test::framework::master_test_suite().add( BOOST_PARAM_TEST_CASE( &testJs, begin(params), end(params) ) );
-
-    return true;
+    // Check that we have the basic types:
+    BOOST_CHECK(engine.evaluate("vec3").isObject());
+    BOOST_CHECK(engine.evaluate("vec3.createFrom").isFunction());
+    BOOST_CHECK(engine.evaluate("vec3.negate").isFunction());
+    BOOST_CHECK(engine.evaluate("mat4").isObject());
+    BOOST_CHECK(engine.evaluate("quat4").isObject());
+    BOOST_CHECK(engine.evaluate("vec4").isObject());
+    BOOST_CHECK(engine.evaluate("vec2").isObject());
 }
 
+BOOST_AUTO_TEST_CASE( TestVec3Add ) {
+    QScriptEngine engine;
+    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    QString script = "(function() {"
+            "var a = vec3.createFrom(0, 1, 2);"
+            "var b = vec3.createFrom(2, 1, 0);"
+            "var c = vec3.create();"
+            "return vec3.add(a, b, c);"
+            "})";
+    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    BOOST_CHECK_EQUAL(2, returnValue.property(0).toNumber());
+    BOOST_CHECK_EQUAL(2, returnValue.property(1).toNumber());
+    BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());
 }
 
-BOOST_GLOBAL_FIXTURE( SetupQtApplication );
-
-int
-main( int argc, char* argv[] )
-{
-    return ::boost::unit_test::unit_test_main( &init_unit_test_suite, argc, argv );
+BOOST_AUTO_TEST_CASE( TestVec3Subtract ) {
+    QScriptEngine engine;
+    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    QString script = "(function() {"
+            "var a = vec3.createFrom(0, 1, 2);"
+            "var b = vec3.createFrom(2, 1, 0);"
+            "var c = vec3.create();"
+            "return vec3.subtract(a, b, c);"
+            "})";
+    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    BOOST_CHECK_EQUAL(-2, returnValue.property(0).toNumber());
+    BOOST_CHECK_EQUAL(0, returnValue.property(1).toNumber());
+    BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());
 }
 
-*/
+BOOST_AUTO_TEST_CASE( TestMat4MultiplyWithVec4) {
+    QScriptEngine engine;
+    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    QString script = "(function() {"
+            "var x = vec3.createFrom(1, 1, 1);"
+            "var A = mat4.createFrom(2, 0, 0, 0,"
+            "                        0, 2, 0, 0,"
+            "                        0, 0, 2, 0,"
+            "                        0, 0, 0, 1);"
+            "return mat4.multiplyVec3(A, x);"
+            "})";
+
+    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    BOOST_CHECK_EQUAL(2, returnValue.property(0).toNumber());
+    BOOST_CHECK_EQUAL(2, returnValue.property(1).toNumber());
+    BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());
+}
+}
+
