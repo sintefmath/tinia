@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
     BOOST_CHECK_EQUAL(0, releaseCalled);
     BOOST_CHECK_EQUAL(0, pressCalled);
 
-    QMouseEvent *e = NULL;
+    QMouseEvent *e = new QMouseEvent(QEvent::MouseMove, QPoint(0,0), QPoint(0,0), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
 
     // Now we fire the events
     handler.mouseMoveEvent(e);
