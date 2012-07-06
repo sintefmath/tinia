@@ -20,16 +20,38 @@
 #include <QtScript>
 #include <tinia/model/ExposedModel.hpp>
 #include <tinia/qtcontroller/scripting/ExposedModel.hpp>
+#include <QMouseEvent>
 
 namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
+/** Basic EventHandler. Will pass events to the relevant methods in the Script class
+ * @note This uses the ScriptEngine singleton.
+ */
 class EventHandler
 {
 public:
+    /** Construct the EventHandler.
+     *
+     * @param scriptClassName the name of the class to constructor and call methods in.
+     *                        Must be available in the ScriptEngine before invocation
+     * @param model           The associated model.
+     */
     EventHandler(const std::string& scriptClassName,
                  std::shared_ptr<tinia::model::ExposedModel> model);
+
+    /** Will pass the event to "mouseMoveEvent" in the scriptclass
+     */
+    void mouseMoveEvent(QMouseEvent* event);
+
+    /** Will pass the event to "mousePressEvent" in the scriptclass
+     */
+    void mousePressEvent(QMouseEvent* event);
+
+    /** Will pass the event to "mouseReleaseEvent" in the scriptclass
+     */
+    void mouseReleaseEvent(QMouseEvent* event);
 
 private:
     ExposedModel m_scriptModel;

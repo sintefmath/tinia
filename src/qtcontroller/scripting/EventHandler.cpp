@@ -29,9 +29,26 @@ EventHandler::EventHandler(const std::string& scriptClassName,
       m_model(model)
 {
     auto& engine = ScriptEngine::getInstance()->engine();
+    QScriptValue parameters = engine.newObject();
+    parameters.setProperty("exposedModel", engine.newQObject(&m_scriptModel));
     m_scriptHandler =
-            engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << engine.newQObject(&m_scriptModel));
+            engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << parameters);
 
+}
+
+void EventHandler::mouseMoveEvent(QMouseEvent *event)
+{
+    m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler);
+}
+
+void EventHandler::mousePressEvent(QMouseEvent *event)
+{
+    m_scriptHandler.property("mousePressEvent").call(m_scriptHandler);
+}
+
+void EventHandler::mouseReleaseEvent(QMouseEvent *event)
+{
+    m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler);
 }
 
 } // namespace scripting
