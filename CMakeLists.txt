@@ -73,11 +73,11 @@ ENDIF()
 set(BOOST_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time  )
+FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
 
 ##### QT #####
 IF(${DESKTOP})
-  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript REQUIRED)
+  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript VERSION 4.7 REQUIRED)
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
   SET(QT_USE_QTXML TRUE)
