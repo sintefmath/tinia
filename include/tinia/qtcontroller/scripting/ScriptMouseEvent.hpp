@@ -40,10 +40,12 @@ public:
     Q_PROPERTY(bool shiftKey READ shiftKey)
     Q_PROPERTY(bool ctrlKey READ ctrlKey)
     Q_PROPERTY(bool metaKey READ metaKey)
+    Q_PROPERTY(int button READ button)
     
 signals:
     
 public slots:
+    int button();
     int x();
     int y();
     bool altKey();

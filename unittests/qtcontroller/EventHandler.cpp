@@ -90,6 +90,8 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
     BOOST_CHECK_EQUAL(1, moveCalled);
     BOOST_CHECK_EQUAL(1, releaseCalled);
     BOOST_CHECK_EQUAL(1, pressCalled);
+
+    delete e;
 }
 
 BOOST_AUTO_TEST_CASE(EventObject) {
@@ -169,6 +171,64 @@ BOOST_AUTO_TEST_CASE(EventObject) {
 
     BOOST_CHECK_EQUAL(42, engine.evaluate("releaseX").toNumber());
     BOOST_CHECK_EQUAL(43, engine.evaluate("releaseY").toNumber());
+
+    delete e;
+}
+
+BOOST_AUTO_TEST_CASE(ButtonsTest) {
+    auto model = std::make_shared<tinia::model::ExposedModel>();
+
+    QString script =
+            "buttonMove = -2;\n"
+            "buttonPress = -2;\n"
+            "buttonRelease = -2;\n"
+            "function MyButtonTest(params) {\n"
+            "   this.model = params.exposedModel;\n"
+            "}\n"
+            "MyButtonTest.prototype = {\n"
+            "   mouseMoveEvent: function(event) {\n"
+            "       buttonMove = event.button;\n"
+            "   },\n"
+            "   mousePressEvent: function(event) {\n"
+            "       buttonPress = event.button;\n"
+            "   },\n"
+            "   mouseReleaseEvent: function(event) {\n"
+            "       buttonRelease = event.button;\n"
+            "   }\n"
+            "}\n";
+
+    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+
+    engine.evaluate(script);
+
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonMove").toNumber());
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonPress").toNumber());
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonRelease").toNumber());
+
+    tinia::qtcontroller::scripting::EventHandler handler("MyButtonTest", model);
+
+    QMouseEvent eMove(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                  Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+    handler.mouseMoveEvent(&eMove);
+    BOOST_CHECK_EQUAL(-1, engine.evaluate("buttonMove").toNumber());
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonPress").toNumber());
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonRelease").toNumber());
+
+
+    QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                  Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    handler.mousePressEvent(&ePress);
+    BOOST_CHECK_EQUAL(-1, engine.evaluate("buttonMove").toNumber());
+    BOOST_CHECK_EQUAL(0, engine.evaluate("buttonPress").toNumber());
+    BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonRelease").toNumber());
+
+
+    QMouseEvent eRelease(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                  Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+    handler.mouseReleaseEvent(&eRelease);
+    BOOST_CHECK_EQUAL(-1, engine.evaluate("buttonMove").toNumber());
+    BOOST_CHECK_EQUAL(0, engine.evaluate("buttonPress").toNumber());
+    BOOST_CHECK_EQUAL(2, engine.evaluate("buttonRelease").toNumber());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

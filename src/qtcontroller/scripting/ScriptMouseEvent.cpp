@@ -28,6 +28,21 @@ ScriptMouseEvent::ScriptMouseEvent(const QMouseEvent& event, QObject *parent) :
     ;
 }
 
+int ScriptMouseEvent::button()
+{
+    auto b = m_event.button();
+    if(b == Qt::LeftButton ) {
+        return 0;
+    }
+    else if (b == Qt::MiddleButton) {
+        return 1;
+    }
+    else if (b == Qt::RightButton) {
+        return 2;
+    }
+    return -1;
+}
+
 int ScriptMouseEvent::x()
 {
     return m_event.x();
