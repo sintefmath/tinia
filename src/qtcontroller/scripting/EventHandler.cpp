@@ -18,6 +18,7 @@
 
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/scripting/ScriptMouseEvent.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -25,30 +26,37 @@ namespace scripting {
 
 EventHandler::EventHandler(const std::string& scriptClassName,
                            std::shared_ptr<tinia::model::ExposedModel> model)
-    : m_scriptModel(model, &ScriptEngine::getInstance()->engine()),
+    : m_engine(ScriptEngine::getInstance()->engine()),
+      m_scriptModel(model, &m_engine),
       m_model(model)
 {
-    auto& engine = ScriptEngine::getInstance()->engine();
-    QScriptValue parameters = engine.newObject();
-    parameters.setProperty("exposedModel", engine.newQObject(&m_scriptModel));
+
+    QScriptValue parameters = m_engine.newObject();
+    parameters.setProperty("exposedModel", m_engine.newQObject(&m_scriptModel));
     m_scriptHandler =
-            engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << parameters);
+            m_engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << parameters);
 
 }
 
 void EventHandler::mouseMoveEvent(QMouseEvent *event)
 {
-    m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler);
+    ScriptMouseEvent scriptEvent(*event);
+    m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler,
+                                                    QScriptValueList() << m_engine.newQObject(&scriptEvent));
 }
 
 void EventHandler::mousePressEvent(QMouseEvent *event)
 {
-    m_scriptHandler.property("mousePressEvent").call(m_scriptHandler);
+    ScriptMouseEvent scriptEvent(*event);
+    m_scriptHandler.property("mousePressEvent").call(m_scriptHandler,
+                                                    QScriptValueList() << m_engine.newQObject(&scriptEvent));
 }
 
 void EventHandler::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler);
+    ScriptMouseEvent scriptEvent(*event);
+    m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
+                                                       QScriptValueList() << m_engine.newQObject(&scriptEvent));
 }
 
 } // namespace scripting

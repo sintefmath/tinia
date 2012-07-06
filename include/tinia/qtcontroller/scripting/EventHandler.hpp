@@ -54,6 +54,7 @@ public:
     void mouseReleaseEvent(QMouseEvent* event);
 
 private:
+    QScriptEngine& m_engine;
     ExposedModel m_scriptModel;
     std::shared_ptr<tinia::model::ExposedModel> m_model;
     QScriptValue m_scriptHandler;
