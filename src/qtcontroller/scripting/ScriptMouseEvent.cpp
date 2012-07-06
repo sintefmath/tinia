@@ -65,7 +65,7 @@ bool ScriptMouseEvent::shiftKey()
 
 bool ScriptMouseEvent::ctrlKey()
 {
-    return m_event.modifiers() & Qt::CTRL;
+    return m_event.modifiers() & Qt::ControlModifier;
 }
 
 bool ScriptMouseEvent::metaKey()

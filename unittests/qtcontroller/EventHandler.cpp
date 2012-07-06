@@ -231,6 +231,101 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
     BOOST_CHECK_EQUAL(2, engine.evaluate("buttonRelease").toNumber());
 }
 
+BOOST_AUTO_TEST_CASE(Modifiers) {
+    auto model = std::make_shared<tinia::model::ExposedModel>();
+
+    QString script =
+            "alt = false;\n"
+            "shift = false;\n"
+            "ctrl = false;\n"
+            "function ModifierTest(params) {}\n"
+            "ModifierTest.prototype = {\n"
+            "   mousePressEvent: function(event) {\n"
+            "       alt = event.altKey;\n"
+            "       shift = event.shiftKey;\n"
+            "       ctrl = event.ctrlKey;\n"
+            "   }\n"
+            "}\n";
+
+    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+
+    engine.evaluate(script);
+
+    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", model);
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(!engine.evaluate("alt").toBool());
+        BOOST_CHECK(!engine.evaluate("shift").toBool());
+        BOOST_CHECK(!engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::AltModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(engine.evaluate("alt").toBool());
+        BOOST_CHECK(!engine.evaluate("shift").toBool());
+        BOOST_CHECK(!engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(!engine.evaluate("alt").toBool());
+        BOOST_CHECK(!engine.evaluate("shift").toBool());
+        BOOST_CHECK(engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ShiftModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(!engine.evaluate("alt").toBool());
+        BOOST_CHECK(engine.evaluate("shift").toBool());
+        BOOST_CHECK(!engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ShiftModifier|Qt::AltModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(engine.evaluate("alt").toBool());
+        BOOST_CHECK(engine.evaluate("shift").toBool());
+        BOOST_CHECK(!engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier | Qt::ShiftModifier|Qt::AltModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(engine.evaluate("alt").toBool());
+        BOOST_CHECK(engine.evaluate("shift").toBool());
+        BOOST_CHECK(engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier | Qt::ShiftModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(!engine.evaluate("alt").toBool());
+        BOOST_CHECK(engine.evaluate("shift").toBool());
+        BOOST_CHECK(engine.evaluate("ctrl").toBool());
+    }
+
+    {
+        QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
+                           Qt::LeftButton, Qt::LeftButton, Qt::ControlModifier | Qt::AltModifier);
+        handler.mousePressEvent(&ePress);
+        BOOST_CHECK(engine.evaluate("alt").toBool());
+        BOOST_CHECK(!engine.evaluate("shift").toBool());
+        BOOST_CHECK(engine.evaluate("ctrl").toBool());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
