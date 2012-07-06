@@ -29,6 +29,7 @@ namespace scripting {
  */
 class ScriptEngine
 {
+public:
     static std::shared_ptr<ScriptEngine> getInstance();
 
     QScriptEngine& engine();
