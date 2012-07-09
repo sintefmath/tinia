@@ -2,5 +2,6 @@
     <qresource prefix="/javascript">
         <file>shared/DSRV.js</file>
         <file>shared/gl-matrix.js</file>
+        <file>shared/includes.txt</file>
     </qresource>
 </RCC>

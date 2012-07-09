@@ -31,7 +31,7 @@ using namespace boost::unit_test;
 BOOST_AUTO_TEST_CASE( TestIncludeGlMatrix ) {
 
     QScriptEngine engine;
-    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    tinia::qtcontroller::scripting::addDefaultScripts(engine);
 
     // This should now work:
     BOOST_CHECK_EQUAL(1,
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE( TestIncludeGlMatrix ) {
 
 BOOST_AUTO_TEST_CASE( TestVec3Add ) {
     QScriptEngine engine;
-    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    tinia::qtcontroller::scripting::addDefaultScripts(engine);
     QString script = "(function() {"
             "var a = vec3.createFrom(0, 1, 2);"
             "var b = vec3.createFrom(2, 1, 0);"
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE( TestVec3Add ) {
 
 BOOST_AUTO_TEST_CASE( TestVec3Subtract ) {
     QScriptEngine engine;
-    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    tinia::qtcontroller::scripting::addDefaultScripts(engine);
     QString script = "(function() {"
             "var a = vec3.createFrom(0, 1, 2);"
             "var b = vec3.createFrom(2, 1, 0);"
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( TestVec3Subtract ) {
 
 BOOST_AUTO_TEST_CASE( TestMat4MultiplyWithVec4) {
     QScriptEngine engine;
-    tinia::qtcontroller::scripting::addGlMatrix(engine);
+    tinia::qtcontroller::scripting::addDefaultScripts(engine);
     QString script = "(function() {"
             "var x = vec3.createFrom(1, 1, 1);"
             "var A = mat4.createFrom(2, 0, 0, 0,"

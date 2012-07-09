@@ -22,11 +22,6 @@
 
 namespace tinia { namespace qtcontroller { namespace scripting {
 
-/** Adds the glMatrix javascript modules to the engine
- * @return The QScriptValue of the evaluation.
- */
-QScriptValue addGlMatrix(QScriptEngine& engine);
-
 /** Adds the default script options to the engine.
  * @throws std::runtime_error if the javascript-parsing returns an error.
  */

@@ -22,16 +22,27 @@
 
 
 namespace tinia { namespace qtcontroller { namespace scripting {
-QScriptValue addGlMatrix(QScriptEngine& engine) {
-    QFile file(":javascript/shared/gl-matrix.js");
-    if(!file.open(QFile::ReadOnly)) {
-        throw std::runtime_error("Could not open gl-matrix.js");
-    }
-    return engine.evaluate(file.readAll());
-}
-
 
 void addDefaultScripts(QScriptEngine &engine) {
+    QFile textList(":javascript/shared/includes.txt");
+    if(!textList.open(QFile::ReadOnly)) {
+        throw std::runtime_error("Could not open the includes file for javascript.");
+    }
 
+    while(!textList.atEnd()) {
+        QString line = textList.readLine().trimmed();
+        if(line.size() == 0)
+            continue;
+        QFile javascriptFile(":javascript/shared/" + line);
+
+        if(!javascriptFile.open(QFile::ReadOnly)) {
+            throw std::runtime_error("Could not open javascript file: " + line.toStdString());
+        }
+
+        auto error = engine.evaluate(javascriptFile.readAll());
+        if(error.isError()) {
+            throw std::runtime_error(error.toString().toStdString());
+        }
+    }
 }
 }}}
