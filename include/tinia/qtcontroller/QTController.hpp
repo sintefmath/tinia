@@ -15,12 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef QTOBSERVER_QTOBSERVER_HPP
-#define QTOBSERVER_QTOBSERVER_HPP
+#pragma once
 #include <memory>
 #include "tinia/jobcontroller/Controller.hpp"
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+
 
 class QMainWindow;
 class QGLWidget;
@@ -76,4 +75,4 @@ private:
 
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_QTOBSERVER_HPP
+

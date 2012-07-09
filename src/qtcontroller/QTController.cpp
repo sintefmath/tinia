@@ -31,6 +31,11 @@
 #include <QDomDocument>
 #include <QString>
 
+// This needs to be outside namespaces because QT says so...
+static void tiniaInitResources() {
+    Q_INIT_RESOURCE(resources);
+}
+
 namespace tinia {
 namespace qtcontroller {
 
@@ -98,6 +103,7 @@ int QTController::run(int argc, char **argv)
     m_main_window = new QMainWindow();
 
     // Now we may init the script.
+    tiniaInitResources();
     initScript();
 
     if( dynamic_cast<jobcontroller::OpenGLJob*>( m_job ) ) {
