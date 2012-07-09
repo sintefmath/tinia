@@ -37,10 +37,10 @@ var modelLib = new model.ExposedModel();
 
 doh.register("ExposedModelTests",  {
     revisionTest: function() {
-        var model = new model.ExposedModel();
-        doh.assertEqual(0, model.getRevision());
-        model.setRevision(10);
-        doh.assertEqual(10, model.getRevision());
+        var modelObj = new model.ExposedModel();
+        doh.assertEqual(0, modelObj.getRevision());
+        modelObj.setRevision(10);
+        doh.assertEqual(10, modelObj.getRevision());
     },
     simpleAdd : function() {
         modelLib.addElement("string", "StringKey", "StringValue");
@@ -280,39 +280,39 @@ doh.register("EventTest", {
     
     valueChangedEvent: function() {
         var valueSeen = false;
-        var model = new model.ExposedModel();
-        model.addElement("bool", "key", false);
-        doh.assertEqual(false, model.getValue("key"));
-        model.addLocalListener("key", function(key, value) {
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("bool", "key", false);
+        doh.assertEqual(false, modelObj.getValue("key"));
+        modelObj.addLocalListener("key", function(key, value) {
             valueSeen = value;
         });
         
-        model.updateElement("key", true);
+        modelObj.updateElement("key", true);
         doh.assertEqual(true, valueSeen);
     }
 });
 
 doh.register("BuilderTest", {
     testSimpleBuild: function() {
-        var model = new model.ExposedModel();
-        var builder = new model.ExposedModelBuilder(model);
-        var stateParser = new model.StateParser(model);
-        model.addElement("string", "key", "sometext");
-        doh.assertEqual("sometext", model.getValue("key"));
+        var modelObj = new model.ExposedModel();
+        var builder = new model.ExposedModelBuilder(modelObj);
+        var stateParser = new model.StateParser(modelObj);
+        modelObj.addElement("string", "key", "sometext");
+        doh.assertEqual("sometext", modelObj.getValue("key"));
         var xml = builder.buildXML();
         
-        model.updateElement("key", "someothertext");
-        doh.assertEqual("someothertext", model.getValue("key"));
+        modelObj.updateElement("key", "someothertext");
+        doh.assertEqual("someothertext", modelObj.getValue("key"));
         
         stateParser.parseXML(dojox.xml.parser.parse(xml));
-        doh.assertEqual("sometext", model.getValue("key"));
+        doh.assertEqual("sometext", modelObj.getValue("key"));
     },
     
     advancedWithAjax: function() {
-        var model = new model.ExposedModel();
+        var modelObj = new model.ExposedModel();
 
-        var parser = new model.ExposedModelParser(model);
-        var builder = new model.ExposedModelBuilder(model);
+        var parser = new model.ExposedModelParser(modelObj);
+        var builder = new model.ExposedModelBuilder(modelObj);
         dojo.xhrGet({
             url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
@@ -326,63 +326,63 @@ doh.register("BuilderTest", {
                 return result;
             }
         });
-        doh.assertTrue(model.hasKey("mesh_0"));
-        doh.assertTrue(model.hasKey("boundingbox"));
-        doh.assertTrue(model.hasKey("viewer"));
-        doh.assertTrue(model.hasKey("timestep"));
-        doh.assertTrue(model.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, model.getValue("timestep"));
-        doh.assertTrue(model.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", model.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", model.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", model.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", model.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Enable/show advanced dummy fields", model.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(modelObj.hasKey("mesh_0"));
+        doh.assertTrue(modelObj.hasKey("boundingbox"));
+        doh.assertTrue(modelObj.hasKey("viewer"));
+        doh.assertTrue(modelObj.hasKey("timestep"));
+        doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, modelObj.getValue("timestep"));
+        doh.assertTrue(modelObj.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", modelObj.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", modelObj.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", modelObj.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Enable/show advanced dummy fields", modelObj.getAnnotation("showAdvanced", "en"));
         
         var projection = [1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, model.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
         
-        doh.assertTrue(!!model.GUI());
-        doh.assertEqual("viewer", model.GUI().child(1).child(0,0).key());
+        doh.assertTrue(!!modelObj.GUI());
+        doh.assertEqual("viewer", modelObj.GUI().child(1).child(0,0).key());
         
        
         var xml = dojox.xml.parser.parse(builder.buildXML());
         
-        model.updateElement("timestep", 10);
-        doh.assertEqual(10, model.getValue("timestep"));
-        var stateParser = new model.StateParser(model);
+        modelObj.updateElement("timestep", 10);
+        doh.assertEqual(10, modelObj.getValue("timestep"));
+        var stateParser = new model.StateParser(modelObj);
         
         stateParser.parseXML(xml);
         
         
         
-        doh.assertTrue(model.hasKey("mesh_0"));
-        doh.assertTrue(model.hasKey("boundingbox"));
-        doh.assertTrue(model.hasKey("viewer"));
-        doh.assertTrue(model.hasKey("timestep"));
-        doh.assertTrue(model.getValue("viewer").hasKey("Width"));
-        doh.assertEqual(33, model.getValue("timestep"));
-        doh.assertTrue(model.hasRestriction("timestep"));
-        doh.assertEqual("Show mesh 2", model.getAnnotation("mesh_2", "en"));
-        doh.assertEqual("Show mesh 1", model.getAnnotation("mesh_1", "en"));
-        doh.assertEqual("Show mesh 0", model.getAnnotation("mesh_0", "en"));
-        doh.assertEqual("Configuration", model.getAnnotation("showConfig", "en"));
-        doh.assertEqual("Enable/show advanced dummy fields", model.getAnnotation("showAdvanced", "en"));
+        doh.assertTrue(modelObj.hasKey("mesh_0"));
+        doh.assertTrue(modelObj.hasKey("boundingbox"));
+        doh.assertTrue(modelObj.hasKey("viewer"));
+        doh.assertTrue(modelObj.hasKey("timestep"));
+        doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+        doh.assertEqual(33, modelObj.getValue("timestep"));
+        doh.assertTrue(modelObj.hasRestriction("timestep"));
+        doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
+        doh.assertEqual("Show mesh 1", modelObj.getAnnotation("mesh_1", "en"));
+        doh.assertEqual("Show mesh 0", modelObj.getAnnotation("mesh_0", "en"));
+        doh.assertEqual("Configuration", modelObj.getAnnotation("showConfig", "en"));
+        doh.assertEqual("Enable/show advanced dummy fields", modelObj.getAnnotation("showAdvanced", "en"));
         
       
-        doh.assertEqual(projection, model.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
     }
 });
 
 doh.register("ExposedModelSenderTest", {
     simpleTest: function() {
-        var model = new model.ExposedModel();
-        model.addElement("integer", "timestep", 20);
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("integer", "timestep", 20);
         var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
-        var sender = new model.ExposedModelSender(modelSenderUrlHandler, model);
+        var sender = new model.ExposedModelSender(modelSenderUrlHandler, modelObj);
         
         var deferred = new doh.Deferred();
         var started = false;
@@ -399,7 +399,7 @@ doh.register("ExposedModelSenderTest", {
             }
         });
         
-        model.updateElement("timestep", 0);
+        modelObj.updateElement("timestep", 0);
         
     
         
@@ -410,35 +410,35 @@ doh.register("ExposedModelSenderTest", {
 doh.register("ExposedModelReceiverTest", {
     trivialTest: function() {
         var url = "../../xml/getExposedModelUpdate.xml";
-        var model = new model.ExposedModel();
-        var modelReceiver = new model.ExposedModelReceiver(url, model);
+        var modelObj = new model.ExposedModel();
+        var modelReceiver = new model.ExposedModelReceiver(url, modelObj);
         
         var deferred = new doh.Deferred();
         var complete = false;
-        dojo.subscribe("/model/updateReceived", function() {
-            doh.assertEqual(10456, modelLib.getRevision());
-            doh.assertTrue(modelLib.hasKey("mesh_0"));
-            doh.assertTrue(modelLib.hasKey("boundingbox"));
-            doh.assertTrue(modelLib.hasKey("viewer"));
-            doh.assertTrue(modelLib.hasKey("timestep"));
-            doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
-            doh.assertEqual(33, modelLib.getValue("timestep"));
-            doh.assertTrue(modelLib.hasRestriction("timestep"));
-            doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
-            doh.assertEqual("Show mesh 1", modelLib.getAnnotation("mesh_1", "en"));
-            doh.assertEqual("Show mesh 0", modelLib.getAnnotation("mesh_0", "en"));
-            doh.assertEqual("Configuration", modelLib.getAnnotation("showConfig", "en"));
+        dojo.subscribe("/model/updateParsed", function() {
+            doh.assertEqual(10456, modelObj.getRevision());
+            doh.assertTrue(modelObj.hasKey("mesh_0"));
+            doh.assertTrue(modelObj.hasKey("boundingbox"));
+            doh.assertTrue(modelObj.hasKey("viewer"));
+            doh.assertTrue(modelObj.hasKey("timestep"));
+            doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+            doh.assertEqual(33, modelObj.getValue("timestep"));
+            doh.assertTrue(modelObj.hasRestriction("timestep"));
+            doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
+            doh.assertEqual("Show mesh 1", modelObj.getAnnotation("mesh_1", "en"));
+            doh.assertEqual("Show mesh 0", modelObj.getAnnotation("mesh_0", "en"));
+            doh.assertEqual("Configuration", modelObj.getAnnotation("showConfig", "en"));
             doh.assertEqual("Enable/show advanced dummy fields", 
-                modelLib.getAnnotation("showAdvanced", "en"));
+                modelObj.getAnnotation("showAdvanced", "en"));
         
             var projection = [1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, -1.0202020406723022, -1,
             0, 0, -18.5638427734375, 0];
-            doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
+            doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
         
-            doh.assertTrue(!!modelLib.GUI());
-            doh.assertEqual("viewer", modelLib.GUI().child(1).child(0,0).key());
+            doh.assertTrue(!!modelObj.GUI());
+            doh.assertEqual("viewer", modelObj.GUI().child(1).child(0,0).key());
             if(!complete) {
                 deferred.callback(true);
                 complete = true;
@@ -455,56 +455,56 @@ doh.register("ExposedModelReceiverTest", {
 
 doh.register("GUIBuilderTest", {
     simpleTest : function() {
-        var model = new model.ExposedModel();
-        model.addElement("string", "key", "value");
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("string", "key", "value");
         var textInput = new model.gui.KeyValue("TextInput", "key");
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model);
+        var builder = new gui.GUIBuilder(modelObj);
         contentPane.addChild(builder.buildGUI(textInput));
         doh.assertEqual("value", contentPane.getChildren()[0].getValue());
         
-        model.updateElement("key", "newvalue");
+        modelObj.updateElement("key", "newvalue");
         doh.assertEqual("newvalue", contentPane.getChildren()[0].getValue());
         
     },
     
     simpleAnnotationTest : function() {
-        var model = new model.ExposedModel();
-        model.addElement("string", "key", "value");
-        model.addAnnotation("key", "Annotation");
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("string", "key", "value");
+        modelObj.addAnnotation("key", "Annotation");
         var textInput = new model.gui.KeyValue("TextInput", "key", false);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model);
+        var builder = new gui.GUIBuilder(modelObj);
         contentPane.addChild(builder.buildGUI(textInput));
         doh.assertEqual("Annotation", contentPane.getChildren()[0].getValue());
         
-        model.updateElement("key", "newvalue");
+        modelObj.updateElement("key", "newvalue");
         doh.assertEqual("Annotation", contentPane.getChildren()[0].getValue());
     },
     
     horizontalLayoutTest : function() {
-        var model = new model.ExposedModel();
-        model.addElement("string", "key", "value");
-        model.addAnnotation("key", "Annotation");
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("string", "key", "value");
+        modelObj.addAnnotation("key", "Annotation");
         var textInput = new model.gui.KeyValue("TextInput", "key", false);
         var layout = new model.gui.HorizontalLayout();
         layout.addChild(textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model);
+        var builder = new gui.GUIBuilder(modelObj);
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
     },
     
     verticalLayoutTest : function() {
-        var model = new model.ExposedModel();
-        model.addElement("string", "key", "value");
-        model.addAnnotation("key", "Annotation");
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("string", "key", "value");
+        modelObj.addAnnotation("key", "Annotation");
         var textInput = new model.gui.KeyValue("TextInput", "key", false);
         var layout = new model.gui.VerticalLayout();
         layout.addChild(textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model);
+        var builder = new gui.GUIBuilder(modelObj);
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
@@ -514,24 +514,24 @@ doh.register("GUIBuilderTest", {
     gridLayoutTest : function() {
         var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
         
-        var model = new model.ExposedModel();
-        model.addElement("string", "key", "value");
-        model.addAnnotation("key", "Annotation");
+        var modelObj = new model.ExposedModel();
+        modelObj.addElement("string", "key", "value");
+        modelObj.addAnnotation("key", "Annotation");
         var textInput = new model.gui.KeyValue("TextInput", "key", false);
         var layout = new model.gui.Grid();
         layout.setChild(0,0, textInput);
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model, "", true, modelSenderUrlHandler, "");
+        var builder = new gui.GUIBuilder(modelObj, "", true, modelSenderUrlHandler, "");
         contentPane.addChild(builder.buildGUI(layout));
         //doh.assertEqual("Annotation", contentPane.getChildren()[0].getChildren()[0].getValue());
         
     },
     
     guiFromXML : function() {
-        var model = new model.ExposedModel();
+        var modelObj = new model.ExposedModel();
         var modelSenderUrlHandler = new model.URLHandler("../../xml/updateState.xml");
         
-        var parser = new model.ExposedModelParser(model);
+        var parser = new model.ExposedModelParser(modelObj);
         dojo.xhrGet({
             url: "../../xml/getExposedModelUpdate.xml",
             handleAs: "xml",
@@ -546,8 +546,8 @@ doh.register("GUIBuilderTest", {
             }
         });
         var contentPane = new dijit.layout.StackContainer();
-        var builder = new gui.GUIBuilder(model, "", true, modelSenderUrlHandler, "");
-        contentPane.addChild(builder.buildGUI(model.GUI()));
+        var builder = new gui.GUIBuilder(modelObj, "", true, modelSenderUrlHandler, "");
+        contentPane.addChild(builder.buildGUI(modelObj.GUI()));
         
     }
 });

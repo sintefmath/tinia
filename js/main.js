@@ -27,8 +27,8 @@ dojo.require("model.Logger");
 dojo.require("model.URLHandler");
 
 function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, debug, renderList) {
-    var model = new model.ExposedModel();
-    var parser = new model.ExposedModelParser(model);
+    var modelObj = new model.ExposedModel();
+    var parser = new model.ExposedModelParser(modelObj);
     dojo.xhrGet({
         url: getExposedModelUpdateURL,
         handleAs: "xml",
@@ -39,7 +39,7 @@ function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, d
             parser.parseXML(result);
 
             var modelSenderUrlHandler = new model.URLHandler(updateStateURL);
-            var builder = new gui.GUIBuilder(model, renderlistURL, isLocal,
+            var builder = new gui.GUIBuilder(modelObj, renderlistURL, isLocal,
                                              modelSenderUrlHandler, renderList);
 
             var appLayout = new dijit.layout.BorderContainer({
@@ -48,8 +48,8 @@ function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, d
             }, dojo.byId("gui"));
 
             if(!isLocal)
-                var sender = new model.ExposedModelSender(modelSenderUrlHandler, model);
-            var mainWindow = builder.buildGUI(model.GUI(), modelSenderUrlHandler);
+                var sender = new model.ExposedModelSender(modelSenderUrlHandler, modelObj);
+            var mainWindow = builder.buildGUI(modelObj.GUI(), modelSenderUrlHandler);
 
 
 	    
@@ -61,15 +61,14 @@ function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, d
             mainWindow.startup();
 
             
-            var receiver = new model.ExposedModelReceiver(getExposedModelUpdateURL, model);
+            var receiver = new model.ExposedModelReceiver(getExposedModelUpdateURL, modelObj);
             if(!isLocal) {
                 receiver.longPoll();
             }
 
             if(debug) {
-                new model.Logger(model);
+                new model.Logger(modelObj);
             }
-            console.debug( "BAA" );
             return result;
         },
         error: function(result, ioArgs) {
