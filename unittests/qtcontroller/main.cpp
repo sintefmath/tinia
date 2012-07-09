@@ -20,9 +20,10 @@
 #include <boost/test/unit_test.hpp>
 #include <QApplication>
 
-
+/*
 namespace tinia {
 namespace test {
+*/
 
 struct SetupQtApplication {
     QCoreApplication app;
@@ -33,14 +34,14 @@ struct SetupQtApplication {
     SetupQtApplication()
         : app(argc, &argv)
     {
-
+    Q_INIT_RESOURCE(resources);
     }
 };
 
 char* SetupQtApplication::argv = "bleh";
 int SetupQtApplication::argc = 1;
-}}
+/*}}*/
 
-using namespace tinia::test;
+//using namespace tinia::test;
 BOOST_GLOBAL_FIXTURE( SetupQtApplication );
 
