@@ -36,8 +36,10 @@ public:
      * @param scriptClassName the name of the class to constructor and call methods in.
      *                        Must be available in the ScriptEngine before invocation
      * @param model           The associated model.
+     * @param key             The key associated with the script.
      */
     EventHandler(const std::string& scriptClassName,
+                 const std::string& key,
                  std::shared_ptr<tinia::model::ExposedModel> model,
                  QScriptEngine& engine);
 

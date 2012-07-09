@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
     auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
     engine.evaluate(script);
 
-    tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", model, engine);
+    tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", "key", model, engine);
 
     // Assert the variables aren't touched yet:
     int moveCalled, releaseCalled, pressCalled;
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(EventObject) {
     BOOST_CHECK_EQUAL(-1, engine.evaluate("releaseX").toNumber());
     BOOST_CHECK_EQUAL(-1, engine.evaluate("releaseY").toNumber());
 
-    tinia::qtcontroller::scripting::EventHandler handler("MyEventObjectTest",
+    tinia::qtcontroller::scripting::EventHandler handler("MyEventObjectTest", "key",
                                                          model, engine);
 
     QMouseEvent *e = new QMouseEvent(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
     BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonPress").toNumber());
     BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonRelease").toNumber());
 
-    tinia::qtcontroller::scripting::EventHandler handler("MyButtonTest", model, engine);
+    tinia::qtcontroller::scripting::EventHandler handler("MyButtonTest", "key", model, engine);
 
     QMouseEvent eMove(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
                   Qt::NoButton, Qt::NoButton, Qt::NoModifier);
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(Modifiers) {
 
     engine.evaluate(script);
 
-    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", model, engine);
+    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", "key", model, engine);
 
     {
         QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
@@ -324,6 +324,22 @@ BOOST_AUTO_TEST_CASE(Modifiers) {
         BOOST_CHECK(!engine.evaluate("shift").toBool());
         BOOST_CHECK(engine.evaluate("ctrl").toBool());
     }
+}
+
+BOOST_AUTO_TEST_CASE(KeyTest) {
+    QString script =
+            "var key ='notset';\n"
+            "function KeyTest(params) {\n"
+            "    key = params.key;\n"
+            "}\n";
+    QScriptEngine engine;
+    auto model = std::make_shared<tinia::model::ExposedModel>();
+    engine.evaluate(script);
+
+    tinia::qtcontroller::scripting::EventHandler handler("KeyTest", "KeyFromTest", model, engine);
+
+    BOOST_CHECK_EQUAL("KeyFromTest", engine.evaluate("key").toString().toStdString());
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,6 +29,7 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
+#include <tinia/qtcontroller/scripting/EventHandler.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -73,6 +74,7 @@ public slots:
 private:
    void updateMatrices();
    void initializeDSRV();
+   scripting::EventHandler m_eventHandler;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;

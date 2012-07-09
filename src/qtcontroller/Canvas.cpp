@@ -22,6 +22,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <array>
 #include <tinia/jobcontroller/OpenGLJob.hpp>
+#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -38,6 +39,7 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
     : QGLWidget( QGL::DepthBuffer| QGL::DoubleBuffer | QGL::AlphaChannel,
                  parent,
                  share_widget ),
+      m_eventHandler("DSRV", key,  model, scripting::ScriptEngine::getInstance()->engine()),
       m_key(key),
       m_boundingBoxKey(boundingBoxKey),
       m_resetViewKey(resetViewKey),
