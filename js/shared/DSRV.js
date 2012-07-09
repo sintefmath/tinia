@@ -37,8 +37,9 @@ function DSRV(parameters) {
 
     this.m_projection = mat4.identity(mat4.create());
     this.m_modelview = mat4.identity(mat4.create());
-    this.m_bbmin = vec3.createFrom(0, 0, 0);
-    this.m_bbmax = vec3.createFrom(2, 2, 2);
+    this.m_bbmin = vec3.create([-1.1, -1.1, -1.1]);
+
+    this.m_bbmax = vec3.create([1.1, 1.1, 1.1]);
 
     this.m_aspect = 1;
 
@@ -48,15 +49,21 @@ function DSRV(parameters) {
 
     this.m_beginDirection = vec3.create();
 
-    this.m_translateZ = 0;
+    this.m_translateZ = 4;
 
-
-    // Fix this:
-    this.m_height = 500;
-    this.m_width = 500;
+    // Get width and height:
+    this.setSize(this.m_exposedModel.getElementValue(this.m_key).getElementValue("width"),
+            this.m_exposedModel.getElementValue(this.m_key).getElementValue("height"));
 }
 
 DSRV.prototype = {
+
+    setSize : function(w, h) {
+
+        this.m_width = w;
+        this.m_height = h;
+        this.m_aspect = (w + 0.0) / h;
+    },
     mouseMoveEvent : function(event) {
         switch(this.m_state) {
         case this.ROTATE:
@@ -76,11 +83,15 @@ DSRV.prototype = {
     mousePressEvent : function(event) {
         switch(event.button) {
         case this.ROTATE:
+            print("BEGIN ROTATE");
             this.m_beginOrientation = quat4.create(this.m_orientation);
             this.m_beginDirection = this.pointOnUnitSphere(event.x, event.y);
             this.m_state = this.ROTATE;
             break;
+        default:
+            this.m_state = -1;
         }
+
         print(event.x + ", " + event.y);
     },
 
@@ -126,22 +137,22 @@ DSRV.prototype = {
         this.m_modelview = mat4.translate(this.m_modelview, [0, 0, -this.m_translateZ]);
         this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation) );
         this.m_modelview = mat4.translate(this.m_modelview,
-            [-0.5*(bbmin[0]+bbmax[0]),
-            -0.5*(bbmin[1]+bbmax[1]),
-            -0.5*(bbmin[2]+bbmax[2])
-            ]);
+                                          [-0.5*(bbmin[0]+bbmax[0]),
+                                           -0.5*(bbmin[1]+bbmax[1]),
+                                           -0.5*(bbmin[2]+bbmax[2])
+                                          ]);
 
         // --- set up projection matrix
 
         // the eight corners of the bounding box
         var corners = [[ bbmin[0], bbmin[1], bbmin[2], 1.0 ],
-        [ bbmin[0], bbmin[1], bbmax[2], 1.0 ],
-        [ bbmin[0], bbmax[1], bbmin[2], 1.0 ],
-        [ bbmin[0], bbmax[1], bbmax[2], 1.0 ],
-        [ bbmax[0], bbmin[1], bbmin[2], 1.0 ],
-        [ bbmax[0], bbmin[1], bbmax[2], 1.0 ],
-        [ bbmax[0], bbmax[1], bbmin[2], 1.0 ],
-        [ bbmax[0], bbmax[1], bbmax[2], 1.0 ]];
+                       [ bbmin[0], bbmin[1], bbmax[2], 1.0 ],
+                       [ bbmin[0], bbmax[1], bbmin[2], 1.0 ],
+                       [ bbmin[0], bbmax[1], bbmax[2], 1.0 ],
+                       [ bbmax[0], bbmin[1], bbmin[2], 1.0 ],
+                       [ bbmax[0], bbmin[1], bbmax[2], 1.0 ],
+                       [ bbmax[0], bbmax[1], bbmin[2], 1.0 ],
+                       [ bbmax[0], bbmax[1], bbmax[2], 1.0 ]];
         // apply the modelview matrix to the eight corners to get the minimum
         // and maximum z in the camera's local coordinate system.
         var near, far;
