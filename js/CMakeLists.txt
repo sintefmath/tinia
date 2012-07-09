@@ -1,16 +1,18 @@
 FILE(GLOB javascript_RESOURCES "*.qrc")
+FILE(GLOB javascript_SOURCES "shared/*.js")
 QT4_ADD_RESOURCES( javascript_QRC_SOURCES ${javascript_RESOURCES} )
 
 add_library( tinia_javascript
-    ${qtcontroller_QRC_SOURCES}
+    ${javascript_QRC_SOURCES}
+    ${javascript_SOURCES}
     )
 target_link_libraries ( tinia_javascript
     ${QT_LIBRARIES}
 )
 
 IF(NOT WIN32)
-  install( TARGETS tinia-javascript LIBRARY DESTINATION lib/ COMPONENT qtcontroller)
+  install( TARGETS tinia_javascript LIBRARY DESTINATION lib/ COMPONENT qtcontroller)
 ELSE()
-  INSTALL(TARGETS tinia-javascript
+  INSTALL(TARGETS tinia_javascript
     DESTINATION lib)
 ENDIF()
