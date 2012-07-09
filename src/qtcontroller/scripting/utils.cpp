@@ -23,10 +23,15 @@
 
 namespace tinia { namespace qtcontroller { namespace scripting {
 QScriptValue addGlMatrix(QScriptEngine& engine) {
-    QFile file(":javascript/scripting/gl-matrix.js");
+    QFile file(":javascript/shared/gl-matrix.js");
     if(!file.open(QFile::ReadOnly)) {
         throw std::runtime_error("Could not open gl-matrix.js");
     }
     return engine.evaluate(file.readAll());
+}
+
+
+void addDefaultScripts(QScriptEngine &engine) {
+
 }
 }}}

@@ -33,7 +33,7 @@ struct SetupQtApplication {
     SetupQtApplication()
         : app(argc, &argv)
     {
-        ;
+
     }
 };
 

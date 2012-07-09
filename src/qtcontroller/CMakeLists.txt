@@ -36,6 +36,7 @@ target_link_libraries ( qtcontroller
     renderlist
     renderlistgl
     model
+    tinia_javascript
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
     jobcontroller

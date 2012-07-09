@@ -27,4 +27,8 @@ namespace tinia { namespace qtcontroller { namespace scripting {
  */
 QScriptValue addGlMatrix(QScriptEngine& engine);
 
+/** Adds the default script options to the engine.
+ * @throws std::runtime_error if the javascript-parsing returns an error.
+ */
+void addDefaultScripts(QScriptEngine& engine);
 }}}
