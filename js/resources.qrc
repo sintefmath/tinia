@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/javascript">
+        <file>shared/DSRV.js</file>
+        <file>shared/gl-matrix.js</file>
+    </qresource>
+</RCC>
