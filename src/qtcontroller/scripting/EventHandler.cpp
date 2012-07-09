@@ -39,27 +39,43 @@ EventHandler::EventHandler(const std::string& scriptClassName,
     m_scriptHandler =
             m_engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << parameters);
 
+    if(m_scriptHandler.isError()) {
+        throw std::runtime_error("Error while creating JavaScript object " + scriptClassName + ": " + m_scriptHandler.toString().toStdString());
+    }
+
 }
 
 void EventHandler::mouseMoveEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler,
+    auto error = m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler,
                                                     QScriptValueList() << m_engine.newQObject(&scriptEvent));
+
+    if(error.isError()) {
+        throw std::runtime_error("Error in Script: " + error.toString().toStdString());
+    }
 }
 
 void EventHandler::mousePressEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    m_scriptHandler.property("mousePressEvent").call(m_scriptHandler,
+    auto error = m_scriptHandler.property("mousePressEvent").call(m_scriptHandler,
                                                     QScriptValueList() << m_engine.newQObject(&scriptEvent));
+
+    if(error.isError()) {
+        throw std::runtime_error("Error in Script: " + error.toString().toStdString());
+    }
 }
 
 void EventHandler::mouseReleaseEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
+    auto error = m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
                                                        QScriptValueList() << m_engine.newQObject(&scriptEvent));
+
+    if(error.isError()) {
+        throw std::runtime_error("Error in Script: " + error.toString().toStdString());
+    }
 }
 
 } // namespace scripting

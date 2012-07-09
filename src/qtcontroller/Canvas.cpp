@@ -225,6 +225,7 @@ QSize Canvas::minimumSize() const
 void Canvas::mousePressEvent(QMouseEvent *event)
 {
 
+    m_eventHandler.mousePressEvent(event);
     if(m_job->passThrough())
     {
         m_job->mousePressEvent(event);
@@ -247,20 +248,21 @@ void Canvas::mousePressEvent(QMouseEvent *event)
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
+    m_eventHandler.mouseMoveEvent(event);
 
     if(m_job->passThrough())
     {
         m_job->mouseMoveEvent(event);
     }
 
-    m_dsrv->motion(event->x(), event->y());
-    updateMatrices();
+    //m_dsrv->motion(event->x(), event->y());
+    //updateMatrices();
     updateGL();
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-
+    m_eventHandler.mouseReleaseEvent(event);
     if(m_job->passThrough())
     {
         m_job->mouseReleaseEvent(event);
@@ -337,6 +339,7 @@ void Canvas::initializeDSRV()
 
 void Canvas::updateMatrices()
 {
+    return;
     model::Viewer viewer;
     glm::mat4 modelView = m_dsrv->getModelviewMatrix();
     glm::mat4 projection = m_dsrv->getProjectionMatrix();

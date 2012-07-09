@@ -43,6 +43,10 @@ void addDefaultScripts(QScriptEngine &engine) {
         if(error.isError()) {
             throw std::runtime_error(error.toString().toStdString());
         }
+        auto exception = engine.uncaughtException();
+        if(exception.isError()) {
+            throw std::runtime_error(exception.toString().toStdString());
+        }
     }
 }
 }}}
