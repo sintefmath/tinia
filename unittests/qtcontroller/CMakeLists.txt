@@ -7,4 +7,4 @@ ADD_EXECUTABLE( qtcontroller_unittest
   ${qtcontrollerTestSrc} 
   ${qtcontrollerTestHeaders} )
 
-TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} model qtcontroller ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
+TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} model qtcontroller tinia_javascript ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
