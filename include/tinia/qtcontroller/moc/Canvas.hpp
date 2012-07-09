@@ -74,7 +74,9 @@ public slots:
 private:
    void updateMatrices();
    void initializeDSRV();
-   scripting::EventHandler m_eventHandler;
+
+   // It's best if this is pointer, as we'll delay initialization.
+   std::unique_ptr<scripting::EventHandler> m_eventHandler;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;

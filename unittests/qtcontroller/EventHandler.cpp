@@ -342,6 +342,25 @@ BOOST_AUTO_TEST_CASE(KeyTest) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(MapTest) {
+    QString script =
+            "var keyMap ='notset';\n"
+            "function KeyTest(params) {\n"
+            "    keyMap = params.key;\n"
+            "}\n";
+    QScriptEngine engine;
+    auto model = std::make_shared<tinia::model::ExposedModel>();
+    engine.evaluate(script);
+
+    std::map<std::string, std::string> params;
+    params["key"] = "KeyFromTest";
+    tinia::qtcontroller::scripting::EventHandler handler("KeyTest", params, model, engine);
+
+    BOOST_CHECK_EQUAL("KeyFromTest", engine.evaluate("keyMap").toString().toStdString());
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -39,7 +39,7 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
     : QGLWidget( QGL::DepthBuffer| QGL::DoubleBuffer | QGL::AlphaChannel,
                  parent,
                  share_widget ),
-      m_eventHandler("DSRV", key,  model, scripting::ScriptEngine::getInstance()->engine()),
+
       m_key(key),
       m_boundingBoxKey(boundingBoxKey),
       m_resetViewKey(resetViewKey),
@@ -53,6 +53,15 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
       m_renderlist_db( NULL ),
       m_renderlist_renderer( NULL )
 {
+
+    // Setup eventhandler:
+    std::map<std::string, std::string> eventParams;
+    eventParams["key"] = m_key;
+    eventParams["boundingBoxKey"] = m_boundingBoxKey;
+    m_eventHandler.reset(new scripting::EventHandler("DSRV",
+                                                     eventParams,
+                                                     model,
+                                                     scripting::ScriptEngine::getInstance()->engine()));
     model::Viewer viewer;
     m_model->getElementValue(m_key, viewer);
     setPreferredSize();
@@ -225,7 +234,7 @@ QSize Canvas::minimumSize() const
 void Canvas::mousePressEvent(QMouseEvent *event)
 {
 
-    m_eventHandler.mousePressEvent(event);
+    m_eventHandler->mousePressEvent(event);
     if(m_job->passThrough())
     {
         m_job->mousePressEvent(event);
@@ -248,7 +257,7 @@ void Canvas::mousePressEvent(QMouseEvent *event)
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
-    m_eventHandler.mouseMoveEvent(event);
+    m_eventHandler->mouseMoveEvent(event);
 
     if(m_job->passThrough())
     {
@@ -262,7 +271,7 @@ void Canvas::mouseMoveEvent(QMouseEvent *event)
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_eventHandler.mouseReleaseEvent(event);
+    m_eventHandler->mouseReleaseEvent(event);
     if(m_job->passThrough())
     {
         m_job->mouseReleaseEvent(event);

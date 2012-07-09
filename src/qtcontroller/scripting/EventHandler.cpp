@@ -45,6 +45,29 @@ EventHandler::EventHandler(const std::string& scriptClassName,
 
 }
 
+EventHandler::EventHandler(const std::string &scriptClassName,
+                           const std::map<std::string, std::string> parameters,
+                           std::shared_ptr<model::ExposedModel> model,
+                           QScriptEngine &engine)
+    : m_engine(engine),
+      m_scriptModel(model, &m_engine),
+      m_model(model)
+{
+    QScriptValue scriptParameters = m_engine.newObject();
+    scriptParameters.setProperty("exposedModel", m_engine.newQObject(&m_scriptModel));
+
+    for(auto param = parameters.begin(); param != parameters.end(); ++param) {
+        scriptParameters.setProperty(QString(param->first.c_str()), QString(param->second.c_str()));
+    }
+    m_scriptHandler =
+            m_engine.evaluate(QString(scriptClassName.c_str())).construct(QScriptValueList() << scriptParameters);
+
+    if(m_scriptHandler.isError()) {
+        throw std::runtime_error("Error while creating JavaScript object " + scriptClassName + ": " + m_scriptHandler.toString().toStdString());
+    }
+}
+
+
 void EventHandler::mouseMoveEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);

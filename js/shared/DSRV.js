@@ -31,15 +31,15 @@ function axisAngle(axis, angle) {
 function DSRV(parameters) {
     this.m_exposedModel = parameters.exposedModel;
     this.m_key = parameters.key;
+    this.m_boundingBoxKey = parameters.boundingBoxKey;
 
     this.m_orientation = quat4.create();
     this.m_orientation[3] = 1;
 
     this.m_projection = mat4.identity(mat4.create());
     this.m_modelview = mat4.identity(mat4.create());
-    this.m_bbmin = vec3.create([-1.1, -1.1, -1.1]);
 
-    this.m_bbmax = vec3.create([1.1, 1.1, 1.1]);
+    this.getBoundingBoxFromModel();
 
     this.m_aspect = 1;
 
@@ -57,6 +57,12 @@ function DSRV(parameters) {
 }
 
 DSRV.prototype = {
+    getBoundingBoxFromModel : function() {
+        var bb = this.m_exposedModel.getElementValue(this.m_boundingBoxKey).split(" ");
+
+        this.m_bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
+        this.m_bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
+    },
 
     setSize : function(w, h) {
 

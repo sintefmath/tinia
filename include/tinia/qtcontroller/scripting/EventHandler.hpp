@@ -21,6 +21,7 @@
 #include <tinia/model/ExposedModel.hpp>
 #include <tinia/qtcontroller/scripting/ExposedModel.hpp>
 #include <QMouseEvent>
+#include <map>
 
 namespace tinia {
 namespace qtcontroller {
@@ -37,11 +38,26 @@ public:
      *                        Must be available in the ScriptEngine before invocation
      * @param model           The associated model.
      * @param key             The key associated with the script.
+     * @param engine          The JavaScript engine to run the script code in.
      */
     EventHandler(const std::string& scriptClassName,
                  const std::string& key,
                  std::shared_ptr<tinia::model::ExposedModel> model,
                  QScriptEngine& engine);
+
+    /**
+     * Construct the EventHandler
+     * @param scriptClassName the name of the class to constructor and call methods in.
+     *                        Must be available in the ScriptEngine before invocation
+     * @param model           The associated model.
+     * @param parameters      A map of key values that will be given to the constructor of
+     *                        the script class. The name "exposedModel" is reserved.
+     * @param engine          The JavaScript engine to run the script code in.
+     */
+    EventHandler(const std::string &scriptClassName,
+                 const std::map<std::string, std::string> parameters,
+                 std::shared_ptr<model::ExposedModel> model,
+                 QScriptEngine &engine);
 
     /** Will pass the event to "mouseMoveEvent" in the scriptclass
      */
