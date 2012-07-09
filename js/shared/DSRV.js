@@ -54,14 +54,26 @@ function DSRV(parameters) {
     // Get width and height:
     this.setSize(this.m_exposedModel.getElementValue(this.m_key).getElementValue("width"),
             this.m_exposedModel.getElementValue(this.m_key).getElementValue("height"));
+
+    // Handle updates to the boundingbox:
+    var DSRV_this = this;
+    this.m_exposedModel.addListener(this.m_boundingBoxKey, function(bb) {
+        DSRV_this.updateBoundingBox(bb);
+    });
+
+    this.updateMatrices();
+    this.insertMatrices();
 }
 
 DSRV.prototype = {
-    getBoundingBoxFromModel : function() {
-        var bb = this.m_exposedModel.getElementValue(this.m_boundingBoxKey).split(" ");
-
+    updateBoundingBox : function(bb) {
+        bb = bb.split(" ");
         this.m_bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
         this.m_bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
+    },
+
+    getBoundingBoxFromModel : function() {
+        this.updateBoundingBox(this.m_exposedModel.getElementValue(this.m_boundingBoxKey));
     },
 
     setSize : function(w, h) {
