@@ -1,3 +1,4 @@
+
 /* Copyright STIFTELSEN SINTEF 2012
  * 
  * This file is part of the Tinia Framework.
@@ -58,6 +59,7 @@ GUIBuilder::GUIBuilder( std::shared_ptr<model::ExposedModel>   model,
      m_perf_mode( perf_mode ),
      m_root_context( root_context )
 {
+    ;
 }
 
 

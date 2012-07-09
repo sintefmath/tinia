@@ -20,6 +20,7 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
+#include <tinia/qtcontroller/scripting/utils.hpp>
 #include <QApplication>
 #include <QLayout>
 #include <QLabel>
@@ -41,6 +42,7 @@ QTController::QTController()
       m_perf_mode( false ),
       m_renderlist_mode( false )
 {
+
 }
 
 QTController::~QTController()
@@ -95,6 +97,8 @@ int QTController::run(int argc, char **argv)
     QApplication app(argc, argv);
     m_main_window = new QMainWindow();
 
+    // Now we may init the script.
+    initScript();
 
     if( dynamic_cast<jobcontroller::OpenGLJob*>( m_job ) ) {
         for( int i=1; i<argc; i++) {
@@ -150,7 +154,13 @@ int QTController::run(int argc, char **argv)
    
    std::cerr << foo.toLocal8Bit() << "\n";
    */
-   return app.exec();
+    return app.exec();
+}
+
+void QTController::initScript()
+{
+    m_engine = scripting::ScriptEngine::getInstance();
+    scripting::addDefaultScripts(m_engine->engine());
 }
 
 namespace  {

@@ -20,6 +20,7 @@
 #define QTOBSERVER_QTOBSERVER_HPP
 #include <memory>
 #include "tinia/jobcontroller/Controller.hpp"
+#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 
 class QMainWindow;
 class QGLWidget;
@@ -60,8 +61,10 @@ public:
       */
     int run(int argc, char** argv);
 private:
+    void initScript();
     void populateGUI();
 
+    std::shared_ptr<scripting::ScriptEngine> m_engine;
     QMainWindow*                            m_main_window;
     QGLWidget*                              m_root_context;
     jobcontroller::Job*                       m_job;

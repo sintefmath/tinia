@@ -15,3 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+function DSRV(parameters) {
+    this._exposedModel = parameters.exposedModel;
+}
+
+DSRV.prototype = {
+    mouseMoveEvent : function(event) {
+
+    },
+
+    mousePressEvent : function(event) {
+
+    },
+
+    mouseReleaseEvent : function(event) {
+
+    }
+}
