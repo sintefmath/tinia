@@ -331,6 +331,31 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
 }
 
 
+BOOST_FIXTURE_TEST_CASE(ListenerTestCase, ModelScriptingFixture) {
+    QString script =
+            "var listenerCalled = false;\n"
+            "var valueWas = -1;\n"
+            "function main(model) {\n"
+            "   model.addListener('key', function(value) {\n"
+            "       listenerCalled = true;\n"
+            "       valueWas = value;\n"
+            "   });"
+            "}";
+
+    eng.evaluate(script);
+
+    model->addElement("key", 41);
+    eng.evaluate("main").call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+    BOOST_CHECK(!eng.evaluate("listenerCalled").toBool());
+    BOOST_CHECK_EQUAL(-1, eng.evaluate("valueWas").toNumber());
+
+    model->updateElement("key", 42);
+
+    BOOST_CHECK(eng.evaluate("listenerCalled").toBool());
+    BOOST_CHECK_EQUAL(42, eng.evaluate("valueWas").toNumber());
+
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

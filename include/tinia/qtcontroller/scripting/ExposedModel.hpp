@@ -25,12 +25,15 @@ namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
-class ExposedModel : public QObject
+class ExposedModel : public QObject, public tinia::model::StateListener
 {
     Q_OBJECT
 public:
     explicit ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
                           QScriptEngine* engine, QObject *parent = 0);
+
+    ~ExposedModel();
+    void stateElementModified(model::StateElement *stateElement);
     
 signals:
     
@@ -39,10 +42,14 @@ public slots:
 
     QScriptValue getElementValue(const QString& key);
 
+    void addListener(const QString& key, QScriptValue function);
+
 
 private:
     QScriptEngine* m_engine;
     std::shared_ptr<tinia::model::ExposedModel> m_model;
+
+    std::map<std::string, std::vector<QScriptValue > > m_listeners;
 };
 
 } // namespace scripting

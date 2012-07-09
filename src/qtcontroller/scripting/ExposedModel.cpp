@@ -28,6 +28,23 @@ ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
                            QObject *parent)
     : QObject(parent), m_engine(engine), m_model(model)
 {
+    m_model->addStateListener(this);
+}
+
+ExposedModel::~ExposedModel()
+{
+    m_model->removeStateListener(this);
+}
+
+void ExposedModel::stateElementModified(model::StateElement *stateElement)
+{
+    auto listenersFound = m_listeners.find(stateElement->getKey());
+    if(listenersFound != m_listeners.end()) {
+        auto& listeners = listenersFound->second;
+        for(size_t i = 0; i < listeners.size(); ++i) {
+            listeners[i].call(QScriptValue(), QScriptValueList() << getElementValue(QString(stateElement->getKey().c_str())));
+        }
+    }
 }
 
 void ExposedModel::updateElement(const QString &key, QScriptValue value)
@@ -93,6 +110,11 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
         return m_engine->newQObject(v);
     }
     return QScriptValue();
+}
+
+void ExposedModel::addListener(const QString &key, QScriptValue function)
+{
+    m_listeners[key.toStdString()].push_back(function);
 }
 
 } // namespace scripting
