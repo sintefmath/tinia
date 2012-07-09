@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
     auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
     engine.evaluate(script);
 
-    tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", model);
+    tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", model, engine);
 
     // Assert the variables aren't touched yet:
     int moveCalled, releaseCalled, pressCalled;
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(EventObject) {
     BOOST_CHECK_EQUAL(-1, engine.evaluate("releaseY").toNumber());
 
     tinia::qtcontroller::scripting::EventHandler handler("MyEventObjectTest",
-                                                         model);
+                                                         model, engine);
 
     QMouseEvent *e = new QMouseEvent(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
                                      Qt::NoButton, Qt::NoButton, Qt::NoModifier);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
     BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonPress").toNumber());
     BOOST_CHECK_EQUAL(-2, engine.evaluate("buttonRelease").toNumber());
 
-    tinia::qtcontroller::scripting::EventHandler handler("MyButtonTest", model);
+    tinia::qtcontroller::scripting::EventHandler handler("MyButtonTest", model, engine);
 
     QMouseEvent eMove(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),
                   Qt::NoButton, Qt::NoButton, Qt::NoModifier);
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(Modifiers) {
 
     engine.evaluate(script);
 
-    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", model);
+    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", model, engine);
 
     {
         QMouseEvent ePress(QEvent::MouseMove, QPoint(42,43), QPoint(0,0),

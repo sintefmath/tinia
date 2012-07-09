@@ -25,8 +25,9 @@ namespace qtcontroller {
 namespace scripting {
 
 EventHandler::EventHandler(const std::string& scriptClassName,
-                           std::shared_ptr<tinia::model::ExposedModel> model)
-    : m_engine(ScriptEngine::getInstance()->engine()),
+                           std::shared_ptr<tinia::model::ExposedModel> model,
+                           QScriptEngine& engine)
+    : m_engine(engine),
       m_scriptModel(model, &m_engine),
       m_model(model)
 {

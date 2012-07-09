@@ -27,7 +27,6 @@ namespace qtcontroller {
 namespace scripting {
 
 /** Basic EventHandler. Will pass events to the relevant methods in the Script class
- * @note This uses the ScriptEngine singleton.
  */
 class EventHandler
 {
@@ -39,7 +38,8 @@ public:
      * @param model           The associated model.
      */
     EventHandler(const std::string& scriptClassName,
-                 std::shared_ptr<tinia::model::ExposedModel> model);
+                 std::shared_ptr<tinia::model::ExposedModel> model,
+                 QScriptEngine& engine);
 
     /** Will pass the event to "mouseMoveEvent" in the scriptclass
      */
