@@ -54,27 +54,7 @@
      The values in a model is expected to change often, and very often contains
      GUI-state, short strings or integral values.
 
-
-
-    \section sec_example Example
-
-    \section sec_extension Extension
-
-    In order to extend a complex type, e.g., the Viewer, follow these steps:
-    1) Update the data structure (E.g., Viewer.hpp)
-    2) Update the two template specializations for the type in impl::ElementDataFactory.hpp, 'createElement'
-       and 'createT'.
-
-    These instructions are up to date and tested as of 110912.
-
-    \include main.cpp
-
-
-
-  */
-//
-/** \namespace model Everything in model resides in the model namespace.
-  */
+*/
 
 namespace tinia {
 namespace model {
@@ -94,8 +74,6 @@ public:
 
    std::string getElementMaxConstraint(std::string key) const;
    std::string getElementMinConstraint(std::string key) const;
-
-
 
    StateSchemaElement getStateSchemaElement(std::string key);
 

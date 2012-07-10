@@ -9,15 +9,14 @@ Ubuntu packages (with dependencies) from Ubuntu 12.04:
     - libqt4-dev
     - libapr1-dev
     - cmake
-    - libboost-test-dev (For unit tests).
+    - libboost-all-dev (For unit tests).
     - apache2-dev (For server module).
-
 
      Once these are installed a simple `$ cmake . ` `$ make `.
 
      Should be enough to compile it. You can optionally issue
      ` $ make package` Which will build a debian package which installs into
      /usr/lib and /usr/include/model . This package can be installed on your
-     system with the following command
+     system with the following command:
 
      `$ sudo dpkg -i ExposedModel<version>.deb \endverbatim`
