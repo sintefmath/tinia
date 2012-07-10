@@ -30,11 +30,10 @@
 #include <tinia/renderlist/SetFramebufferState.hpp>
 #include <tinia/renderlist/SetPixelState.hpp>
 #include <tinia/renderlist/SetRasterState.hpp>
-
+#include "utils.hpp"
 #include "TestJob.hpp"
 #include "tinia/model/GUILayout.hpp"
 #include <iostream>
-#include <siut2/gl_utils/GLSLtools.hpp>
 #include "tinia/model/File.hpp"
 
 namespace tinia {

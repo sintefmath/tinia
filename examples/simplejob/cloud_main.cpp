@@ -22,6 +22,7 @@ int main(int argc, char** argv)
 {
     using namespace tinia::example;
     tinia::trell::IPCGLJobController *trellController = new tinia::trell::IPCGLJobController();
+
     TestJob *testJob = new TestJob();
     trellController->setJob(testJob);
 
