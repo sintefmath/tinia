@@ -46,7 +46,7 @@
 #include <tinia/model/exceptions/RestrictionException.hpp>
 #include <tinia/model/exceptions/TypeException.hpp>
 
-/** \mainpage
+/** \page ExposedModelLibrary Exposed Model
      ExposedModel is a small library used to create, update and query policies.
      A model is a set of typed-parameters with potential restrictions that is sent
      between a client and a server in a distributed application.
@@ -54,24 +54,7 @@
      The values in a model is expected to change often, and very often contains
      GUI-state, short strings or integral values.
 
-     \section sec_compilation Compilation and installation
-     Compilation is done by using cmake and to compile the package you need the following
-     Ubuntu packages from Ubuntu 11.04:
-     - libxml2-dev
-     - cmake
-     - libboost-test-dev (For unit tests).
 
-     Once these are installed a simple
-     \verbatim
-        $ cmake .
-        $ make \endverbatim
-     Should be enough to compile it. You can optionally issue
-     \verbatim
-        $ make package \endverbatim
-     Which will build a debian package which installs into /usr/lib and /usr/include/model .
-     This package can be installed on your system with the following command
-     \verbatim
-        $ sudo dpkg -i ExposedModel<version>.deb \endverbatim
 
     \section sec_example Example
 
