@@ -13,7 +13,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
+ * along with the Tinia Framework.  If not, se <http://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -32,9 +32,8 @@
  *
  */
 
-
-
 #include "tinia/model/model.hpp"
+#include "tinia/renderlist.hpp"
 
 /** @namespace tinia All C++ functionality of Tinia is contained in the tinia namespace. */
 
