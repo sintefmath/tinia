@@ -25,7 +25,6 @@
 #include <QTime>
 #include <QTimer>
 #include <tinia/renderlist/gl/Renderer.hpp>
-#include <siut2/dsrv/DSRViewer.hpp>
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
@@ -63,17 +62,11 @@ protected:
    void keyPressEvent(QKeyEvent *event);
    void keyReleaseEvent(QKeyEvent *);
 signals:
-   void resetViewFromExposedModel();
    void updateFromExposedModel();
-   void updateDSRV();
    void updateFPS( QString fps );
 public slots:
-   void updateDSRVNow();
    void setRenderMode( int index );
-   void resetView();
 private:
-   void updateMatrices();
-   void initializeDSRV();
 
    // It's best if this is pointer, as we'll delay initialization.
    std::unique_ptr<scripting::EventHandler> m_eventHandler;
@@ -82,7 +75,6 @@ private:
    std::string m_resetViewKey;
    std::shared_ptr<model::ExposedModel> m_model;
    jobcontroller::OpenGLJob* m_job;
-   siut2::dsrv::DSRViewer* m_dsrv;
    QTime                   m_last_fps_calc;
    unsigned int            m_frames;
    QTimer*                 m_redraw_timer;
