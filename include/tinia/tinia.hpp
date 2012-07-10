@@ -35,5 +35,5 @@
 #include "tinia/model.hpp"
 #include "tinia/renderlist.hpp"
 
-/** @namespace tinia All C++ functionality of Tinia is contained in the tinia namespace. */
+/** @namespace tinia Provides classes for the tinia-framework. */
 

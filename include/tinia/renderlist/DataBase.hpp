@@ -25,6 +25,7 @@
 namespace tinia {
 namespace renderlist {
 
+/** DataBase stores and manipulates the OpenGL-state. */
 class DataBase
 {
 public:
