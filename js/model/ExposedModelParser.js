@@ -479,8 +479,30 @@ dojo.declare("model.GUIParser", model.XMLHelper, {
     },
     
     makeCanvas: function(xml) {
+        var scripts = [];
+        var scriptsNode = dojo.query("scripts", xml);
+
+        if(scriptsNode.length > 0) {
+
+            scriptsNode = scriptsNode[0];
+        
+            if (scriptsNode && scriptsNode.childNodes.length > 0) {
+
+                for(var i = 0; i < scriptsNode.childNodes.length; i++) {
+                    if(scriptsNode.childNodes[i].nodeName == "#text") {
+                        continue;
+                    }
+                    var parametersXml = dojo.query("parameter", scriptsNode.childNodes[i]);
+                    var params = {};
+                    for(var j = 0; j < parametersXml.length; j++) {
+                        params[dojo.attr(parametersXml[j], "name")] = dojo.attr(parametersXml[j], "value");
+                    }
+                    scripts[scripts.length] = new model.gui.ScriptArgument(scriptsNode.childNodes[i].getAttribute("className"), params);
+                }
+            }
+        }
         return new model.gui.Canvas(this.getKey(xml), dojo.attr(xml, "renderlistKey"),
-            dojo.attr(xml, "boundingboxKey"), dojo.attr(xml, "resetViewKey"));
+            dojo.attr(xml, "boundingboxKey"), dojo.attr(xml, "resetViewKey"), scripts);
     },
 
     isGUIElement: function(xml) {

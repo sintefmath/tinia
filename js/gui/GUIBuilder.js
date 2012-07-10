@@ -119,7 +119,8 @@ dojo.declare("gui.GUIBuilder", null, {
                                             "renderListURL" : this._renderListURL,
                                             "resetViewKey"  : root.resetViewKey(),
                                           "urlHandler" : this._urlHandler,
-					  "showRenderList" : this._showRenderList});
+					  "showRenderList" : this._showRenderList,
+                                            "scripts" : root.scripts()});
                 
                 break;
                 

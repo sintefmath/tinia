@@ -75,7 +75,6 @@ dojo.declare("model.ExposedModelReceiver", null, {
     },
     
     _handleUpdate: function(response) {
-        console.log(response);
         this._parser.parseXML(response);
     },
     

@@ -42,7 +42,7 @@ public slots:
 
     QScriptValue getElementValue(const QString& key);
 
-    void addListener(const QString& key, QScriptValue function);
+    void addLocalListener(const QString& key, QScriptValue function);
 
 
 private:

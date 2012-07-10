@@ -41,7 +41,9 @@ void ExposedModel::stateElementModified(model::StateElement *stateElement)
     if(listenersFound != m_listeners.end()) {
         auto& listeners = listenersFound->second;
         for(size_t i = 0; i < listeners.size(); ++i) {
-            listeners[i].call(QScriptValue(), QScriptValueList() << getElementValue(QString(stateElement->getKey().c_str())));
+            listeners[i].call(QScriptValue(), QScriptValueList()
+                              << QString(stateElement->getKey().c_str())
+                              << getElementValue(QString(stateElement->getKey().c_str())));
         }
     }
 }
@@ -111,7 +113,7 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
     return QScriptValue();
 }
 
-void ExposedModel::addListener(const QString &key, QScriptValue function)
+void ExposedModel::addLocalListener(const QString &key, QScriptValue function)
 {
     m_listeners[key.toStdString()].push_back(function);
 }

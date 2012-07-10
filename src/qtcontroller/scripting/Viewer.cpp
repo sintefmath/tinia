@@ -42,10 +42,10 @@ model::Viewer &Viewer::viewer()
 
 void Viewer::updateElement(const QString& key, QScriptValue value)
 {
-    if(key=="modelviewMatrix") {
+    if(key=="modelview") {
         setMatrix(m_viewer.modelviewMatrix, value);
     }
-    else if(key =="projectionMatrix") {
+    else if(key =="projection") {
         setMatrix(m_viewer.projectionMatrix, value);
     }
     else if(key=="height") {
@@ -58,7 +58,7 @@ void Viewer::updateElement(const QString& key, QScriptValue value)
 
 QScriptValue Viewer::getElementValue(const QString &key)
 {
-    if(key=="modelviewMatrix") {
+    if(key=="modelview") {
         QString array("Array(");
         for(int i = 0; i < 16; ++i) {
             array +=QString::number(m_viewer.modelviewMatrix[i]);
@@ -70,7 +70,7 @@ QScriptValue Viewer::getElementValue(const QString &key)
         return m_engine->evaluate(array);
 
     }
-    else if(key =="projectionMatrix") {
+    else if(key =="projection") {
         QString array("Array(");
         for(int i = 0; i < 16; ++i) {
             array +=QString::number(m_viewer.projectionMatrix[i]);

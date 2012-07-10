@@ -3,5 +3,6 @@
         <file>shared/DSRV.js</file>
         <file>shared/gl-matrix.js</file>
         <file>shared/includes.txt</file>
+        <file>shared/console.js</file>
     </qresource>
 </RCC>

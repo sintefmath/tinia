@@ -122,6 +122,10 @@ dojo.declare("model.ExposedModel", null, {
         return this._get(key);
     },
     
+    getElementValue: function(key) {
+        return this.getValue(key);
+    },
+    
     getType: function(key) {
         return this._getElementData(key).type();
     },

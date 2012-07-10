@@ -88,9 +88,9 @@
                         </xsd:element>
                         <xsd:complexType name="viewer">
                             <xsd:sequence>
-                                <xsd:element name="Width" type="xsd:integer"/>
-                                <xsd:element name="Height" type="xsd:integer"/>
-                                <xsd:element name="Projection">
+                                <xsd:element name="width" type="xsd:integer"/>
+                                <xsd:element name="height" type="xsd:integer"/>
+                                <xsd:element name="projection">
                                     <xsd:restriction>
                                         <xsd:simpleType>
                                             <xsd:list itemType="xsd:float"/>
@@ -98,7 +98,7 @@
                                         <xsd:length value="16"/>
                                     </xsd:restriction>
                                 </xsd:element>
-                                <xsd:element name="Modelview">
+                                <xsd:element name="modelview">
                                     <xsd:restriction>
                                         <xsd:simpleType>
                                             <xsd:list itemType="xsd:float"/>
@@ -106,8 +106,8 @@
                                         <xsd:length value="16"/>
                                     </xsd:restriction>
                                 </xsd:element>
-                                <xsd:element name="Timestamp" type="xsd:double"/>
-                                <xsd:element name="SceneView" type="xsd:string"/>
+                                <xsd:element name="timestamp" type="xsd:double"/>
+                                <xsd:element name="sceneView" type="xsd:string"/>
                             </xsd:sequence>
                         </xsd:complexType>
                     </xsd:all>
@@ -129,12 +129,12 @@
         <showAdvanced>0</showAdvanced>
         <mesh_1>0</mesh_1>
         <viewer>
-            <Width>782</Width>
-            <Height>782</Height>
-            <Projection>1 0 0 0 0 1 0 0 0 0 -1.0202020406723022 -1 0 0 -18.5638427734375 0</Projection>
-            <Modelview>0.7354713678359985 -0.6516221761703491 0.18566226959228516 0 0.2348913997411728 0.502234697341919 0.832217812538147 0 -0.6355375647544861 -0.5684619545936584 0.5224396586418152 0 -65.47185516357422 -58.561859130859375 -436.5816650390625 1</Modelview>
-            <Timestamp>20</Timestamp>
-            <SceneView>---oooOOOooo---</SceneView>
+            <width>782</width>
+            <height>782</height>
+            <projection>1 0 0 0 0 1 0 0 0 0 -1.0202020406723022 -1 0 0 -18.5638427734375 0</projection>
+            <modelview>0.7354713678359985 -0.6516221761703491 0.18566226959228516 0 0.2348913997411728 0.502234697341919 0.832217812538147 0 -0.6355375647544861 -0.5684619545936584 0.5224396586418152 0 -65.47185516357422 -58.561859130859375 -436.5816650390625 1</modelview>
+            <timestamp>20</timestamp>
+            <sceneView>---oooOOOooo---</sceneView>
         </viewer>
     </State>
     <GuiLayout>
@@ -278,7 +278,16 @@
             <Grid>
                 <Row>
                     <Cell>
-                        <Canvas key="viewer" showValue="1" viewerKey="viewer" renderlistKey="viewer_renderlist" boundingboxKey="boundingbox"/>
+                        <Canvas key="viewer" showValue="1" viewerKey="viewer" renderlistKey="viewer_renderlist" boundingboxKey="boundingbox">
+                            <scripts>
+                                <script className="DSRV">
+                                    <parameter name="boundingBoxKey" value="boundingbox"/>
+                                    <parameter name="key" value="viewer"/>
+                                    <parameter name="renderlistKey" value="renderlist"/>
+                                    <parameter name="resetViewKey" value="viewer_reset_view"/>
+                                </script>
+                            </scripts>
+                        </Canvas>
                     </Cell>
                 </Row>
             </Grid>

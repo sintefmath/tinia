@@ -202,7 +202,7 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithoutScript, ModelScriptingFixtu
     }
     modelView += ")";
 
-    v.updateElement("modelviewMatrix", eng.evaluate(modelView));
+    v.updateElement("modelview", eng.evaluate(modelView));
 
     QString projection("Array(");
     for(int i = 0; i < 16; ++i) {
@@ -213,7 +213,7 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithoutScript, ModelScriptingFixtu
     }
     projection += ")";
 
-    v.updateElement("projectionMatrix", eng.evaluate(projection));
+    v.updateElement("projection", eng.evaluate(projection));
 
     v.updateElement("height", QScriptValue(100));
     v.updateElement("width", QScriptValue(42));
@@ -232,9 +232,9 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
     tinia::qtcontroller::scripting::Viewer v(&eng);
 
     QString script = "(function(viewer) { "
-            "viewer.updateElement('modelviewMatrix', "
+            "viewer.updateElement('modelview', "
             "    Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)); "
-            "viewer.updateElement('projectionMatrix', "
+            "viewer.updateElement('projection', "
             "    Array(16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)); "
             "viewer.updateElement('height', 100);"
             "viewer.updateElement('width', 42);"
@@ -252,13 +252,13 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
     BOOST_CHECK_EQUAL(modelViewer.height, 100);
     BOOST_CHECK_EQUAL(modelViewer.width, 42);
     for(int i = 0; i < 16; ++i) {
-        QString fetchModelView = "(function(viewer) { return viewer.getElementValue('modelviewMatrix')[" + QString::number(i) + "]; })";
+        QString fetchModelView = "(function(viewer) { return viewer.getElementValue('modelview')[" + QString::number(i) + "]; })";
         auto fetchModelViewFunction = eng.evaluate(fetchModelView);
         auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
         BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
 
 
-        QString fetchProjection = "(function(viewer) { return viewer.getElementValue('projectionMatrix')[" + QString::number(i)+ "]; })";
+        QString fetchProjection = "(function(viewer) { return viewer.getElementValue('projection')[" + QString::number(i)+ "]; })";
         auto fetchProjectionFunction = eng.evaluate(fetchProjection);
         auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
         BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
@@ -284,13 +284,13 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
     }
     model->addElement("viewer", v);
     for(int i = 0; i < 16; ++i) {
-        QString fetchModelView = "(function(model) { return model.getElementValue('viewer').getElementValue('modelviewMatrix')[" + QString::number(i) + "]; })";
+        QString fetchModelView = "(function(model) { return model.getElementValue('viewer').getElementValue('modelview')[" + QString::number(i) + "]; })";
         auto fetchModelViewFunction = eng.evaluate(fetchModelView);
         auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
         BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
 
 
-        QString fetchProjection = "(function(model) {  return model.getElementValue('viewer').getElementValue('projectionMatrix')[" + QString::number(i)+ "]; })";
+        QString fetchProjection = "(function(model) {  return model.getElementValue('viewer').getElementValue('projection')[" + QString::number(i)+ "]; })";
         auto fetchProjectionFunction = eng.evaluate(fetchProjection);
         auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
         BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
@@ -306,9 +306,9 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
     // Now we update from javascript
     QString script = "(function(model) { "
             "var viewer = model.getElementValue('viewer');"
-            "viewer.updateElement('projectionMatrix', "
+            "viewer.updateElement('projection', "
             "    Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)); "
-            "viewer.updateElement('modelviewMatrix', "
+            "viewer.updateElement('modelview', "
             "    Array(16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)); "
             "viewer.updateElement('width', 100);"
             "viewer.updateElement('height', 42);"
@@ -336,7 +336,7 @@ BOOST_FIXTURE_TEST_CASE(ListenerTestCase, ModelScriptingFixture) {
             "var listenerCalled = false;\n"
             "var valueWas = -1;\n"
             "function main(model) {\n"
-            "   model.addListener('key', function(value) {\n"
+            "   model.addLocalListener('key', function(key, value) {\n"
             "       listenerCalled = true;\n"
             "       valueWas = value;\n"
             "   });"

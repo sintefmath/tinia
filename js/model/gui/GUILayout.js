@@ -321,8 +321,23 @@ dojo.declare("model.gui.KeyValue", model.gui.Element, {
     
 });
 
+dojo.declare("model.gui.ScriptArgument", null, {
+    constructor: function(className, params) {
+        this._className = className;
+        this._params = params;
+    },
+    
+    className : function() {
+        return this._className;
+    },
+    
+    params : function() {
+        return this._params;
+    }
+});
+
 dojo.declare("model.gui.Canvas", model.gui.Element, {
-    constructor: function(key, renderlistKey, boundingBoxKey, resetViewKey) {
+    constructor: function(key, renderlistKey, boundingBoxKey, resetViewKey, scripts) {
         this._key = key;
         if(renderlistKey === undefined) {
             renderlistKey = key + "_renderlist";
@@ -338,6 +353,8 @@ dojo.declare("model.gui.Canvas", model.gui.Element, {
             resetViewKey = "resetview_" + key;
         }
         this._resetViewKey = resetViewKey;
+        
+        this._scripts = scripts;
     },
     
     key: function() { 
@@ -358,6 +375,10 @@ dojo.declare("model.gui.Canvas", model.gui.Element, {
     
     type: function() {
         return "Canvas";
+    },
+    
+    scripts : function() {
+        return this._scripts;
     }
 });
 

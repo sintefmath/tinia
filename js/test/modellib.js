@@ -122,7 +122,7 @@ doh.register("ParserTest", {
         doh.assertTrue(modelLib.hasKey("boundingbox"));
         doh.assertTrue(modelLib.hasKey("viewer"));
         doh.assertTrue(modelLib.hasKey("timestep"));
-        doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
+        doh.assertTrue(modelLib.getValue("viewer").hasKey("width"));
         doh.assertEqual(33, modelLib.getValue("timestep"));
         doh.assertTrue(modelLib.hasRestriction("timestep"));
         doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
@@ -140,7 +140,7 @@ doh.register("ParserTest", {
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("projection"));
         
         doh.assertTrue(!!modelLib.GUI());
 
@@ -181,7 +181,7 @@ doh.register("ParserTest", {
         doh.assertTrue(modelLib.hasKey("boundingbox"));
         doh.assertTrue(modelLib.hasKey("viewer"));
         doh.assertTrue(modelLib.hasKey("timestep"));
-        doh.assertTrue(modelLib.getValue("viewer").hasKey("Width"));
+        doh.assertTrue(modelLib.getValue("viewer").hasKey("width"));
         doh.assertEqual(33, modelLib.getValue("timestep"));
         doh.assertTrue(modelLib.hasRestriction("timestep"));
         doh.assertEqual("Show mesh 2", modelLib.getAnnotation("mesh_2", "en"));
@@ -195,7 +195,7 @@ doh.register("ParserTest", {
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelLib.getValue("viewer").getValue("projection"));
         
         doh.assertTrue(!!modelLib.GUI());
         doh.assertEqual("viewer", modelLib.GUI().child(1).child(0,0).key());
@@ -330,7 +330,7 @@ doh.register("BuilderTest", {
         doh.assertTrue(modelObj.hasKey("boundingbox"));
         doh.assertTrue(modelObj.hasKey("viewer"));
         doh.assertTrue(modelObj.hasKey("timestep"));
-        doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+        doh.assertTrue(modelObj.getValue("viewer").hasKey("width"));
         doh.assertEqual(33, modelObj.getValue("timestep"));
         doh.assertTrue(modelObj.hasRestriction("timestep"));
         doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
@@ -343,7 +343,7 @@ doh.register("BuilderTest", {
         0, 1, 0, 0,
         0, 0, -1.0202020406723022, -1,
         0, 0, -18.5638427734375, 0];
-        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("projection"));
         
         doh.assertTrue(!!modelObj.GUI());
         doh.assertEqual("viewer", modelObj.GUI().child(1).child(0,0).key());
@@ -363,7 +363,7 @@ doh.register("BuilderTest", {
         doh.assertTrue(modelObj.hasKey("boundingbox"));
         doh.assertTrue(modelObj.hasKey("viewer"));
         doh.assertTrue(modelObj.hasKey("timestep"));
-        doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+        doh.assertTrue(modelObj.getValue("viewer").hasKey("width"));
         doh.assertEqual(33, modelObj.getValue("timestep"));
         doh.assertTrue(modelObj.hasRestriction("timestep"));
         doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
@@ -373,7 +373,7 @@ doh.register("BuilderTest", {
         doh.assertEqual("Enable/show advanced dummy fields", modelObj.getAnnotation("showAdvanced", "en"));
         
       
-        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
+        doh.assertEqual(projection, modelObj.getValue("viewer").getValue("projection"));
     }
 });
 
@@ -421,7 +421,7 @@ doh.register("ExposedModelReceiverTest", {
             doh.assertTrue(modelObj.hasKey("boundingbox"));
             doh.assertTrue(modelObj.hasKey("viewer"));
             doh.assertTrue(modelObj.hasKey("timestep"));
-            doh.assertTrue(modelObj.getValue("viewer").hasKey("Width"));
+            doh.assertTrue(modelObj.getValue("viewer").hasKey("width"));
             doh.assertEqual(33, modelObj.getValue("timestep"));
             doh.assertTrue(modelObj.hasRestriction("timestep"));
             doh.assertEqual("Show mesh 2", modelObj.getAnnotation("mesh_2", "en"));
@@ -435,7 +435,7 @@ doh.register("ExposedModelReceiverTest", {
             0, 1, 0, 0,
             0, 0, -1.0202020406723022, -1,
             0, 0, -18.5638427734375, 0];
-            doh.assertEqual(projection, modelObj.getValue("viewer").getValue("Projection"));
+            doh.assertEqual(projection, modelObj.getValue("viewer").getValue("projection"));
         
             doh.assertTrue(!!modelObj.GUI());
             doh.assertEqual("viewer", modelObj.GUI().child(1).child(0,0).key());

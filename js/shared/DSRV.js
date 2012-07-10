@@ -29,6 +29,7 @@ function axisAngle(axis, angle) {
     return q;
 }
 function DSRV(parameters) {
+    console.log("constructing dsrv");
     this.m_exposedModel = parameters.exposedModel;
     this.m_key = parameters.key;
     this.m_boundingBoxKey = parameters.boundingBoxKey;
@@ -57,13 +58,13 @@ function DSRV(parameters) {
 
     // Handle updates to the boundingbox:
     var DSRV_this = this;
-    this.m_exposedModel.addListener(this.m_boundingBoxKey, function(bb) {
+    this.m_exposedModel.addLocalListener(this.m_boundingBoxKey, function(key, bb) {
         DSRV_this.updateBoundingBox(bb);
         DSRV_this.updateMatrices();
         DSRV_this.insertMatrices();
     });
 
-    this.m_exposedModel.addListener(this.m_key, function(viewer) {
+    this.m_exposedModel.addLocalListener(this.m_key, function(key, viewer) {
         var height = viewer.getElementValue("height");
         var width = viewer.getElementValue("width");
         if(height != DSRV_this.m_height || width != DSRV_this.m_width) {
@@ -75,6 +76,8 @@ function DSRV(parameters) {
 
     this.updateMatrices();
     this.insertMatrices();
+
+    console.log("DSRV Constructed");
 
 }
 
@@ -106,7 +109,6 @@ DSRV.prototype = {
             this.handleZoomMove(event.x, event.y);
             break;
         }
-
         this.updateMatrices();
         this.insertMatrices();
     },
@@ -124,6 +126,7 @@ DSRV.prototype = {
     },
 
     mouseReleaseEvent : function(event) {
+        console.log("released");
         this.m_state = -1;
     },
 
@@ -224,8 +227,8 @@ DSRV.prototype = {
 
     insertMatrices: function() {
         var viewer = this.m_exposedModel.getElementValue(this.m_key);
-        viewer.updateElement("modelviewMatrix", this.m_modelview);
-        viewer.updateElement("projectionMatrix", this.m_projection);
+        viewer.updateElement("modelview", this.m_modelview);
+        viewer.updateElement("projection", this.m_projection);
         this.m_exposedModel.updateElement(this.m_key, viewer);
     }
 }

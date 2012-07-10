@@ -515,12 +515,38 @@ xmlNodePtr XMLBuilder::addCanvas(model::gui::Canvas* element,
 
 
 
-
    xmlSetProp(xmlElement, BAD_CAST "renderlistKey", BAD_CAST element->renderlistKey().c_str());
 
 
    xmlSetProp(xmlElement, BAD_CAST "boundingboxKey", BAD_CAST element->boundingBoxKey().c_str());
    xmlSetProp(xmlElement, BAD_CAST "resetViewKey", BAD_CAST element->resetViewKey().c_str());
+
+   auto scripts = xmlNewChild(xmlElement, 0, BAD_CAST "scripts", 0);
+   auto mainViewer = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
+   xmlSetProp(mainViewer, BAD_CAST "className", BAD_CAST element->viewerType().className().c_str());
+   for(auto it = element->viewerType().parameters().begin();
+       it != element->viewerType().parameters().end();
+       ++it)
+   {
+       auto arg = xmlNewChild(mainViewer, 0, BAD_CAST "parameter", 0);
+       xmlSetProp(arg, BAD_CAST "name", BAD_CAST it->first.c_str());
+       xmlSetProp(arg, BAD_CAST "value", BAD_CAST it->second.c_str());
+   }
+
+   for(size_t i = 0; i < element->scripts().size(); ++i) {
+       const auto& scriptArg = element->scripts()[i];
+       auto  script = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
+       xmlSetProp(script, BAD_CAST "className", BAD_CAST scriptArg.className().c_str());
+       for(auto it = scriptArg.parameters().begin();
+           it != scriptArg.parameters().end();
+           ++it)
+       {
+           auto arg = xmlNewChild(script, 0, BAD_CAST "parameter", 0);
+           xmlSetProp(arg, BAD_CAST "name", BAD_CAST it->first.c_str());
+           xmlSetProp(arg, BAD_CAST "value", BAD_CAST it->second.c_str());
+       }
+   }
+
    return xmlElement;
 }
 
