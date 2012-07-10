@@ -32,7 +32,7 @@
  *
  */
 
-#include "tinia/model/model.hpp"
+#include "tinia/model.hpp"
 #include "tinia/renderlist.hpp"
 
 /** @namespace tinia All C++ functionality of Tinia is contained in the tinia namespace. */
