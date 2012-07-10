@@ -59,11 +59,25 @@ function DSRV(parameters) {
     var DSRV_this = this;
     this.m_exposedModel.addListener(this.m_boundingBoxKey, function(bb) {
         DSRV_this.updateBoundingBox(bb);
+        DSRV_this.updateMatrices();
+        DSRV_this.insertMatrices();
+    });
+
+    this.m_exposedModel.addListener(this.m_key, function(viewer) {
+        var height = viewer.getElementValue("height");
+        var width = viewer.getElementValue("width");
+        if(height != DSRV_this.m_height || width != DSRV_this.m_width) {
+            DSRV_this.setSize(width, height);
+            DSRV_this.updateMatrices();
+            DSRV_this.insertMatrices();
+        }
     });
 
     this.updateMatrices();
     this.insertMatrices();
+
 }
+
 
 DSRV.prototype = {
     updateBoundingBox : function(bb) {
@@ -85,7 +99,6 @@ DSRV.prototype = {
     mouseMoveEvent : function(event) {
         switch(this.m_state) {
         case this.ROTATE:
-            print("rotation");
             this.handleRotateMove(event.x, event.y);
 
             break;
@@ -101,7 +114,6 @@ DSRV.prototype = {
     mousePressEvent : function(event) {
         switch(event.button) {
         case this.ROTATE:
-            print("BEGIN ROTATE");
             this.m_beginOrientation = quat4.create(this.m_orientation);
             this.m_beginDirection = this.pointOnUnitSphere(event.x, event.y);
             this.m_state = this.ROTATE;
@@ -109,12 +121,10 @@ DSRV.prototype = {
         default:
             this.m_state = -1;
         }
-
-        print(event.x + ", " + event.y);
     },
 
     mouseReleaseEvent : function(event) {
-        print(event.x + ", " + event.y);
+        this.m_state = -1;
     },
 
     handleRotateMove: function(x, y) {
