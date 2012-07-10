@@ -27,7 +27,10 @@ making it easy for you to use.
   translates the variables into an XML document following a special schema which
   is transmitted across the internet.
 
-- The Controller component specifies the interfaces needed to create a
+- The [Renderlist](@ref RenderListLibrary) component handles creation of WebGL renderlists and generating proxy geometry
+  for use on the client side.
+
+- The [Controller component](@ref JobControllerLibrary) specifies the interfaces needed to create a
   Tinia-based application. It has several interfaces depending on the use-case of
   the application, and can easily be extended if need be. Typical interfaces are
   QTObserver for a desktop job and TrellObserver for cloud jobs.
@@ -36,7 +39,6 @@ making it easy for you to use.
   through an Apache2 web server, and communicates with the TrellObserver using
   IPC.
 
-- The Renderlist component handles creation of WebGL renderlists and generating proxy geometry
-  for use on the client side.
+
 
 

@@ -18,22 +18,20 @@
 
 #pragma once
 
-/** @defgroup ConvenienceHeaders Convenience Headers
- * These files are convenience headers that is inteded to be used if you do
- * not need fine grained control of which files to include.
- *
- * They are split up so that each module has a separate header, and there is
- * also a global include file to grab them all.
+/** @file jobcontroller.hpp  Convenience header to include all jobcontroller functionality with one include statement.
+ *  @ingroup ConvenienceHeaders
  */
 
-/** @file tinia.hpp
- * @ingroup ConvenienceHeaders
- * Convenience header to include all of Tinia with one include statemes.
+#include "tinia/jobcontroller/Controller.hpp"
+#include "tinia/jobcontroller/Job.hpp"
+#include "tinia/jobcontroller/OpenGLJob.hpp"
+
+/** @namespace tinia::jobcontroller Provides classes necessary to use the \ref JobControllerLibrary. */
+
+/** @page JobControllerLibrary Job Controller
  *
+ * The Job Controller framework specifies the interfaces needed to create a Tinia-based
+ * application. It has several interfaces depending on the use-case of the
+ * application, and can easily be extended if need be. Typical interfaces are
+ * QTObserver for a desktop job and TrellObserver for cloud jobs.
  */
-
-#include "tinia/model.hpp"
-#include "tinia/renderlist.hpp"
-
-/** @namespace tinia Provides classes for the tinia-framework. */
-
