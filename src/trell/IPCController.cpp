@@ -102,6 +102,28 @@ IPCController::notify()
     }
 }
 
+void IPCController::addScript(const std::string &script)
+{
+    m_scripts.push_back(script);
+}
+
+bool IPCController::onGetScripts(size_t &result_size, char *buffer, const size_t buffer_size)
+{
+    std::string header("// Scripts defined by the program.");
+    header.copy(buffer, buffer_size);
+    buffer += header.size();
+    result_size += header.size();
+    for(size_t i = 0; i < m_scripts.size(); ++i) {
+        m_scripts[i].copy(buffer, buffer_size);
+        buffer += m_scripts[i].size();
+        result_size += m_scripts[i].size();
+        if(result_size > buffer_size) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 bool
 IPCController::createSharedMemory( void** memory,

@@ -27,6 +27,68 @@
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
+int
+trell_handle_get_script(trell_sconf_t           *sconf,
+                            request_rec             *r,
+                            trell_dispatch_info_t   *dispatch_info)
+{
+
+
+    int retval = HTTP_INTERNAL_SERVER_ERROR;
+
+    messenger_t msgr;
+    messenger_status_t mrv;
+
+    mrv = messenger_init( &msgr, dispatch_info->m_jobid );
+    if( mrv != MESSENGER_OK ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                       "mod_trell: messenger_init('%s') failed: %s",
+                       dispatch_info->m_jobid, messenger_strerror( mrv ) );
+        return HTTP_NOT_FOUND;
+    }
+    else {
+        mrv = messenger_lock( &msgr );
+        if( mrv != MESSENGER_OK ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                           "mod_trell: messenger_lock('%s') failed: %s",
+                           dispatch_info->m_jobid, messenger_strerror( mrv ) );
+        }
+        else {
+            trell_message_t* msg = msgr.m_shmem_ptr;
+            msg->m_type = TRELL_MESSAGE_GET_SCRIPTS;
+
+            mrv = messenger_post( &msgr, TRELL_MESSAGE_SCRIPT_SIZE );
+            if( mrv != MESSENGER_OK ) {
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                               "mod_trell: messenger_post('%s') failed: %s",
+                               dispatch_info->m_jobid, messenger_strerror( mrv ) );
+                retval = HTTP_INTERNAL_SERVER_ERROR;
+            }
+            else if( msg->m_type == TRELL_MESSAGE_SCRIPT ) {
+                retval = trell_send_script( sconf, r,
+                                            msg->m_script.m_script, msg->m_size );
+            }
+            else {
+                retval = HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            mrv = messenger_unlock( &msgr );
+            if( mrv != MESSENGER_OK ) {
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                               "mod_trell: messenger_unlock('%s') failed: %s",
+                               dispatch_info->m_jobid, messenger_strerror( mrv ) );
+            }
+        }
+        mrv = messenger_free( &msgr );
+        if( mrv != MESSENGER_OK ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                           "mod_trell: messenger_free('%s') failed: %s",
+                           dispatch_info->m_jobid,
+                           messenger_strerror( mrv ) );
+        }
+    }
+    return retval;
+}
 
 int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,

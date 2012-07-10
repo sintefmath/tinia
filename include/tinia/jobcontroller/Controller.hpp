@@ -17,11 +17,15 @@
  */
 
 #pragma once
+#include <string>
+
 namespace tinia {
 namespace jobcontroller {
 class Controller
 {
 public:
+
+    virtual void addScript(const std::string& script) = 0;
 
     virtual
     void

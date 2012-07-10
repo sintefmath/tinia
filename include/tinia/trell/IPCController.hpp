@@ -95,6 +95,13 @@ public:
     void
     notify();
 
+    /** Adds the script to the main script engine. This will be uploaded to javascript */
+    void addScript(const std::string& script);
+
+    bool onGetScripts(size_t&             result_size,
+                      char*               buffer,
+                      const size_t        buffer_size);
+
 protected:
 
 
@@ -204,6 +211,7 @@ protected:
 
 
 private:
+    std::vector<std::string> m_scripts;
     pid_t           m_ipc_pid;
 
     /** The pid of the process that should invoke the cleanup functions (to

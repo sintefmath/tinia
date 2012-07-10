@@ -157,6 +157,8 @@ static int trell_handler_body(request_rec *r)
             }
             return trell_handle_get_renderlist( sconf, r, &dispatch_info );
             break;
+        case TRELL_REQUEST_GET_SCRIPT:
+            return trell_handle_get_script( sconf, r, &dispatch_info);
 
         default:
             break;

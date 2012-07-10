@@ -203,6 +203,9 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         require_timestamp = 1;
         dispatch_info->m_request = TRELL_REQUEST_GET_RENDERLIST;
     }
+    else if( strcmp ( dispatch_info->m_requestname, "getScript.js" ) == 0 ) {
+        dispatch_info->m_request = TRELL_REQUEST_GET_SCRIPT;
+    }
     else {
         dispatch_info->m_request = TRELL_REQUEST_STATIC_FILE;
     }

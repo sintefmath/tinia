@@ -238,6 +238,17 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
         }
         break;
 
+    case TRELL_MESSAGE_GET_SCRIPTS:
+        if ( onGetScripts(msg->m_size, msg->m_script.m_script, buf_size - TRELL_MESSAGE_SCRIPT_SIZE)) {
+            msg->m_type = TRELL_MESSAGE_SCRIPT;
+            retsize = TRELL_MESSAGE_SCRIPT_SIZE + msg->m_size;
+        }
+        else {
+            msg->m_type = TRELL_MESSAGE_ERROR;
+            retsize = TRELL_MSGHDR_SIZE;
+        }
+        break;
+
     default:
         msg->m_type = TRELL_MESSAGE_ERROR;
         msg->m_size = 0u;
