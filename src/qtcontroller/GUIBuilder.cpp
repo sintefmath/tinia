@@ -198,6 +198,11 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
     return widget;
 }
 
+void GUIBuilder::addScript(const std::string &script)
+{
+
+}
+
 QWidget*
 GUIBuilder::addPopupButton( model::gui::PopupButton* root, QWidget* parent )
 {

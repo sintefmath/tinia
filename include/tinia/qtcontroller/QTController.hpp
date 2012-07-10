@@ -63,7 +63,6 @@ private:
     void initScript();
     void populateGUI();
 
-    std::shared_ptr<scripting::ScriptEngine> m_engine;
     QMainWindow*                            m_main_window;
     QGLWidget*                              m_root_context;
     jobcontroller::Job*                       m_job;

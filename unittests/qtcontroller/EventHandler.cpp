@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
     engine.evaluate(script);
 
     tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", "key", model, engine);
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(EventObject) {
             "       releaseY = event.y;\n"
             "   }\n"
             "}\n";
-    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(Modifiers) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::ScriptEngine::getInstance()->engine();
+    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 

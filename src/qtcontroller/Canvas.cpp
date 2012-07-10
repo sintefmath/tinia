@@ -60,7 +60,7 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
     m_eventHandler.reset(new scripting::EventHandler("DSRV",
                                                      eventParams,
                                                      model,
-                                                     scripting::ScriptEngine::getInstance()->engine()));
+                                                     scripting::scriptEngineInstance()));
     model::Viewer viewer;
     m_model->getElementValue(m_key, viewer);
     setPreferredSize();

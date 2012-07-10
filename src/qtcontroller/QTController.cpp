@@ -165,8 +165,7 @@ int QTController::run(int argc, char **argv)
 
 void QTController::initScript()
 {
-    m_engine = scripting::ScriptEngine::getInstance();
-    scripting::addDefaultScripts(m_engine->engine());
+    scripting::addDefaultScripts(scripting::scriptEngineInstance());
 }
 
 namespace  {
