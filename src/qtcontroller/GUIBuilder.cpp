@@ -34,6 +34,8 @@
 #include "tinia/qtcontroller/moc/PopupEventFilter.hpp"
 #include "tinia/qtcontroller/moc/FileDialogButton.hpp"
 #include "tinia/qtcontroller/impl/utils.hpp"
+#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+
 #include <QLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -200,7 +202,12 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
 
 void GUIBuilder::addScript(const std::string &script)
 {
-
+    auto& engine = scripting::scriptEngineInstance();
+    auto error = engine.evaluate(QString(script.c_str()));
+    if(error.isError()) {
+        throw std::runtime_error("Error in JavaScript code: "
+                                 + error.toString().toStdString());
+    }
 }
 
 QWidget*

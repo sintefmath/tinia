@@ -90,6 +90,11 @@ void QTController::finish()
 {
 }
 
+void QTController::addScript(const std::string &script)
+{
+    m_scriptsToParse.push_back(script);
+}
+
 int QTController::run(int argc, char **argv)
 {
     if( m_job == NULL ) {
@@ -166,6 +171,16 @@ int QTController::run(int argc, char **argv)
 void QTController::initScript()
 {
     scripting::addDefaultScripts(scripting::scriptEngineInstance());
+    for(size_t i = 0; i < m_scriptsToParse.size(); ++i) {
+
+        auto error = scripting::scriptEngineInstance().evaluate(QString(m_scriptsToParse[i].c_str()));
+        if(error.isError()) {
+            throw std::runtime_error("Error parsing script: "
+                                     + error.toString().toStdString()
+                                     + "\n\nSCRIPT:\n"
+                                     + m_scriptsToParse[i]);
+        }
+    }
 }
 
 namespace  {

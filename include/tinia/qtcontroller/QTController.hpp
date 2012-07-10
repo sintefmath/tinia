@@ -48,6 +48,11 @@ public:
     void fail();
     void finish();
 
+    /** Adds the script to the main scripting engine
+     * @param script
+     */
+    void addScript(const std::string& script);
+
     bool perfMode() const { return m_perf_mode; }
     bool renderListMode() const { return m_renderlist_mode; }
 
@@ -62,12 +67,14 @@ public:
 private:
     void initScript();
     void populateGUI();
-
     QMainWindow*                            m_main_window;
     QGLWidget*                              m_root_context;
     jobcontroller::Job*                       m_job;
     GUIBuilder*                             m_builder;
     std::shared_ptr<model::ExposedModel>   m_model;
+
+    // We need to hold the scripts in memory untill we start up QApplication
+    std::vector<std::string>                m_scriptsToParse;
     bool                                    m_perf_mode;
     bool                                    m_renderlist_mode;
 };
