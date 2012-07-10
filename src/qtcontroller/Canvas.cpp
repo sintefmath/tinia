@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -30,8 +30,8 @@ namespace impl {
 
 Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
                 std::string                             key,
-                std::string                             boundingBoxKey,
-                const std::string&                      resetViewKey,
+                const tinia::model::gui::ScriptArgument& viewerType,
+                const std::vector<tinia::model::gui::ScriptArgument>& scripts,
                 std::shared_ptr<model::ExposedModel>   model,
                 QWidget*                                parent,
                 QGLWidget*                              share_widget,
@@ -41,8 +41,6 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
                  share_widget ),
 
       m_key(key),
-      m_boundingBoxKey(boundingBoxKey),
-      m_resetViewKey(resetViewKey),
       m_model(model),
       m_job(openglJob),
       m_last_fps_calc( QTime::currentTime() ),
@@ -52,15 +50,16 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
       m_renderlist_db( NULL ),
       m_renderlist_renderer( NULL )
 {
-
-    // Setup eventhandler:
-    std::map<std::string, std::string> eventParams;
-    eventParams["key"] = m_key;
-    eventParams["boundingBoxKey"] = m_boundingBoxKey;
-    m_eventHandler.reset(new scripting::EventHandler("DSRV",
-                                                     eventParams,
-                                                     model,
-                                                     scripting::ScriptEngine::getInstance()->engine()));
+    m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(viewerType.className(),
+                                                                                                   viewerType.parameters(),
+                                                                                                   model,
+                                                                                                   scripting::scriptEngineInstance())));
+    for(size_t i = 0; i < scripts.size(); ++i) {
+        m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(scripts[i].className(),
+                                                                                                       scripts[i].parameters(),
+                                                                                                       model,
+                                                                                                       scripting::scriptEngineInstance())));
+    }
     model::Viewer viewer;
     m_model->getElementValue(m_key, viewer);
     setPreferredSize();
@@ -223,19 +222,24 @@ QSize Canvas::minimumSize() const
 
 void Canvas::mousePressEvent(QMouseEvent *event)
 {
-
-    m_eventHandler->mousePressEvent(event);
+    for(size_t i = 0; i < m_eventHandlers.size(); ++i) {
+        m_eventHandlers[i]->mousePressEvent(event);
+    }
 }
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
-    m_eventHandler->mouseMoveEvent(event);
+    for(size_t i = 0; i < m_eventHandlers.size(); ++i) {
+        m_eventHandlers[i]->mouseMoveEvent(event);
+    }
     updateGL();
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    m_eventHandler->mouseReleaseEvent(event);
+    for(size_t i = 0; i < m_eventHandlers.size(); ++i) {
+        m_eventHandlers[i]->mouseReleaseEvent(event);
+    }
     updateGL();
 }
 

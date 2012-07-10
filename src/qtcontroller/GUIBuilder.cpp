@@ -34,6 +34,8 @@
 #include "tinia/qtcontroller/moc/PopupEventFilter.hpp"
 #include "tinia/qtcontroller/moc/FileDialogButton.hpp"
 #include "tinia/qtcontroller/impl/utils.hpp"
+#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+
 #include <QLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -196,6 +198,16 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
     }
 
     return widget;
+}
+
+void GUIBuilder::addScript(const std::string &script)
+{
+    auto& engine = scripting::scriptEngineInstance();
+    auto error = engine.evaluate(QString(script.c_str()));
+    if(error.isError()) {
+        throw std::runtime_error("Error in JavaScript code: "
+                                 + error.toString().toStdString());
+    }
 }
 
 QWidget*
@@ -388,8 +400,8 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
 
         tinia::qtcontroller::impl::Canvas * canvas = new tinia::qtcontroller::impl::Canvas( static_cast<jobcontroller::OpenGLJob*>(m_job),
                                       root->key(),
-                                      root->boundingBoxKey(),
-                                      root->resetViewKey(),
+                                      root->viewerType(),
+                                      root->scripts(),
                                       m_model,
                                       wrapper,
                                       m_root_context,
@@ -426,8 +438,8 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
     else {
         tinia::qtcontroller::impl::Canvas * canvas = new tinia::qtcontroller::impl::Canvas( static_cast<jobcontroller::OpenGLJob*>(m_job),
                                       root->key(),
-                                      root->boundingBoxKey(),
-                                      root->resetViewKey(),
+                                                                                            root->viewerType(),
+                                                                                            root->scripts(),
                                       m_model,
                                       parent,
                                       m_root_context,

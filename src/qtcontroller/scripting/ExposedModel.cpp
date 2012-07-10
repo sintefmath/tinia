@@ -22,7 +22,6 @@ namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
-
 ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
                            QScriptEngine *engine,
                            QObject *parent)

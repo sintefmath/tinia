@@ -49,6 +49,11 @@ public:
       */
     QWidget* buildGUI(model::gui::Element* root, QWidget* parent );
 
+    /** Adds the script defined in script to the javascript engine.
+     * @note Must be called after QApplication is constructed.
+     */
+    void addScript(const std::string& script);
+
 private:
     std::shared_ptr<model::ExposedModel>   m_model;
     jobcontroller::Job*                       m_job;

@@ -32,6 +32,9 @@ namespace scripting {
 class EventHandler
 {
 public:
+
+
+
     /** Construct the EventHandler.
      *
      * @param scriptClassName the name of the class to constructor and call methods in.

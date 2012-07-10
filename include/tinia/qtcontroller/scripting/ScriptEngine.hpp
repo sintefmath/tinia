@@ -24,25 +24,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
-/** A singleton holding the script engine.
- * @note This is *not* thread safe.
- */
-class ScriptEngine
-{
-public:
-    static std::shared_ptr<ScriptEngine> getInstance();
-
-    QScriptEngine& engine();
-    const QScriptEngine& engine() const;
-
-private:
-    QScriptEngine m_engine;
-    static std::shared_ptr<ScriptEngine> m_instance;
-
-    ScriptEngine();
-    ScriptEngine(const ScriptEngine&);
-    ScriptEngine& operator=(const ScriptEngine&);
-};
+QScriptEngine& scriptEngineInstance();
 
 } // namespace scripting
 } // namespace qtcontroller

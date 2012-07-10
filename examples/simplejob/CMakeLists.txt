@@ -1,5 +1,5 @@
 SET( test_qt_job_SOURCES "TestJob.cpp" "main.cpp" )
-SET( test_job_HEADERS "TestJob.hpp" )
+SET( test_job_HEADERS "TestJob.hpp" "utils.hpp" )
 IF(${DESKTOP})
   ADD_EXECUTABLE(simple_qt_job
     ${test_qt_job_SOURCES}

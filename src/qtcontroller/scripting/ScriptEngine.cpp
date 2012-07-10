@@ -22,39 +22,9 @@ namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
-std::shared_ptr<ScriptEngine> ScriptEngine::m_instance;
-
-std::shared_ptr<ScriptEngine> ScriptEngine::getInstance()
-{
-    if(m_instance.get() == NULL) {
-        m_instance.reset(new ScriptEngine());
-    }
-    return m_instance;
-}
-
-QScriptEngine &ScriptEngine::engine()
-{
-    return m_engine;
-}
-
-const QScriptEngine &ScriptEngine::engine() const
-{
-    return m_engine;
-}
-
-ScriptEngine::ScriptEngine()
-{
-    ;
-}
-
-ScriptEngine::ScriptEngine(const ScriptEngine &)
-{
-    ;
-}
-
-ScriptEngine &ScriptEngine::operator =(const ScriptEngine &)
-{
-    return *this;
+QScriptEngine& scriptEngineInstance() {
+    static QScriptEngine engine;
+    return engine;
 }
 
 } // namespace scripting
