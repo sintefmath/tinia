@@ -25,3 +25,7 @@
 *.lai
 *.la
 *.a
+
+# Doxygen generated documentation
+/doxygen
+
