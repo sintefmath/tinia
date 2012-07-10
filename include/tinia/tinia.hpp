@@ -18,13 +18,21 @@
 
 #pragma once
 
+/** @defgroup ConvenienceHeaders Convenience Headers
+ * These files are convenience headers that is inteded to be used if you do
+ * not need fine grained control of which files to include.
+ *
+ * They are split up so that each module has a separate header, and there is
+ * also a global include file to grab them all.
+ */
+
 /** @file tinia.hpp
  * @ingroup ConvenienceHeaders
  * Convenience header to include all of Tinia with one include statemes.
  *
- * Include this file if you want to use Tinia without bothering with getting the right
- * includes in every file.
  */
+
+
 
 #include "tinia/model/model.hpp"
 
