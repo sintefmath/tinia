@@ -15,9 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef QTOBSERVER_CANVAS_HPP
-#define QTOBSERVER_CANVAS_HPP
+#pragma once
 #include <QtOpenGL>
 #include <QGLWidget>
 #include <QSizePolicy>
@@ -39,8 +37,9 @@ class Canvas : public QGLWidget, public model::StateListener
     Q_OBJECT
 public:
     explicit Canvas(jobcontroller::OpenGLJob* openglJob,
-                    std::string key, std::string boundingBoxKey,
-                    const std::string& resetViewKey,
+                    std::string key,
+                    const tinia::model::gui::ScriptArgument& viewerType,
+                    const std::vector<tinia::model::gui::ScriptArgument>& scripts,
                     std::shared_ptr<model::ExposedModel> model,
                     QWidget* parent,
                     QGLWidget* share_widget,
@@ -67,9 +66,7 @@ signals:
 public slots:
    void setRenderMode( int index );
 private:
-
-   // It's best if this is pointer, as we'll delay initialization.
-   std::unique_ptr<scripting::EventHandler> m_eventHandler;
+   std::vector<std::unique_ptr<scripting::EventHandler > > m_eventHandlers;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;
@@ -86,4 +83,4 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_CANVAS_HPP
+

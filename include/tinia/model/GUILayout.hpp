@@ -16,10 +16,10 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GUILAYOUT_HPP
-#define GUILAYOUT_HPP
+#pragma once
 #include <vector>
 #include <string>
+#include <map>
 
 namespace tinia {
 namespace model {
@@ -510,6 +510,36 @@ public:
 };
 
 
+/** Wrapper object for script arguments
+ */
+class ScriptArgument {
+public:
+    ScriptArgument(const ScriptArgument& other) : m_className(other.className()), m_parameters(other.parameters()) {}
+    ScriptArgument(const std::string& className) : m_className(className) {}
+
+    ScriptArgument(const std::string &className, const std::map<std::string, std::string> parameters)
+        : m_className(className), m_parameters(parameters)
+    {
+        ;
+    }
+
+    const std::string& className() const {
+        return m_className;
+    }
+
+    const std::map<std::string, std::string>& parameters() const {
+        return m_parameters;
+    }
+
+    std::map<std::string, std::string>& parameters() {
+        return m_parameters;
+    }
+
+private:
+    std::string m_className;
+    std::map<std::string, std::string> m_parameters;
+};
+
 /**
   The main tool for viewing OpenGL-context.
   */
@@ -519,11 +549,12 @@ class Canvas
 {
 public:
     Canvas( const std::string& key )
-        : KeyValue( key, true )
+        : KeyValue( key, true ), m_viewerType("DSRV")
     {
         m_boundingbox_key = "boundingbox";
         m_renderlist_key = key + "_renderlist";
         m_reset_view_key = key + "_reset_view";
+        addDefaultsKeys(m_viewerType);
     }
 
     Canvas( const std::string&  key,
@@ -531,9 +562,11 @@ public:
             const std::string&  boundingbox_key )
         : KeyValue(key, true ),
           m_renderlist_key( renderlist_key ),
-          m_boundingbox_key( boundingbox_key )
+          m_boundingbox_key( boundingbox_key ),
+          m_viewerType("DSRV")
     {
         m_reset_view_key = key + "_reset_view";
+        addDefaultsKeys(m_viewerType);
     }
 
     virtual const ElementType type() const { return CANVAS; }
@@ -543,12 +576,39 @@ public:
     virtual const std::string& boundingBoxKey() const { return m_boundingbox_key; }
 
     virtual Canvas* resetViewKey(const std::string& key) { m_reset_view_key = key; return this; }
-    virtual const std::string& resetViewKey() { return m_reset_view_key; }
+    virtual const std::string& resetViewKey() const { return m_reset_view_key; }
+
+    virtual const ScriptArgument& viewerType() const { return m_viewerType; }
+
+    virtual Canvas* setViewerType(const ScriptArgument& argument)
+    {
+        m_viewerType = argument;
+        addDefaultsKeys(m_viewerType);
+        return this;
+    }
+
+    virtual Canvas* appendScript(const ScriptArgument& argument) {
+        m_scripts.push_back(argument);
+        addDefaultsKeys(m_scripts.back());
+        return this;
+    }
+
+    virtual const std::vector<ScriptArgument>& scripts() const { return m_scripts; }
 
 private:
+    void addDefaultsKeys(ScriptArgument& argument) {
+        argument.parameters()["renderlistKey"] = renderlistKey();
+        argument.parameters()["boundingBoxKey"] = boundingBoxKey();
+        argument.parameters()["resetViewKey"] = resetViewKey();
+        argument.parameters()["key"] = key();
+    }
+
     std::string m_renderlist_key;
     std::string m_boundingbox_key;
     std::string m_reset_view_key;
+    ScriptArgument m_viewerType;
+    std::vector<ScriptArgument> m_scripts;
+
 };
 
 
@@ -556,5 +616,3 @@ private:
 }
 }
 
-
-#endif // GUILAYOUT_HPP
