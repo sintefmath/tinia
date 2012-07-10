@@ -72,7 +72,8 @@ enum TrellRequest {
     TRELL_REQUEST_POLICY_UPDATE_XML,
     TRELL_REQUEST_STATE_UPDATE_XML,
     TRELL_REQUEST_PNG,
-    TRELL_REQUEST_GET_RENDERLIST
+    TRELL_REQUEST_GET_RENDERLIST,
+    TRELL_REQUEST_GET_SCRIPT
 };
 
 enum TrellModAction {
@@ -115,6 +116,12 @@ trell_handle_get_model_update( trell_sconf_t*          sconf,
                                 request_rec*            r,
                                 trell_dispatch_info_t*  dispatch_info );
 
+/** Gets the user defined scripts */
+int
+trell_handle_get_script( trell_sconf_t*          sconf,
+                                request_rec*            r,
+                                trell_dispatch_info_t*  dispatch_info );
+
 /** Handles a model update from client.
   *
   * - Checks if method is post, if not return HTTP_METHOD_NOT_ALLOWED.
@@ -142,6 +149,12 @@ int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info );
+
+int
+trell_send_script(  trell_sconf_t*   sconf,
+                    request_rec*     r,
+                    const char*      payload,
+                    const size_t     payload_size );
 
 int
 trell_send_xml( trell_sconf_t*   sconf,

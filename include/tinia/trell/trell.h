@@ -63,6 +63,9 @@ enum TrellMessageType {
     /** Query or reply that contains an xml payload. */
     TRELL_MESSAGE_XML,
 
+    /** Reply that contains JavaScript */
+    TRELL_MESSAGE_SCRIPT,
+
     /** A heartbeat query. */
     TRELL_MESSAGE_HEARTBEAT,
     /** A request for the job's arguments. */
@@ -83,7 +86,9 @@ enum TrellMessageType {
     /** Message contains an unencoded image. */
     TRELL_MESSAGE_IMAGE,
 
-    TRELL_MESSAGE_GET_RENDERLIST
+    TRELL_MESSAGE_GET_RENDERLIST,
+
+    TRELL_MESSAGE_GET_SCRIPTS
 };
 
 typedef struct trell_message
@@ -103,6 +108,10 @@ typedef struct trell_message
         struct {
             char                    m_xml[1];
         }                       m_xml;
+
+        struct {
+            char m_script[1];
+        } m_script;
 
         struct {
             char                    m_xml[1];
@@ -158,6 +167,7 @@ typedef struct trell_message
 #define TRELL_MESSAGE_IMAGE_SIZE                (offsetof(trell_message_t, m_image.m_data))
 #define TRELL_MESSAGE_GET_RENDERLIST_SIZE       (offsetof(trell_message_t, m_get_renderlist.m_tail ) )
 #define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))
+#define TRELL_MESSAGE_SCRIPT_SIZE               (offsetof(trell_message_t, m_script.m_script ))
 
 #ifdef __cplusplus
 }
