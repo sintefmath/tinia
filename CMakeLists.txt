@@ -162,6 +162,9 @@ ENDIF()
 ADD_SUBDIRECTORY( "examples/rlview/" )
 ADD_SUBDIRECTORY( "examples/simplejob" )
 
+#Tutorials
+ADD_SUBDIRECTORY( "tutorials/tutorial1/")
+
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
 SET( CPACK_GENERATOR "DEB" )

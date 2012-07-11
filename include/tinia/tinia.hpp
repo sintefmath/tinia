@@ -34,6 +34,7 @@
 
 #include "tinia/model.hpp"
 #include "tinia/renderlist.hpp"
+#include "tinia/jobcontroller.hpp"
 
 /** @namespace tinia Provides classes for the tinia-framework. */
 

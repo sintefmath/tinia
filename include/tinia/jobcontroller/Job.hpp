@@ -22,6 +22,13 @@
 
 namespace tinia {
 namespace jobcontroller {
+
+/** Job is responsible for the basic interactions between the Controller and
+ * the underlying program logic in a Tinia program.
+ *
+ * Users will typically reimplement the init method to connect it to their program
+ * code.
+ */
 class Job
 {
 public:

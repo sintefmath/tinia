@@ -14,30 +14,11 @@ running as it should before deploying on your servers.
 See [the compilation instructions](@ref sec_compilation) for details on how to
 compile and install the framework.
 
-Tina Modules
-------------
+The documentation is split in the following parts
+ - \subpage sec_modules "Components" for a less than detailed description of the individual components
 
-The Tinia Framework is split into several components, each responsible for specific
-functionality. This makes it easy to maintain and update for us, whilst also
-making it easy for you to use.
+ - \subpage sec_tutorials "Tutorials" for a collection of tutorials on how to use Tinia.
 
-- [Exposed Model](@ref ExposedModelLibrary) responsible for both GUI
-  specification as well as communicating variables between the GUI and your
-  application. For cloud applications it makes use of a sub-component that
-  translates the variables into an XML document following a special schema which
-  is transmitted across the internet.
-
-- The [Renderlist](@ref RenderListLibrary) component handles creation of WebGL renderlists and generating proxy geometry
-  for use on the client side.
-
-- The [Controller component](@ref JobControllerLibrary) specifies the interfaces needed to create a
-  Tinia-based application. It has several interfaces depending on the use-case of
-  the application, and can easily be extended if need be. Typical interfaces are
-  QTObserver for a desktop job and TrellObserver for cloud jobs.
-
-- The Trell component is responsible for the client – server interactions
-  through an Apache2 web server, and communicates with the TrellObserver using
-  IPC.
 
 
 

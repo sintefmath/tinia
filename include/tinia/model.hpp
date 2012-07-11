@@ -30,5 +30,5 @@
 #include "tinia/model/StateListener.hpp"
 #include "tinia/model/StateSchemaListener.hpp"
 
-/** @namespace tinia::model Provides classes related to the \ref ExposedModelLibrary. */
+/** @namespace tinia::model Provides classes related to the \ref exposedmodellibrary. */
 

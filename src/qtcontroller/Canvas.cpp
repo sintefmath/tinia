@@ -198,11 +198,6 @@ void Canvas::resizeEvent(QResizeEvent *event)
 {
     QGLWidget::resizeEvent(event);
 
-    if(m_job->passThrough())
-    {
-        m_job->resizeEvent(event);
-    }
-
 
     setPreferredSize();
 }

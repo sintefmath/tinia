@@ -46,7 +46,7 @@
 #include <tinia/model/exceptions/RestrictionException.hpp>
 #include <tinia/model/exceptions/TypeException.hpp>
 
-/** \page ExposedModelLibrary Exposed Model
+/** \page exposedmodellibrary Exposed Model
      ExposedModel is a small library used to create, update and query policies.
      A model is a set of typed-parameters with potential restrictions that is sent
      between a client and a server in a distributed application.
