@@ -18,7 +18,7 @@ The Job class
 ---
 The Job class defines the methods which will be called to interact with our program.
 
-We subclass `tinia::jobcontroller::OpenGLJob` as we're going to make an OpenGL program.
+We subclass [OpenGLJob](@ref tinia::jobcontroller::OpenGLJob) as we're going to make an OpenGL program.
 
 Tinia provides the convenience header `tinia/tinia.hpp` which includes everything we need. We also include
 the glew header since we're going to do OpenGL rendering. The user is free to choose whatever OpenGL wrangler
