@@ -25,24 +25,25 @@ the glew header since we're going to do OpenGL rendering. The user is free to ch
 he wants.
 \snippet Tutorial1_Job.hpp headers
 
-Notice our class, `tinia::tutorial::Tutorial1Job` is a subclass of `tinia::jobcontroller::OpenGLJob`,
+Notice our class, [TutorialJob](@ref tinia::tutorial::Tutorial1Job) is a subclass of [OpenGLJob](@ref tinia::jobcontroller::OpenGLJob),
 as we're going to do OpenGL rendering.
-To utilize the superclass, we need to override `tinia::jobcontroller::OpenGLJob::renderFrame`. We're
-not using proxy geometry for this tutorial, so we don't need to reimplement `tinia::jobcontroller::OpenGLJob::getRenderList`.
+To utilize the superclass, we need to override [renderFrame](@ref tinia::jobcontroller::OpenGLJob::renderFrame). We're
+not using proxy geometry for this tutorial, so we don't need to reimplement [getRenderList](@ref tinia::jobcontroller::OpenGLJob::getRenderList).
 
 \snippet Tutorial1_Job.hpp class
 
 ### The ExposedModel
 
-Every subclass of `tinia::jobcontroller::Job` has an instance of `tinia::model::ExposedModel` named `m_model`,
+Every subclass of [Job](@ref tinia::jobcontroller::Job) has an instance of
+[ExposedModel](@ref tinia::model::ExposedModel) named [m_model](@ref tinia::jobcontroller::Job::m_model),
 hereby referenced to as the model. The model defines the variables which are exposed to the user interface.
 Some variables in the model will not be directly visible to user, others will typically be visible through
 GUI widgets such as textboxes and spinboxes.
 
-In the constructor of `tinia::tutorial::Tutorial1Job` we add an element of type `tinia::model::Viewer`
-to the model which we inherited from `tinia::jobcontroller::Job`. Objects of type `tinia::model::Viewer` contains the
-necessary information to do OpenGL rendering. The method `tinia::model::ExposedModel::addElement` takes two parameters:
-the key and the the value. The key is completely user defined; the user is free to choose any string as a key, as long as the
+In the constructor of [Tutorial1Job](@ref tinia::tutorial::Tutorial1Job) we add an element of type [Viewer](@ref tinia::model::Viewer)
+to the model which we inherited from [Job](@ref tinia::jobcontroller::Job). Objects of type [Viewer](@ref tinia::model::Viewer) contains the
+necessary information to do OpenGL rendering. The method [addElement](@ref tinia::model::ExposedModel::addElement) takes two parameters:
+the key and the value. The key is completely user defined; the user is free to choose any string as a key, as long as the
 key is unique within the model. The key will later be used for looking up the value.
 
 We also add a key with name "boundingbox". The default viewer in Tinia will look for an element with this name to find the
@@ -55,13 +56,13 @@ to specify a GUI.
 
 ### Rendering OpenGL
 
-The method `tinia::jobcontroller::OpenGLJob::renderFrame` will be called whenever there's a change in the model.
+The method [renderFrame](@ref tinia::jobcontroller::OpenGLJob::renderFrame) will be called whenever there's a change in the model.
 This happens, for instance, when the user interacts with the mouse on the OpenGL canvas.
 
-In `tinia::tutorial::Tutorial1Job::renderFrame` we first obtain the Viewer object we defined in the constructor.
+In [renderFrame](@ref tinia::tutorial::Tutorial1Job::renderFrame) we first obtain the Viewer object we defined in the constructor.
 \snippet Tutorial1_Job.hpp viewer
 
-Objects of type `tinia::model::Viewer` contain the ModelView and Projection matrices. The matrices are stored as row-major in a `std::array<float, 16>`.
+Objects of type [Viewer](@ref tinia::model::Viewer) contain the ModelView and Projection matrices. The matrices are stored as row-major in a `std::array<float, 16>`.
 You may treat the `data()` any way you'd like. In this example, we hand them directly to the `glLoadMatrixf` function, though a typical use would be to use
 them as uniform values to a shader.
 
@@ -79,16 +80,16 @@ The full `renderFrame` thus becomes
 
 The Desktop Main File
 ---
-Every Tinia program is controlled by a subclass of `tinia::jobcontroller::Controller`. The controller is responsible
-for creating a GUI and handling interactions with the user. For desktop programs, one should use `tinia::qtcontroller::QTController`.
+Every Tinia program is controlled by a subclass of [Controller](@ref tinia::jobcontroller::Controller). The controller is responsible
+for creating a GUI and handling interactions with the user. For desktop programs, one should use [QTController](@ref tinia::qtcontroller::QTController).
 
 First we include the the code for the Job we've written, then we include the desktop controller `tinia/qtcontroller/QTController.hpp`.
 \snippet tutorial1_desktop.cpp headers
 
-We create an instance of our `tinia::tutorial::Tutorial1Job` class
+We create an instance of our [Tutorial1Job](@ref tinia::tutorial::Tutorial1Job) class
 \snippet tutorial1_desktop.cpp job
 
-We also create an instance of `tinia::qtcontroller::QTController`
+We also create an instance of [QTController](@ref tinia::qtcontroller::QTController)
 \snippet tutorial1_desktop.cpp controller
 
 Then we need to hand the job to the controller
@@ -110,7 +111,7 @@ The Web Main File
 ---
 The main file for the web application is quite similar to the dekstop main file. We only show the main differences here.
 
-For web programs we use the `tinia::trell::IPCGLJobController` as our controller.
+For web programs we use the [IPCGLJobController](@ref tinia::trell::IPCGLJobController) as our controller.
 
 First you need to include the `tinia/trell/IPCGLJobController.hpp` header file instead of the QTController header file:
 \snippet tutorial1_web.cpp headers
@@ -123,7 +124,7 @@ The whole main file is then
 
 ### Running the web program
 If you've successfully installed Tinia you should be able to run the web program
-as `tutorial1_web` through the [mod_trell web interface]@(ref sec_mod_trell_gui).
+as `tutorial1_web` through the [mod_trell web interface](@ref sec_mod_trell_gui).
 
 The program should look something like this:
 \image html tutorial1_web.png "Screenshot of the web job from Tutorial1."
