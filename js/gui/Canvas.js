@@ -86,12 +86,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this.domNode = dojo.create("div");
         dojo.style(this.domNode, "background", "black");
         dojo.style(this.domNode, "margin", "10px");
+        dojo.style(this.domNode, "padding", "0px");
 
 
         this._setWidthHeight(this.domNode);
         this._canvas = dojo.create("canvas");
         dojo.style(this._canvas, "position", "relative");
         dojo.style(this._canvas, "float", "none");
+        dojo.style(this._canvas, "padding", 0);
+        dojo.style(this._canvas, "margin", 0);
         dojo.style(this._canvas, "display", "block");
         this._canvas.style.zIndex = "1";
         dojo.style(this._canvas, "z-index", "1");
@@ -109,6 +112,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.style(this._img, "position", "relative");
         dojo.style(this._img, "float", "none");
         dojo.style(this._img, "z-index", "2");
+        
+        dojo.style(this._img, "padding", 0);
+        dojo.style(this._img, "margin", 0);
         this._placeImage();
         dojo.connect(this._img, "onload", dojo.hitch(this, this._loadComplete()));
 
@@ -209,11 +215,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _mousedown : function(event) {
         this._active = true;
         
-        var x = event.pageX - this._canvas.offsetLeft;
-        var y = event.pageY - this._canvas.offsetTop;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
         event.relativeX = x;
         event.relativeY = y;
-                console.log(event.x);
         for(var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mousePressEvent(event);
         }
@@ -221,11 +226,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
         
     },
-
+    _placementX : function() {
+        return dojo.position(this._canvas).x;
+    },
+    
+    _placementY : function() {
+        return dojo.position(this._canvas).y;
+    },
     _mouseup : function(event) {
         this._active = false;
-        var x = event.pageX - this._canvas.offsetLeft;
-        var y = event.pageY - this._canvas.offsetTop;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
         event.relativeX = x;
         event.relativeY = y;
         for(var i = 0; i < this._eventHandlers.length; ++i) {
@@ -236,8 +247,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _mousemove : function(event) {
-        var x = event.pageX - this._canvas.offsetLeft;
-        var y = event.pageY - this._canvas.offsetTop;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
         event.relativeX = x;
         event.relativeY = y;
         for(var i = 0; i < this._eventHandlers.length; ++i) {

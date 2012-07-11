@@ -102,7 +102,6 @@ DSRV.prototype = {
     mouseMoveEvent : function(event) {
         switch(this.m_state) {
         case this.ROTATE:
-            console.log(event.relativeX + ", " + event.relativeY);
             this.handleRotateMove(event.relativeX, event.relativeY);
 
             break;
