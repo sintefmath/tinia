@@ -114,9 +114,9 @@ DSRV.prototype = {
     },
 
     mousePressEvent : function(event) {
+        console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
         switch(event.button) {
         case this.ROTATE:
-            console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
             this.m_beginOrientation = quat4.create(this.m_orientation);
             this.m_beginDirection = this.pointOnUnitSphere(event.relativeX, event.relativeY);
             this.m_state = this.ROTATE;

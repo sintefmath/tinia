@@ -176,7 +176,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
   
 //        document.addEventListener("gesturestart", dojo.hitch(this, this._touchGestureBegin));
 //        document.addEventListener("gesturechange", dojo.hitch(this, this._touchGesture));
-
+        
+        // Use these to prevent rightclicking on the image (we need this to enable extra mouse events)
+        dojo.connect(this._img, "oncontextmenu", function(e) { e.preventDefault();});
+        this.on("contextmenu", function(event) { event.preventDefault(); return false;});
+        
+        
+        // Resizing.
         dojo.connect(document,"onmousedown", dojo.hitch(this, this._mouseDownResize));
         dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
         dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
