@@ -28,7 +28,6 @@ dojo.require("model.ExposedModelReceiver");
 dojo.require("model.URLHandler");
 dojo.require("dijit.layout.StackContainer");
 dojo.require("3rdparty/webgl-utils");
-dojo.require("3rdparty.glMatrix");
 
 
 dojo.require("gui.GUIBuilder");

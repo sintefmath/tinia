@@ -71,7 +71,6 @@ dojo.require("3rdparty.webgl-utils");
 dojo.require("renderlist.RenderList");
 dojo.require("dijit._Widget");
 dojo.require("gui.TrackBallViewer");
-dojo.require("3rdparty.glMatrix");
 
 
 dojo.require("gui.CheckBoxWithLabel");

@@ -34,8 +34,8 @@ class ScriptMouseEvent : public QObject
 public:
     explicit ScriptMouseEvent(const QMouseEvent& e, QObject *parent = 0);
 
-    Q_PROPERTY(int x READ x)
-    Q_PROPERTY(int y READ y)
+    Q_PROPERTY(int relativeX READ relativeX)
+    Q_PROPERTY(int relativeY READ relativeY)
     Q_PROPERTY(bool altKey READ altKey)
     Q_PROPERTY(bool shiftKey READ shiftKey)
     Q_PROPERTY(bool ctrlKey READ ctrlKey)
@@ -46,8 +46,8 @@ signals:
     
 public slots:
     int button();
-    int x();
-    int y();
+    int relativeX();
+    int relativeY();
     bool altKey();
     bool shiftKey();
     bool ctrlKey();

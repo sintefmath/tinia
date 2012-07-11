@@ -24,7 +24,6 @@ dojo.require("renderlist.RenderListParser" );
 dojo.require("renderlist.RenderListRenderer" );
 dojo.require("dijit._Widget");
 dojo.require("gui.TrackBallViewer");
-dojo.require("3rdparty.glMatrix");
 
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function(params) {
@@ -69,7 +68,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._setAttrWidthHeight(this._img);
         this._setAttrWidthHeight(this._canvas);
         this._placeImage();
-        //this._trackball.setSize(w, h);
 
         this._urlHandler.updateParams({
             "width" : w,
@@ -82,10 +80,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         viewer.updateElement("width", w);
         viewer.updateElement("height", h);
         this._modelLib.updateElement(this._key, viewer);
-
-
-    //this._update();
-
     },
 
     buildRendering: function() {
@@ -107,10 +101,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if( window.WebGLRenderingContext ) {
             this.domNode.appendChild(this._canvas);
         }
-/*
-        this._trackball = new gui.TrackBallViewer();
-        this._trackball.setSize(this._width, this._height);
-*/
+
 
         this._img = dojo.create("img");
         dojo.attr(this._img, "src", "image/canvas_backdrop.jpg");
@@ -127,42 +118,23 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         this._update();
 
-/*
-        this._modelLib.addLocalListener(this._boundingboxKey, function(key, value) {
-            this._trackball.setBoundingBox(value);
-            this._updateMatrices();
-            // We'll update the matrices twice, one time after the update is parsed as well
-            this._shouldUpdate = true;
-        }, this);*/
-        
-/*        
-        this._modelLib.addLocalListener(this._resetViewKey, function(key, value) {
-            this._trackball = new gui.TrackBallViewer();
-            this._trackball.setSize(this._width, this._height);
-            this._trackball.setBoundingBox(value);
-            this._updateMatrices();
-        });*/
 
         this._modelLib.addLocalListener(this._renderlistKey, function(key, value) {
             this._getRenderList();
         }, this);
 
-/*
-        if(this._modelLib.hasKey(this._boundingboxKey)) {
-            this._trackball.setBoundingBox(this._modelLib.getValue(this._boundingboxKey));
-        }
-        */
 
         // We always want to update after the first parsing
         this._shouldUpdate = true;
         
         this._urlHandler.setURL(this._snapshotURL);
-//        dojo.subscribe("/model/updateParsed", dojo.hitch(this, function(params) {
-//            if(this._shouldUpdate) {
-//                this._updateMatrices();
-//            }
-//            this._shouldUpdate = false;
-//        }));
+        
+        dojo.subscribe("/model/updateParsed", dojo.hitch(this, function(params) {
+            if(this._shouldUpdate) {
+                this._updateMatrices();
+            }
+            this._shouldUpdate = false;
+        }));
 
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function(params) {
             // Temporary sanity fix for firefox
@@ -183,12 +155,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     startup: function() {
         this._startGL();
         this.on("mousedown", dojo.hitch(this, this._mousedown));
-	this.domNode.addEventListener("touchstart",  dojo.hitch(this, this._mousedown));
-	this._img.addEventListener("touchstart", dojo.hitch(this, this._mousedown));
+//	this.domNode.addEventListener("touchstart",  dojo.hitch(this, this._mousedown));
+//	this._img.addEventListener("touchstart", dojo.hitch(this, this._mousedown));
         dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseup));
-	this.on("touchend", dojo.hitch(this, this._mouseup));
+//	this.on("touchend", dojo.hitch(this, this._mouseup));
         this.on("mousemove", dojo.hitch(this, this._mousemove));
-	document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
+//	document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
         this.on("mouseover", dojo.hitch(this, function() {
             this._mouseOver = true;
         }));
@@ -196,12 +168,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._mouseOver = false;
         }));
   
-        document.addEventListener("gesturestart", dojo.hitch(this, this._touchGestureBegin));
-        document.addEventListener("gesturechange", dojo.hitch(this, this._touchGesture));
+//        document.addEventListener("gesturestart", dojo.hitch(this, this._touchGestureBegin));
+//        document.addEventListener("gesturechange", dojo.hitch(this, this._touchGesture));
 
-        dojo.connect(document,"onmousedown", dojo.hitch(this, this._mouseDownResize));
-        dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
-        dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
+//        dojo.connect(document,"onmousedown", dojo.hitch(this, this._mouseDownResize));
+//        dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
+//        dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
         
 
     },
@@ -236,66 +208,51 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
     _mousedown : function(event) {
         this._active = true;
+        
         var x = event.pageX - this._canvas.offsetLeft;
         var y = event.pageY - this._canvas.offsetTop;
-        event.x = x;
-        event.y = y;
+        event.relativeX = x;
+        event.relativeY = y;
+                console.log(event.x);
         for(var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mousePressEvent(event);
         }
         this._showCorrect();
         event.preventDefault();
+        
     },
 
     _mouseup : function(event) {
         this._active = false;
         var x = event.pageX - this._canvas.offsetLeft;
         var y = event.pageY - this._canvas.offsetTop;
-        event.x = x;
-        event.y = y;
+        event.relativeX = x;
+        event.relativeY = y;
         for(var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseReleaseEvent(event);
         }
         this._showCorrect();
+        event.preventDefault();
     },
 
     _mousemove : function(event) {
         var x = event.pageX - this._canvas.offsetLeft;
         var y = event.pageY - this._canvas.offsetTop;
-        event.x = x;
-        event.y = y;
+        event.relativeX = x;
+        event.relativeY = y;
         for(var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseMoveEvent(event);
         }
-//	if(event.touches) {
-//            if(event.touches.length > 1) {
-//                return;
-//            }
-//	    event = event.touches[0];
-//	}
-//        var x = event.pageX - this._canvas.offsetLeft;
-//        var y = event.pageY - this._canvas.offsetTop;
-//        if(this._active) {
-//            this._trackball.mouseMove(x,y);
-//            this._updateMatrices();
-//            this._showCorrect();
-//        }
 
-
+        event.preventDefault();
 
     },
 
     _updateMatrices : function() {
-//        this._trackball.updateMatrices();
-//
-//        var viewer = this._modelLib.getValue(this._key);
-//        viewer.updateElement("projection", this._trackball.getProjection());
-//        viewer.updateElement("modelview", this._trackball.getModelView());
-//
-//
-//        this._imageLoading = true;
-//
-//        this._modelLib.updateElement(this._key, viewer);
+        return;
+        var viewer = this._modelLib.getValue(this._key);
+        this._imageLoading = true;
+        this._modelLib.updateElement(this._key, viewer);
     },
 
     _setAttrWidthHeight : function(node) {
@@ -320,9 +277,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _getRenderList: function(){
-                        if( this._render_list_store === undefined ) {
-                            return;
-                        }
+        if( this._render_list_store === undefined ) {
+            return;
+        }
 
         dojo.xhrGet(
         {

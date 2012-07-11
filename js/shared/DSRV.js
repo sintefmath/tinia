@@ -102,11 +102,12 @@ DSRV.prototype = {
     mouseMoveEvent : function(event) {
         switch(this.m_state) {
         case this.ROTATE:
-            this.handleRotateMove(event.x, event.y);
+            console.log(event.relativeX + ", " + event.relativeY);
+            this.handleRotateMove(event.relativeX, event.relativeY);
 
             break;
         case this.ZOOM:
-            this.handleZoomMove(event.x, event.y);
+            this.handleZoomMove(event.relativeX, event.relativeY);
             break;
         }
         this.updateMatrices();
@@ -116,8 +117,9 @@ DSRV.prototype = {
     mousePressEvent : function(event) {
         switch(event.button) {
         case this.ROTATE:
+            console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
             this.m_beginOrientation = quat4.create(this.m_orientation);
-            this.m_beginDirection = this.pointOnUnitSphere(event.x, event.y);
+            this.m_beginDirection = this.pointOnUnitSphere(event.relativeX, event.relativeY);
             this.m_state = this.ROTATE;
             break;
         default:

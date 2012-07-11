@@ -21,7 +21,6 @@
  * and open the template in the editor.
  */
 
-dojo.require("3rdparty.glMatrix");
 
 function axisAngle(axis, angle) {
     var q = quat4.create();

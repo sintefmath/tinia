@@ -43,12 +43,12 @@ int ScriptMouseEvent::button()
     return -1;
 }
 
-int ScriptMouseEvent::x()
+int ScriptMouseEvent::relativeX()
 {
     return m_event.x();
 }
 
-int ScriptMouseEvent::y()
+int ScriptMouseEvent::relativeY()
 {
     return m_event.y();
 }

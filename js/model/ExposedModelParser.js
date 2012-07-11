@@ -147,15 +147,12 @@ dojo.declare("model.StateSchemaParser", model.XMLHelper, {
     },
     
     updateElement: function(parent, key, xmlElement) {
-                    console.log("updating element1");
 
         if( this._isRestricted(xmlElement) ) {
-            console.log("updating element");
             var minInclusive = this.queryXSD(xmlElement, "minInclusive");
             var maxInclusive = this.queryXSD(xmlElement, "maxInclusive");
             if(minInclusive && minInclusive.length > 0 && maxInclusive && 
                 maxInclusive.length > 0) {
-                console.log("max/min found, updating");
                 var max = dojo.attr(maxInclusive[0], "value");
                 var min = dojo.attr(minInclusive[0], "value");
                 
