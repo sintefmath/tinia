@@ -177,9 +177,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 //        document.addEventListener("gesturestart", dojo.hitch(this, this._touchGestureBegin));
 //        document.addEventListener("gesturechange", dojo.hitch(this, this._touchGesture));
 
-//        dojo.connect(document,"onmousedown", dojo.hitch(this, this._mouseDownResize));
-//        dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
-//        dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
+        dojo.connect(document,"onmousedown", dojo.hitch(this, this._mouseDownResize));
+        dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
+        dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
         
 
     },
@@ -378,8 +378,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _mouseMoveResize: function(event) {
-        var x = event.pageX - this._canvas.offsetLeft;
-        var y = event.pageY - this._canvas.offsetTop;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
 
         if(this._isResizing) {
             this.resize(x, y);
@@ -389,8 +389,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _mouseDownResize: function(event) {
         if(event.button != 0) return;
-        var x = event.pageX - this._canvas.offsetLeft;
-        var y = event.pageY - this._canvas.offsetTop;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
         if(Math.max(Math.abs(this._width-x), Math.abs(this._height-y)) < 20) {
             this._isResizing = true;
         }
