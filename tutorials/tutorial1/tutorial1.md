@@ -120,3 +120,10 @@ Then we specify the controller:
 
 The whole main file is then
 \include tutorial1_web.cpp
+
+### Running the web program
+If you've successfully installed Tinia you should be able to run the web program
+as `tutorial1_web` through the [mod_trell web interface]@(ref sec_mod_trell_gui).
+
+The program should look something like this:
+\image html tutorial1_web.png "Screenshot of the web job from Tutorial1."

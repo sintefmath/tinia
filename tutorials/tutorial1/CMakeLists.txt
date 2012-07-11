@@ -43,4 +43,11 @@ IF(${SERVER})
     jobcontroller
     trell
     )
+
+
+  INSTALL(TARGETS
+    tutorial1_web RUNTIME
+    DESTINATION var/trell/apps/
+    COMPONENT mod_trell
+    )
 ENDIF()
