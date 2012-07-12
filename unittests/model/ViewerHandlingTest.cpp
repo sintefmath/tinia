@@ -89,9 +89,10 @@ BOOST_FIXTURE_TEST_CASE( validateTypeTraits, ViewerFixture ) {
 BOOST_FIXTURE_TEST_CASE( updateViewer, ViewerFixture ) {
     model.addElement( "viewer1", viewer );
 
-    viewer.height = 2 * viewer.height;
+    // We add 1 to the height to not silently accept viewer.height == 0.
+    viewer.height = 2 * viewer.height+1;
 
-    //model.updateElement( "viewer1", viewer );
+    model.updateElement( "viewer1", viewer );
 
     Viewer readViewer;
     model.getElementValue( "viewer1", readViewer );

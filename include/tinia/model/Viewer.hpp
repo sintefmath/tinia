@@ -31,8 +31,8 @@ namespace model {
 struct Viewer {
 
     Viewer() :
-        width( 0 ),
-        height( 0 ),
+        width( 512 ),
+        height( 512 ),
         timestamp( 0.0 ),
         sceneView( "---oooOOOooo---" )
     {

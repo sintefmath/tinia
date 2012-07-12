@@ -29,3 +29,36 @@
 # Doxygen generated documentation
 /doxygen
 
+# Qt generated stuff
+moc_*
+*.depends
+qrc_resources.cxx
+
+# CMake generated stuff
+/CMakeFiles
+CMakeCache.txt
+*.filters
+*.vcxproj
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+*.depend
+*.stamp
+*.rule
+
+# Visual Studio stuff
+*.ipch
+*.suo
+tinia.sln
+*.exe
+*.ilk
+*.pdb
+*.tlog
+*.obj
+*.manifest
+*.lastbuildstate
+*.log
+*.lib
+*.res
+*.rc
+
