@@ -40,10 +40,8 @@ namespace tinia {
 namespace qtcontroller {
 
 QTController::QTController()
-    : m_main_window(NULL),
-      m_root_context(NULL),
-      m_job(NULL),
-      m_builder(NULL),
+    : m_root_context(NULL),
+      m_job(NULL),      
       m_perf_mode( false ),
       m_renderlist_mode( false )
 {
@@ -52,17 +50,7 @@ QTController::QTController()
 
 QTController::~QTController()
 {
-    if( m_main_window != NULL ){
-        delete m_main_window;
-    }
-
-    if( m_job != NULL ) {
-        delete m_job;
-    }
-
-    if( m_builder != NULL ) {
-        delete m_builder;
-    }
+    ;
 }
 
 
@@ -104,8 +92,9 @@ int QTController::run(int argc, char **argv)
 
 
 
-    QApplication app(argc, argv);
-    m_main_window = new QMainWindow();
+    m_app.reset(  new QApplication( argc, argv ) );
+
+    m_main_window.reset( new QMainWindow() );
 
     // Now we may init the script.
     tiniaInitResources();
@@ -132,11 +121,7 @@ int QTController::run(int argc, char **argv)
        throw new std::runtime_error("Job did not start up properly");
     }
 
-    m_builder = new GUIBuilder( m_model,
-                                m_job,
-                                this,
-                                m_perf_mode,
-                                m_root_context );
+    m_builder.reset( new GUIBuilder( m_model, m_job, this, m_perf_mode, m_root_context ) );
 
     m_main_window->setCentralWidget( m_builder->buildGUI( m_model->getGUILayout(model::gui::DESKTOP),
                                                           NULL ) );
@@ -148,24 +133,7 @@ int QTController::run(int argc, char **argv)
 	}
     m_main_window->show();
 
-/*
-   QString style =
-           "QGroupBox::title { color: black; } "
-           "QGroupBox { margin: 0; border: 0; padding: 0; }";
-
-   app.setStyleSheet( style );
-*/
-   /*
-   model::gui::Element* tree = m_model->getGUILayout( model::gui::DESKTOP );
-   QDomDocument* dom = new QDomDocument;
-   QDomElement gui_layout = dom->createElement( "layout" );
-   dom->appendChild( gui_layout );
-   addNode( dom, gui_layout, tree ); 
-   QString foo = dom->toString();
-   
-   std::cerr << foo.toLocal8Bit() << "\n";
-   */
-    return app.exec();
+    return m_app->exec();
 }
 
 void QTController::initScript()
