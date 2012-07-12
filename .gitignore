@@ -48,3 +48,4 @@ CPackSourceConfig.cmake
 # Visual Studio stuff
 *.ipch
 *.suo
+tinia.sln
