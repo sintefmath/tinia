@@ -45,3 +45,6 @@ CPackSourceConfig.cmake
 *.stamp
 *.rule
 
+# Visual Studio stuff
+*.ipch
+*.suo
