@@ -32,6 +32,7 @@
 # Qt generated stuff
 moc_*
 *.depends
+qrc_resources.cxx
 
 # CMake generated stuff
 /CMakeFiles
@@ -49,3 +50,15 @@ CPackSourceConfig.cmake
 *.ipch
 *.suo
 tinia.sln
+*.exe
+*.ilk
+*.pdb
+*.tlog
+*.obj
+*.manifest
+*.lastbuildstate
+*.log
+*.lib
+*.res
+*.rc
+
