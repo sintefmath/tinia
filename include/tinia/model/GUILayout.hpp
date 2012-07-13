@@ -572,6 +572,7 @@ public:
     virtual const ElementType type() const { return CANVAS; }
 
     virtual const std::string& renderlistKey() const { return m_renderlist_key; }
+    virtual Canvas* boundingBoxKey(const std::string& key) { m_boundingbox_key = key; return this; }
 
     virtual const std::string& boundingBoxKey() const { return m_boundingbox_key; }
 

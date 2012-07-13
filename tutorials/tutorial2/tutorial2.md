@@ -1,4 +1,4 @@
-Tutorial 2: Specifying GUI {#tut_tutorial2}
+Tutorial 2: Specifying GUI (part 1){#tut_tutorial2}
 ===
 
 In this tutorial we build upon [Tutorial 1](@ref tut_tutorial1) and build a more
@@ -22,4 +22,27 @@ The [ExposedModel](@ref tinia::model::ExposedModel) class has the method
 [setGUILayout](@ref tinia::model::ExposedModel::setGUILayout) which will be use
 to specify how we want our GUI to look.
 
+In the eyes of the model, a GUI is just a tree of widget types defined in the
+namespace `tinia::model::gui`. Every GUI starts with a root element. A root element
+can be any widget type, but it's usually one of the container widgets
+[HorizontalLayout](@ref tinia::model::gui::HorizontalLayout),
+[VerticalLayout](@ref tinia::model::gui::VerticalLayout),
+[Grid](@ref tinia::model::gui::Grid) or [TabLayout](@ref tinia::model::gui::TabLayout).
+
+Altering Tutorial 1
+---
+We'd like to modify Tutorial 1 such that it only contains an OpenGL canvas.
+First we need to specify the root element, which we choose to be a
+[VerticalLayout](@ref tinia::model::gui::VerticalLayout). We make our GUI in
+the constructor of [Tutorial2Job](@ref tinia::tutorial::Tutorial2Job).
+All GUI elements in
+the model are represented as pointers, so we do this as well.
+
+The creation of the [VerticalLayout](@ref tinia::model::gui::VerticalLayout)
+is really simple:
+\snippet Tutorial2_Job.hpp layout
+
+An OpenGL canvas is represented by a [Canvas](@ref tinia::model::gui::Canvas) element.
+The constructor takes the key to the [Viewer](@ref tinia::model::gui::Viewer) as
+the first value.
 

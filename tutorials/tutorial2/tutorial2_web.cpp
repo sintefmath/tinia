@@ -1,5 +1,5 @@
 
-#include "Tutorial1_Job.hpp"
+#include "Tutorial2_Job.hpp"
 /** [headers] */
 #include "tinia/trell/IPCGLJobController.hpp"
 /** [headers] */
@@ -7,7 +7,7 @@
 /** [main] */
 int main(int argc, char** argv) {
     /** [job] */
-    tinia::tutorial::Tutorial1Job job;
+    tinia::tutorial::Tutorial2Job job;
     /** [job] */
 
     /** [controller] */
