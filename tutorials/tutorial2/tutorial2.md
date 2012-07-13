@@ -43,6 +43,38 @@ is really simple:
 \snippet Tutorial2_Job.hpp layout
 
 An OpenGL canvas is represented by a [Canvas](@ref tinia::model::gui::Canvas) element.
-The constructor takes the key to the [Viewer](@ref tinia::model::gui::Viewer) as
+The constructor takes the key to the [Viewer](@ref tinia::model::Viewer) as
 the first value.
+\snippet Tutorial2_Job.hpp canvas
+
+In the previous tutorial we relied on the fact that Tinia defaults the boundinbox
+key to "boundingbox", but it's good practice to specify this manually to the
+[Canvas](@ref tinia::model::gui::Canvas). This is done with the following line
+\snippet Tutorial2_Job.hpp boundingbox
+
+Once we've made our new [Canvas](@ref tinia::model::gui::Canvas) it's just the
+simple matter of adding it to the VerticalLayout
+\snippet Tutorial2_Job.hpp add
+
+And at last we set our layout as the GUI to the model. Notice how the second argument
+is `tinia::model::gui::ALL` which indicates that the GUI could be used
+for all types of devices (desktops, mobile devices, tablets):
+\snippet Tutorial2_Job.hpp setgui
+
+The rest of the program is left unchanged. The whole `Tutorial2_Job.hpp` is then
+\include Tutorial2_Job.hpp
+
+### Running the desktop program
+Starting the program should show something similar to this:
+\image html tutorial2_desktop.png "Screenshot of the desktop job from Tutorial2."
+
+
+### Running the web program
+If you've successfully installed Tinia you should be able to run the web program
+as `tutorial2_web` through the [mod_trell web interface](@ref sec_mod_trell_gui).
+
+The program should look something like this:
+\image html tutorial2_web.png "Screenshot of the web job from Tutorial2."
+
+
 
