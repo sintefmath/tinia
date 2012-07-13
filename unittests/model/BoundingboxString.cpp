@@ -25,4 +25,4 @@ BOOST_AUTO_TEST_CASE(BoundingBoxString) {
     auto bb = tinia::model::makeBoundingBoxString(0, 0, 0, 1, 1, 1);
     BOOST_CHECK_EQUAL("0 0 0 1 1 1", bb);
 }
-BOOST_AUTO_TEST_SUITE(BoundingBox)
+BOOST_AUTO_TEST_SUITE_END()
