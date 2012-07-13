@@ -26,7 +26,7 @@ Ubuntu packages (with dependencies) from Ubuntu 12.04:
 - cmake
 - libboost-all-dev
 - apache2-dev (For server module).
-- build-essentials
+- build-essential
 
 Once these are installed a simple 
 
