@@ -24,7 +24,7 @@ Ubuntu packages (with dependencies) from Ubuntu 12.04:
 - libqt4-dev
 - libapr1-dev
 - cmake
-- libboost-all-dev (For unit tests).
+- libboost-all-dev
 - apache2-dev (For server module).
 - build-essentials
 
