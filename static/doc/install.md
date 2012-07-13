@@ -38,7 +38,7 @@ Should be enough to compile it. You can optionally issue
 /usr/lib and /usr/include/model . This package can be installed on your
 system with the following command:
 
-`$ sudo dpkg -i ExposedModel<version>.deb`
+`$ sudo dpkg -i tinia-0.1.0.deb`
 
 Compilation on Windows 7 with Visual Studio 2010
 ------------------------------------------------
