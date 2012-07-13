@@ -32,6 +32,7 @@ ELSE()
     ${qtcontroller_FORMS_HEADERS}
     )
 ENDIF()
+
 target_link_libraries ( qtcontroller
     renderlist
     renderlistgl

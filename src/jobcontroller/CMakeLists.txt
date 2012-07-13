@@ -5,20 +5,13 @@ ADD_LIBRARY( jobcontroller ${jobcontrollerSrc} ${jobcontrollerHeaders} )
 
 TARGET_LINK_LIBRARIES( jobcontroller ${Boost_LIBRARIES} model )
 
-IF(NOT WIN32)
   install( FILES 
     ${jobcontrollerHeaders} 
     DESTINATION include/tinia/jobcontroller  
-    COMPONENT jobcontroller-dev)
+    COMPONENT jobcontroller_dev)
+
   install( TARGETS  
     jobcontroller LIBRARY 
     DESTINATION lib/ 
+    ARCHIVE DESTINATION lib/
     COMPONENT jobcontroller)
-ELSE()
-  INSTALL(DIRECTORY include/tinia/jobcontroller
-    DESTINATION include/tinia/
-    FILES_MATCHING PATTERN "*.hpp"
-    PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS jobcontroller
-    DESTINATION lib)
-ENDIF()

@@ -35,7 +35,7 @@ DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedMode
       setMaximum(max);
       setMinimum(min);
    }
-   catch(boost::bad_lexical_cast* exception)
+   catch(boost::bad_lexical_cast& exception)
    {
       // Do nothing
    }

@@ -1,5 +1,7 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+SET( version_number "0.1.0" )
+
 # Set shared for linux:
 IF(NOT WIN32)
     IF(NOT DEFINED ${BUILD_SHARED_LIBS})
@@ -42,17 +44,7 @@ IF(WIN32)
 ENDIF()
 ENDIF( EXTEND_CMAKE_MODULE_PATH )
 
-SET( revision $ENV{GIT_REVISION} )
-IF ( NOT DEFINED revision )
-    SET( revision 0 )
-ENDIF( NOT  DEFINED revision )
 
-SET( build_number $ENV{BUILD_NUMBER} )
-IF ( NOT DEFINED build_number )
-    SET( build_number 0 )
-ENDIF( NOT  DEFINED build_number )
-
-SET( version_number "0.${revision}.${build_number}" )
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_CXX_FLAGS " -DDEBUG -g3 -Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
@@ -169,27 +161,47 @@ ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
-SET( CPACK_GENERATOR "DEB" )
-SET( CPACK_MONOLITHIC_INSTALL 1)
-SET( CPACK_PACKAGE_VERSION ${version_number} )
-SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
-SET( CPACK_COMPONENTS_ALL 
-  model
-  model-dev 
+
+SET(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/agpl-3.0.txt)
+
+SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
+
+SET(CPACK_PACKAGE_VERSION ${version_number} )
+
+IF(WIN32)
+    SET( CPACK_GENERATOR "NSIS" )
+    SET( CPACK_NSIS_CONTACT "kjetil.olsen.lye@sintef.no" )
+    SET(CPACK_PACKAGE_INSTALL_DIRECTORY "tinia-${version_number}")
+    SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Akerselva")
+
+    SET( CPACK_COMPONENTS_ALL 
+         model
+         model-dev 
   modelxml
   modelxml-dev
   jobcontroller
-  jobcontroller-dev
+  jobcontroller_dev
   renderlist
   renderlist-dev
   renderlistgl
   renderlistgl-dev
   qtcontroller
-  qtcontroller-dev
+ qtcontroller-dev
   libtrell
   libtrell-dev
   mod_trell
   )
-SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
-SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
+ELSE()
+    SET( CPACK_GENERATOR "DEB" )
+    SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
+    SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
+    SET(CPACK_MONOLITHIC_INSTALL 1)
+    SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
+ENDIF()
+
+
+
+
+
+
 include ( CPack )

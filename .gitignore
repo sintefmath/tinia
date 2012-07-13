@@ -64,4 +64,6 @@ tinia.sln
 *.lib
 *.res
 *.rc
+*.cache
+
 
