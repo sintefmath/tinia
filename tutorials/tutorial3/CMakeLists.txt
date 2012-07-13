@@ -2,11 +2,11 @@
 SET( tutorial_HEADERS "Tutorial3_Job.hpp" )
 
 IF(${DESKTOP})
-ADD_EXECUTABLE(Tutorial3_desktop
+ADD_EXECUTABLE(tutorial3_desktop
     ${tutorial_HEADERS}
     tutorial3_desktop.cpp
 )
-  TARGET_LINK_LIBRARIES(Tutorial3_desktop
+  TARGET_LINK_LIBRARIES(tutorial3_desktop
     qtcontroller
     renderlist
     renderlistgl
@@ -23,12 +23,12 @@ ENDIF()
 
 
 IF(${SERVER})
-  ADD_EXECUTABLE(Tutorial3_web
+  ADD_EXECUTABLE(tutorial3_web
     ${tutorial_HEADERS}
     tutorial3_web.cpp
     )
 
-  TARGET_LINK_LIBRARIES(Tutorial3_web
+  TARGET_LINK_LIBRARIES(tutorial3_web
     ${RT}
     ${LIB_APR}
     ${GLEW_LIBRARY}
@@ -46,7 +46,7 @@ IF(${SERVER})
 
 
   INSTALL(TARGETS
-    Tutorial3_web RUNTIME
+    tutorial3_web RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )

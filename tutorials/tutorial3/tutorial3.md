@@ -1,7 +1,7 @@
-Tutorial 2: Specifying GUI (part 1){#tut_tutorial3}
+Tutorial 3: Specifying GUI (part 2){#tut_tutorial3}
 ===
 
-In this tutorial we build upon [Tutorial 1](@ref tut_tutorial1) and build a more
+In this tutorial we build upon [Tutorial 2](@ref tut_tutorial1) and build a more
 complex graphical user interface using the Tinia framework.
 
 Familiarity with basic OpenGL and C++ with object orientation is assumed.
@@ -11,70 +11,140 @@ server/client program.
 
 The program consists of three files: The Job class definition and two main files. One
 main file will be created for the desktop program, and one for the web program.
-We will only highlight changes from [Tutorial 1](@ref tut_tutorial1), so it's a good
+We will only highlight changes from [Tutorial 2](@ref tut_tutorial2), so it's a good
 idea to brush up on that tutorial before reading this one.
 
 \tableofcontents
 
-GUI through Tinia
+User input through Tinia
 ---
-The [ExposedModel](@ref tinia::model::ExposedModel) class has the method
-[setGUILayout](@ref tinia::model::ExposedModel::setGUILayout) which will be use
-to specify how we want our GUI to look.
+With the exception of layout and spacing widgets (e.g.
+[HorizontalLayout](@ref tinia::model::gui::HorizontalLayout) and
+[HorizontalExpandingSpace](@ref tinia::model::gui::HorizontalExpandingSpace))
+most GUI widgets in Tinia passes user information to the exposed model.
 
-In the eyes of the model, a GUI is just a tree of widget types defined in the
-namespace `tinia::model::gui`. Every GUI starts with a root element. A root element
-can be any widget type, but it's usually one of the container widgets
-[HorizontalLayout](@ref tinia::model::gui::HorizontalLayout),
-[VerticalLayout](@ref tinia::model::gui::VerticalLayout),
-[Grid](@ref tinia::model::gui::Grid) or [TabLayout](@ref tinia::model::gui::TabLayout).
+A [TextInput](@ref tinia::model::gui::TextInput) for instance, takes the text
+the user has entered in and hands it over to the exposed model. The exposed
+model is then free deny the text (if for example the element is an integer
+the model will only accept text that is convertible to integers). If the exposed
+model accepts the new value, the relevant components will be notified. Specifically,
+an update to an element in the exposed model will trigger a redraw of the OpenGL
+canvas.
 
-Altering Tutorial 1
+Making our triangle resizeable
 ---
-We'd like to modify Tutorial 1 such that it only contains an OpenGL canvas.
-First we need to specify the root element, which we choose to be a
-[VerticalLayout](@ref tinia::model::gui::VerticalLayout). We make our GUI in
-the constructor of [Tutorial2Job](@ref tinia::tutorial::Tutorial2Job).
-All GUI elements in
-the model are represented as pointers, so we do this as well.
+We want to make our triangle from the previous example resizeable. To be precise,
+we want to define three scalars \f$s_1, s_2, s_3\in [0,10]\f$, and define the
+three corners of our triangle to be
+\f[v_1 = \begin{pmatrix}0\\ 0\\ 0\end{pmatrix} - s_1 \begin{pmatrix}1\\ 0\\ 0\end{pmatrix}\f]
+\f[v_2 = \begin{pmatrix}1\\ 0\\ 0\end{pmatrix} + s_2 \begin{pmatrix}1\\ 0\\ 0\end{pmatrix}\f]
+\f[v_3 = \begin{pmatrix}1\\1\\ 0\end{pmatrix} + s_2 \begin{pmatrix}1\\ 0\\ 0\end{pmatrix} + s_3 \begin{pmatrix}0\\ 1\\ 0\end{pmatrix}\f]
+The two corners of the boundingbox will then be
+\f[\{\begin{pmatrix}-s_1\\ 0\\ 0\end{pmatrix}, \begin{pmatrix}1+s_2\\ 1 + s_3\\ 0\end{pmatrix}\}\f].
 
-The creation of the [VerticalLayout](@ref tinia::model::gui::VerticalLayout)
-is really simple:
-\snippet Tutorial2_Job.hpp layout
+Constrained elements in ExposedModel
+---
+A constrained element in [ExposedModel](@ref tinia::model::ExposedModel) is an element
+with upper and lower bounds. For our triangle example, we need to add \f$s_1, s_2, s_3\f$
+as constrained elements via the [addConstrainedElement](@ref tinia::model::ExposedModel::addConstrainedElement) method.
+The first argument to this method is the key, the second is the current value, the third is the minimum allowed
+value for the element, the fourth is the maximum allowed value for the element.
+\snippet Tutorial3_Job.hpp constrained
 
-An OpenGL canvas is represented by a [Canvas](@ref tinia::model::gui::Canvas) element.
-The constructor takes the key to the [Viewer](@ref tinia::model::Viewer) as
-the first value.
-\snippet Tutorial2_Job.hpp canvas
+Notice that we add our elements as `int`, and the model is able to deduce the
+type automatically.
 
-In the previous tutorial we relied on the fact that Tinia defaults the boundinbox
-key to "boundingbox", but it's good practice to specify this manually to the
-[Canvas](@ref tinia::model::gui::Canvas). This is done with the following line
-\snippet Tutorial2_Job.hpp boundingbox
+Listeners to ExposedModel
+---
+If we allow the user to resize the triangle, we need to update our boundingbox
+whenever the user updates either \f$s_1\f$, \f$s_2 \f$ or \f$s_3\f$. To do this,
+we want to add a simple listener to the ExposedModel. A listener here is just
+a subclass of `tinia::model::StateListener` with the method
+[stateElementModified](@ref tinia::model::StateListener::stateElementModified) implemented.
 
-Once we've made our new [Canvas](@ref tinia::model::gui::Canvas) it's just the
-simple matter of adding it to the VerticalLayout
-\snippet Tutorial2_Job.hpp add
+Our listener class is this simple class:
 
-And at last we set our layout as the GUI to the model. Notice how the second argument
-is `tinia::model::gui::ALL` which indicates that the GUI could be used
-for all types of devices (desktops, mobile devices, tablets):
-\snippet Tutorial2_Job.hpp setgui
+\snippet Tutorial3_Job.hpp listenerdef
 
-The rest of the program is left unchanged. The whole `Tutorial2_Job.hpp` is then
-\include Tutorial2_Job.hpp
+First we need to get a hold of the Exposed model, which we receive in the constructor
+\snippet Tutorial3_Job.hpp listenerctor
+
+Then in the constructor of [Tutorial3Listener](@ref tinia::tutorial::Tutorial3Listener)
+we add ourselves as a listener to the relevant elements using the
+[addStateListener](@ref tinia::model::ExposedModel::addStateListener) method
+\snippet Tutorial3_Job.hpp addlistener
+
+Once we've added ourselves as a listener, we must also ensure that we remove ourselves
+upon deletion of the listener, hence we need the following destructor in the listener
+\snippet Tutorial3_Job.hpp removelistener
+
+Finally we write the [stateElementModified](@ref tinia::model::StateListener::stateElementModified)
+method. This method firsts gets the three scalars, then create the new boundingbox as a string
+and lastly updates the boundingbox to the model.
+\snippet Tutorial3_Job.hpp stateelementmodified
+
+We store our listener in the [Tutorial3Job](@ref tinia::tutorial3::Tutorial3Job)
+class in the variable
+\snippet Tutorial3_Job.hpp mlistener
+
+In the constructor of [Tutorial3Job](@ref tinia::tutorial3::Tutorial3Job) we
+instantiate the listener
+\snippet Tutorial3_Job.hpp clistener
+
+Sliders and labels
+---
+We want to modify \f$s_1\f$, \f$s_2\f$ and \f$s_3\f$ through a slider. To use a slider
+in Tinia, simply add a new instance of [HorizontalSlider](@ref tinia::model::gui::HorizontalSlider)
+to the GUI layout. The [HorizontalSlider](@ref tinia::model::gui::HorizontalSlider)
+accepts the key of the element as the first parameter to the constructor.
+\snippet Tutorial3_Job.hpp slider
+
+To the left of each slider we want a label saying either "Left corner", "Right corner" or "Upper corner".
+The [Label](@ref tinia::model::gui::Label) lets us add labels to each element, but we need
+to add annotations to each element for it to display anything more useful than
+"s1", "s2" or "s3", hence we use the method [addAnnotation](@ref tinia::model::ExposedModel::addAnnotation)
+in the model
+\snippet Tutorial3_Job.hpp annotation
+
+Then we create the three labels
+\snippet Tutorial3_Job.hpp label
+
+Finally create a [Grid](@ref tinia::model::gui::Grid) layout with size 3 times 3
+to hold our six widgets plus 3
+[HorizontalExpandingSpace](@ref tinia::model::gui::HorizontalExpandingSpace)s spacers.
+Finally we add the grid
+to the main layout:
+\snippet Tutorial3_Job.hpp grid
+
+Modification to the renderloop
+---
+We only need to make small modifications to the renderloop. First we need to get
+the scalars
+\snippet Tutorial3_Job.hpp getscalars
+
+then we utilize the scalars while drawing the triangle
+\snippet Tutorial3_Job.hpp renderloop
 
 ### Running the desktop program
 Starting the program should show something similar to this:
-\image html tutorial2_desktop.png "Screenshot of the desktop job from Tutorial2."
+\image html tutorial3_desktop.png "Screenshot of the desktop job from Tutorial3."
 
 
 ### Running the web program
 If you've successfully installed Tinia you should be able to run the web program
-as `tutorial2_web` through the [mod_trell web interface](@ref sec_mod_trell_gui).
+as `tutorial3_web` through the [mod_trell web interface](@ref sec_mod_trell_gui).
 
 The program should look something like this:
-\image html tutorial2_web.png "Screenshot of the web job from Tutorial2."
+\image html tutorial3_web.png "Screenshot of the web job from Tutorial3."
+
+The full Job file
+---
+All changes in this tutorail have been done in the Job file of the tutorial:
+\include Tutorial3_Job.hpp
+
+
+
+
 
 
 
