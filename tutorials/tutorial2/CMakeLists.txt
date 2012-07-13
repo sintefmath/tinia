@@ -1,5 +1,5 @@
 
-SET( tutorial2_HEADERS "Tutorial2_Job.hpp" )
+SET( tutorial_HEADERS "Tutorial2_Job.hpp" )
 
 IF(${DESKTOP})
 ADD_EXECUTABLE(tutorial2_desktop
