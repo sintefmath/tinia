@@ -388,6 +388,13 @@ BOOST_FIXTURE_TEST_CASE(DefaultLengthCheck, ExposedModelFixture)
 }
 
 
+BOOST_FIXTURE_TEST_CASE(GetElementByValue, ExposedModelFixture)
+{
+    model.addElement("one", 1);
+    auto one = model.getElementValue<int>("one");
+    BOOST_CHECK_EQUAL(1, one);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(FileCheck, ExposedModelFixture)
 {
