@@ -25,3 +25,8 @@ else()
 	set(GLM_FOUND true)
 	set(GLM_INCLUDE_DIRS ${GLM_INCLUDE_DIR})
 endif()
+
+# Mark as advanced to hide from the GUI
+MARK_AS_ADVANCED(
+  GLM_INCLUDE_DIR
+)
