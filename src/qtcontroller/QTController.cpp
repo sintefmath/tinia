@@ -40,10 +40,8 @@ namespace tinia {
 namespace qtcontroller {
 
 QTController::QTController()
-    : m_main_window(NULL),
-      m_root_context(NULL),
-      m_job(NULL),
-      m_builder(NULL),
+    : m_root_context(NULL),
+      m_job(NULL),      
       m_perf_mode( false ),
       m_renderlist_mode( false )
 {
@@ -52,17 +50,7 @@ QTController::QTController()
 
 QTController::~QTController()
 {
-    if( m_main_window != NULL ){
-        delete m_main_window;
-    }
-
-    if( m_job != NULL ) {
-        delete m_job;
-    }
-
-    if( m_builder != NULL ) {
-        delete m_builder;
-    }
+    ;
 }
 
 
@@ -104,8 +92,9 @@ int QTController::run(int argc, char **argv)
 
 
 
-    QApplication app(argc, argv);
-    m_main_window = new QMainWindow();
+    m_app.reset(  new QApplication( argc, argv ) );
+
+    m_main_window.reset( new QMainWindow() );
 
     // Now we may init the script.
     tiniaInitResources();
@@ -132,11 +121,7 @@ int QTController::run(int argc, char **argv)
        throw new std::runtime_error("Job did not start up properly");
     }
 
-    m_builder = new GUIBuilder( m_model,
-                                m_job,
-                                this,
-                                m_perf_mode,
-                                m_root_context );
+    m_builder.reset( new GUIBuilder( m_model, m_job, this, m_perf_mode, m_root_context ) );
 
     m_main_window->setCentralWidget( m_builder->buildGUI( m_model->getGUILayout(model::gui::DESKTOP),
                                                           NULL ) );
@@ -148,24 +133,7 @@ int QTController::run(int argc, char **argv)
 	}
     m_main_window->show();
 
-/*
-   QString style =
-           "QGroupBox::title { color: black; } "
-           "QGroupBox { margin: 0; border: 0; padding: 0; }";
-
-   app.setStyleSheet( style );
-*/
-   /*
-   model::gui::Element* tree = m_model->getGUILayout( model::gui::DESKTOP );
-   QDomDocument* dom = new QDomDocument;
-   QDomElement gui_layout = dom->createElement( "layout" );
-   dom->appendChild( gui_layout );
-   addNode( dom, gui_layout, tree ); 
-   QString foo = dom->toString();
-   
-   std::cerr << foo.toLocal8Bit() << "\n";
-   */
-    return app.exec();
+    return m_app->exec();
 }
 
 void QTController::initScript()
@@ -181,222 +149,6 @@ void QTController::initScript()
                                      + m_scriptsToParse[i]);
         }
     }
-}
-
-namespace  {
-static
-QDomElement
-addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch );
-
-template<typename ChildType>
-static
-void
-addChildren( QDomDocument* dom, QDomElement& parent, model::gui::Container1D<ChildType>* branch )
-{
-    for(size_t i=0; i<branch->children(); i++ ) {
-        addNode( dom, parent, branch->child(i) );
-    }
-}
-
-static
-void
-addChildren( QDomDocument* dom, QDomElement& parent, model::gui::Container2D<model::gui::Element>* branch )
-{
-    parent.setAttribute( "width", (uint)branch->width() );
-    parent.setAttribute( "height", (uint)branch->height() );
-    for(size_t j=0; j<branch->height(); j++ ) {
-        for(size_t i=0; i<branch->width(); i++ ) {
-            auto child = branch->child( j, i );
-            if( child != NULL ) {
-                QDomElement n = addNode( dom, parent, child );
-                n.setAttribute( "row", (uint)j );
-                n.setAttribute( "col", (uint)i );
-            }
-        }
-    }
-}
-
-static
-void
-addElementAttributes( QDomDocument* dom, QDomElement& node, model::gui::Element* element )
-{
-    if( !element->visibilityKey().empty() ) {
-        QDomElement n = dom->createElement( "Visibility" );
-        QDomText t = dom->createTextNode( element->visibilityKey().c_str() );
-        n.appendChild( t );
-        if( element->visibilityInverted() ) {
-            n.setAttribute( "inverted", 1 );
-        }
-        node.appendChild( n );
-    }
-    if( !element->enabledKey().empty() ) {
-        QDomElement n = dom->createElement( "Enabled" );
-        QDomText t = dom->createTextNode( element->enabledKey().c_str() );
-        n.appendChild( t );
-        if( element->enabledInverted() ) {
-            n.setAttribute( "inverted", 1 );
-        }
-        node.appendChild( n );
-    }
-}
-
-static
-QDomElement
-addNode( QDomDocument* dom, QDomElement& parent, model::gui::Element* branch )
-{
-    auto TabLayout = dynamic_cast<model::gui::TabLayout*>( branch );
-    if( TabLayout ) {
-        QDomElement node = dom->createElement( "TabLayout" );
-        addElementAttributes( dom, node, branch );
-        addChildren<model::gui::Tab>( dom, node, static_cast<model::gui::Container1D<model::gui::Tab>*>( TabLayout ) );
-        parent.appendChild( node );
-        return node;
-    }
-    auto Tab = dynamic_cast<model::gui::Tab*>( branch );
-    if( Tab ) {
-        QDomElement node = dom->createElement( "Tab" );
-        addElementAttributes( dom, node, branch );
-        addNode( dom, node, Tab->child() );
-        parent.appendChild( node );
-        return node;
-    }
-    auto Grid = dynamic_cast<model::gui::Grid*>( branch );
-    if( Grid ) {
-        QDomElement node = dom->createElement( "Grid" );
-        addElementAttributes( dom, node, branch );
-        addChildren( dom, node, static_cast<model::gui::Container2D<model::gui::Element>*>( Grid ) );
-        parent.appendChild( node );
-        return node;
-    }
-    auto TextInput = dynamic_cast<model::gui::TextInput*>( branch );
-    if( TextInput ) {
-        QDomElement node = dom->createElement( "TextInput" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto Canvas = dynamic_cast<model::gui::Canvas*>( branch );
-    if( Canvas ) {
-        QDomElement node = dom->createElement( "Canvas" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto Label = dynamic_cast<model::gui::Label*>( branch );
-    if( Label ) {
-        QDomElement node = dom->createElement( "Label" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto ComboBox = dynamic_cast<model::gui::ComboBox*>( branch );
-    if( ComboBox ) {
-        QDomElement node = dom->createElement( "ComboBox" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto ElementGroup = dynamic_cast<model::gui::ElementGroup*>( branch );
-    if( ElementGroup ) {
-        QDomElement node = dom->createElement( "ElementGroup" );
-        addElementAttributes( dom, node, branch );
-        addNode( dom, node, ElementGroup->child() );
-        parent.appendChild( node );
-        return node;
-    }
-    auto RadioButtons = dynamic_cast<model::gui::RadioButtons*>( branch );
-    if( RadioButtons ) {
-        QDomElement node = dom->createElement( "RadioButtons" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto SpinBox = dynamic_cast<model::gui::SpinBox*>( branch );
-    if( SpinBox ) {
-        QDomElement node = dom->createElement( "SpinBox" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto CheckBox = dynamic_cast<model::gui::CheckBox*>( branch );
-    if( CheckBox ) {
-        QDomElement node = dom->createElement( "CheckBox" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto Button = dynamic_cast<model::gui::Button*>( branch );
-    if( Button ) {
-        QDomElement node = dom->createElement( "Button" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto HorizontalSlider = dynamic_cast<model::gui::HorizontalSlider*>( branch );
-    if( HorizontalSlider ) {
-        QDomElement node = dom->createElement( "HorizontalSlider" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto HorizontalLayout = dynamic_cast<model::gui::HorizontalLayout*>( branch );
-    if( HorizontalLayout ) {
-        QDomElement node = dom->createElement( "HorizontalLayout" );
-        addElementAttributes( dom, node, branch );
-        addChildren<model::gui::Element>( dom, node, static_cast<model::gui::Container1D<model::gui::Element>*>( HorizontalLayout ) );
-        parent.appendChild( node );
-        return node;
-    }
-    auto VerticalLayout = dynamic_cast<model::gui::VerticalLayout*>( branch );
-    if( VerticalLayout ) {
-        QDomElement node = dom->createElement( "VerticalLayout" );
-        addElementAttributes( dom, node, branch );
-        addChildren<model::gui::Element>( dom, node, static_cast<model::gui::Container1D<model::gui::Element>*>( VerticalLayout ) );
-        parent.appendChild( node );
-        return node;
-    }
-    auto DoubleSpinBox = dynamic_cast<model::gui::DoubleSpinBox*>( branch );
-    if( DoubleSpinBox ) {
-        QDomElement node = dom->createElement( "DoubleSpinBox" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto VerticalSpace = dynamic_cast<model::gui::VerticalSpace*>( branch );
-    if( VerticalSpace ) {
-        QDomElement node = dom->createElement( "VerticalSpace" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto VerticalExpandingSpace = dynamic_cast<model::gui::VerticalExpandingSpace*>( branch );
-    if( VerticalExpandingSpace ) {
-        QDomElement node = dom->createElement( "VerticalExpandingSpace" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto HorizontalSpace = dynamic_cast<model::gui::HorizontalSpace*>( branch );
-    if( HorizontalSpace ) {
-        QDomElement node = dom->createElement( "HorizontalSpace" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    auto HorizontalExpandingSpace = dynamic_cast<model::gui::HorizontalExpandingSpace*>( branch );
-    if( HorizontalExpandingSpace ) {
-        QDomElement node = dom->createElement( "HorizontalExpandingSpace" );
-        addElementAttributes( dom, node, branch );
-        parent.appendChild( node );
-        return node;
-    }
-    QDomElement node = dom->createElement( "IllegalShouldThrow" );
-    parent.appendChild( node );
-    return node;
-}
-
-
-
 }
 
 }// namespace qtcontroller

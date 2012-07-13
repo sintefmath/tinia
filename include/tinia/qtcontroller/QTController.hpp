@@ -23,6 +23,7 @@
 
 class QMainWindow;
 class QGLWidget;
+class QApplication;
 namespace tinia {
 namespace model {
     class ExposedModel;
@@ -67,16 +68,21 @@ public:
 private:
     void initScript();
     void populateGUI();
-    QMainWindow*                            m_main_window;
-    QGLWidget*                              m_root_context;
-    jobcontroller::Job*                       m_job;
-    GUIBuilder*                             m_builder;
+
+    // The order of these two is important, to ensure proper destructor order.
+    // App will be deleted after m_main_window.
+    std::unique_ptr<QApplication>          m_app;
+    std::unique_ptr<QMainWindow>           m_main_window;
+
+    QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
+    jobcontroller::Job*                    m_job;
+    std::unique_ptr<GUIBuilder>            m_builder;
     std::shared_ptr<model::ExposedModel>   m_model;
 
     // We need to hold the scripts in memory untill we start up QApplication
     std::vector<std::string>                m_scriptsToParse;
     bool                                    m_perf_mode;
-    bool                                    m_renderlist_mode;
+    bool                                    m_renderlist_mode;    
 };
 
 } // namespace qtcontroller
