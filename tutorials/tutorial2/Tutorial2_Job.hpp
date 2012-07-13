@@ -8,9 +8,9 @@
 namespace tinia { namespace tutorial {
 
 /** [class] */
-class Tutorial1Job : public tinia::jobcontroller::OpenGLJob {
+class Tutorial2Job : public tinia::jobcontroller::OpenGLJob {
 public:
-    Tutorial1Job();
+    Tutorial2Job();
 
     bool renderFrame( const std::string &session,
                       const std::string &key,
@@ -21,15 +21,35 @@ public:
 /** [class]*/
 
 /** [ctor] */
-Tutorial1Job::Tutorial1Job()
+Tutorial2Job::Tutorial2Job()
 {
     m_model->addElement( "myViewer", tinia::model::Viewer() );
     m_model->addElement("boundingbox", "0 0 0 1 1 1");
+
+    /** [layout] */
+    auto layout = new tinia::model::gui::VerticalLayout();
+    /** [layout] */
+
+    /** [canvas] */
+    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    /** [canvas] */
+
+    /** [boundingbox] */
+    canvas->boundingBoxKey("boundingbox");
+    /** [boundingbox] */
+
+    /** [add] */
+    layout->addChild(canvas);
+    /** [add] */
+
+    /** [setgui] */
+    m_model->setGUILayout(layout, tinia::model::gui::ALL);
+    /** [setgui] */
 }
 /** [ctor]*/
 
 /** [renderframe] */
-bool Tutorial1Job::renderFrame( const std::string &session,
+bool Tutorial2Job::renderFrame( const std::string &session,
                                 const std::string &key,
                                 unsigned int fbo,
                                 const size_t width,
