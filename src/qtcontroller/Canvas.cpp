@@ -240,7 +240,10 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
 void Canvas::keyPressEvent(QKeyEvent *event)
 {
-    ;
+    for(size_t i = 0; i < m_eventHandlers.size(); ++i) {
+        m_eventHandlers[i]->keyPressEvent(event);
+    }
+    updateGL();
 }
 
 void Canvas::keyReleaseEvent(QKeyEvent *event)

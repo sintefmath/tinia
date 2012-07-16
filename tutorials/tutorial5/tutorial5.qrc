@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/tutorial5/javascript">
+        <file>FPSViewer.js</file>
+    </qresource>
+</RCC>
