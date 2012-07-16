@@ -68,6 +68,10 @@ private:
     /** [mlistener] */
     std::unique_ptr<Tutorial4Listener> m_listener;
     /** [mlistener] */
+
+    /** [mdatabase] */
+    tinia::renderlist::DataBase m_database;
+    /** [mdatabase] */
 };
 /** [class]*/
 
@@ -141,6 +145,76 @@ Tutorial4Job::Tutorial4Job()
     /** [clistener] */
     m_listener.reset(new Tutorial4Listener(m_model));
     /** [clistener] */
+#if 0
+    /** [buffer] */
+    double vertices[] = {
+                         0, 0, 0,
+                         1, 0, 0,
+                         1, 1, 0,
+                         0, 0, 0
+                        };
+    m_database.createBuffer("vertices")->set(vertices, 3*3);
+    /** [buffer] */
+
+    /** [shader] */
+    std::string vertexShader =
+            "uniform mat4 MVP;\n"
+            "attribute vec3 position;\n"
+            "void\n"
+            "main()\n"
+            "{\n"
+            "    gl_Position = MVP * vec4( position, 1.0 );\n"
+            "}\n";
+    std::string fragmentShader =
+            "#ifdef GL_ES\n"
+            "precision highp float;\n"
+            "#endif\n"
+            "uniform vec3 color;\n"
+            "void\n"
+            "main()\n"
+            "{\n"
+            "    gl_FragColor = vec4( color, 1.0 );\n"
+            "}\n";
+    auto shader = m_database.createShader("shader");
+    shader->setVertexStage(vertexShader);
+    shader->setFragmentStage(fragmentShader);
+    /** [shader] */
+
+    /** [actionShader] */
+    m_database.createAction<tinia::renderlist::SetShader>("useShader")
+            ->setShader("shader");
+    /** [actionShader] */
+
+    /** [actionBuffer] */
+    m_database.createAction<tinia::renderlist::SetInputs>("useBuffer")
+            ->setShader("shader")
+            ->setinput("position", "vertices", 3);
+    /** [actionBuffer] */
+
+    /** [actionMVP] */
+    m_database.createAction<tinia::renderlist::SetUniforms>("setUniforms")
+            ->setShader("shader")
+            ->setSemantic("MVP", tinia::renderlist::SEMANTIC_MODELVIEW_PROJECTION_MATRIX);
+    /** [actionMVP] */
+
+    /** [actionDraw] */
+    m_database.createAction<tinia::renderlist::Draw>("draw")
+            ->setNonIndexed(tinia::renderlist::PRIMITIVE_LINES, 0, 4);
+    /** [actionDraw] */
+
+    /** [drawOrder] */
+    m_database.drawOrderClear()
+            ->attachName("useShader")
+            ->attachName("useBuffer")
+            ->attachName("setUniforms")
+            ->attachName("draw");
+    /** [drawOrder] */
+
+    /** [process] */
+    m_database.process();
+    /** [process] */
+#endif
+
 }
 /** [ctor]*/
 

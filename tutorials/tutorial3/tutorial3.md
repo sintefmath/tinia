@@ -1,7 +1,7 @@
 Tutorial 3: Specifying GUI (part 2){#tut_tutorial3}
 ===
 
-In this tutorial we build upon [Tutorial 2](@ref tut_tutorial1) and build a more
+In this tutorial we build upon [Tutorial 2](@ref tut_tutorial2) and build a more
 complex graphical user interface using the Tinia framework.
 
 Familiarity with basic OpenGL and C++ with object orientation is assumed.

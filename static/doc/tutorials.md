@@ -11,3 +11,6 @@ your own GUI.
 
 - \subpage tut_tutorial3 "Specifying GUI (part 2)" demonstrates how to use Tinia to build a
 more complex GUI.
+
+- \subpage tut_tutorial4 "Renderlists" introduces the use of renderlists to create
+a proxy geometry.

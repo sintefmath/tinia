@@ -19,6 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
 
 BOOST_AUTO_TEST_SUITE(EventHandler)
 
@@ -359,6 +360,29 @@ BOOST_AUTO_TEST_CASE(MapTest) {
 
     BOOST_CHECK_EQUAL("KeyFromTest", engine.evaluate("keyMap").toString().toStdString());
 
+}
+
+BOOST_AUTO_TEST_CASE(KeyPressEventTest) {
+    auto model = std::make_shared<tinia::model::ExposedModel>();
+
+    QString script =
+            "key = 0\n"
+            "function ModifierTest(params) {}\n"
+            "ModifierTest.prototype = {\n"
+            "   keyPressEvent: function(event) {\n"
+            "       key = event.key\n"
+            "   }\n"
+            "}\n";
+
+    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+
+    engine.evaluate(script);
+
+    tinia::qtcontroller::scripting::EventHandler handler("ModifierTest", "key", model, engine);
+    QKeyEvent ePress(QEvent::KeyPress, 42, Qt::NoModifier);
+    handler.keyPressEvent(&ePress);
+
+    BOOST_CHECK_EQUAL(42, engine.evaluate("key").toNumber());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
