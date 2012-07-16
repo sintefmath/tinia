@@ -49,6 +49,11 @@ CPackSourceConfig.cmake
 *.stamp
 *.rule
 
+# CPack NSIS Installer generated stuff
+/_CPack_Packages
+install_manifest*.*
+
+
 # Visual Studio stuff
 *.ipch
 *.suo
