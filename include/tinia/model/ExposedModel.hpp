@@ -224,6 +224,14 @@ The job can use this to get an update meant for the client. This version are for
    void
    getElementValue( std::string key, T& t );
 
+   /** Get a typed element value.
+      \param key Name of element to update.
+      */
+   template<class T>
+   T
+   getElementValue( const std::string& key);
+
+
    /** Get the contents of a matrix.
       \param key Name of an element added as a matrix.
       \param matrixData Pointer to a continious block of memory that can hold at least 16 floats.
@@ -679,7 +687,17 @@ ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const 
 }
 );
 
+
+
 addAnnotationHelper( key, annotationMap );
+}
+
+template<typename T>
+T
+ExposedModel::getElementValue(const std::string& key) {
+    T t;
+    getElementValue(key, t);
+    return t;
 }
 
 template<typename T>

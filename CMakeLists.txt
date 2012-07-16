@@ -157,6 +157,7 @@ ADD_SUBDIRECTORY( "examples/simplejob" )
 #Tutorials
 ADD_SUBDIRECTORY( "tutorials/tutorial1/")
 ADD_SUBDIRECTORY( "tutorials/tutorial2/")
+ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)

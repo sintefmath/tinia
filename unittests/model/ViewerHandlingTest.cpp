@@ -99,6 +99,17 @@ BOOST_FIXTURE_TEST_CASE( updateViewer, ViewerFixture ) {
     BOOST_CHECK_EQUAL( readViewer.height, viewer.height );
 }
 
+BOOST_FIXTURE_TEST_CASE(getViewerByValue, ViewerFixture) {
+    viewer.height = 2 * viewer.height + 1;
+    model.addElement("viewerTest", viewer);
+
+    auto v = model.getElementValue<tinia::model::Viewer>("viewerTest");
+
+    BOOST_CHECK_EQUAL(v.height, viewer.height);
+
+
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

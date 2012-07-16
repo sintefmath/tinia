@@ -64,6 +64,11 @@ for all types of devices (desktops, mobile devices, tablets):
 The rest of the program is left unchanged. The whole `Tutorial2_Job.hpp` is then
 \include Tutorial2_Job.hpp
 
+### Ownership of the GUI
+The observant reader might have noticed that we don't delete the GUI pointers we've
+made in the tutorial. By design, the [ExposedModel](@ref tinia::model::ExposedModel)
+takes ownership of the GUI pointers and deletes them upon destruction.
+
 ### Running the desktop program
 Starting the program should show something similar to this:
 \image html tutorial2_desktop.png "Screenshot of the desktop job from Tutorial2."
