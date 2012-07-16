@@ -5,20 +5,19 @@ TARGET_LINK_LIBRARIES( renderlistgl
                       ${GLEW_LIBRARY}
                       ${OPENGL_LIBRARIES} )
 
-IF(NOT WIN32)
+
+# The reason for the development name to be <component>_dev is
+# that using <component>-dev does not work with NSIS Windows installer.
+# Remember to also update the list of components in the 
+# main CMakeLists.txt if you alter component names.
+
   install( FILES 
     ${renderlistgl_HEADERS} 
     DESTINATION include/tinia/renderlist/gl  
-    COMPONENT renderlistgl-dev)
+    COMPONENT renderlistgl_dev)
+
   install( TARGETS  
-    renderlistgl ARCHIVE
+    renderlistgl LIBRARY
     DESTINATION lib/ 
+    ARCHIVE DESTINATION lib/
     COMPONENT renderlistgl)
-ELSE()
- INSTALL(DIRECTORY include/tinia/renderlist/gl
-    DESTINATION nclude/tinia/renderlist/
-    FILES_MATCHING PATTERN "*.hpp"
-    PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS renderlistgl
-    DESTINATION lib)
-ENDIF()

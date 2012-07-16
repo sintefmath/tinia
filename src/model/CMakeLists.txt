@@ -6,20 +6,19 @@ ADD_LIBRARY( model ${modelSrc} ${modelHeaders} )
 
 TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
 
-IF(NOT WIN32)
+# The reason for the development name to be <component>_dev is
+# that using <component>-dev does not work with NSIS Windows installer.
+# Remember to also update the list of components in the 
+# main CMakeLists.txt if you alter component names.
+
   install( FILES 
     ${modelHeaders} 
     DESTINATION include/tinia/model  
-    COMPONENT model-dev)
+    COMPONENT model_dev)
+
   install( TARGETS  
     model LIBRARY 
     DESTINATION lib/ 
-    COMPONENT model)
-ELSE()
- INSTALL(DIRECTORY include/tinia/model
-    DESTINATION include/tinia/
-    FILES_MATCHING PATTERN "*.hpp"
-    PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS model
-    DESTINATION lib)
-ENDIF()
+    ARCHIVE DESTINATION lib/
+    COMPONENT model )
+    
