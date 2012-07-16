@@ -55,6 +55,11 @@ install_manifest*.*
 
 
 # Visual Studio stuff
+[Dd]ebug*/
+[Rr]elease/
+build/
+[Tt]est[Rr]esult
+[Bb]uild[Ll]og.*
 *.ipch
 *.suo
 tinia.sln
@@ -70,5 +75,6 @@ tinia.sln
 *.res
 *.rc
 *.cache
+
 
 
