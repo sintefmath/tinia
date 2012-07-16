@@ -4,20 +4,20 @@ FILE( GLOB renderlist_HEADERS "../../include/tinia/renderlist/*.hpp")
 ADD_LIBRARY( renderlist STATIC ${renderlist_SRC} ${renderlist_HEADERS} )
 TARGET_LINK_LIBRARIES( renderlist )
 
-IF(NOT WIN32)
+
+# The reason for the development name to be <component>_dev is
+# that using <component>-dev does not work with NSIS Windows installer.
+# Remember to also update the list of components in the 
+# main CMakeLists.txt if you alter component names.
+
   install( FILES 
     ${renderlist_HEADERS} 
     DESTINATION include/tinia/renderlist  
-    COMPONENT renderlist-dev)
+    COMPONENT renderlist_dev)
+
   install( TARGETS  
-    renderlist ARCHIVE
+    renderlist LIBRARY
     DESTINATION lib/ 
+    ARCHIVE DESTINATION lib/
     COMPONENT renderlist)
-ELSE()
- INSTALL(DIRECTORY include/tinia/renderlist
-    DESTINATION include/tinia/
-    FILES_MATCHING PATTERN "*.hpp"
-    PATTERN ".git" EXCLUDE)
-  INSTALL(TARGETS renderlist
-    DESTINATION lib)
-ENDIF()
+

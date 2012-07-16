@@ -10,9 +10,9 @@ target_link_libraries ( tinia_javascript
     ${QT_LIBRARIES}
 )
 
-IF(NOT WIN32)
-  install( TARGETS tinia_javascript LIBRARY DESTINATION lib/ COMPONENT qtcontroller)
-ELSE()
-  INSTALL(TARGETS tinia_javascript
-    DESTINATION lib)
-ENDIF()
+
+install( TARGETS 
+    tinia_javascript LIBRARY 
+    DESTINATION lib/ 
+    ARCHIVE DESTINATION /lib
+    COMPONENT qtcontroller)

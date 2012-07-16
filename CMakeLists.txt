@@ -174,24 +174,18 @@ IF(WIN32)
     SET( CPACK_NSIS_CONTACT "kjetil.olsen.lye@sintef.no" )
     SET(CPACK_PACKAGE_INSTALL_DIRECTORY "tinia-${version_number}")
     SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Akerselva")
-
     SET( CPACK_COMPONENTS_ALL 
          model
-         model-dev 
-  modelxml
-  modelxml-dev
-  jobcontroller
-  jobcontroller_dev
-  renderlist
-  renderlist-dev
-  renderlistgl
-  renderlistgl-dev
-  qtcontroller
- qtcontroller-dev
-  libtrell
-  libtrell-dev
-  mod_trell
-  )
+         model_dev   
+         jobcontroller
+         jobcontroller_dev
+         renderlist
+         renderlist_dev
+         renderlistgl
+         renderlistgl_dev
+         qtcontroller
+         qtcontroller_dev         
+    )
 ELSE()
     SET( CPACK_GENERATOR "DEB" )
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
