@@ -74,6 +74,10 @@ public:
      */
     void mouseReleaseEvent(QMouseEvent* event);
 
+    /** Will pass the event "keyPressEvent" in the scriptclass
+     */
+    void keyPressEvent(QKeyEvent* event);
+
 private:
     QScriptEngine& m_engine;
     ExposedModel m_scriptModel;

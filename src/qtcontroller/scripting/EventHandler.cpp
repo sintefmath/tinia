@@ -19,6 +19,7 @@
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 #include <tinia/qtcontroller/scripting/ScriptMouseEvent.hpp>
+#include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -94,6 +95,17 @@ void EventHandler::mouseReleaseEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
     auto error = m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
+                                                       QScriptValueList() << m_engine.newQObject(&scriptEvent));
+
+    if(error.isError()) {
+        throw std::runtime_error("Error in Script: " + error.toString().toStdString());
+    }
+}
+
+void EventHandler::keyPressEvent(QKeyEvent *event)
+{
+    KeyboardEvent scriptEvent(*event);
+    auto error = m_scriptHandler.property("keyPressEvent").call(m_scriptHandler,
                                                        QScriptValueList() << m_engine.newQObject(&scriptEvent));
 
     if(error.isError()) {
