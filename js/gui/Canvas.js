@@ -187,10 +187,25 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.connect(document,"onmouseup", dojo.hitch(this, this._mouseUpResize));
         dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
         
+        
+        // Keyboard press
+        this.domNode.setAttribute("tabindex", 0);
+        this.on("mousedown", dojo.hitch(this, function(event) { this.domNode.focus(); }));
+        this.on("keydown", dojo.hitch(this, this._keyPress));
 
     },
 
-
+    _keyPress : function(event) {
+        if(event.key === undefined) {
+            event.key = event.keyCode ? event.keyCode : event.charCode;
+        }
+        
+        for(var i = 0; i < this._eventHandlers.length; ++i) {
+            if(this._eventHandlers[i].keyPressEvent) {
+                this._eventHandlers[i].keyPressEvent(event);
+            }
+        }
+    },
 
     _placeImage : function() {
         this._img.style.top = (-this._height)+"px";
