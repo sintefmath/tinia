@@ -28,9 +28,9 @@ function FPSViewer( params ) {
     this._far = 1.0;
 
     var viewer = this._model.getElementValue(  this._key );
-    this._height = viewer.getElementValue( "height" );
     this._width = viewer.getElementValue( "width" );
-    this._aspect = this._height / this._width;
+    this._height = viewer.getElementValue( "height" );
+    this._aspect = this._width / this._height ;
 
     this.calculateMatrices();
 
@@ -42,25 +42,59 @@ FPSViewer.prototype = {
         console.log( event.key );
         var direction = vec3.create();
         var speed = 1;
+
+	console.log( "camPos before move: " + this._cameraPosition );
+	
         switch( event.key ){
-        case 87 : direction[2] = speed; break;  //w, move forward in z direction
-        case 83 : direction[2] = -speed; break;//s, back off mister
-        case 65 : direction[0] = speed; break;//a, move left on x-axis
-        case 68 : direction[0] = -speed; break;//moving right
+        case 87 : direction[2] = moveForward( speed ); break;  //w, move forward in z direction
+        case 83 : direction[2] = moveForward( -speed ); break;//s, back off mister
+        case 65 : direction[0] = moveHorizontal( speed ); break;//a, move left on x-axis
+        case 68 : direction[0] = moveHorizontal( -speed ); break;//moving right
         }
 
+	console.log( "camPos after  move: " + this._cameraPosition );
+        // direction = quat4.multiplyVec3( this._orientation, direction );
 
-        direction = quat4.multiplyVec3( this._orientation, direction );
+        // console.log( "rotate direction " + direction );
+        // console.log( "initial cameraPosition " + this._cameraPosition );
 
-        console.log( "rotate direction " + direction );
-        console.log( "initial cameraPosition " + this._cameraPosition );
+        // this._cameraPosition = vec3.add( this._cameraPosition, direction );
+        // this._lookAtPosition = vec3.add( this._lookAtPosition, direction );
 
-        this._cameraPosition = vec3.add( this._cameraPosition, direction );
-        this._lookAtPosition = vec3.add( this._lookAtPosition, direction );
+        // console.log( "updated cameraPosition " + this._cameraPosition );
+        // console.log( "updated lookAtPosition " + this._lookAtPosition );
 
-        console.log( "updated cameraPosition " + this._cameraPosition );
-        console.log( "updated lookAtPosition " + this._lookAtPosition );
         this.calculateMatrices();
+
+    },
+
+    moveHorizontal: function( speed ) {
+	console.log( "horizontal move:  "  + speed );
+	
+	var rightVec = vec3.create( this._modelView[0], this._modelView[4], this._modelView[8] );
+
+	console.log( "right vector:  " + rightVec );
+	
+	rightVec = vec3.scale( rightVec, speed );
+
+	console.log( "scaled right vector:  " + rightVec );
+	
+	this._cameraPosition = vec3.multiply( this._cameraPosition, rightVec );
+
+    },
+
+    moveForward: function( speed ) {
+	var forwardVec = vec3.create( this._modelView[1], this._modelView[5], this._modelView[9] );
+	forwardVec = vec3.scale( forwardVec, speed );
+	this._cameraPosition = vec3.multiply( this._cameraPosition, forwardVec );
+
+    },
+
+    moveVertical: function( speed ) {
+	var upVec = vec3.create( this._modelView[1], this._modelView[5], this._modelView[9] );
+	upVec = vec3.scale( upVec, speed );
+	this._cameraPosition = vec3.multiply( this._cameraPosition, upVec );
+
     },
 
     mousePressEvent : function( event ) {
@@ -96,12 +130,12 @@ FPSViewer.prototype = {
         this._modelView = mat4.translate( this._modelView, negCamPos );
         this._modelView = mat4.multiply(  this._modelView, quat4.toMat4( this._orientation ) );
         this._modelView = mat4.translate( this._modelView, this._cameraPosition);
-        this._modelView = mat4.translate( this._modelView, this._lookAtPosition );
+//        this._modelView = mat4.translate( this._modelView, this._lookAtPosition );
 
         var viewer = this._model.getElementValue( this._key );
-        this._height = viewer.getElementValue( "height" );
         this._width = viewer.getElementValue( "width" );
-        this._aspect = this._height / this._width;
+	this._height = viewer.getElementValue( "height" );
+	this._aspect = this._width / this._height ;
         this._projection = mat4.perspective( 90.0, this._aspect, this._near, this._far );
 
 
@@ -113,6 +147,29 @@ FPSViewer.prototype = {
         viewer.updateElement( "modelview", this._modelView );
         viewer.updateElement( "projection", this._projection );
         this._model.updateElement( this._key, viewer );
+    },
+
+
+//Based on the "Infinite Projection Matrix found in "The Graphics Codex" by Morgan McGuire
+    createInfiniteProjectionMatrix: function( fov, near ) {
+	proj = mat4.create( mat4.identity() );
+
+	var tanFov2 = Math.tan( fov / 2 );
+	var k = 1 / tanFov2;
+
+	proj[0] = this._aspect * k;
+	proj[2] = k / ( near * this._width );
+
+	proj[5] = k;
+	proj[6] = k / (near * this._height );
+
+	proj[10] = -1;
+	proj[11] = 2 * near;
+	
+	proj[14] = -1;
+	proj[15] = 0;
+
+	return proj;
     },
 
     //From DSRV.js
