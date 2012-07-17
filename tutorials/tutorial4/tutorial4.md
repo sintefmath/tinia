@@ -1,7 +1,7 @@
 Tutorial 4: Renderlists{#tut_tutorial4}
 ===
 
-In this tutorial we build upon [Tutorial 3](@ref tut_tutorial3) and build a more
+In this tutorial we build upon [Tutorial 2](@ref tut_tutorial2) and build a more
 complex graphical user interface using the Tinia framework.
 
 Familiarity with basic OpenGL and C++ with object orientation is assumed.
@@ -103,7 +103,10 @@ initialize GLEW at the right time
 \snippet Tutorial4_Job.hpp initGL
 
 ### Running the desktop program
-Starting the program should show something similar to this:
+To actually view the renderlist in the desktop program, you need to start
+the executable with the --renderlist option. In the lower left corner of
+the OpenGL canvas, you should have a pull down menu saying "Native Rendering",
+changing this to "Render List" should show something similar to this:
 \image html tutorial4_desktop.png "Screenshot of the desktop job from Tutorial4."
 
 
@@ -111,12 +114,13 @@ Starting the program should show something similar to this:
 If you've successfully installed Tinia you should be able to run the web program
 as `tutorial4_web` through the [mod_trell web interface](@ref sec_mod_trell_gui).
 
-The program should look something like this:
+The renderlist will show up whenever you hold your mousebutton
+down on the canvas. The program should look something like this:
 \image html tutorial4_web.png "Screenshot of the web job from Tutorial4."
 
 The full Job file
 ---
-All changes in this tutorail have been done in the Job file of the tutorial:
+All changes in this tutorial have been done in the Job file of the tutorial:
 \include Tutorial4_Job.hpp
 
 
