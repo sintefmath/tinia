@@ -3,6 +3,7 @@
 /** [headers]*/
 #include <tinia/tinia.hpp>
 #include <GL/glew.h>
+#include "Triangle.hpp"
 /** [headers]*/
 
 namespace tinia { namespace tutorial {
@@ -64,6 +65,15 @@ public:
                       unsigned int fbo,
                       const size_t width,
                       const size_t height );
+/** [renderlistdecl] */
+    renderlist::DataBase* getRenderList(const std::string &session,
+                                        const std::string &key);
+    /** [renderlistdecl] */
+
+    /** [initGL] */
+    bool initGL() { glewInit(); return true; }
+    /** [initGL] */
+
 private:
     /** [mlistener] */
     std::unique_ptr<Tutorial4Listener> m_listener;
@@ -145,13 +155,11 @@ Tutorial4Job::Tutorial4Job()
     /** [clistener] */
     m_listener.reset(new Tutorial4Listener(m_model));
     /** [clistener] */
-#if 0
     /** [buffer] */
-    double vertices[] = {
+    float vertices[] = {
                          0, 0, 0,
                          1, 0, 0,
-                         1, 1, 0,
-                         0, 0, 0
+                         1, 1, 0
                         };
     m_database.createBuffer("vertices")->set(vertices, 3*3);
     /** [buffer] */
@@ -169,11 +177,10 @@ Tutorial4Job::Tutorial4Job()
             "#ifdef GL_ES\n"
             "precision highp float;\n"
             "#endif\n"
-            "uniform vec3 color;\n"
             "void\n"
             "main()\n"
             "{\n"
-            "    gl_FragColor = vec4( color, 1.0 );\n"
+            "    gl_FragColor = vec4( 1,0,1, 1.0 );\n"
             "}\n";
     auto shader = m_database.createShader("shader");
     shader->setVertexStage(vertexShader);
@@ -188,7 +195,7 @@ Tutorial4Job::Tutorial4Job()
     /** [actionBuffer] */
     m_database.createAction<tinia::renderlist::SetInputs>("useBuffer")
             ->setShader("shader")
-            ->setinput("position", "vertices", 3);
+            ->setInput("position", "vertices", 3);
     /** [actionBuffer] */
 
     /** [actionMVP] */
@@ -199,22 +206,20 @@ Tutorial4Job::Tutorial4Job()
 
     /** [actionDraw] */
     m_database.createAction<tinia::renderlist::Draw>("draw")
-            ->setNonIndexed(tinia::renderlist::PRIMITIVE_LINES, 0, 4);
+            ->setNonIndexed(tinia::renderlist::PRIMITIVE_LINE_LOOP, 0, 3);
     /** [actionDraw] */
 
     /** [drawOrder] */
     m_database.drawOrderClear()
-            ->attachName("useShader")
-            ->attachName("useBuffer")
-            ->attachName("setUniforms")
-            ->attachName("draw");
+            ->drawOrderAdd("useShader")
+            ->drawOrderAdd("useBuffer")
+            ->drawOrderAdd("setUniforms")
+            ->drawOrderAdd("draw");
     /** [drawOrder] */
 
     /** [process] */
     m_database.process();
     /** [process] */
-#endif
-
 }
 /** [ctor]*/
 
@@ -263,5 +268,12 @@ bool Tutorial4Job::renderFrame( const std::string &session,
     /** [return] */
 }
 /** [renderframe] */
+
+/** [renderlistfunc] */
+renderlist::DataBase *Tutorial4Job::getRenderList(const std::string &session, const std::string &key)
+{
+    return &m_database;
+}
+/** [renderlistfunc] */
 } // of tutorial
 } // of tinia

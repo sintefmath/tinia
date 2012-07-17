@@ -40,10 +40,10 @@ FPSViewer.prototype = {
 
     keyPressEvent : function( event ) {
         console.log( event.key );
-        var direction = vec3.create();
         var speed = 1;
         switch( event.key ){
-        case 87 : direction[2] = speed; break;  //w, move forward in z direction
+        case 87 : direction[2] = speed; break;  //w, move forward in z directi
+            var direction = vec3.create();on
         case 83 : direction[2] = -speed; break;//s, back off mister
         case 65 : direction[0] = speed; break;//a, move left on x-axis
         case 68 : direction[0] = -speed; break;//moving right

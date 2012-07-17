@@ -87,7 +87,20 @@ Then we set up the draw order
 And finally we process the databaser
 \snippet Tutorial4_Job.hpp process
 
+### Exposing the renderlist
+To expose the renderlist to the controller, we need to implement the
+[getRenderList](@ref tinia::jobcontroller::OpenGLJob::getRenderList) method as
+such:
+\snippet Tutorial4_Job.hpp renderlistdecl
+\snippet Tutorial4_Job.hpp renderlistfunc
 
+### Initializing an OpenGL extension wrangler
+We want to view the renderlist in our desktop program, and to do this we
+need to use the `tinia::renderlist::gl` library. This library requires that we
+have our extension wrangler initialized, so we need to implement the
+[initGL](@ref tinia::jobcontroller::OpenGLJob::initGL) method in order to
+initialize GLEW at the right time
+\snippet Tutorial4_Job.hpp initGL
 
 ### Running the desktop program
 Starting the program should show something similar to this:
