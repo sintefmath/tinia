@@ -282,6 +282,12 @@ Renderer::render( unsigned int  fbo,
         (*it)->invoke( state );
         CHECK_GL;
     }
+
+    // Reset state back
+    /**
+     * \todo Review this. Do we want to do this here?
+     */
+    glUseProgram(0);
 }
 
 
