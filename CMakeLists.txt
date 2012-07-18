@@ -10,28 +10,24 @@ IF(NOT WIN32)
 ENDIF()
 
 IF(NOT WIN32)
-  OPTION( SERVER "Build mod_trell and related components?" ON)
+  OPTION( Tinia_SERVER "Build mod_trell and related components?" ON)
 ELSE()
-  OPTION( SERVER "Build mod_trell and related components?" OFF)
+  OPTION( Tinia_SERVER "Build mod_trell and related components?" OFF)
 ENDIF()
 
-OPTION( DESKTOP "Build qtcontroller?" ON)
+OPTION( Tinia_DESKTOP "Build qtcontroller?" ON)
 
 
-OPTION( EXTEND_CMAKE_MODULE_PATH
+OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
         ON )
-IF( EXTEND_CMAKE_MODULE_PATH )
+MARK_AS_ADVANCED( Tinia_EXTEND_CMAKE_MODULE_PATH )
+
+IF( Tinia_EXTEND_CMAKE_MODULE_PATH )
     SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                           ${CMAKE_SOURCE_DIR}/cmake/Modules
-                           "~/cmake/Modules"
-                           #"$ENV{HOMEPATH}/cmake/Modules"
-                           ${CMAKE_INSTALL_PREFIX}/share/cmake/Modules
-                           "C:/cmake/Modules"
-                           "../siut/cmakemacros"
-                           "../siut"
-                           "."
-    )
+                           ${CMAKE_SOURCE_DIR}/cmake/Modules )
+ENDIF()
+
 
 
 IF(WIN32)
@@ -39,11 +35,11 @@ IF(WIN32)
   ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
   ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
   SET(CMAKE_INSTALL_PREFIX CACHE INTERNAL "")
-  SET(CMAKE_PREFIX_PATH 
-	"$ENV{TINIA_3RDPARTY}/glm;$ENV{TINIA_3RDPARTY}/glew;$ENV{TINIA_3RDPARTY}/boost" )
+  #OPTION( TINIA_3RDPARTY_LOC "Location of Tinia 3rdparty" "$ENV{TINIA_3RDPARTY}" )
+  SET( Tinia_3RDPARTY_LOC $ENV{TINIA_3RDPARTY} CACHE PATH "Location of Tinia 3rdparty" )
+  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
+	"${Tinia_3RDPARTY_LOC}" )
 ENDIF()
-ENDIF( EXTEND_CMAKE_MODULE_PATH )
-
 
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
@@ -68,7 +64,7 @@ set(Boost_USE_STATIC_RUNTIME    OFF)
 FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
 
 ##### QT #####
-IF(${DESKTOP})
+IF(${Tinia_DESKTOP})
   FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript REQUIRED)
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
@@ -86,7 +82,7 @@ FIND_PACKAGE( OpenGL REQUIRED )
 FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 
-IF(${SERVER})
+IF(${Tinia_SERVER})
 
   FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
     HINTS "/usr/include/apache2" "/usr/include/httpd/" 
@@ -122,18 +118,18 @@ link_directories(
 )
 
 ADD_SUBDIRECTORY( "src/model" )
-IF(${SERVER})
+IF(${Tinia_SERVER})
   ADD_SUBDIRECTORY( "src/modelxml" )
 ENDIF()
 ADD_SUBDIRECTORY( "src/renderlist" )
 ADD_SUBDIRECTORY( "src/renderlistgl" )
 ADD_SUBDIRECTORY( "src/jobcontroller" )
-IF(${DESKTOP})
+IF(${Tinia_DESKTOP})
   ADD_SUBDIRECTORY( "js")
   ADD_SUBDIRECTORY( "src/qtcontroller" )
 
 ENDIF()
-IF(${SERVER})
+IF(${Tinia_SERVER})
   ADD_SUBDIRECTORY( "src/trell" )
   ADD_SUBDIRECTORY( "src/mod_trell" )
   ADD_SUBDIRECTORY( "src/trell_master" )
@@ -141,12 +137,12 @@ ENDIF()
 
 # Unit tests
 ADD_SUBDIRECTORY( "unittests/model/" )
-IF(${SERVER})
+IF(${Tinia_SERVER})
   ADD_SUBDIRECTORY( "unittests/modelxml/" )
 ENDIF()
 ADD_SUBDIRECTORY( "unittests/renderlist/" )
 ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
-IF(${DESKTOP})
+IF(${Tinia_DESKTOP})
    ADD_SUBDIRECTORY( "unittests/qtcontroller/" )
 ENDIF()
 
@@ -186,6 +182,8 @@ IF(WIN32)
          renderlistgl_dev
          qtcontroller
          qtcontroller_dev         
+         #simple_qt_job
+         #tinia_3rdparty 
     )
 ELSE()
     SET( CPACK_GENERATOR "DEB" )

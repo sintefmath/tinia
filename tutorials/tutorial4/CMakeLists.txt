@@ -1,7 +1,7 @@
 
 SET( tutorial_HEADERS "Tutorial4_Job.hpp" )
 
-IF(${DESKTOP})
+IF(${Tinia_DESKTOP})
 ADD_EXECUTABLE(tutorial4_desktop
     ${tutorial_HEADERS}
     tutorial4_desktop.cpp
@@ -22,7 +22,7 @@ ADD_EXECUTABLE(tutorial4_desktop
 ENDIF()
 
 
-IF(${SERVER})
+IF(${Tinia_SERVER})
   ADD_EXECUTABLE(tutorial4_web
     ${tutorial_HEADERS}
     tutorial4_web.cpp

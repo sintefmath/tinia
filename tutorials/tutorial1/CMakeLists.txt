@@ -1,9 +1,11 @@
 
 SET( tutorial_HEADERS "Tutorial1_Job.hpp" )
+SET( tutorial_DOC "tutorial1.md" )
 
-IF(${DESKTOP})
+IF(${Tinia_DESKTOP})
 ADD_EXECUTABLE(tutorial1_desktop
     ${tutorial_HEADERS}
+    ${tutorial_DOC}
     tutorial1_desktop.cpp
 )
   TARGET_LINK_LIBRARIES(tutorial1_desktop
@@ -22,7 +24,7 @@ ADD_EXECUTABLE(tutorial1_desktop
 ENDIF()
 
 
-IF(${SERVER})
+IF(${Tinia_SERVER})
   ADD_EXECUTABLE(tutorial1_web
     ${tutorial_HEADERS}
     tutorial1_web.cpp
