@@ -6,6 +6,29 @@ and open the template in the editor.
 <html>
     <head>
         <title></title>
+        <script type="text/javascript">
+    var dojoConfig = {
+        async: false,
+        packages: [
+            {
+                name: "model",
+                location: location.pathname.replace(/\/[^/]+$/, "") + "/model"
+            },
+            {
+                name: "renderlist",
+                location: location.pathname.replace(/\/[^/]+$/, "") + "/renderlist"
+            },
+            {
+                name: "gui",
+                location: location.pathname.replace(/\/[^/]+$/, "") + "/gui"
+            },
+            {
+                name: "3rdparty",
+                location: location.pathname.replace(/\/[^/]+$/, "") + "/3rdparty"
+            }
+        ]
+    };
+</script>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="dijit/themes/claro/claro.css" media="screen" />
         <link rel="stylesheet" href="css/text.css" />
@@ -15,18 +38,23 @@ and open the template in the editor.
         <script type="text/javascript" src="shared/gl-matrix.js"> </script>
         <script type="text/javascript" src="shared/DSRV.js"></script>
         <script type="text/javascript" src="getScript.js"></script>
-        <script src="compiled/dojo/dojo.js"></script>
+        
+        <!--<script src="compiled/dojo/dojo.js"></script>-->
+        <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.3/dojo/dojo.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.3/dijit/dijit.js"></script>
+        <link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dijit/themes/claro/claro.css"> 
+
         <script type="text/javascript">
-            
+            /*
              dojo.registerModulePath("model", "../../model");
              dojo.registerModulePath("gui", "../../gui");
              dojo.registerModulePath("3rdparty", "../../3rdparty");
              dojo.registerModulePath("renderlist", "../../renderlist");
-             
+             */
         </script>
         <script src="compiled/dojo/dijit/dijit-all.js"></script>
         <script type="text/javascript" src="release/dojo/dojo/model.js"></script>
-        <script src="model/layer.js"></script>
+        <!--<script src="model/layer.js"></script>-->
 
 
 
