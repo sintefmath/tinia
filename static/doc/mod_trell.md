@@ -27,11 +27,11 @@ not change anything, but hitting the
 this:
 \image html mod_trell_refresh.png "mod_trell is now running"
 
-A short note terminology
+A short note about terminology
 ---
 In Tinia, a program made through the Tinia framework is frequently referenced
 as a job. The idea being that a Job is a part of a complete program, the job
-itself is not a whole program by itself, but by using the Tinia framework
+is not a whole program by itself, but by using the Tinia framework
 components it becomes a full program.
 
 Starting a new program / job
@@ -46,7 +46,8 @@ any programs yet, this list is empty.
 To start a new program, we must write in a unique id in the "Job id" field. The
 id can be any (reasonable short) text without spaces. The executable field
 should be the name of the executable to be run. mod_trell will look for
-executable in the directory specified by the apache-httpd option `TrellAppRoot`.
+executables in the directory specified by the apache-httpd option
+`TrellAppRoot`.
 If you've installed tinia through the .deb package, this will be
 `/var/trell/apps`. For now, we'll use the simple test program `stest_job`.
 
@@ -64,7 +65,7 @@ up a new window showing something like this:
 ### Errors when starting a job
 If you didn't manage to start the job, you should check the
 text files
-`/tmp/<your_job_id>.stderr` and `/tmp/your_job_id>.stdout` for error messages.
+`/tmp/<your_job_id>.stderr` and `/tmp/<your_job_id>.stdout` for error messages.
 
 The most common error message is something similar to "Failed to open display
 ':0.0'". This typically stems from strict X restrictions. You can amend this
