@@ -1,6 +1,7 @@
 mod_trell web interface {#sec_mod_trell_gui}
 ============================================
-
+This guide assumes you've successfully
+[intalled mod_trell](@ref sec_mod_trell_install)
 The mod_trell web interface may seem a little uninviting at first, and it's
 probably not the most user friendly interface, but for simple testing purposes
 it works.
