@@ -269,8 +269,8 @@ The job can use this to get an update meant for the client. This version are for
 
 
    /**
-      Adds a listener to the StateSchema event. Note: The caller is responsible
-      for removing the listener upon deletion of the listener.
+      Adds a listener to the StateSchema event.
+      \note The caller is responsible for removing the listener upon deletion of the listener.
       */
    void addStateSchemaListener(StateSchemaListener* listener);
 
@@ -280,8 +280,8 @@ The job can use this to get an update meant for the client. This version are for
    void removeStateSchemaListener(StateSchemaListener* listener);
 
    /**
-      Adds a listener to the StateSchema event. Note: The caller is responsible
-      for removing the listener upon deletion of the listener.
+      Adds a listener to the StateSchema event.
+      \note The caller is responsible for removing the listener upon deletion of the listener.
       */
    void addStateSchemaListener(std::string key, StateSchemaListener* listener);
 
@@ -291,8 +291,8 @@ The job can use this to get an update meant for the client. This version are for
    void removeStateSchemaListener(std::string key, StateSchemaListener* listener);
 
    /**
-      Adds a listener to the State event. Note: The caller is responsible
-      for removing the listener upon deletion of the listener.
+      Adds a listener to the State event.
+      \note The caller is responsible for removing the listener upon deletion of the listener.
       */
    void addStateListener(StateListener* listener);
 
@@ -303,8 +303,8 @@ The job can use this to get an update meant for the client. This version are for
 
 
    /**
-      Adds a listener to the State event. Note: The caller is responsible
-      for removing the listener upon deletion of the listener.
+      Adds a listener to the State event.
+      \note The caller is responsible for removing the listener upon deletion of the listener.
       */
    void addStateListener(std::string key, StateListener* listener);
 
@@ -334,6 +334,7 @@ The job can use this to get an update meant for the client. This version are for
    /**
      Sets the GUI (represented by its root element) for the given device. Use
      model::gui::Device to specify this.
+     \note The ExposedModel takes ownership of the GUI, and handles deletion.
      */
    void setGUILayout(gui::Element *rootElement, int device);
 
