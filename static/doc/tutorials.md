@@ -14,3 +14,6 @@ more complex GUI.
 
 - \subpage tut_tutorial4 "Renderlists" introduces the use of renderlists to create
 a proxy geometry.
+
+- \subpage tut_tutorial5 "Specifying your own viewer controls" specifies how you
+can write your own input controls using Javascript.
