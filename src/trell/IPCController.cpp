@@ -109,7 +109,7 @@ void IPCController::addScript(const std::string &script)
 
 bool IPCController::onGetScripts(size_t &result_size, char *buffer, const size_t buffer_size)
 {
-    std::string header("// Scripts defined by the program.");
+    std::string header("");
     header.copy(buffer, buffer_size);
     buffer += header.size();
     result_size += header.size();
