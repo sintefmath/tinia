@@ -35,6 +35,8 @@ ENDIF()
 IF(${Tinia_SERVER})
   ADD_EXECUTABLE(tutorial5_web
     ${tutorial_HEADERS}
+    ${tutorial_JS_SOURCES}
+    ${tutorial_QRC_SOURCES}
     tutorial5_web.cpp
     )
 
