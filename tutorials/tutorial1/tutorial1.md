@@ -16,7 +16,9 @@ main file will be created for the desktop program, and one for the web program.
 
 The Job class
 ---
-The Job class defines the methods which will be called to interact with our program.
+The main component in a Tinia program is an a subclass of the [Job](@ref tinia::jobcontroller::Job)
+class.
+The subclass of the Job class defines the methods which will be called to interact with our program.
 
 We subclass [OpenGLJob](@ref tinia::jobcontroller::OpenGLJob) as we're going to make an OpenGL program.
 
