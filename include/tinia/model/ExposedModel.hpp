@@ -348,6 +348,9 @@ The job can use this to get an update meant for the client. This version are for
 
 private:
 
+   /** Checks if the GUI is valid, throws exceptions if it's not
+    */
+   void guiIsValid(gui::Element *rootElement);
    /**
     * Finds the element in the Model, throws if it isn't found
     */

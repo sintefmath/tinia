@@ -34,6 +34,8 @@
 #include "tinia/model/impl/utils.hpp"
 #include <tinia/model/exceptions/KeyNotFoundException.hpp>
 #include <tinia/model/exceptions/ExistingKeyException.hpp>
+#include <tinia/model/GUILayout.hpp>
+#include <tinia/model/impl/validateGUI.hpp>
 
 namespace tinia {
 namespace model {
@@ -420,6 +422,11 @@ model::gui::Element* model::ExposedModel::getGUILayout(model::gui::Device device
       makeDefaultGUILayout();
    }
    return m_gui;
+}
+
+void model::ExposedModel::guiIsValid(model::gui::Element *rootElement)
+{
+    model::impl::validateGUI(rootElement, *this);
 }
 
 model::impl::ElementData &model::ExposedModel::findElementInternal(const std::string &key)
