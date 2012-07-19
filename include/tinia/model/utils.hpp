@@ -26,13 +26,7 @@ namespace tinia { namespace model {
     `m_model->addElement("boundingbox", makeBoundingBoxString(0, 1, 0, 10, 10, 10)`
 */
 std::string makeBoundingBoxString(double minX, double minY, double minZ,
-                                  double maxX, double maxY, double maxZ)
-{
-    std::stringstream ss;
-    ss << minX << " " << minY << " " << minZ << " ";
-    ss << maxX << " " << maxY << " " << maxZ;
-    return ss.str();
-}
+                                  double maxX, double maxY, double maxZ);
 
 }
 }

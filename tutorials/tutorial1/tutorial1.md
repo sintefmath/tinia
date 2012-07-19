@@ -16,7 +16,9 @@ main file will be created for the desktop program, and one for the web program.
 
 The Job class
 ---
-The Job class defines the methods which will be called to interact with our program.
+The main component in a Tinia program is an a subclass of the [Job](@ref tinia::jobcontroller::Job)
+class.
+The subclass of the Job class defines the methods which will be called to interact with our program.
 
 We subclass [OpenGLJob](@ref tinia::jobcontroller::OpenGLJob) as we're going to make an OpenGL program.
 
@@ -36,7 +38,7 @@ not using proxy geometry for this tutorial, so we don't need to reimplement [get
 
 Every subclass of [Job](@ref tinia::jobcontroller::Job) has an instance of
 [ExposedModel](@ref tinia::model::ExposedModel) named [m_model](@ref tinia::jobcontroller::Job::m_model),
-hereby referenced to as the model. The model defines the variables which are exposed to the user interface.
+hereafter referenced to as the model. The model defines the variables which are exposed to the user interface.
 Some variables in the model will not be directly visible to user, others will typically be visible through
 GUI widgets such as textboxes and spinboxes.
 
@@ -57,13 +59,13 @@ to specify a GUI.
 ### Rendering OpenGL
 
 The method [renderFrame](@ref tinia::jobcontroller::OpenGLJob::renderFrame) will be called whenever there's a change in the model.
-This happens, for instance, when the user interacts with the mouse on the OpenGL canvas.
+This happens, for instance, when the user interacts with the OpenGL canvas using the mouse.
 
-In [renderFrame](@ref tinia::tutorial::Tutorial1Job::renderFrame) we first obtain the Viewer object we defined in the constructor.
+In our implementation of [renderFrame](@ref tinia::tutorial::Tutorial1Job::renderFrame) we first obtain the Viewer object we defined in the constructor.
 \snippet Tutorial1_Job.hpp viewer
 
 Objects of type [Viewer](@ref tinia::model::Viewer) contain the ModelView and Projection matrices. The matrices are stored as row-major in a `std::array<float, 16>`.
-You may treat the `data()` any way you'd like. In this example, we hand them directly to the `glLoadMatrixf` function, though a typical use would be to use
+You may treat the `data()` any way you'd like. In this example, we hand them directly to the `glLoadMatrixf` function, though a more typical use would be to use
 them as uniform values to a shader.
 
 \snippet Tutorial1_Job.hpp matrices

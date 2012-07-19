@@ -4,5 +4,6 @@
         <file>shared/gl-matrix.js</file>
         <file>shared/includes.txt</file>
         <file>shared/console.js</file>
+        <file>shared/utils.js</file>
     </qresource>
 </RCC>

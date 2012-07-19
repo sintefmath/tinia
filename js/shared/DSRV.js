@@ -57,22 +57,22 @@ function DSRV(parameters) {
             this.m_exposedModel.getElementValue(this.m_key).getElementValue("height"));
 
     // Handle updates to the boundingbox:
-    var DSRV_this = this;
-    this.m_exposedModel.addLocalListener(this.m_boundingBoxKey, function(key, bb) {
-        DSRV_this.updateBoundingBox(bb);
-        DSRV_this.updateMatrices();
-        DSRV_this.insertMatrices();
-    });
 
-    this.m_exposedModel.addLocalListener(this.m_key, function(key, viewer) {
+    this.m_exposedModel.addLocalListener(this.m_boundingBoxKey, tinia.hitch(this, function(key, bb) {
+        this.updateBoundingBox(bb);
+        this.updateMatrices();
+        this.insertMatrices();
+    }));
+
+    this.m_exposedModel.addLocalListener(this.m_key, tinia.hitch(this, function(key, viewer) {
         var height = viewer.getElementValue("height");
         var width = viewer.getElementValue("width");
-        if(height != DSRV_this.m_height || width != DSRV_this.m_width) {
-            DSRV_this.setSize(width, height);
-            DSRV_this.updateMatrices();
-            DSRV_this.insertMatrices();
+        if(height != this.m_height || width != this.m_width) {
+            this.setSize(width, height);
+            this.updateMatrices();
+            this.insertMatrices();
         }
-    });
+    }));
 
     this.updateMatrices();
     this.insertMatrices();

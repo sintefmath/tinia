@@ -16,29 +16,9 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/utils.hpp"
+#pragma once
 
-
-namespace tinia {
-namespace model {
-std::string makeBoundingBoxString(double minX, double minY, double minZ,
-                                  double maxX, double maxY, double maxZ)
-{
-    std::stringstream ss;
-    ss << minX << " " << minY << " " << minZ << " ";
-    ss << maxX << " " << maxY << " " << maxZ;
-    return ss.str();
-}
-}
-}
-
-
-
-
-
-
-
-
-
-
-
+namespace tinia { namespace model { namespace impl {
+void validateGUI(tinia::model::gui::Element* root,
+                 tinia::model::ExposedModel& model);
+}}}
