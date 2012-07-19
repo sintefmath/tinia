@@ -33,7 +33,6 @@ IF(${Tinia_SERVER})
     ${LIB_APR}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARIES}
-    ${Freeglut_LIBRARY}
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
     model 

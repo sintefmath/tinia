@@ -16,7 +16,6 @@ ADD_EXECUTABLE(tutorial1_desktop
     ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
-    ${Freeglut_LIBRARY}
     model
     jobcontroller
     ${Boost_LIBRARIES}
@@ -35,7 +34,6 @@ IF(${Tinia_SERVER})
     ${LIB_APR}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARIES}
-    ${Freeglut_LIBRARY}
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
     model 
