@@ -35,7 +35,7 @@ build
 # Qt generated stuff
 moc_*
 *.depends
-qrc_resources.cxx
+qrc_*.cxx
 
 # CMake generated stuff
 /CMakeFiles
