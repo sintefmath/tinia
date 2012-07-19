@@ -367,9 +367,7 @@ BOOST_FIXTURE_TEST_CASE(ExposedModelGUITestCase, ExposedModelFixture)
    canvasGrid->setChild(0,0, canvas);
    VerticalLayout* verticalLayout = new VerticalLayout;
    verticalLayout->setVisibilityKey( "myBool" );
-   verticalLayout->addChild(elemGroup);
-   verticalLayout->addChild(elemGroup);
-   verticalLayout->addChild(elemGroup);
+
    canvasGrid->setChild(1,0, verticalLayout);
    superLayout->addChild(canvasGrid);
 
