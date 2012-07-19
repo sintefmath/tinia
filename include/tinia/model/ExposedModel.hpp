@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POLICY_HPP
-#define POLICY_HPP
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -754,7 +753,5 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     }
 }
 } }
-
-#endif // POLICY_HPP
 
 
