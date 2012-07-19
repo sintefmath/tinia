@@ -1,7 +1,7 @@
 Tutorial 3: Specifying GUI (part 2){#tut_tutorial3}
 ===
 
-In this tutorial we build upon [Tutorial 2](@ref tut_tutorial2) and build a more
+In this tutorial we build upon [Tutorial 2](@ref tut_tutorial2) to create a more
 complex graphical user interface using the Tinia framework.
 
 Familiarity with basic OpenGL and C++ with object orientation is assumed.
@@ -21,7 +21,7 @@ User input through Tinia
 With the exception of layout and spacing widgets (e.g.
 [HorizontalLayout](@ref tinia::model::gui::HorizontalLayout) and
 [HorizontalExpandingSpace](@ref tinia::model::gui::HorizontalExpandingSpace))
-most GUI widgets in Tinia passes user information to the exposed model.
+most GUI widgets in Tinia pass user information to the exposed model.
 
 A [TextInput](@ref tinia::model::gui::TextInput) for instance, takes the text
 the user has entered in and hands it over to the exposed model. The exposed
@@ -51,8 +51,8 @@ The first argument to this method is the key, the second is the current value, t
 value for the element, the fourth is the maximum allowed value for the element.
 \snippet Tutorial3_Job.hpp constrained
 
-Notice that we add our elements as `int`, and the model is able to deduce the
-type automatically.
+Notice that we add our elements as `int`, and the compiler is able to deduce the
+type automatically as an int.
 
 Listeners to ExposedModel
 ---
@@ -80,7 +80,7 @@ upon deletion of the listener, hence we need the following destructor in the lis
 
 Finally we write the [stateElementModified](@ref tinia::model::StateListener::stateElementModified)
 method. This method firsts gets the three scalars, then create the new boundingbox as a string
-and lastly updates the boundingbox to the model.
+and lastly updates the boundingbox in the model.
 \snippet Tutorial3_Job.hpp stateelementmodified
 
 We store our listener in the [Tutorial3Job](@ref tinia::tutorial3::Tutorial3Job)
@@ -109,16 +109,16 @@ in the model
 Then we create the three labels
 \snippet Tutorial3_Job.hpp label
 
-Finally create a [Grid](@ref tinia::model::gui::Grid) layout with size 3 times 3
+Finally we create a [Grid](@ref tinia::model::gui::Grid) layout with size 3 times 3
 to hold our six widgets plus 3
-[HorizontalExpandingSpace](@ref tinia::model::gui::HorizontalExpandingSpace)s spacers.
-Finally we add the grid
+[HorizontalExpandingSpace](@ref tinia::model::gui::HorizontalExpandingSpace)s spacers,
+then add this grid
 to the main layout:
 \snippet Tutorial3_Job.hpp grid
 
-Modification to the renderloop
+Modification to the render oop
 ---
-We only need to make small modifications to the renderloop. First we need to get
+We only need to make small modifications to the render loop. First we need to get
 the scalars
 \snippet Tutorial3_Job.hpp getscalars
 
@@ -139,7 +139,7 @@ The program should look something like this:
 
 The full Job file
 ---
-All changes in this tutorail have been done in the Job file of the tutorial:
+All changes in this tutorial have been done in the Job file of the tutorial:
 \include Tutorial3_Job.hpp
 
 

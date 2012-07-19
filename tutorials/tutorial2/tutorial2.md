@@ -1,8 +1,8 @@
 Tutorial 2: Specifying GUI (part 1){#tut_tutorial2}
 ===
 
-In this tutorial we build upon [Tutorial 1](@ref tut_tutorial1) and build a more
-complex graphical user interface using the Tinia framework.
+In this tutorial we build upon [Tutorial 1](@ref tut_tutorial1)
+to create a more complex graphical user interface using the Tinia framework.
 
 Familiarity with basic OpenGL and C++ with object orientation is assumed.
 
@@ -19,7 +19,7 @@ idea to brush up on that tutorial before reading this one.
 GUI through Tinia
 ---
 The [ExposedModel](@ref tinia::model::ExposedModel) class has the method
-[setGUILayout](@ref tinia::model::ExposedModel::setGUILayout) which will be use
+[setGUILayout](@ref tinia::model::ExposedModel::setGUILayout) which is used
 to specify how we want our GUI to look.
 
 In the eyes of the model, a GUI is just a tree of widget types defined in the
@@ -47,7 +47,7 @@ The constructor takes the key to the [Viewer](@ref tinia::model::Viewer) as
 the first value.
 \snippet Tutorial2_Job.hpp canvas
 
-In the previous tutorial we relied on the fact that Tinia defaults the boundinbox
+In the previous tutorial we relied on the fact that Tinia defaults the boundingbox
 key to "boundingbox", but it's good practice to specify this manually to the
 [Canvas](@ref tinia::model::gui::Canvas). This is done with the following line
 \snippet Tutorial2_Job.hpp boundingbox
@@ -56,8 +56,8 @@ Once we've made our new [Canvas](@ref tinia::model::gui::Canvas) it's just the
 simple matter of adding it to the VerticalLayout
 \snippet Tutorial2_Job.hpp add
 
-And at last we set our layout as the GUI to the model. Notice how the second argument
-is `tinia::model::gui::ALL` which indicates that the GUI could be used
+Finally we set our layout as the GUI to the model. Notice how the second argument
+is `tinia::model::gui::ALL` which indicates that the GUI can be used
 for all types of devices (desktops, mobile devices, tablets):
 \snippet Tutorial2_Job.hpp setgui
 
