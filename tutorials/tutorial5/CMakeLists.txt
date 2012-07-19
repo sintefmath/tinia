@@ -42,6 +42,8 @@ IF(${Tinia_SERVER})
     ${RT}
     ${LIB_APR}
     ${GLEW_LIBRARY}
+    ${QT_LIBRARIES}
+    ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${Freeglut_LIBRARY}
     ${Boost_LIBRARIES} 
