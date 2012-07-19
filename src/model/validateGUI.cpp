@@ -107,6 +107,7 @@ void isValid( tinia::model::gui::Container1D<T>* root,
 
 }
 
+
 template<typename T>
 void isValid( tinia::model::gui::Container0D<T>* root,
              tinia::model::ExposedModel& model) {
@@ -116,11 +117,19 @@ void isValid( tinia::model::gui::Container0D<T>* root,
 
 }
 
+
+void isValid( tinia::model::gui::Tab* root, tinia::model::ExposedModel& model)  {
+    auto container =  dynamic_cast<tinia::model::gui::Container0D<tinia::model::gui::Element>*>(root);
+    if(container != NULL) {
+        isValid(container, model);
+    }
+}
+
 template<typename T>
 void isValid( tinia::model::gui::Container2D<T>* root,
               tinia::model::ExposedModel& model) {
-    for(size_t i = 0; i < root->width(); ++i) {
-        for(size_t j = 0; j <root->height(); ++j) {
+    for(size_t i = 0; i < root->height(); ++i) {
+        for(size_t j = 0; j <root->width(); ++j) {
             if(root->child(i, j) == NULL) {
                 continue;
             }
@@ -221,8 +230,9 @@ struct CheckGUI {
 void validateGUI(tinia::model::gui::Element *root,
                  tinia::model::ExposedModel& model) {
     using namespace tinia::model::gui;
-    typedef boost::mpl::vector<Container1D<Tab>, Container1D<Element>,
-            Container0D<Element>, Container2D<Element>, KeyValue, Button,
+    typedef boost::mpl::vector<TabLayout, HorizontalLayout, VerticalLayout,
+            Grid, Tab, ElementGroup,
+            KeyValue, Button,
             CheckBox, RadioButtons, ComboBox, SpinBox, DoubleSpinBox,
             HorizontalSlider, Canvas, TextInput> guiTypes;
     CheckGUI f(root, model);
