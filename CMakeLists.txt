@@ -160,7 +160,7 @@ ADD_SUBDIRECTORY( "tutorials/tutorial1/")
 ADD_SUBDIRECTORY( "tutorials/tutorial2/")
 ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 ADD_SUBDIRECTORY( "tutorials/tutorial4/")
-#ADD_SUBDIRECTORY( "tutorials/tutorial5/")
+ADD_SUBDIRECTORY( "tutorials/tutorial5/")
 
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
