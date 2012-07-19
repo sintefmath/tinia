@@ -8,9 +8,9 @@
 namespace tinia { namespace tutorial {
 
 /** [class] */
-class Tutorial5Job : public tinia::jobcontroller::OpenGLJob {
+class FPSViewer : public tinia::jobcontroller::OpenGLJob {
 public:
-    Tutorial5Job();
+    FPSViewer();
 
     bool renderFrame( const std::string &session,
                       const std::string &key,
@@ -23,7 +23,7 @@ private:
 /** [class]*/
 
 /** [ctor] */
-Tutorial5Job::Tutorial5Job()
+FPSViewer::FPSViewer()
 {
     m_model->addElement( "myViewer", tinia::model::Viewer() );
     m_model->addElement("boundingbox", "-2 -2 -2 2 2 2");
@@ -98,7 +98,7 @@ void DrawCube(float size) {
  glEnd(); }
 
 /** [renderframe] */
-bool Tutorial5Job::renderFrame( const std::string &session,
+bool FPSViewer::renderFrame( const std::string &session,
                                 const std::string &key,
                                 unsigned int fbo,
                                 const size_t width,

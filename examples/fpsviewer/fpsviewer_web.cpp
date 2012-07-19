@@ -1,5 +1,5 @@
 
-#include "Tutorial5_Job.hpp"
+#include "fpsviewer_job.hpp"
 /** [headers] */
 #include "tinia/trell/IPCGLJobController.hpp"
 /** [headers] */
@@ -7,7 +7,7 @@
 /** [main] */
 int main(int argc, char** argv) {
     /** [job] */
-    tinia::tutorial::Tutorial5Job job;
+    tinia::tutorial::FPSViewer job;
     /** [job] */
 
     /** [controller] */

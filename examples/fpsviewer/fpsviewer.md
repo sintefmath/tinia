@@ -1,4 +1,4 @@
-Tutorial 5: Specifying your own viewer controls {#tut_tutorial5}
+Example: Specifying your own viewer controls {#example_fpsviewer}
 ===
 
 In this tutorial we build upon [Tutorial 3](@ref tut_tutorial3) and 
