@@ -1,5 +1,5 @@
 /** [headers] */
-#include "Tutorial5_Job.hpp"
+#include "fpsviewer_job.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include <QFile>
 #include <string>
@@ -9,7 +9,7 @@
 /** [main] */
 int main(int argc, char** argv) {
     /** [job] */
-    tinia::tutorial::Tutorial5Job job;
+    tinia::tutorial::FPSViewer job;
     /** [job] */
 
     /** [controller] */
