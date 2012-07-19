@@ -20,6 +20,7 @@
 #include <cstring>
 #include "tinia/trell/IPCJobController.hpp"
 #include "tinia/model/ExposedModelLock.hpp"
+#include "tinia/model/impl/xml/XMLHandler.hpp"
 
 // This should not be included here, but will be fixed when interface is
 // cleaned up (that is when IPCJobController is rinsed of all opengl-methods)

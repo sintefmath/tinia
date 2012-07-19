@@ -19,9 +19,12 @@
 #pragma once
 #include "IPCController.hpp"
 #include "tinia/jobcontroller/Job.hpp"
-#include "tinia/model/impl/xml/XMLHandler.hpp"
+
 
 namespace tinia {
+namespace model { namespace impl { namespace xml {
+class XMLHandler;
+}}}
 namespace trell {
 
 
