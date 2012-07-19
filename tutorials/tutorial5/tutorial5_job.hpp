@@ -13,12 +13,14 @@ namespace tinia { namespace tutorial5 {
 struct WindowCoord {
     int x, y;
 
+    /** [WindowCoordCtor] */
     explicit WindowCoord( std::string& xy ) {
         std::istringstream buffer( xy );
         
         buffer >> x;
         buffer >> y;              
     }
+    /** [WindowCoordCtor] */
 };
 
 struct RelativeCoord {
@@ -31,20 +33,13 @@ struct RelativeCoord {
 };
 
 struct ImageCoord {
-    int x, y;
+    int x, y;    
 
-    int textureSize;
-
-    ImageCoord( const RelativeCoord& relativeCoord, const int textureSize ) 
-        : textureSize( textureSize )
+    ImageCoord( const RelativeCoord& relativeCoord, const int textureSize )        
     {
         x = static_cast<int>( relativeCoord.x * textureSize );
         y = static_cast<int>( relativeCoord.y * textureSize );
-    }
-
-    int arrayPos() const {
-        return y * textureSize + x;
-    }
+    }    
 };
 
 /** [declaration] */
@@ -66,8 +61,7 @@ public:
 private:
     void generateTexture();
     void colorPixel( const ImageCoord& imageCoord );    
-    bool validPos( int pos );
-
+  
     GLuint m_texName;
     static const unsigned int m_textureSize = 256;        
 };
@@ -98,10 +92,10 @@ TextureDrawer::TextureDrawer() {
     m_model->setGUILayout(layout, tinia::model::gui::ALL);
     /** [setgui] */        
     
-    /** [setupclicck] */
+    /** [setupclick] */
     m_model->addElement( "click_xy", "0 0");    
     m_model->addStateListener( "click_xy", this );
-    /** [setupclicck] */       
+    /** [setupclick] */       
 }
 /** [ctor]*/
 
@@ -110,22 +104,27 @@ TextureDrawer::~TextureDrawer() {
 
 }
 
+/** [initGL] */
 bool TextureDrawer::initGL () {
     glewInit();
     generateTexture ();
 
     return true;
 }
+/** [initGL] */
 
+/** [stateElementModified] */
 void TextureDrawer::stateElementModified ( tinia::model::StateElement *stateElement ) {
     auto xy = m_model->getElementValue<std::string>( "click_xy" );    
 
     WindowCoord windowCoord( xy );      
-    RelativeCoord relativeCoord( windowCoord,  m_model->getElementValue<tinia::model::Viewer> ( "myViewer" ) );
+    RelativeCoord relativeCoord( windowCoord,  
+        m_model->getElementValue<tinia::model::Viewer> ( "myViewer" ) );
     ImageCoord imageCoord( relativeCoord, m_textureSize );
 
     colorPixel( imageCoord );
 }
+/** [stateElementModified] */
 
 
 void TextureDrawer::generateTexture() {
@@ -145,26 +144,15 @@ void TextureDrawer::generateTexture() {
         0, GL_RGBA, GL_FLOAT, texData.data() );     
 }
 
-bool TextureDrawer::validPos( int pos ) {
-    if ( pos >= 0 && pos < m_textureSize * m_textureSize ) {
-        return true;
-    } else {
-        return false;
-    }
-}
+/** [colorPixel] */
 void TextureDrawer::colorPixel( const ImageCoord& imageCoord ) {
-    auto pos = imageCoord.arrayPos();
-
-    if ( validPos( pos ) ) {            
-        glm::vec4 v( 1.0, 0.0, 0.0, 1.0 );
-
-        glTexSubImage2D ( GL_TEXTURE_2D, 0,
-            imageCoord.x, imageCoord.y, 1, 1, 
-            GL_RGBA, GL_FLOAT, &v );            
-    }
+    glm::vec4 v( 1.0, 0.0, 0.0, 1.0 );
+    
+    glTexSubImage2D ( GL_TEXTURE_2D, 0,
+                     imageCoord.x, imageCoord.y, 1, 1, 
+                     GL_RGBA, GL_FLOAT, &v );                
 }
-
-
+/** [colorPixel] */
 
 
 /** [renderframe] */
