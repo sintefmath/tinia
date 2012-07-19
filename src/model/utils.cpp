@@ -16,11 +16,19 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tinia/model/impl/utils.hpp"
+#include "tinia/model/utils.hpp"
+
 
 namespace tinia {
 namespace model {
-
+std::string makeBoundingBoxString(double minX, double minY, double minZ,
+                                  double maxX, double maxY, double maxZ)
+{
+    std::stringstream ss;
+    ss << minX << " " << minY << " " << minZ << " ";
+    ss << maxX << " " << maxY << " " << maxZ;
+    return ss.str();
+}
 }
 }
 
