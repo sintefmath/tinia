@@ -85,15 +85,6 @@ in the image-space which we can update.
 \snippet tutorial5_job.hpp stateElementModified 
 
 
-
-
-
-
-
-
-
-
-
 The complete TextureDrawer file
 -------------------------------
 \include tutorial5_job.hpp
