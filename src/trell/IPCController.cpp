@@ -115,8 +115,8 @@ bool IPCController::onGetScripts(size_t &result_size, char *buffer, const size_t
     result_size += header.size();
     for(size_t i = 0; i < m_scripts.size(); ++i) {
         m_scripts[i].copy(buffer, buffer_size);
-        buffer += m_scripts[i].size() + "\n";
-        result_size += m_scripts[i].size() + 1;
+        buffer += m_scripts[i].size();
+        result_size += m_scripts[i].size();
         if(result_size > buffer_size) {
             return false;
         }
