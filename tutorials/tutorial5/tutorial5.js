@@ -1,12 +1,8 @@
-function TextureDrawer( params ) {
-    console.log("Constructing Texturedrawer");
-
-    this._model = params.exposedModel;
-    //this._key = params.key;
-    //var viewer = this._model.getElementValue(this._key);
+function MouseClickResponder( params ) {
+    this._model = params.exposedModel;    
 }
 
-TextureDrawer.prototype = {
+MouseClickResponder.prototype = {
     mousePressEvent: function (event) {        
         this.updateModel(event.relativeX, event.relativeY);
 
@@ -19,6 +15,4 @@ TextureDrawer.prototype = {
     updateModel: function (relX, relY) {
         this._model.updateElement("click_xy", relX + " " + relY);        
     }
-
-
 }

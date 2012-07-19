@@ -47,55 +47,29 @@ struct ImageCoord {
     }
 };
 
+/** [declaration] */
 class TextureDrawer : public tinia::jobcontroller::OpenGLJob,
                       public tinia::model::StateListener
+/** [declaration] */
 {
 public:
     TextureDrawer();
     ~TextureDrawer();
 
+/** [overrides] */
     bool renderFrame( const std::string &session, const std::string &key,
                      unsigned int fbo, const size_t width, const size_t height );
     
     bool initGL();
-
-    void stateElementModified ( tinia::model::StateElement *stateElement )  {        
-        auto xy = m_model->getElementValue<std::string>( "click_xy" );    
-
-        WindowCoord windowCoord( xy );      
-        RelativeCoord relativeCoord( windowCoord,  m_model->getElementValue<tinia::model::Viewer> ( "myViewer" ) );
-        ImageCoord imageCoord( relativeCoord, m_textureSize );
-        
-        colorPixel( imageCoord );
-    }
-
+    void stateElementModified ( tinia::model::StateElement *stateElement );
+/** [overrides] */
 private:
     void generateTexture();
-    void colorPixel( const ImageCoord& imageCoord ) {
-        auto pos = imageCoord.arrayPos();
-
-        if ( validPos( pos ) ) {
-            m_texData[pos] = glm::vec4( 1.0, 0.0, 0.0, 0.0 );
-            uploadTexture();
-        }
-    }
-
-    void uploadTexture() {
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, m_textureSize, m_textureSize,
-            0, GL_RGBA, GL_FLOAT, m_texData.data() ); 
-    }
-
-    bool validPos( int pos ) {
-        if ( pos >= 0 && pos < m_texData.size() ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
+    void colorPixel( const ImageCoord& imageCoord );    
+    bool validPos( int pos );
 
     GLuint m_texName;
-    static const unsigned int m_textureSize = 256;
-    std::array<glm::vec4, m_textureSize * m_textureSize> m_texData;       
+    static const unsigned int m_textureSize = 256;        
 };
 
 /** [ctor] */
@@ -109,7 +83,7 @@ TextureDrawer::TextureDrawer() {
 
     /** [canvas] */
     auto canvas = new tinia::model::gui::Canvas("myViewer");
-    canvas->setViewerType( std::string("TextureDrawer") );
+    canvas->setViewerType( std::string("MouseClickResponder") );
     /** [canvas] */
 
     /** [boundingbox] */
@@ -127,7 +101,6 @@ TextureDrawer::TextureDrawer() {
     /** [setupclicck] */
     m_model->addElement( "click_xy", "0 0");    
     m_model->addStateListener( "click_xy", this );
-
     /** [setupclicck] */       
 }
 /** [ctor]*/
@@ -144,18 +117,55 @@ bool TextureDrawer::initGL () {
     return true;
 }
 
+void TextureDrawer::stateElementModified ( tinia::model::StateElement *stateElement ) {
+    auto xy = m_model->getElementValue<std::string>( "click_xy" );    
+
+    WindowCoord windowCoord( xy );      
+    RelativeCoord relativeCoord( windowCoord,  m_model->getElementValue<tinia::model::Viewer> ( "myViewer" ) );
+    ImageCoord imageCoord( relativeCoord, m_textureSize );
+
+    colorPixel( imageCoord );
+}
+
+
 void TextureDrawer::generateTexture() {
+    std::array<glm::vec4, m_textureSize * m_textureSize> texData;
+    glm::vec4 defaultColor( 0.4, 0.6, 0.7, 1.0 );
+
+    std::fill( std::begin( texData ), std::end( texData ), defaultColor );
+
     glGenTextures ( 1, &m_texName );
     glBindTexture ( GL_TEXTURE_2D, m_texName );    
-    
-    std::fill( std::begin( m_texData ), std::end( m_texData ), glm::vec4( 0.5, 0.5, 0.7, 1.0 ) );
-    
+
     // Mandatory on Nvidia-hardware
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     
-    uploadTexture ();    
+    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, m_textureSize, m_textureSize,
+        0, GL_RGBA, GL_FLOAT, texData.data() );     
 }
+
+bool TextureDrawer::validPos( int pos ) {
+    if ( pos >= 0 && pos < m_textureSize * m_textureSize ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+void TextureDrawer::colorPixel( const ImageCoord& imageCoord ) {
+    auto pos = imageCoord.arrayPos();
+
+    if ( validPos( pos ) ) {            
+        glm::vec4 v( 1.0, 0.0, 0.0, 1.0 );
+
+        glTexSubImage2D ( GL_TEXTURE_2D, 0,
+            imageCoord.x, imageCoord.y, 1, 1, 
+            GL_RGBA, GL_FLOAT, &v );            
+    }
+}
+
+
+
 
 /** [renderframe] */
 bool TextureDrawer::renderFrame( const std::string &session,
