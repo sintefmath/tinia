@@ -45,4 +45,14 @@
 /** @namespace tinia::renderlist Provides classes necessary to use the \ref RenderListLibrary. */
 
 /** @page RenderListLibrary RenderList
- *  RenderList is a library used for building and manipulating OpenGL and WebGL state. */
+ *  RenderList is a library used for building and manipulating OpenGL and WebGL state.
+ *
+ * In Tinia, the RenderList is mainly used to represent a proxy geometry. This proxy
+ * geometry is supposed to be a light weight representation of a heavy geometry.
+ *
+ * The main component in the RenderList library is the
+ * [DataBase](@ref tinia::renderlist::DataBase) class. The DataBase consists of
+ * buffers, shaders, actions and a draw order.
+ *
+ * For a nice introduction on how to use renderlists, consult [Tutorial 4](@ref tut_tutorial4).
+ */

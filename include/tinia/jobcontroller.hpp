@@ -33,5 +33,13 @@
  * The Job Controller framework specifies the interfaces needed to create a Tinia-based
  * application. It has several interfaces depending on the use-case of the
  * application, and can easily be extended if need be. Typical interfaces are
- * QTObserver for a desktop job and TrellObserver for cloud jobs.
+ * QTObserver for a desktop job and TrellObserver for cloud jobs, found in the
+ * qtobserver and trell module respectively.
+ *
+ * A user typically want to subclass either
+ * [Job](@ref tinia::jobcontroller::Job) or
+ * [OpenGLJob](@ref tinia::jobcontroller::OpenGLJob). To run the program, he then
+ * creates a new instance of this subclass, and hands it to the controller using
+ * the [setJob](@ref tinia::jobcontroller::Controller::setJob) method, then calls
+ * the [run](@ref tinia::jobcontroller::Controller::run) method.
  */
