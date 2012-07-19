@@ -412,6 +412,7 @@ void model::ExposedModel::fireStateElementModified(std::string key,
   */
 void model::ExposedModel::setGUILayout(model::gui::Element *rootElement, int device)
 {
+    guiIsValid(rootElement);
    m_gui = rootElement;
 }
 
