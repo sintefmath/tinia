@@ -98,8 +98,11 @@ IF(${Tinia_SERVER})
     PATHS "/usr/lib/"
     )
     
-  SET(APR_INCLUDE_DIR   "/usr/include/apr-1.0"
-    "/usr/include/apr-1")
+  FIND_PATH(APR_INCLUDE_DIR "apr.h"
+HINTS   "/usr/include/apr-1.0"
+        "/usr/include/apr-1"
+        "apr-1/"
+        "apr-1.0")
 ENDIF()
 
 include_directories( "./include" 
