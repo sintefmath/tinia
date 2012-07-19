@@ -1,16 +1,6 @@
 FILE( GLOB modelxmlSrc "*.cpp" )
 FILE( GLOB modelxmlHeaders "../../include/tinia/impl/xml/*.hpp" )
 
-SET( CPACK_GENERATOR "DEB" )
-SET( CPACK_PACKAGE_NAME "modelxml" )
-SET( CPACK_DEBIAN_PACKAGE_NAME "modelxml" )
-SET( CPACK_PACKAGE_VERSION ${version_number} )
-SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
-SET( CPACK_COMPONENTS_ALL libraries headers )
-SET( CPACK_COMPONENT_HEADERS_DEPENDS libraries )
-SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
-include ( CPack )
-
 ADD_LIBRARY( modelxml ${modelxmlSrc} ${modelxmlHeaders})
 
 TARGET_LINK_LIBRARIES( modelxml ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES})
