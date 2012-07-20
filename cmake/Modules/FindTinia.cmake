@@ -156,7 +156,7 @@ IF( ${tinia_SERVER} )
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/modelxml"
-"$ENV{HOME}/projects/tinia/build/src/modelxml"
+    "$ENV{HOME}/projects/tinia/build/src/modelxml"
     "$ENV{HOME}/lib/"
     "$ENV{HOME}/install/lib/"
     "${tinia_ROOT}/lib/"
@@ -171,7 +171,7 @@ IF( ${tinia_SERVER} )
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/trell"
-"$ENV{HOME}/projects/tinia/build/src/trell"
+    "$ENV{HOME}/projects/tinia/build/src/trell"
     "$ENV{HOME}/lib/"
     "$ENV{HOME}/install/lib/"
     "${tinia_ROOT}/lib/"
@@ -234,7 +234,6 @@ SET(TINIA_LIBRARIES
   ${GLEW_LIBRARY}
   ${tinia_RenderList_LIBRARY}
   ${tinia_RenderListGL_LIBRARY}
-  ${tinia_GLEW_LIBRARY}
 )
 
 IF(${tinia_DESKTOP})
@@ -243,7 +242,7 @@ IF(${tinia_DESKTOP})
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
     ${tinia_qtcontroller_LIBRARY}
-
+    ${GLEW_LIBRARY}
     )
  SET(TINIA_INCLUDE_DIRS}
     ${TINIA_INCLUDE_DIRS}
