@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_RADIOBUTTONS_HPP
-#define QTOBSERVER_RADIOBUTTONS_HPP
+#pragma once
 #include <QGroupBox>
 #include <QRadioButton>
 #include <QList>
@@ -60,4 +59,3 @@ private:
 }
 }
 }
-#endif // QTOBSERVER_RADIOBUTTONS_HPP

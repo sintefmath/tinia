@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_MAINWINDOW_HPP
-#define QTOBSERVER_MAINWINDOW_HPP
+#pragma once
 
 #include <QMainWindow>
 namespace tinia {
@@ -40,4 +39,3 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_MAINWINDOW_HPP

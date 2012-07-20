@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATESCHEMALISTENERHANDLER_HPP
-#define STATESCHEMALISTENERHANDLER_HPP
+#pragma once
 #include <list>
 #include <map>
 #include <vector>
@@ -47,4 +46,4 @@ private:
 }
 }
 }
-#endif // STATESCHEMALISTENERHANDLER_HPP
+

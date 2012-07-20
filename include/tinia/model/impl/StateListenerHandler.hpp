@@ -16,8 +16,8 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATELISTENERHANDLER_HPP
-#define STATELISTENERHANDLER_HPP
+#pragma once
+
 #include "tinia/model/StateListener.hpp"
 #include <vector>
 #include <string>
@@ -47,4 +47,4 @@ private:
 }
 }
 }
-#endif // STATELISTENERHANDLER_HPP
+

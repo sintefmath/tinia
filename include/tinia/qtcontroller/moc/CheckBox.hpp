@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_CHECKBOX_HPP
-#define QTOBSERVER_CHECKBOX_HPP
+#pragma once
 
 #include <QCheckBox>
 #include <tinia/model/ExposedModel.hpp>
@@ -54,4 +53,3 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_CHECKBOX_HPP

@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATESCHEMALISTENER_HPP
-#define STATESCHEMALISTENER_HPP
+#pragma once
 #include "tinia/model/StateSchemaElement.hpp"
 
 namespace tinia {
@@ -34,4 +33,4 @@ public:
 };
 }
 }
-#endif // STATESCHEMALISTENER_HPP
+

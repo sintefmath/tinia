@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FILEDIALOGBUTTON_HPP
-#define FILEDIALOGBUTTON_HPP
+#pragma once
 
 #include <QPushButton>
 #include <tinia/model/ExposedModel.hpp>
@@ -48,4 +47,3 @@ private:
 }
 }
 }
-#endif // FILEDIALOGBUTTON_HPP

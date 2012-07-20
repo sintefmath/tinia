@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once
 #include <string>
 #include <tinia/model/ExposedModel.hpp>
 #include <memory>
@@ -33,4 +32,4 @@ std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> mod
 }
 }
 }
-#endif // UTILS_HPP
+

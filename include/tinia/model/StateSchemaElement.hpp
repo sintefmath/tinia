@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATESCHEMAELEMENT_HPP
-#define STATESCHEMAELEMENT_HPP
+#pragma once
 #include "tinia/model/impl/ElementData.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <unordered_map>
@@ -113,4 +112,4 @@ void model::StateSchemaElement::getMinConstraint(T& t) const
 }
 }
 }
-#endif // STATESCHEMAELEMENT_HPP
+

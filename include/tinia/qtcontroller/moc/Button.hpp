@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_BUTTON_HPP
-#define QTOBSERVER_BUTTON_HPP
+#pragma once
 
 #include <QPushButton>
 #include <tinia/model/ExposedModel.hpp>
@@ -49,4 +48,4 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_BUTTON_HPP
+

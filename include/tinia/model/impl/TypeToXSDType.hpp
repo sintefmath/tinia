@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TYPETOXSDTYPE_HPP
-#define TYPETOXSDTYPE_HPP
+#pragma once
 
 #include <string>
 #include "tinia/model/Viewer.hpp"
@@ -126,4 +125,4 @@ TypeToXSDType<T>::getTypenameDetail() {
 }
 }
 }
-#endif // TYPETOXSDTYPE_HPP
+

@@ -16,9 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POLICY_FILE_HPP
-#define POLICY_FILE_HPP
-
+#pragma once
 #include <iostream>
 #include <sstream>
 
@@ -45,4 +43,3 @@ std::ostream& operator<<(std::ostream& stream, const File& file);
 std::istream& operator>>(std::istream& stream, File& file);
 }
 }
-#endif // POLICY_FILE_HPP

@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VIEWER_HPP
-#define VIEWER_HPP
+#pragma once
 
 #include <array>
 #include <algorithm>
@@ -61,4 +60,4 @@ struct Viewer {
 
 }
 }
-#endif // VIEWER_HPP
+

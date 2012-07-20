@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_HORIZONTALSLIDER_HPP
-#define QTOBSERVER_HORIZONTALSLIDER_HPP
+#pragma once
 
 #include <QWidget>
 #include <QSlider>
@@ -61,4 +60,4 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_HORIZONTALSLIDER_HPP
+

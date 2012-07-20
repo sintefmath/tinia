@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_ELEMENTGROUP_HPP
-#define QTOBSERVER_ELEMENTGROUP_HPP
+#pragma once
 
 #include <QGroupBox>
 #include "tinia/model/ExposedModel.hpp"
@@ -50,4 +49,4 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_ELEMENTGROUP_HPP
+

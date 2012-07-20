@@ -16,8 +16,8 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATEELEMENT_HPP
-#define STATEELEMENT_HPP
+#pragma once
+
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/ElementDataFactory.hpp"
 #include <boost/shared_ptr.hpp>
@@ -55,4 +55,4 @@ void StateElement::getValue(T& t) const
 }
 }
 }
-#endif // STATEELEMENT_HPP
+

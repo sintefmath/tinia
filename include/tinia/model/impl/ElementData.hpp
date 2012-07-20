@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ELEMENTDATA_HPP
-#define ELEMENTDATA_HPP
+#pragma once
 
 #include <string>
 #include <unordered_set>
@@ -238,4 +237,3 @@ ElementData::getMinConstraint(T& t) const {
 }
 }
 }
-#endif // ELEMENTDATA_HPP

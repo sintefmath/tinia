@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_RADIOBUTTON_HPP
-#define QTOBSERVER_RADIOBUTTON_HPP
+#pragma once
 
 #include <QRadioButton>
 #include "tinia/model/ExposedModel.hpp"
@@ -53,4 +52,3 @@ private:
 }
 } // namespace qtcontroller
 } // namespace tinia
-#endif // QTOBSERVER_RADIOBUTTON_HPP

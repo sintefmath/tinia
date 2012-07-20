@@ -16,9 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_HPP
-#define UTILS_HPP
-
+#pragma once
 #include <string>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
@@ -97,7 +95,7 @@ void print(const boost::property_tree::basic_ptree<T, U> &pt) {
 }
 }
 }
-#endif // UTILS_HPP
+
 
 
 

@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_GUIBUILDER_HPP
-#define QTOBSERVER_GUIBUILDER_HPP
+#pragma once
 #include "tinia/model/GUILayout.hpp"
 #include "tinia/model/ExposedModel.hpp"
 #include "QTController.hpp"
@@ -112,4 +111,4 @@ private:
 
 }
 }
-#endif // QTOBSERVER_GUIBUILDER_HPP
+

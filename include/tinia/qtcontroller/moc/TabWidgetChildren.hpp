@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_TABWIDGETCHILDREN_HPP
-#define QTOBSERVER_TABWIDGETCHILDREN_HPP
+#pragma once
 
 #include <QWidget>
 #include <QTableWidget>
@@ -51,4 +50,3 @@ private:
 }
 } // namespace qtcontroller
 } // of namespace tinia
-#endif // QTOBSERVER_TABWIDGETCHILDREN_HPP

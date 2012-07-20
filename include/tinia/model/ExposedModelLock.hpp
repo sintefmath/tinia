@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef POLICY_POLICYLOCK_HPP
-#define POLICY_POLICYLOCK_HPP
+#pragma once
 #include "boost/thread.hpp"
 #include "tinia/model/ExposedModel.hpp"
 #include <memory>
@@ -38,4 +37,4 @@ private:
 
 } // namespace model
 } // namespace tinia
-#endif // POLICY_POLICYLOCK_HPP
+

@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ELEMENTDATAFACTORY_HPP
-#define ELEMENTDATAFACTORY_HPP
+#pragma once
 
 #include <vector>
 #include <string>
@@ -160,4 +159,4 @@ ElementDataFactory::createMatrix( const ElementData& elementData, float* matrixD
 }
 }
 }
-#endif // ELEMENTDATAFACTORY_HPP
+

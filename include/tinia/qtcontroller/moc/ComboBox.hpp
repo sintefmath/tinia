@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_COMBOBOX_HPP
-#define QTOBSERVER_COMBOBOX_HPP
+#pragma once
 
 #include <QComboBox>
 #include <QStringList>
@@ -63,4 +62,4 @@ private:
 } // namespace qtcontroller
 } // namespace tinia
 
-#endif // QTOBSERVER_COMBOBOX_HPP
+

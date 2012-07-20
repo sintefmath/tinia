@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef QTOBSERVER_DOUBLESPINBOX_HPP
-#define QTOBSERVER_DOUBLESPINBOX_HPP
+#pragma once
 
 #include <QDoubleSpinBox>
 #include "tinia/model/ExposedModel.hpp"
@@ -55,4 +54,3 @@ private:
 }
 }
 }
-#endif // QTOBSERVER_DOUBLESPINBOX_HPP

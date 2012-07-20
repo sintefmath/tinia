@@ -16,8 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATELISTENER_HPP
-#define STATELISTENER_HPP
+#pragma once
 #include "tinia/model/StateElement.hpp"
 #include <memory>
 
@@ -41,4 +40,4 @@ public:
 };
 }
 }
-#endif // STATELISTENER_HPP
+
