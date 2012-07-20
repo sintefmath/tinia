@@ -22,7 +22,7 @@ INSTALL( TARGETS mod_trell
 )
 
 INSTALL( FILES ../../config/mod_trell.load ../../config/mod_trell.conf
-  DESTINATION /etc/apache2/mods-available
+  DESTINATION share/tinia/conf
   PERMISSIONS WORLD_READ OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
   COMPONENT mod_trell
 )
