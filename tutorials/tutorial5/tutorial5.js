@@ -8,10 +8,6 @@ MouseClickResponder.prototype = {
 
     },
 
-    mouseMoveEvent: function (event) {        
-        this.updateModel(event.relativeX, event.relativeY);
-    },
-
     updateModel: function (relX, relY) {
         this._model.updateElement("click_xy", relX + " " + relY);        
     }
