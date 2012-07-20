@@ -84,6 +84,18 @@ in the image-space which we can update.
 
 \snippet tutorial5_job.hpp stateElementModified 
 
+Running the program
+-------------------
+
+You should now be able to launch the program like in the previous tutorials.
+
+As you click in the window in either application, you will color
+that pixel white. We have now a bare bones pixel editor up and running!
+
+\image html tutorial5_desktop.png "Screenshot of the desktop job from Tutorial 5".
+
+\image html tutorial5_web.png "Screenshot of the web job from Tutorial 5".
+
 
 The complete TextureDrawer file
 -------------------------------
