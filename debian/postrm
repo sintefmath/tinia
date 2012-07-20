@@ -5,4 +5,4 @@ rm -f /etc/apache2/mods-enabled/mod_trell.conf
 rm -f /etc/apache2/mods-available/mod_trell.load
 rm -f /etc/apache2/mods-available/mod_trell.conf
 service apache2 restart
-rm -rf /var/trell
+rm -rf /usr/var/trell
