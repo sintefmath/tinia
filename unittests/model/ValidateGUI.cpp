@@ -16,6 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/mpl/list.hpp>
 #include <boost/test/unit_test.hpp>
 #include <tinia/model.hpp>
 #include <tinia/model/impl/validateGUI.hpp>
