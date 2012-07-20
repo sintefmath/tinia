@@ -85,6 +85,9 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
     }
 
     setFocusPolicy(Qt::ClickFocus);
+
+    // Enable mouse movement tracking even when not holding mousebutton.
+    setMouseTracking(true);
 }
 
 Canvas::~Canvas()
