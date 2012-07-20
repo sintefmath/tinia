@@ -25,6 +25,7 @@ Ubuntu packages (with dependencies) from Ubuntu 12.04:
 - libapr1-dev
 - cmake
 - libboost-all-dev
+- apache2 (For server module)
 - apache2-dev (For server module).
 - build-essential
 
