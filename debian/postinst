@@ -3,7 +3,7 @@ ln -sf /etc/apache2/mods-available/mod_trell.load /etc/apache2/mods-enabled/mod_
 ln -sf /etc/apache2/mods-available/mod_trell.conf /etc/apache2/mods-enabled/mod_trell.conf
 service apache2 restart
 echo "Installing test_job"
-ln -sf /usr/var/trell/apps/test_job/bin/test_job /var/trell/apps/stest_job
+ln -sf /usr/var/trell/apps/test_job/bin/test_job /usr/var/trell/apps/stest_job
 #echo "Getting JavaScript components"
 #old_dir=`pwd`
 #cd /var/trell/js/
