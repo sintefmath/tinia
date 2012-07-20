@@ -63,7 +63,7 @@ private:
     void colorPixel( const ImageCoord& imageCoord );    
   
     GLuint m_texName;
-    static const unsigned int m_textureSize = 256;        
+    static const unsigned int m_textureSize = 64;
 };
 
 /** [ctor] */
@@ -129,7 +129,7 @@ void TextureDrawer::stateElementModified ( tinia::model::StateElement *stateElem
 
 void TextureDrawer::generateTexture() {
     std::array<glm::vec4, m_textureSize * m_textureSize> texData;
-    glm::vec4 defaultColor( 0.4, 0.6, 0.7, 1.0 );
+    glm::vec4 defaultColor( 0x88/256., 0xbf/256., 0xdb/256., 1.0 );
 
     std::fill( std::begin( texData ), std::end( texData ), defaultColor );
 
@@ -146,11 +146,11 @@ void TextureDrawer::generateTexture() {
 
 /** [colorPixel] */
 void TextureDrawer::colorPixel( const ImageCoord& imageCoord ) {
-    glm::vec4 v( 1.0, 0.0, 0.0, 1.0 );
+    glm::vec4 drawColor( 1.0, 1.0, 1.0, 1.0 );
     
     glTexSubImage2D ( GL_TEXTURE_2D, 0,
                      imageCoord.x, imageCoord.y, 1, 1, 
-                     GL_RGBA, GL_FLOAT, &v );                
+                     GL_RGBA, GL_FLOAT, &drawColor );
 }
 /** [colorPixel] */
 
