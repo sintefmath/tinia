@@ -226,10 +226,11 @@ SET(TINIA_INCLUDE_DIRS
 
 
 SET(TINIA_LIBRARIES
-  ${tinia_policy_LIBRARY}
-  ${tinia_jobobserver_LIBRARY}
+  ${Boost_LIBRARIES}
+  ${GLEW_LIBRARY}
+  ${tinia_model_LIBRARY}
   ${tinia_jobcontroller_LIBRARY}
-  ${BOOST_LIBRARIES}
+
   ${OPENGL_LIBRARIES}
   ${GLEW_LIBRARY}
   ${tinia_RenderList_LIBRARY}
