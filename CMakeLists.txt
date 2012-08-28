@@ -65,10 +65,11 @@ FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread 
 
 ##### QT #####
 IF(${Tinia_DESKTOP})
-  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript REQUIRED)
+  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript QtNetwork REQUIRED)
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
   SET(QT_USE_QTXML TRUE)
+    SET(QT_USE_QTNETWORK TRUE)
   SET(QT_USE_QTSCRIPT TRUE)
   QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
   QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})

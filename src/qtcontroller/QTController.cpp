@@ -20,6 +20,7 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
+#include "tinia/qtcontroller/moc/HTTPServer.hpp"
 #include <tinia/qtcontroller/scripting/utils.hpp>
 #include <QApplication>
 #include <QLayout>
@@ -96,6 +97,7 @@ int QTController::run(int argc, char **argv)
 
     m_main_window.reset( new QMainWindow() );
 
+    HTTPServer server(m_app.get());
     // Now we may init the script.
     tiniaInitResources();
     initScript();
