@@ -50,7 +50,7 @@ function DSRV(parameters) {
 
     this.m_beginDirection = vec3.create();
 
-    this.m_translateZ = 4;
+    this.m_translateZ = 2;
 
     // Get width and height:
     this.setSize(this.m_exposedModel.getElementValue(this.m_key).getElementValue("width"),
@@ -170,7 +170,7 @@ DSRV.prototype = {
 
         // --- set up modelview matrix
         this.m_modelview = mat4.identity(mat4.create());
-        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, -this.m_translateZ]);
+        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, 0*this.m_translateZ]);
         this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation) );
         this.m_modelview = mat4.translate(this.m_modelview,
                                           [-0.5*(bbmin[0]+bbmax[0]),
