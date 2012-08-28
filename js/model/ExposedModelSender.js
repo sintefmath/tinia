@@ -20,7 +20,7 @@ dojo.provide("model.ExposedModelSender");
 dojo.require("model.ExposedModelBuilder");
 
 dojo.declare("model.ExposedModelSender", null, {
-    constructor : function(urlHandler, modelLib) {
+    constructor : function(urlHandler, modelLib) {
         this._urlHandler = urlHandler;
         this._modelLib = modelLib;
         this._modelLib.addListener(this.update, this);

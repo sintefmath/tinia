@@ -19,6 +19,8 @@ signals:
 private slots:
     void readyRead();
     void discardClient();
+private:
+    QString getStaticContent(const QString& uri);
 };
 
 }

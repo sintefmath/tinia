@@ -222,7 +222,7 @@ dojo.declare("model.StateSchemaParser", model.XMLHelper, {
 
         if(enumerations && enumerations.length > 0) {
 
-            var restrictionList = [];
+            var restrictionList = [];
             for (var i = 0; i < enumerations.length; i++) {
                 restrictionList[i] = dojo.attr(enumerations[i], "value");
             }
@@ -401,7 +401,7 @@ dojo.declare("model.GUIParser", model.XMLHelper, {
                     if(this.isGUIElement(rowElement.childNodes[j])) {
                         var cellElement = rowElement.childNodes[j];
                         for(var k = 0; k < cellElement.childNodes.length; k++) {
-                            if(this.isGUIElement(cellElement.childNodes[k])) {
+                            if(this.isGUIElement(cellElement.childNodes[k])) {
                                 grid.setChild(row, col, this.makeGUIElement(cellElement.childNodes[k]));
                             }
                         }
@@ -431,7 +431,7 @@ dojo.declare("model.GUIParser", model.XMLHelper, {
         }
         
         for(var i = 0; i < xml.childNodes.length; i++) {
-            if(this.isGUIElement(xml.childNodes[i])) {
+            if(this.isGUIElement(xml.childNodes[i])) {
                 container.addChild(this.makeGUIElement(xml.childNodes[i]));
             }
         }

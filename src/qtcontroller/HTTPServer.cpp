@@ -18,8 +18,11 @@
 
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
 #include "tinia/qtcontroller/impl/http_utils.hpp"
+#include <stdexcept>
+#include <iostream>
 #include <QStringList>
 #include <QDateTime>
+#include <QFile>
 
 namespace tinia {
 namespace qtcontroller {
@@ -49,23 +52,33 @@ void HTTPServer::readyRead()
     QTcpSocket* socket = (QTcpSocket*)sender();
     if (socket->canReadLine()) {
         auto line = QString(socket->readLine());
+        std::cout << line.toStdString() << std::endl;
         if (isGet(line)) {
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
-            os << "HTTP/1.1 200 Ok\r\n"
-                  "Content-Type: text/html; charset=\"utf-8\"\r\n"
-                  "\r\n"
-                  "<h1>Nothing to see here</h1>\n<hr />\n"
-               << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
+
+            try {
+                os << getStaticContent(getRequestURI(line)) <<"\n";
+            } catch(std::invalid_argument& e) {
+                os << "HTTP/1.1 404 Not Found\r\n"
+                      "Content-Type: text/html; charset=\"utf-8\"\r\n"
+                      "\r\n";
+                  os << "<h1>Nothing to see here</h1>\n<hr />\n"
+                    << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
                   << line;
 
+                  while(socket->canReadLine()) {
+                      auto line = QString(socket->readLine());
+                      os << line<<"<br />\n";
+                  }
 
-            while(socket->canReadLine()) {
-                auto line = QString(socket->readLine());
-                os << line<<"<br />\n";
+                  os<< QDateTime::currentDateTime().toString() << "\n";
+                  std::cout << "Not found: " << line.toStdString() << std::endl;
             }
 
-            os<< QDateTime::currentDateTime().toString() << "\n";
+
+
+
             socket->close();
 
 
@@ -82,6 +95,20 @@ void HTTPServer::discardClient()
     QTcpSocket* socket = (QTcpSocket*)sender();
     socket->deleteLater();
 
+}
+
+QString HTTPServer::getStaticContent(const QString &uri)
+{
+    QFile file(":/javascript" + uri);
+    if(file.open(QIODevice::ReadOnly)) {
+        QString reply =QString("HTTP/1.0 200 Ok\r\n") +
+                QString("Content-Type: ") + getMimeType(uri) +
+                QString("; charset=\"utf-8\"\r\n \n\n") + file.readAll() + "\n";
+        return reply;
+    }
+    else {
+        throw std::invalid_argument("File not found: " + uri.toStdString());
+    }
 }
 
 }

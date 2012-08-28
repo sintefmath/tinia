@@ -210,7 +210,7 @@ dojo.declare("model.ExposedModel", null, {
             context = null;
         }
         if(!this._localListeners[key]) {
-            this._localListeners[key] = [];
+            this._localListeners[key] = [];
         }
         this._localListeners[key][this._localListeners[key].length] = dojo.hitch(context, func);
     },
