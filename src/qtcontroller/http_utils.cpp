@@ -47,5 +47,19 @@ QString getMimeType(const QString& file) {
     return extensions[extension];
 }
 
+QMap<QString, QString> decodeGetParameters(const QString& request) {
+    auto params = request.split('?')[1].split('&');
+    QMap<QString, QString> keyValue;
+    for(auto i = 0u; i < params.size(); ++i) {
+        auto split = params[i].split('=');
+        if(split.size()==1) {
+            keyValue[split[0]] = "";
+        } else if(split.size() > 1){
+            keyValue[split[0]] = split[1];
+        }
+
+    }
+    return keyValue;
+}
 
 }}}
