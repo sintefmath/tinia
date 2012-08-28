@@ -17,11 +17,13 @@
  */
 
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
+#include "tinia/qtcontroller/impl/http_utils.hpp"
 #include <QStringList>
 #include <QDateTime>
 
 namespace tinia {
 namespace qtcontroller {
+namespace impl {
 
 HTTPServer::HTTPServer(QObject *parent) :
     QTcpServer(parent)
@@ -30,29 +32,40 @@ HTTPServer::HTTPServer(QObject *parent) :
     qDebug("Started");
 }
 
-void HTTPServer::request(int socket)
+void HTTPServer::incomingConnection(int socket)
 {
+    qDebug("HTTPServer: request");
 
     QTcpSocket* s = new QTcpSocket(this);
-    connect(s, SIGNAL(readyRead()), this, SLOT(readClient()));
+    connect(s, SIGNAL(readyRead()), this, SLOT(readyRead()));
     connect(s, SIGNAL(disconnected()), this, SLOT(discardClient()));
     s->setSocketDescriptor(socket);
 
 }
 
-void HTTPServer::readClient()
+void HTTPServer::readyRead()
 {
+    qDebug("HTTPServer: receiving");
     QTcpSocket* socket = (QTcpSocket*)sender();
     if (socket->canReadLine()) {
-        QStringList tokens = QString(socket->readLine()).split(QRegExp("[ \r\n][ \r\n]*"));
-        if (tokens[0] == "GET") {
+        auto line = QString(socket->readLine());
+        if (isGet(line)) {
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
-            os << "HTTP/1.0 200 Ok\r\n"
+            os << "HTTP/1.1 200 Ok\r\n"
                   "Content-Type: text/html; charset=\"utf-8\"\r\n"
                   "\r\n"
-                  "<h1>Nothing to see here</h1>\n"
-               << QDateTime::currentDateTime().toString() << "\n";
+                  "<h1>Nothing to see here</h1>\n<hr />\n"
+               << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
+                  << line;
+
+
+            while(socket->canReadLine()) {
+                auto line = QString(socket->readLine());
+                os << line<<"<br />\n";
+            }
+
+            os<< QDateTime::currentDateTime().toString() << "\n";
             socket->close();
 
 
@@ -61,7 +74,16 @@ void HTTPServer::readClient()
             }
         }
     }
+
 }
 
+void HTTPServer::discardClient()
+{
+    QTcpSocket* socket = (QTcpSocket*)sender();
+    socket->deleteLater();
+
+}
+
+}
 } // namespace qtcontroller
 } // namespace tinia

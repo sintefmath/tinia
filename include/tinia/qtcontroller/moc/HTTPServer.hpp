@@ -4,6 +4,7 @@
 
 namespace tinia {
 namespace qtcontroller {
+namespace impl {
 
 class HTTPServer : public QTcpServer
 {
@@ -11,14 +12,16 @@ class HTTPServer : public QTcpServer
 public:
     explicit HTTPServer(QObject *parent = 0);
 
-    void request(int socket);
+    void incomingConnection(int socket);
     
 signals:
     
 private slots:
-    void readClient();
+    void readyRead();
+    void discardClient();
 };
 
+}
 } // namespace qtcontroller
 } // namespace tinia
 
