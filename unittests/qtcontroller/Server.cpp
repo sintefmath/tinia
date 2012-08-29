@@ -70,4 +70,15 @@ BOOST_AUTO_TEST_CASE(ParseGet) {
     BOOST_CHECK_THROW(tinia::qtcontroller::impl::parseGet<boost::tuple<unsigned int>>(params, "keyNotInThere"), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(PostContent) {
+    QString content = "POST /login.jsp HTTP/1.1\r\n"
+            "Host: www.mysite.com\r\n"
+            "User-Agent: Mozilla/4.0\r\n"
+            "Content-Length: 27\r\n"
+            "Content-Type: application/x-www-form-urlencoded\r\n"
+            "\r\n"
+            "CONTENT HERE";
+    BOOST_CHECK_EQUAL("CONTENT HERE", tinia::qtcontroller::impl::getPostContent(content).toStdString());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

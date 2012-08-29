@@ -63,4 +63,9 @@ QMap<QString, QString> decodeGetParameters(const QString& request) {
     return keyValue;
 }
 
+QString getPostContent(const QString& request) {
+    return request.mid(request.indexOf(QRegExp("\r\n[ ]*\r\n"))).trimmed();
+}
+
+
 }}}
