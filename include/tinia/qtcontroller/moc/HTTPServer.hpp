@@ -37,14 +37,17 @@ private:
 
     void updateState(QTextStream& os, const QString& request);
 
+    void getRenderList(QTextStream& os, const QString& request);
+
     /** Writes the error code to the stream formated as HTTP requires,
      * with the optional message formated in HTML
      */
     void errorCode(QTextStream& os, unsigned int code, const QString& msg);
     QString getStaticContent(const QString& uri);
 
-    tinia::jobcontroller::Job* m_job;
+
     tinia::model::impl::xml::XMLHandler m_xmlHandler;
+    tinia::jobcontroller::Job* m_job;
 };
 
 }

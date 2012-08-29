@@ -18,6 +18,7 @@
 
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
 #include "tinia/qtcontroller/impl/http_utils.hpp"
+#include "tinia/renderlist.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <QStringList>
@@ -32,7 +33,7 @@ namespace qtcontroller {
 namespace impl {
 
 HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, QObject *parent) :
-    QTcpServer(parent), m_xmlHandler(job->getExposedModel())
+    QTcpServer(parent), m_xmlHandler(job->getExposedModel()), m_job(job)
 {
     listen(QHostAddress::Any, 8080);
     qDebug("Started");
@@ -107,8 +108,7 @@ bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
             return true;
         }
         else if(file == "/getRenderList.xml") {
-            auto arguments = parseGet<boost::tuple<unsigned int> > (params, "revision");
-            auto revision = arguments.get<0>();
+            getRenderList(os, request);
             return true;
         }
         else if(file == "/getExposedModelUpdate.xml") {
@@ -134,12 +134,15 @@ void HTTPServer::getPolicyUpdate(QTextStream &os, const QString &request)
     std::cout <<"Getting policyupdate" << std::endl;
     try {
         auto params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(request), "revision");
-        char buffer[5000];
-        m_xmlHandler.getExposedModelUpdate(buffer, 5000, params.get<0>());
+        char buffer[5000000];
+        m_xmlHandler.getExposedModelUpdate(buffer, 5000000, params.get<0>());
         os << httpHeader("application/xml")<<"\n";
         os << QString(buffer)<< "\n";
     } catch(std::invalid_argument e) {
-        errorCode(os, 400, e.what());
+        char buffer[5000000];
+        m_xmlHandler.getExposedModelUpdate(buffer, 5000000, 0);
+        os << httpHeader("application/xml")<<"\n";
+        os << QString(buffer)<< "\n";
     }
 }
 
@@ -147,6 +150,23 @@ void HTTPServer::updateState(QTextStream &os, const QString &request)
 {
     std::string content = getPostContent(request).toStdString();
     m_xmlHandler.updateState(content.c_str(), content.size());
+}
+
+void HTTPServer::getRenderList(QTextStream &os, const QString &request)
+{
+    auto params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
+    os << httpHeader("application/xml") << "\n";
+    tinia::jobcontroller::OpenGLJob* openglJob = dynamic_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
+    if(openglJob) {
+        auto db = openglJob->getRenderList("session", params.get<0>());
+        if(db) {
+            std::string list = renderlist::getUpdateXML( db,
+                                                         renderlist::ENCODING_JSON,
+                                                         params.get<1>() );
+            os << QString(list.c_str()) << "\n";
+        }
+
+    }
 }
 
 void HTTPServer::errorCode(QTextStream &os, unsigned int code, const QString &msg)
