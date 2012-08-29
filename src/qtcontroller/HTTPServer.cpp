@@ -54,34 +54,13 @@ void HTTPServer::readyRead()
     qDebug("HTTPServer: receiving");
     QTcpSocket* socket = (QTcpSocket*)sender();
     if (socket->canReadLine()) {
-        //auto request = socket->readAll();
-        auto line = QString(socket->readLine());
-        std::cout << line.toStdString() << std::endl;
-        if (isGetOrPost(line)) {
+        auto request = socket->readAll();
+        if (isGetOrPost(request)) {
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
-
-            try {
-                os << getStaticContent(getRequestURI(line)) <<"\n";
-            } catch(std::invalid_argument& e) {
-                os << "HTTP/1.1 404 Not Found\r\n"
-                      "Content-Type: text/html; charset=\"utf-8\"\r\n"
-                      "\r\n";
-                os << "<h1>Nothing to see here</h1>\n<hr />\n"
-                   << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
-                   << line;
-
-                while(socket->canReadLine()) {
-                    auto line = QString(socket->readLine());
-                    os << line<<"<br />\n";
-                }
-
-                os<< QDateTime::currentDateTime().toString() << "\n";
-                std::cout << "Not found: " << line.toStdString() << std::endl;
+            if(!handleNonStatic(os, getRequestURI(request), request)) {
+                os << getStaticContent(getRequestURI(request)) << "\n";
             }
-
-
-
 
             socket->close();
 
@@ -110,24 +89,36 @@ bool HTTPServer::isStatic(const QString &file)
 bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
                                  const QString& request)
 {
+    std::cout << file.toStdString() << std::endl;
+    std::cout << "======================"<<std::endl;
+    std::cout << request.toStdString()<< std::endl;
+    std::cout << "=======================" <<std::endl;
     auto params = decodeGetParameters(request);
 
     try {
-        if(file == "snapshot.txt") {
+        if(file == "/snapshot.txt") {
             auto arguments =
                     parseGet<boost::tuple<unsigned int, unsigned int, std::string> >(params, "width height key");
             auto width = arguments.get<0>();
             auto height = arguments.get<1>();
             auto key = arguments.get<2>();
+
+            updateState(os, request);
             return true;
         }
-        else if(file == "getRenderList.xml") {
+        else if(file == "/getRenderList.xml") {
             auto arguments = parseGet<boost::tuple<unsigned int> > (params, "revision");
             auto revision = arguments.get<0>();
             return true;
         }
-        else if(file == "getPolicyUpdate.xml") {
-
+        else if(file == "/getExposedModelUpdate.xml") {
+            getPolicyUpdate(os, request);
+            return true;
+        }
+        else if(file =="/updateState.xml") {
+            updateState(os, request);
+            os << httpHeader("application/xml")<<"\n";
+            return true;
         }
 
     } catch(std::invalid_argument& e) {
@@ -138,9 +129,24 @@ bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
     return false;
 }
 
+void HTTPServer::getPolicyUpdate(QTextStream &os, const QString &request)
+{
+    std::cout <<"Getting policyupdate" << std::endl;
+    try {
+        auto params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(request), "revision");
+        char buffer[5000];
+        m_xmlHandler.getExposedModelUpdate(buffer, 5000, params.get<0>());
+        os << httpHeader("application/xml")<<"\n";
+        os << QString(buffer)<< "\n";
+    } catch(std::invalid_argument e) {
+        errorCode(os, 400, e.what());
+    }
+}
+
 void HTTPServer::updateState(QTextStream &os, const QString &request)
 {
-
+    std::string content = getPostContent(request).toStdString();
+    m_xmlHandler.updateState(content.c_str(), content.size());
 }
 
 void HTTPServer::errorCode(QTextStream &os, unsigned int code, const QString &msg)

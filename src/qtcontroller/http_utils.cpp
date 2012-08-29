@@ -49,8 +49,17 @@ QString getMimeType(const QString& file) {
 }
 
 QMap<QString, QString> decodeGetParameters(const QString& request) {
-    auto params = request.split(QRegExp("[ \r\n][ \r\n]*"))[1].split('?')[1].split('&');
     QMap<QString, QString> keyValue;
+    auto split1 = request.split(QRegExp("[ \r\n][ \r\n]*"));
+    if(split1.size() < 2) {
+        return keyValue;
+    }
+
+    auto split2 = split1[1].split('?');
+    if(split2.size() < 2) {
+        return keyValue;
+    }
+    auto params = split2[1].split('&');
     for(auto i = 0; i < params.size(); ++i) {
         auto split = params[i].split('=');
         if(split.size()==1) {
@@ -66,6 +75,13 @@ QMap<QString, QString> decodeGetParameters(const QString& request) {
 QString getPostContent(const QString& request) {
     return request.mid(request.indexOf(QRegExp("\r\n[ ]*\r\n"))).trimmed();
 }
+
+QString httpHeader(const QString& mime, unsigned int code, const QString& encoding) {
+    QString result = "HTTP/1.1 " + QString::number(code) + "\r\n" +
+            + "Content-Type: " + mime + "; charset=\"" + encoding + "\"\r\n";
+    return result;
+}
+
 
 
 }}}

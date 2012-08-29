@@ -33,6 +33,8 @@ private:
     bool handleNonStatic(QTextStream& os, const QString& file,
                          const QString& request);
 
+    void getPolicyUpdate(QTextStream& os, const QString& request);
+
     void updateState(QTextStream& os, const QString& request);
 
     /** Writes the error code to the stream formated as HTTP requires,
