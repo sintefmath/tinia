@@ -53,8 +53,15 @@ ENDIF()
 
 
 # We don't need XML support on Windows (only needed for mod_trell...)
-IF(NOT WIN32)
-  find_package( LibXml2 REQUIRED )
+IF(Tinia_SERVER)
+    find_package( LibXml2 REQUIRED )
+ELSE()
+    find_pacakge(LibXml2)
+ENDIF()
+
+IF(${LIBXML2_FOUND})
+
+    ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
 ENDIF()
 
 ##### BOOST #####

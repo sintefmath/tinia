@@ -97,7 +97,7 @@ int QTController::run(int argc, char **argv)
 
     m_main_window.reset( new QMainWindow() );
 
-    impl::HTTPServer server(m_app.get());
+    impl::HTTPServer server(m_job, m_app.get());
     // Now we may init the script.
     tiniaInitResources();
     initScript();

@@ -19,6 +19,8 @@ QString getMimeType(const QString& file);
 
 QMap<QString, QString> decodeGetParameters(const QString& request);
 
+QString getPostContent(const QString& request);
+
 template<unsigned int i>
 struct ParseGetHelper {
 

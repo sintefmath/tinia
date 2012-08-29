@@ -31,8 +31,8 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-HTTPServer::HTTPServer(QObject *parent) :
-    QTcpServer(parent)
+HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, QObject *parent) :
+    QTcpServer(parent), m_xmlHandler(job->getExposedModel())
 {
     listen(QHostAddress::Any, 8080);
     qDebug("Started");
@@ -136,6 +136,11 @@ bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
     }
 
     return false;
+}
+
+void HTTPServer::updateState(QTextStream &os, const QString &request)
+{
+
 }
 
 void HTTPServer::errorCode(QTextStream &os, unsigned int code, const QString &msg)

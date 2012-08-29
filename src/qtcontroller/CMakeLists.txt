@@ -9,7 +9,10 @@ FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/moc/*.h"
     "../../include/tinia/qtcontroller/scripting/*.hpp")
 
-
+IF(NOT ${LIBXML2_FOUND})
+    LIST(REMOVE_ITEM "HTTPServer.cpp" qtcontroller_SOURCES)
+    LIST(REMOVE_ITEM "HTTPServer.hpp" qtcontroller_SOURCES_TO_BE_MOCED)
+ENDIF()
 QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
 QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
@@ -23,6 +26,23 @@ QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
     ${qtcontroller_FORMS_HEADERS}
     )
 
+IF(${LIBXML2_FOUND})
+target_link_libraries ( qtcontroller
+    renderlist
+    renderlistgl
+    model
+    tinia_javascript
+    ${LIBXML2_LIBRARIES}
+    modelxml
+    ${QT_LIBRARIES}
+    ${QT_QTOPENGL_LIBRARIES}
+    jobcontroller
+    ${Boost_LIBRARIES}
+    ${OPENGL_LIBRARIES}
+    ${GLEW_LIBRARY}
+    ${Freeglut_LIBRARY}
+)
+ELSe()
 target_link_libraries ( qtcontroller
     renderlist
     renderlistgl
@@ -36,7 +56,7 @@ target_link_libraries ( qtcontroller
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
 )
-
+ENDIF()
 # The reason for the development name to be <component>_dev is
 # that using <component>-dev does not work with NSIS Windows installer.
 # Remember to also update the list of components in the 
