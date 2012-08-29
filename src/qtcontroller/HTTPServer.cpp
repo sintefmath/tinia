@@ -23,6 +23,9 @@
 #include <QStringList>
 #include <QDateTime>
 #include <QFile>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
+#include <boost/tuple/tuple_io.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -51,9 +54,10 @@ void HTTPServer::readyRead()
     qDebug("HTTPServer: receiving");
     QTcpSocket* socket = (QTcpSocket*)sender();
     if (socket->canReadLine()) {
+        //auto request = socket->readAll();
         auto line = QString(socket->readLine());
         std::cout << line.toStdString() << std::endl;
-        if (isGet(line)) {
+        if (isGetOrPost(line)) {
             QTextStream os(socket);
             os.setAutoDetectUnicode(true);
 
@@ -63,17 +67,17 @@ void HTTPServer::readyRead()
                 os << "HTTP/1.1 404 Not Found\r\n"
                       "Content-Type: text/html; charset=\"utf-8\"\r\n"
                       "\r\n";
-                  os << "<h1>Nothing to see here</h1>\n<hr />\n"
-                    << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
-                  << line;
+                os << "<h1>Nothing to see here</h1>\n<hr />\n"
+                   << "You asked for: <b>"<<getRequestURI(line)<<"</b><br />"
+                   << line;
 
-                  while(socket->canReadLine()) {
-                      auto line = QString(socket->readLine());
-                      os << line<<"<br />\n";
-                  }
+                while(socket->canReadLine()) {
+                    auto line = QString(socket->readLine());
+                    os << line<<"<br />\n";
+                }
 
-                  os<< QDateTime::currentDateTime().toString() << "\n";
-                  std::cout << "Not found: " << line.toStdString() << std::endl;
+                os<< QDateTime::currentDateTime().toString() << "\n";
+                std::cout << "Not found: " << line.toStdString() << std::endl;
             }
 
 
@@ -97,6 +101,53 @@ void HTTPServer::discardClient()
 
 }
 
+bool HTTPServer::isStatic(const QString &file)
+{
+    return !(file == "snapshot.txt" && file=="getRenderList.xml" &&
+             file == "updateState.xml" && file == "getPolicyUpdate.xml");
+}
+
+bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
+                                 const QString& request)
+{
+    auto params = decodeGetParameters(request);
+
+    try {
+        if(file == "snapshot.txt") {
+            auto arguments =
+                    parseGet<boost::tuple<unsigned int, unsigned int, std::string> >(params, "width height key");
+            auto width = arguments.get<0>();
+            auto height = arguments.get<1>();
+            auto key = arguments.get<2>();
+            return true;
+        }
+        else if(file == "getRenderList.xml") {
+            auto arguments = parseGet<boost::tuple<unsigned int> > (params, "revision");
+            auto revision = arguments.get<0>();
+            return true;
+        }
+        else if(file == "getPolicyUpdate.xml") {
+
+        }
+
+    } catch(std::invalid_argument& e) {
+        errorCode(os, 400, e.what());
+        return true;
+    }
+
+    return false;
+}
+
+void HTTPServer::errorCode(QTextStream &os, unsigned int code, const QString &msg)
+{
+    os << "HTTP/1.1 " << QString::number(code) << "\r\n"
+       << "Content-Type: text/html; charset=\"utf-8\"\r\n"
+       << "<html>\n<head>\n<title>Error: " << QString::number(code) << "</title>"
+       << "</head>\n" <<"<body>\n" << "<h1>Error code: " << code << "</h1>\n"<<msg
+       <<"</body>\n"<<"</html>\n";
+}
+
+
 QString HTTPServer::getStaticContent(const QString &uri)
 {
     QFile file(":/javascript" + uri);
@@ -107,7 +158,7 @@ QString HTTPServer::getStaticContent(const QString &uri)
         return reply;
     }
     else {
-        throw std::invalid_argument("File not found: " + uri.toStdString());
+        return "HTTP/1.0 404 Not Found\r\n";
     }
 }
 

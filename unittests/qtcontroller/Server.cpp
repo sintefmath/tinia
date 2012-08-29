@@ -25,10 +25,10 @@ BOOST_AUTO_TEST_SUITE(QtServer)
 BOOST_AUTO_TEST_CASE(IsGet) {
     QString uri ="uriFilename.ext";
     QString request = "GET " + uri + " HTTP/1.1\n";
-    BOOST_CHECK(tinia::qtcontroller::impl::isGet(request));
+    BOOST_CHECK(tinia::qtcontroller::impl::isGetOrPost(request));
 
     QString notGet ="NotGET bla";
-    BOOST_CHECK(!tinia::qtcontroller::impl::isGet(notGet));
+    BOOST_CHECK(!tinia::qtcontroller::impl::isGetOrPost(notGet));
 }
 
 BOOST_AUTO_TEST_CASE(DecodeGetUri) {
@@ -54,6 +54,20 @@ BOOST_AUTO_TEST_CASE(GetParams)  {
     BOOST_CHECK(params.contains("key2"));
     BOOST_CHECK_EQUAL(std::string(""), params["key2"].toStdString());
     BOOST_CHECK_EQUAL(std::string("val2"), params["key3"].toStdString());
+}
+
+BOOST_AUTO_TEST_CASE(ParseGet) {
+
+    QMap<QString, QString> params;
+    params["key"] = "value";
+    params["uintKey"] = "42";
+    params["intKey"] = "-43";
+    auto args = tinia::qtcontroller::impl::parseGet<boost::tuple<std::string, unsigned int, int>>(params, "key uintKey intKey");
+    BOOST_CHECK_EQUAL("value", args.get<0>());
+    BOOST_CHECK_EQUAL(42, args.get<1>());
+    BOOST_CHECK_EQUAL(-43, args.get<2>());
+
+    BOOST_CHECK_THROW(tinia::qtcontroller::impl::parseGet<boost::tuple<unsigned int>>(params, "keyNotInThere"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

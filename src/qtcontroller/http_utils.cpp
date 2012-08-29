@@ -24,13 +24,14 @@
 
 namespace tinia { namespace qtcontroller { namespace impl {
 QString getRequestURI(const QString& request) {
-    if(!isGet(request)) {
+    if(!isGetOrPost(request)) {
         throw std::invalid_argument("Request line is not a GET request.");
     }
     return request.split(QRegExp("[ \r\n][ \r\n]*"))[1].split('?')[0];
 }
-bool isGet(const QString& request) {
-    return request.split(QRegExp("[ \r\n][ \r\n]*"))[0] == "GET";
+bool isGetOrPost(const QString& request) {
+    auto method = request.split(QRegExp("[ \r\n][ \r\n]*"))[0];
+    return method == "GET" || method == "POST";
 }
 
 QString getMimeType(const QString& file) {
@@ -48,9 +49,9 @@ QString getMimeType(const QString& file) {
 }
 
 QMap<QString, QString> decodeGetParameters(const QString& request) {
-    auto params = request.split('?')[1].split('&');
+    auto params = request.split(QRegExp("[ \r\n][ \r\n]*"))[1].split('?')[1].split('&');
     QMap<QString, QString> keyValue;
-    for(auto i = 0u; i < params.size(); ++i) {
+    for(auto i = 0; i < params.size(); ++i) {
         auto split = params[i].split('=');
         if(split.size()==1) {
             keyValue[split[0]] = "";
