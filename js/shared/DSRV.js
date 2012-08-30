@@ -50,7 +50,7 @@ function DSRV(parameters) {
 
     this.m_beginDirection = vec3.create();
 
-    this.m_translateZ = 2;
+    this.m_translateZ = 4;
 
     // Get width and height:
     this.setSize(this.m_exposedModel.getElementValue(this.m_key).getElementValue("width"),
