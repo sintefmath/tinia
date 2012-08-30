@@ -10,8 +10,8 @@ FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/scripting/*.hpp")
 
 IF(NOT ${LIBXML2_FOUND})
-    LIST(REMOVE_ITEM "HTTPServer.cpp" ${qtcontroller_SOURCES})
-    LIST(REMOVE_ITEM "HTTPServer.hpp" ${qtcontroller_SOURCES_TO_BE_MOCED})
+    FILE(GLOB_RECURSE serverToRemove "*Server*" "*Server*")
+    LIST(REMOVE_ITEM ${serverToRemove} ${qtcontroller_SOURCES})
 ENDIF()
 QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
