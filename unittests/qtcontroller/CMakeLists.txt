@@ -2,7 +2,7 @@ FILE( GLOB qtcontrollerTestHeaders "*.hpp" )
 FILE( GLOB qtcontrollerTestSrc "*.cpp" )
 IF(NOT ${LIBXML2_FOUND})
     FILE(GLOB_RECURSE serverToRemove "*Server*")
-    LIST(REMOVE_ITEM ${serverToRemove} ${qtControllerTestSrc})
+    LIST(REMOVE_ITEM ${qtControllerTestSrc} ${serverToRemove} )
 ENDIF()
 
 ADD_DEFINITIONS( -DBOOST_TEST_DYN_LINK )

@@ -11,7 +11,7 @@ FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
 
 IF(NOT ${LIBXML2_FOUND})
     FILE(GLOB_RECURSE serverToRemove "*Server*" "*Server*")
-    LIST(REMOVE_ITEM ${serverToRemove} ${qtcontroller_SOURCES})
+    LIST(REMOVE_ITEM ${qtcontroller_SOURCES} ${serverToRemove})
 ENDIF()
 QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
