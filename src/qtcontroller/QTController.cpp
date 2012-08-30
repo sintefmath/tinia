@@ -20,7 +20,9 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
+#ifdef TINIA_HAVE_LIBXML
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
+#endif
 #include <tinia/qtcontroller/scripting/utils.hpp>
 #include <QApplication>
 #include <QLayout>
