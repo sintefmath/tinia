@@ -1,4 +1,5 @@
 #pragma once
+
 #include "tinia/jobcontroller.hpp"
 #include "tinia/model/impl/xml/XMLHandler.hpp"
 #include <QTcpServer>
@@ -15,6 +16,8 @@ public:
     explicit HTTPServer(tinia::jobcontroller::Job*,
                         QObject *parent = 0);
 
+    ~HTTPServer();
+
     void incomingConnection(int socket);
     
 signals:
@@ -25,7 +28,9 @@ private slots:
 
 
 private:
-    bool isStatic(const QString& file);
+    void setupOpenGL();
+
+    void getSnapshotTxt(QTextStream& os, const QString& request);
 
     /** Handles non-static content, if applicable.
      * @returns true if the file is non-static, false otherwise.
@@ -48,6 +53,11 @@ private:
 
     tinia::model::impl::xml::XMLHandler m_xmlHandler;
     tinia::jobcontroller::Job* m_job;
+
+    bool m_openglIsReady;
+    unsigned int m_fbo;
+    unsigned int m_renderbufferRGBA;
+    unsigned int m_renderbufferDepth;
 };
 
 }

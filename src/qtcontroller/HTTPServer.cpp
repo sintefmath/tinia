@@ -16,6 +16,10 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QImage>
+#include <QBuffer>
+#include <QByteArray>
+#include <GL/glew.h>
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
 #include "tinia/qtcontroller/impl/http_utils.hpp"
 #include "tinia/renderlist.hpp"
@@ -33,10 +37,21 @@ namespace qtcontroller {
 namespace impl {
 
 HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, QObject *parent) :
-    QTcpServer(parent), m_xmlHandler(job->getExposedModel()), m_job(job)
+    QTcpServer(parent), m_xmlHandler(job->getExposedModel()), m_job(job),
+    m_openglIsReady(false)
 {
     listen(QHostAddress::Any, 8080);
     qDebug("Started");
+
+}
+
+HTTPServer::~HTTPServer()
+{
+    if(m_openglIsReady) {
+        glDeleteFramebuffers(1, &m_fbo);
+        glDeleteRenderbuffers(1, &m_renderbufferRGBA);
+        glDeleteRenderbuffers(1, &m_renderbufferDepth);
+    }
 }
 
 void HTTPServer::incomingConnection(int socket)
@@ -81,10 +96,66 @@ void HTTPServer::discardClient()
 
 }
 
-bool HTTPServer::isStatic(const QString &file)
+void HTTPServer::setupOpenGL()
 {
-    return !(file == "snapshot.txt" && file=="getRenderList.xml" &&
-             file == "updateState.xml" && file == "getPolicyUpdate.xml");
+    glewInit();
+    glGenFramebuffers( 1, &m_fbo );
+    glGenRenderbuffers( 1, &m_renderbufferRGBA );
+    glGenRenderbuffers( 1, &m_renderbufferDepth );
+    m_openglIsReady = true;
+}
+
+void HTTPServer::getSnapshotTxt(QTextStream &os, const QString &request)
+{
+    auto openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
+    if(!openGLJob) {
+        throw std::invalid_argument("This is not an OpenGL job!");
+    }
+
+    auto arguments =
+            parseGet<boost::tuple<unsigned int, unsigned int,
+            std::string> >(decodeGetParameters(request), "width height key");
+    if(!m_openglIsReady) {
+        setupOpenGL();
+    }
+
+    auto width = arguments.get<0>();
+    auto height = arguments.get<1>();
+    auto key = arguments.get<2>();
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferRGBA );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_RGBA, width, height );
+    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_RENDERBUFFER,
+                               m_renderbufferRGBA );
+
+    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferDepth );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
+    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_DEPTH_ATTACHMENT,
+                               GL_RENDERBUFFER,
+                               m_renderbufferDepth );
+
+    glViewport( 0, 0, width, height );
+
+
+
+    openGLJob->renderFrame( "session", key, m_fbo, width, height );
+
+     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+     unsigned char buffer[5000000];
+     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+     QImage img(buffer, width, height, QImage::Format_RGB888);
+     QBuffer qBuffer;
+
+     img.save(&qBuffer, "png");
+     os << httpHeader(getMimeType("file.txt"));
+     QString str(QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64());
+     os << "\n"<<str;
+
 }
 
 bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
@@ -94,17 +165,11 @@ bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
     std::cout << "======================"<<std::endl;
     std::cout << request.toStdString()<< std::endl;
     std::cout << "=======================" <<std::endl;
-    auto params = decodeGetParameters(request);
-
     try {
         if(file == "/snapshot.txt") {
-            auto arguments =
-                    parseGet<boost::tuple<unsigned int, unsigned int, std::string> >(params, "width height key");
-            auto width = arguments.get<0>();
-            auto height = arguments.get<1>();
-            auto key = arguments.get<2>();
 
             updateState(os, request);
+            getSnapshotTxt(os, request);
             return true;
         }
         else if(file == "/getRenderList.xml") {

@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <QTextStream>
 #include <string>
 #include <tinia/model/ExposedModel.hpp>
 #include <memory>
@@ -29,6 +30,8 @@ namespace impl {
   If the element has no annotation, it defaults to the key.
   */
 std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> model);
+
+
 }
 }
 }
