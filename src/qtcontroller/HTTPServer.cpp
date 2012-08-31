@@ -156,6 +156,8 @@ void HTTPServer::getSnapshotTxt(QTextStream &os, const QString &request)
      QString str(QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64());
      os << "\n"<<str;
 
+     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 }
 
 bool HTTPServer::handleNonStatic(QTextStream &os, const QString& file,
