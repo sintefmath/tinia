@@ -212,12 +212,12 @@ void HTTPServer::getPolicyUpdate(QTextStream &os, const QString &request)
     std::cout <<"Getting policyupdate" << std::endl;
     try {
         auto params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(request), "revision");
-        char buffer[5000000];
+        char buffer[50000];
         m_xmlHandler.getExposedModelUpdate(buffer, 5000000, params.get<0>());
         os << httpHeader("application/xml")<<"\n";
         os << QString(buffer)<< "\n";
     } catch(std::invalid_argument e) {
-        char buffer[5000000];
+        char buffer[50000];
         m_xmlHandler.getExposedModelUpdate(buffer, 5000000, 0);
         os << httpHeader("application/xml")<<"\n";
         os << QString(buffer)<< "\n";

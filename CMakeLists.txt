@@ -134,7 +134,7 @@ link_directories(
 )
 
 ADD_SUBDIRECTORY( "src/model" )
-IF(${Tinia_SERVER})
+IF(${LIBXML2_FOUND})
   ADD_SUBDIRECTORY( "src/modelxml" )
 ENDIF()
 ADD_SUBDIRECTORY( "src/renderlist" )
@@ -153,7 +153,7 @@ ENDIF()
 
 # Unit tests
 ADD_SUBDIRECTORY( "unittests/model/" )
-IF(${Tinia_SERVER})
+IF(${LIBXML2_FOUND})
   ADD_SUBDIRECTORY( "unittests/modelxml/" )
 ENDIF()
 ADD_SUBDIRECTORY( "unittests/renderlist/" )

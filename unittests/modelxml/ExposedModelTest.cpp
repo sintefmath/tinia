@@ -543,7 +543,10 @@ BOOST_FIXTURE_TEST_CASE( HasElement, Fixture ) {
 
 BOOST_FIXTURE_TEST_CASE( AddStringWithRestriction, Fixture ) {
     const std::string elementName = "render_mode";
-    std::vector<std::string> restriction({ "points", "wireframe", "solid" });
+    std::vector<std::string> restriction;
+	restriction.push_back("points");
+	restriction.push_back("wireframe");
+	restriction.push_back("solid");
     model->addElementWithRestriction<std::string>( elementName, "points", restriction );
     BOOST_REQUIRE( model->hasElement( elementName ) );
 
@@ -555,13 +558,18 @@ BOOST_FIXTURE_TEST_CASE( AddStringWithRestriction, Fixture ) {
 }
 
 BOOST_FIXTURE_TEST_CASE( AddStringWithRestrictionNotInList, Fixture ) {
-  std::vector<std::string> restrictions({"bar", "gaz"});
+  std::vector<std::string> restrictions;
+  restrictions.push_back("bar");
+  restrictions.push_back("gaz");
     BOOST_CHECK_THROW( model->addElementWithRestriction<std::string>( "foobar", "foo", restrictions ), tinia::model::RestrictionException );
 }
 
 BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
     const std::string elementName = "render_mode";
-    std::vector<std::string> restrictionList({ "points", "wireframe", "solid" });
+    std::vector<std::string> restrictionList;
+	restrictionList.push_back("points");
+	restrictionList.push_back("wireframe");
+	restrictionList.push_back("solid");
     model->addElementWithRestriction<std::string>( elementName, "points", restrictionList );
 
     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {

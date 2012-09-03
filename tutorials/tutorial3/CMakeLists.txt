@@ -7,6 +7,7 @@ ADD_EXECUTABLE(tutorial3_desktop
     tutorial3_desktop.cpp
 )
   TARGET_LINK_LIBRARIES(tutorial3_desktop
+      model
     qtcontroller
     renderlist
     renderlistgl
@@ -15,7 +16,6 @@ ADD_EXECUTABLE(tutorial3_desktop
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
-    model
     jobcontroller
     ${Boost_LIBRARIES}
     )

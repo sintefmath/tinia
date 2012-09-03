@@ -17,6 +17,8 @@ ADD_EXECUTABLE(tutorial5_desktop
 )
 
   TARGET_LINK_LIBRARIES(tutorial5_desktop
+     model
+	${LIBXML2_LIBRARIES}
     qtcontroller
     renderlist
     renderlistgl
@@ -25,7 +27,6 @@ ADD_EXECUTABLE(tutorial5_desktop
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
-    model
     jobcontroller
     ${Boost_LIBRARIES}
     )
