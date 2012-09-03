@@ -92,7 +92,7 @@ void QTController::setupServerController() {
 
     // Set up toolbar
     m_toolBar = new QToolBar(m_main_window.get());
-    auto action = m_toolBar->addAction("Run server (http://localhost:8080)", m_serverController,
+    auto action = m_toolBar->addAction("Run server (http://localhost:8080/index.html)", m_serverController,
                                        SLOT(startServer(bool)));
     action->setCheckable(true);
 
