@@ -148,7 +148,18 @@ void HTTPServer::getSnapshotTxt(QTextStream &os, const QString &request)
      glPixelStorei( GL_PACK_ALIGNMENT, 1 );
      unsigned char buffer[5000000];
      glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+
+
      QImage img(buffer, width, height, QImage::Format_RGB888);
+
+     // This is a temporary fix. The image is reflected through the horizontal
+     // line y=height ((x, y) |--> (x, h-y) ).
+     QTransform flipTransformation(1, 0,
+                                   0, -1,
+                                   0, height);
+     img = img.transformed(flipTransformation);
+
+
      QBuffer qBuffer;
 
      img.save(&qBuffer, "png");
