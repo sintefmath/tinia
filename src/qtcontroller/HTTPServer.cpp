@@ -259,7 +259,10 @@ void HTTPServer::errorCode(QTextStream &os, unsigned int code, const QString &ms
 
 QString HTTPServer::getStaticContent(const QString &uri)
 {
-    QFile file(":/javascript" + uri);
+
+    QString fullPath = ":/javascript" + uri;
+
+    QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {
         QString reply =QString("HTTP/1.0 200 Ok\r\n") +
                 QString("Content-Type: ") + getMimeType(uri) +
