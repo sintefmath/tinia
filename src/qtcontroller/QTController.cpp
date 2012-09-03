@@ -20,9 +20,6 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
-#ifdef TINIA_HAVE_LIBXML
-#include "tinia/qtcontroller/moc/HTTPServer.hpp"
-#endif
 #include <tinia/qtcontroller/scripting/utils.hpp>
 #include <QApplication>
 #include <QLayout>
@@ -30,6 +27,8 @@
 #include <QGLWidget>
 #include <QMainWindow>
 #include <exception>
+#include <QToolBar>
+#include <QAction>
 
 #include <QDomDocument>
 #include <QString>
@@ -86,6 +85,22 @@ void QTController::addScript(const std::string &script)
     m_scriptsToParse.push_back(script);
 }
 
+#ifdef TINIA_HAVE_LIBXML
+void QTController::setupServerController() {
+    // Construct server controller
+    m_serverController = new impl::ServerController(m_job, m_main_window.get());
+
+    // Set up toolbar
+    m_toolBar = new QToolBar(m_main_window.get());
+    auto action = m_toolBar->addAction("Run server", m_serverController,
+                                       SLOT(startServer(bool)));
+    action->setCheckable(true);
+
+
+    m_main_window->addToolBar(m_toolBar);
+}
+#endif
+
 int QTController::run(int argc, char **argv)
 {
     if( m_job == NULL ) {
@@ -98,9 +113,9 @@ int QTController::run(int argc, char **argv)
     m_app.reset(  new QApplication( argc, argv ) );
 
     m_main_window.reset( new QMainWindow() );
-#ifdef TINIA_HAVE_LIBXML
-    impl::HTTPServer server(m_job, m_app.get());
-#endif
+
+    setupServerController();
+
     // Now we may init the script.
     tiniaInitResources();
     initScript();

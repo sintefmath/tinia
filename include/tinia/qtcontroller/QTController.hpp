@@ -19,6 +19,10 @@
 #include <memory>
 #include "tinia/jobcontroller/Controller.hpp"
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#ifdef TINIA_HAVE_LIBXML
+#include <tinia/qtcontroller/moc/ServerController.hpp>
+#endif
+#include <QToolBar>
 
 
 class QMainWindow;
@@ -65,6 +69,7 @@ public:
       *
       */
     int run(int argc, char** argv);
+
 private:
     void initScript();
     void populateGUI();
@@ -73,6 +78,13 @@ private:
     // App will be deleted after m_main_window.
     std::unique_ptr<QApplication>          m_app;
     std::unique_ptr<QMainWindow>           m_main_window;
+
+#ifdef TINIA_HAVE_LIBXML // This is only for those who have libxml available
+    impl::ServerController* m_serverController;
+    QToolBar* m_toolBar; // Lifetime managed by qt parent-child machinery.
+
+    void setupServerController();
+#endif
 
     QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
     jobcontroller::Job*                    m_job;
