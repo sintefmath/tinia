@@ -10,7 +10,8 @@ namespace impl {
 
 OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
                                          QObject *parent) :
-    QObject(parent), m_glImageIsReady(false), m_job(job),
+    QObject(parent), m_glImageIsReady(false), m_job(job)
+{
     connect(this, SIGNAL(glImageReady()), this,
             SLOT(wakeListeners()));
 
