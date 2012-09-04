@@ -113,8 +113,9 @@ int QTController::run(int argc, char **argv)
     m_app.reset(  new QApplication( argc, argv ) );
 
     m_main_window.reset( new QMainWindow() );
-
+#ifdef TINIA_HAVE_LIBXML
     setupServerController();
+#endif
 
     // Now we may init the script.
     tiniaInitResources();
