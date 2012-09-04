@@ -16,8 +16,9 @@ ServerThread::ServerThread(OpenGLServerGrabber& grabber,
                            tinia::jobcontroller::Job* job,
                            int socket,
                            QObject *parent) :
-    m_socket(socket), m_job(job),
+    m_socket(socket),
     m_xmlHandler(job->getExposedModel()),
+    m_job(job),
     m_grabber(grabber)
 {
 }
