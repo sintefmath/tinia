@@ -56,7 +56,7 @@ ENDIF()
 IF(Tinia_SERVER)
     find_package( LibXml2 REQUIRED )
 ELSE()
-    find_package(LibXml2)
+    find_package(LibXml2 OPTIONAL)
 ENDIF()
 
 IF(${LIBXML2_FOUND})
