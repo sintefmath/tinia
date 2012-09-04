@@ -26,7 +26,7 @@ namespace model {
 class ExposedModelLock
 {
 public:
-   ExposedModelLock(std::shared_ptr<ExposedModel>& model);
+   ExposedModelLock(std::shared_ptr<ExposedModel> model);
    ~ExposedModelLock();
 
 
