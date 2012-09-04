@@ -16,7 +16,7 @@ ServerThread::ServerThread(OpenGLServerGrabber& grabber,
                            tinia::jobcontroller::Job* job,
                            int socket,
                            QObject *parent) :
-    QThread(parent), m_socket(socket), m_job(job),
+    m_socket(socket), m_job(job),
     m_xmlHandler(job->getExposedModel()),
     m_grabber(grabber)
 {
@@ -52,12 +52,6 @@ void ServerThread::run()
         socket.close();
         socket.waitForDisconnected();
     }
-}
-
-void ServerThread::discardClient()
-{
-    QTcpSocket* socket = (QTcpSocket*)sender();
-    socket->deleteLater();
 }
 
 bool ServerThread::isLongPoll(const QString &request)

@@ -33,6 +33,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
+#include <QThreadPool>
 
 namespace tinia {
 namespace qtcontroller {
@@ -49,9 +50,9 @@ void HTTPServer::incomingConnection(int socket)
 {
     auto thread = new ServerThread(m_serverGrabber, m_job, socket);
 
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
-    thread->start();
+    QThreadPool::globalInstance()->start(thread);
 }
 
 }

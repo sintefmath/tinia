@@ -36,9 +36,9 @@ public:
     void stateElementModified(model::StateElement *stateElement);
     
 signals:
-    void elementModified(model::StateElement stateElement);
+    void elementModified(QString key);
 public slots:
-    void notifyListeners(model::StateElement stateElement);
+    void notifyListeners(QString key);
     void updateElement(const QString& key, QScriptValue value);
 
     QScriptValue getElementValue(const QString& key);

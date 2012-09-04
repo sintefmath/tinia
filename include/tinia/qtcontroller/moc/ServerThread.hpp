@@ -1,5 +1,5 @@
 #pragma once
-#include <QThread>
+#include <QRunnable>
 #include <QTextStream>
 #include "tinia/jobcontroller.hpp"
 #include "tinia/model/impl/xml/XMLHandler.hpp"
@@ -9,9 +9,8 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-class ServerThread : public QThread
+class ServerThread : public QRunnable
 {
-    Q_OBJECT
 public:
     explicit ServerThread(OpenGLServerGrabber& grabber,
                           tinia::jobcontroller::Job* job,
@@ -19,13 +18,6 @@ public:
                           QObject *parent = 0);
 
     void run();
-    
-signals:
-    
-public slots:
-
-private slots:
-    void discardClient();
     
 private:
 
