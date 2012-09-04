@@ -544,7 +544,7 @@ void model::ExposedModel::releaseStateEvents()
 
 model::ExposedModel::mutex_type& model::ExposedModel::getExposedModelMutex()
 {
-   return m_selfMutex;
+    return m_selfMutex;
 }
 
 } // of namespace tinia

@@ -48,7 +48,6 @@ public:
       */
    size_t getExposedModelUpdate(char *buffer, const size_t buffer_len,
                           const unsigned int has_revision );
-
    xmlDocPtr getCompleteDocument();
 
 private:

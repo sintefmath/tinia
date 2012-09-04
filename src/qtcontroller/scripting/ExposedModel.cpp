@@ -27,7 +27,11 @@ ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
                            QObject *parent)
     : QObject(parent), m_engine(engine), m_model(model)
 {
+    moveToThread(QThread::currentThread());
     m_model->addStateListener(this);
+    connect(this, SIGNAL(elementModified(model::StateElement)), this,
+            SLOT(notifyListeners(model::StateElement)),
+            Qt::QueuedConnection);
 }
 
 ExposedModel::~ExposedModel()
@@ -37,15 +41,7 @@ ExposedModel::~ExposedModel()
 
 void ExposedModel::stateElementModified(model::StateElement *stateElement)
 {
-    auto listenersFound = m_listeners.find(stateElement->getKey());
-    if(listenersFound != m_listeners.end()) {
-        auto& listeners = listenersFound->second;
-        for(size_t i = 0; i < listeners.size(); ++i) {
-            listeners[i].call(QScriptValue(), QScriptValueList()
-                              << QString(stateElement->getKey().c_str())
-                              << getElementValue(QString(stateElement->getKey().c_str())));
-        }
-    }
+    emit notifyListeners(*stateElement);
 }
 
 void ExposedModel::updateElement(const QString &key, QScriptValue value)
@@ -106,7 +102,9 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
         return QScriptValue(QString(value.c_str()));
     }
     if (type == std::string("complexType")) {
+        qDebug("viewer create");
         auto v = new Viewer(m_engine, this);
+        qDebug("view done");
         m_model->getElementValue(key.toStdString(), v->viewer());
         return m_engine->newQObject(v);
     }
@@ -116,6 +114,18 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
 void ExposedModel::addLocalListener(const QString &key, QScriptValue function)
 {
     m_listeners[key.toStdString()].push_back(function);
+}
+
+void ExposedModel::notifyListeners(model::StateElement stateElement) {
+    auto listenersFound = m_listeners.find(stateElement.getKey());
+    if(listenersFound != m_listeners.end()) {
+        auto& listeners = listenersFound->second;
+        for(size_t i = 0; i < listeners.size(); ++i) {
+            listeners[i].call(QScriptValue(), QScriptValueList()
+                              << QString(stateElement.getKey().c_str())
+                              << getElementValue(QString(stateElement.getKey().c_str())));
+        }
+    }
 }
 
 } // namespace scripting
