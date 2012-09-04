@@ -7,6 +7,7 @@
 #include "tinia/renderlist.hpp"
 #include <QFile>
 #include "tinia/qtcontroller/moc/LongPollHandler.hpp"
+#include "tinia/model/ExposedModelLock.hpp"
 
 namespace tinia {
 namespace qtcontroller {
@@ -112,6 +113,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
 
 void ServerThread::updateState(QTextStream &os, const QString &request)
 {
+	tinia::model::ExposedModelLock lock(m_job->getExposedModel());
     std::string content = getPostContent(request).toStdString();
     m_xmlHandler.updateState(content.c_str(), content.size());
 }

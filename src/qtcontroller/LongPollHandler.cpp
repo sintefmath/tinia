@@ -33,11 +33,14 @@ void LongPollHandler::handle()
         // Don't have to do anything;
     }
 
-    while(!addExposedModelUpdate(m_textStream, revision)) {
+    if(!addExposedModelUpdate(m_textStream, revision)) {
         // Add http-timeout
         m_mutex.lock();
-        m_waitCondition.wait(&m_mutex, 5000);
+        m_waitCondition.wait(&m_mutex, 500);
         m_mutex.unlock();
+		if(!addExposedModelUpdate(m_textStream, revision)) {
+			m_textStream << httpHeader("text/plain", 408);
+		}
     }
 }
 

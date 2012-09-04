@@ -43,11 +43,11 @@ impl::ElementData::ElementData()
 impl::ElementData::ElementData(const impl::ElementData &from)
    :
    // Deep copy
-     stringValue(from.stringValue.begin(), from.stringValue.end()),
-     xsdType(from.xsdType.begin(), from.xsdType.end()),
-     widgetType( from.widgetType.begin(), from.widgetType.end()),
-     minConstraint(from.minConstraint.begin(), from.minConstraint.end()),
-     maxConstraint( from.maxConstraint.begin(), from.maxConstraint.end()),
+     stringValue(from.stringValue),//.begin(), from.stringValue.end()),
+     xsdType(from.xsdType),//.begin(), from.xsdType.end()),
+     widgetType( from.widgetType),//.begin(), from.widgetType.end()),
+     minConstraint(from.minConstraint),//.begin(), from.minConstraint.end()),
+     maxConstraint( from.maxConstraint),//.begin(), from.maxConstraint.end()),
      length(from.length)
 {
 
@@ -73,7 +73,7 @@ impl::ElementData::ElementData(const impl::ElementData &from)
           it++)
       {
          propertyTree->push_back(
-                  PropertyTree::value_type(it->first.c_str(), PropertyTree(impl::ElementData(it->second.data()))
+                  PropertyTree::value_type(it->first, PropertyTree(impl::ElementData(it->second.data()))
                                            ));
       }
    }
