@@ -9,6 +9,8 @@ ADD_EXECUTABLE(tutorial1_desktop
     tutorial1_desktop.cpp
 )
   TARGET_LINK_LIBRARIES(tutorial1_desktop
+      
+	      model
     qtcontroller
     renderlist
     renderlistgl
@@ -16,7 +18,6 @@ ADD_EXECUTABLE(tutorial1_desktop
     ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
-    model
     jobcontroller
     ${Boost_LIBRARIES}
     )

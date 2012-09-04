@@ -7,6 +7,7 @@ ADD_EXECUTABLE(tutorial4_desktop
     tutorial4_desktop.cpp
 )
   TARGET_LINK_LIBRARIES(tutorial4_desktop
+	      model
     qtcontroller
     renderlist
     renderlistgl

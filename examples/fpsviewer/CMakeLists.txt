@@ -13,6 +13,7 @@ ADD_EXECUTABLE(fpsviewer_desktop
     ${fpsviewer_JS_SOURCES}
 )
   TARGET_LINK_LIBRARIES(fpsviewer_desktop
+	      model
     qtcontroller
     renderlist
     renderlistgl
@@ -20,7 +21,6 @@ ADD_EXECUTABLE(fpsviewer_desktop
     ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
-    model
     jobcontroller
     ${Boost_LIBRARIES}
     )

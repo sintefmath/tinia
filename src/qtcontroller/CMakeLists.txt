@@ -33,6 +33,7 @@ target_link_libraries ( qtcontroller
     renderlist
     renderlistgl
     model
+	modelxml
     tinia_javascript
     ${LIBXML2_LIBRARIES}
     modelxml

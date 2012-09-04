@@ -6,6 +6,7 @@ IF(${Tinia_DESKTOP})
     ${test_job_HEADERS}
     )
   TARGET_LINK_LIBRARIES(simple_qt_job
+      ${LIBXML2_LIBRARIES} 
     qtcontroller
     renderlist
     renderlistgl
