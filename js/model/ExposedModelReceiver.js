@@ -38,7 +38,7 @@ dojo.declare("model.ExposedModelReceiver", null, {
     _longPoll : function() {
         dojo.xhrGet({
             url: this._url,
-            timeout: 200000,
+            timeout: 500000,
             preventCache: true,
             
             content: {
