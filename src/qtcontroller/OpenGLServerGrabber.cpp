@@ -10,7 +10,8 @@ namespace impl {
 
 OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
                                          QObject *parent) :
-QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false)
+QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
+    m_width(500), m_height(500)
 {
     connect(this, SIGNAL(glImageReady()), this,
             SLOT(wakeListeners()));
@@ -70,21 +71,10 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
     }
 
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
-    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferRGBA );
-    glRenderbufferStorage( GL_RENDERBUFFER, GL_RGBA, width, height );
-    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0,
-                               GL_RENDERBUFFER,
-                               m_renderbufferRGBA );
 
-    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferDepth );
-    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
-    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
-                               GL_DEPTH_ATTACHMENT,
-                               GL_RENDERBUFFER,
-                               m_renderbufferDepth );
+    if(m_width != width || m_height != height) {
+        resize(width, height);
+    }
 
     glViewport( 0, 0, width, height );
 
@@ -116,7 +106,30 @@ void OpenGLServerGrabber::setupOpenGL()
     glGenFramebuffers( 1, &m_fbo );
     glGenRenderbuffers( 1, &m_renderbufferRGBA );
     glGenRenderbuffers( 1, &m_renderbufferDepth );
+    resize(m_width, m_height);
     m_openglIsReady = true;
+}
+
+void OpenGLServerGrabber::resize(unsigned int width, unsigned int height)
+{
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferRGBA );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_RGBA, width, height );
+    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_RENDERBUFFER,
+                               m_renderbufferRGBA );
+
+    glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferDepth );
+    glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
+    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_DEPTH_ATTACHMENT,
+                               GL_RENDERBUFFER,
+                               m_renderbufferDepth );
+    m_width = width;
+    m_height = height;
 }
 
 } // namespace impl

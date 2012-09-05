@@ -31,7 +31,7 @@ private slots:
 
 private:
     void setupOpenGL();
-
+    void resize(unsigned int width, unsigned int height);
     bool m_glImageIsReady;
 
     // We only want to grab one image at the time
@@ -48,6 +48,9 @@ private:
     unsigned int m_fbo;
     unsigned int m_renderbufferRGBA;
     unsigned int m_renderbufferDepth;
+
+    unsigned int m_width;
+    unsigned int m_height;
 };
 
 } // namespace impl
