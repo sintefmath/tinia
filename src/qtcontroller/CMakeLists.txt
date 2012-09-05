@@ -10,7 +10,8 @@ FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/scripting/*.hpp")
 
 IF(NOT ${LIBXML2_FOUND})
-    FILE(GLOB_RECURSE serverToRemove "*Server*" "*Server*" "*LongPoll*")
+    FILE(GLOB_RECURSE serverToRemove "*Server*" "*Server*" "*LongPoll*" "../../include/tinia/qtcontroller/moc/*Server*"
+									"../../include/tinia/qtcontroller/moc/*LongPoll*")
     LIST(REMOVE_ITEM qtcontroller_SOURCES ${serverToRemove})
     LIST(REMOVE_ITEM qtcontroller_SOURCES_TO_BE_MOCED ${serverToRemove})
     LIST(REMOVE_ITEM qtcontroller_HEADERS ${serverToRemove})
