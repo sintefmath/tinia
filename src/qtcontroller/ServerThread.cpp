@@ -26,9 +26,7 @@ ServerThread::ServerThread(OpenGLServerGrabber& grabber,
 
 void ServerThread::run()
 {
-    qDebug("before create");
     QTcpSocket socket;
-    qDebug("after create");
 
     socket.setSocketDescriptor(m_socket);
     socket.waitForReadyRead();
@@ -77,10 +75,6 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
                                  const QString& request)
 {
-    std::cout << file.toStdString() << std::endl;
-    std::cout << "======================"<<std::endl;
-    std::cout << request.toStdString()<< std::endl;
-    std::cout << "=======================" <<std::endl;
     try {
         if(file == "/snapshot.txt") {
 
