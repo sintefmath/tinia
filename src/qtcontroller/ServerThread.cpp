@@ -32,7 +32,6 @@ void ServerThread::run()
     socket.waitForReadyRead();
 
 
-    qDebug("ServerThread: receiving");
     if (socket.canReadLine()) {
         auto request = socket.readAll();
         QTextStream os(&socket);
@@ -86,10 +85,6 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
             getRenderList(os, request);
             return true;
         }
-        /*else if(file == "/getExposedModelUpdate.xml") {
-            getPolicyUpdate(os, request);
-            return true;
-        }*/
         else if(file =="/updateState.xml") {
             updateState(os, request);
             os << httpHeader("application/xml")<<"\n";

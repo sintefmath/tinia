@@ -36,8 +36,6 @@ bool XMLHandler::updateState(const char *buffer, const size_t doc_len)
 {
    xmlDocPtr doc = NULL;
    try {
-      std::cerr<< std::string(buffer, doc_len)<<std::endl;
-
       doc = m_xmlTransporter.readXMLfromBuffer(buffer, doc_len);
       m_xmlReader.parseDocument(doc, m_elementHandler);
    } catch(const std::exception& e) {
