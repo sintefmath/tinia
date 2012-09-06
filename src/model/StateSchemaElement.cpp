@@ -78,7 +78,7 @@ model::StateSchemaElement::PropertyTree
    // TODO Make this more effective by implementing a "build on demand"-tree?
    // TODO Make this function return by reference (i.e. make destPropertyTree
    // an object member)?
-   model::StateSchemaElement::PropertyTree destPropertyTree;
+   /*model::StateSchemaElement::PropertyTree destPropertyTree;
 
    const model::impl::ElementData::PropertyTree& sourcePropertyTree  = m_data.getPropertyTree();
    for(auto it = sourcePropertyTree.begin(); it!=sourcePropertyTree.end();
@@ -88,7 +88,8 @@ model::StateSchemaElement::PropertyTree
                                  PropertyTree(StateSchemaElement(it->first, it->second.data()))));
    }
 
-   return destPropertyTree;
+   return destPropertyTree;*/
+    return m_data.getPropertyTree();
 }
 
 int model::StateSchemaElement::getLength() const

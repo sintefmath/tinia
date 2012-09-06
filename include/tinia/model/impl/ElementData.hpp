@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -41,16 +42,19 @@ class ElementData {
 public:
     typedef ElementData SelfType;
     typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
-    typedef boost::property_tree::basic_ptree<std::string, SelfType>    PropertyTree;
+    //typedef boost::property_tree::basic_ptree<std::string, SelfType>    PropertyTree;
+    typedef std::map<std::string, SelfType> PropertyTree;
 
     ElementData();
 
-    ElementData(const ElementData& from);
+    //ElementData(const ElementData& from);
+
+    //ElementData& operator=(const ElementData& from);
     /** Set the value of the data represented as a string. */
     void setStringValue( std::string );
 
     /** Set the value of the data represented as a property tree. */
-    void setPropertyTreeValue_r( PropertyTree &pt, const StringStringPTree &sspt, const int level );
+    void setPropertyTreeValue_r( std::map<std::string, SelfType> &pt, const StringStringPTree &sspt, const int level );
     void setPropertyTreeValue( const StringStringPTree &sspt );
 
     /** Get the value of the data represented as a string. */
@@ -142,7 +146,7 @@ public:
     int getLength() const;
 
     /** Get the property tree. */
-    PropertyTree& getPropertyTree();
+    std::map<std::string, SelfType>& getPropertyTree();
 
     const PropertyTree& getPropertyTree() const;
 
@@ -152,8 +156,6 @@ public:
       */
     bool isComplexType() const;
 
-private:
-    void print0(const PropertyTree &pt, const int level) const;
 public:
     void print(void) const;
 
@@ -166,7 +168,6 @@ private:
 	void checkValue(const std::string& stringValue);
 	template<typename T>
 	bool isWithinLimits(T& value, const std::string& stringValue);
-    void initializePropertyTree();
 
     std::string stringValue;
     std::string xsdType;
@@ -178,9 +179,8 @@ private:
     int preChangeRevisionNumber; // The revision number just prior to updating this element
     int length;
 
-    // Should ideally a a unique_ptr but it fails at compile time for templatical-reasons.
-    std::shared_ptr<PropertyTree> propertyTree;
-    //PropertyTree propertyTree;
+    std::map<std::string, SelfType> propertyTree;
+
 };
 
 

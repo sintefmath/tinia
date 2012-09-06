@@ -27,7 +27,7 @@ namespace model {
 class StateSchemaElement
 {
 public:
-   typedef boost::property_tree::basic_ptree<std::string, StateSchemaElement> PropertyTree;
+   typedef impl::ElementData::PropertyTree PropertyTree;
 
    StateSchemaElement();
    StateSchemaElement(std::string key, const impl::ElementData data);

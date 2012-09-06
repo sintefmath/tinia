@@ -98,7 +98,7 @@ XMLBuilder::buildComplexTypeSchemaXML( xmlNodePtr parent, const std::string& nam
 
    typedef model::StateSchemaElement::PropertyTree::value_type value_type;
    for_each( ptree.begin(), ptree.end(), [sequenceNode, this]( const value_type& kv ) {
-             buildSchemaXMLForElement( sequenceNode, kv.first, kv.second.data() );
+             buildSchemaXMLForElement( sequenceNode, kv.first, model::StateSchemaElement(kv.first, kv.second) );
 } );
 }
 
@@ -178,7 +178,7 @@ XMLBuilder::buildComplexElementStateXML( xmlNodePtr node, const model::StateElem
 
    typedef model::StateElement::PropertyTree::value_type value_type;
    for_each( ptree.begin(), ptree.end(), [=]( const value_type& kv ) {
-         buildStateXMLForElement( node, kv.first, kv.second.data() );
+         buildStateXMLForElement( node, kv.first, StateElement(kv.first, kv.second) );
 } );
 }
 

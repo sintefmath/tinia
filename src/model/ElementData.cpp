@@ -39,7 +39,7 @@ impl::ElementData::ElementData()
   length( impl::ElementData::LENGTH_NOT_SET )
 {}
 
-
+#if 0
 impl::ElementData::ElementData(const impl::ElementData &from)
    :
    // Deep copy
@@ -64,22 +64,55 @@ impl::ElementData::ElementData(const impl::ElementData &from)
       annotationMap[it->first.c_str()] =it->second.c_str();
    }
 
-
-   // TODO: Check if this is sensible enough
-   if(from.propertyTree.get() != 0)
-   {
-      initializePropertyTree();
-      for(auto it=from.propertyTree->begin(); it != from.propertyTree->end();
+      for(auto it=from.propertyTree.begin(); it != from.propertyTree.end();
           it++)
       {
-         propertyTree->push_back(
-                  PropertyTree::value_type(it->first, PropertyTree(impl::ElementData(it->second.data()))
-                                           ));
+          propertyTree[it->first] = it->second;
+
       }
-   }
+
 
 }
 
+impl::ElementData &impl::ElementData::operator=(const impl::ElementData &from)
+{
+    // Deep copy
+      stringValue = from.stringValue;//.begin(), from.stringValue.end()),
+      xsdType = from.xsdType;//.begin(), from.xsdType.end()),
+      widgetType =  from.widgetType;//.begin(), from.widgetType.end()),
+      minConstraint = from.minConstraint;//.begin(), from.minConstraint.end()),
+      maxConstraint =  from.maxConstraint;//.begin(), from.maxConstraint.end()),
+      length = from.length;
+
+
+    for(auto it = from.enumerationSet.begin();
+        it != from.enumerationSet.end(); it++)
+    {
+       std::string inputString((*it).c_str());
+       enumerationSet.insert(inputString);
+    }
+
+    for(auto it = from.annotationMap.begin();
+        it != from.annotationMap.end(); it++)
+    {
+       annotationMap[it->first.c_str()] =it->second.c_str();
+    }
+
+
+
+        for(auto it=from.propertyTree.begin(); it != from.propertyTree.end();
+            it++)
+        {
+
+            propertyTree[it->first] = it->second;
+
+        }
+
+
+
+    return *this;
+}
+#endif
 template<typename T>
 bool impl::ElementData::isWithinLimits(T& value, const std::string& stringValue) {
 	if( !emptyRestrictionSet() ) {
@@ -160,9 +193,10 @@ void impl::ElementData::checkValue(const std::string& s) {
 // in XMLReader.cpp, should be replaced by that in utils.hpp but it doesn't work?!?!?!?!?!!!!!
 typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
 
-void impl::ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringStringPTree &sspt, const int level )
+void impl::ElementData::setPropertyTreeValue_r( std::map<std::string, impl::ElementData> &pt, const StringStringPTree &sspt, const int level )
 {
     if ( pt.size() != sspt.size() ) {
+        /*
 //        pt_print("properties from string-string-ptree", sspt);
         printf("pt.size()=%d\n", int(pt.size()));
 
@@ -172,28 +206,27 @@ void impl::ElementData::setPropertyTreeValue_r( PropertyTree &pt, const StringSt
             impl::ElementData ed = it2->second.get_value<impl::ElementData>();
             ed.print();
         }
-
+*/
         throw std::runtime_error("Huh?! The string-string ptree has a different topology than the string-impl::ElementData ptree.");
     }
-    StringStringPTree::const_iterator end  = sspt.end();
-    PropertyTree::iterator            it2  = pt.begin();
-    for (StringStringPTree::const_iterator it   = sspt.begin(); it != end; it++, it2++) {
+    auto end  = sspt.end();
+    auto it2  = pt.begin();
+    for (auto it   = sspt.begin(); it != end; it++, it2++) {
         const string name = it->first;
 
         const string value = it->second.get_value<string>();
 
         // printf("setPropertyTreeValue_r: name=%s, value=%s\n", name.c_str(), value.c_str()); fflush(stdout);
-        impl::ElementData ed = it2->second.get_value<impl::ElementData>();
-        ed.setStringValue( value );
-        it2->second.put_value(ed);
-        setPropertyTreeValue_r(it2->second, it->second, level + 4);
+        pt[it->first].setStringValue(value);
+
+        setPropertyTreeValue_r(it2->second.propertyTree, it->second, level + 4);
     }
 }
 
 
 void impl::ElementData::setPropertyTreeValue( const StringStringPTree &sspt )
 {
-    setPropertyTreeValue_r(*propertyTree, sspt, 0);
+    setPropertyTreeValue_r(propertyTree, sspt, 0);
 }
 
 
@@ -289,42 +322,18 @@ impl::ElementData::getLength() const {
     return length;
 }
 
-void
-impl::ElementData::initializePropertyTree() {
-    propertyTree.reset( new PropertyTree() );
-}
 
 impl::ElementData::PropertyTree&
 impl::ElementData::getPropertyTree() {
-    if ( propertyTree.get() == 0 ) {
-        initializePropertyTree();
-    }
 
-    return *propertyTree;
+    return propertyTree;
 }
 
 const impl::ElementData::PropertyTree&
 impl::ElementData::getPropertyTree() const {
-    if ( propertyTree.get() == 0 ) {
-        throw std::runtime_error( "Trying the get a property tree but it is not initialized" );
-    }
-    return *propertyTree;
+    return propertyTree;
 }
 
-
-void impl::ElementData::print0(const PropertyTree &pt, const int level) const
-{
-    PropertyTree::const_iterator end = pt.end();
-    for (PropertyTree::const_iterator it = pt.begin(); it != end; ++it) {
-        for (int i=0; i<level; i++)
-            cout << " ";
-        PropertyTree val = it->second;
-        impl::ElementData d = val.get_value<impl::ElementData>();
-        std::cout << it->first << ": " << d.getStringValue() << std::endl;
-        //std::cout << it->first << ": " << "ugh" << std::endl;
-        print0(it->second, level + 4);
-    }
-}
 
 
 // For debugging
@@ -334,7 +343,7 @@ void impl::ElementData::print(void) const
     const bool complextype = (xsdType.compare("xsd:complexType") == 0);
     if (complextype) {
         printf("[complex type]\n");
-        print0(*propertyTree, 4);
+        //print0(*propertyTree, 4);
     } else {
         printf("[simple type] \tval=%s\n", getStringValue().c_str());
         if (!emptyRestrictionSet()) {
@@ -355,7 +364,7 @@ void impl::ElementData::print(void) const
 bool model::impl::ElementData::isComplexType() const
 {
    // Primitive implementation
-   return propertyTree.get() != NULL;
+   return propertyTree.size() > 0;
 }
 
 } // of namespace tinia

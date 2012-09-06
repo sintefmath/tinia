@@ -44,6 +44,7 @@ std::string model::StateElement::getStringValue() const
 
 model::StateElement::PropertyTree model::StateElement::getPropertyTree() const
 {
+    /*
    // TODO Make this more effective by implementing a "build on demand"-tree?
    // TODO Make this function return by reference (i.e. make destPropertyTree
    // an object member)?
@@ -57,6 +58,7 @@ model::StateElement::PropertyTree model::StateElement::getPropertyTree() const
                                  PropertyTree(StateElement(it->first, it->second.data()))));
    }
 
-   return destPropertyTree;
+   return destPropertyTree;*/
+    return m_data.getPropertyTree();
 }
 }

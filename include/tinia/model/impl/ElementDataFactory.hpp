@@ -68,12 +68,12 @@ ElementDataFactory::createElement<model::Viewer>( const Viewer& value ) const {
     auto projectionED = createMatrixElement( value.projectionMatrix.data() );
     auto modelviewED = createMatrixElement( value.modelviewMatrix.data() );
 
-    ptree.add( "width", widthED );
-    ptree.add( "height", heightED );
-    ptree.add( "projection", projectionED );
-    ptree.add( "modelview", modelviewED );
-    ptree.add( "timestamp", timestampED );
-    ptree.add( "sceneView", sceneViewED );
+    ptree[ "width"] =  widthED;
+    ptree[ "height"] =  heightED;
+    ptree["projection"] =  projectionED;
+    ptree["modelview"] =  modelviewED;
+    ptree["timestamp"] =  timestampED;
+    ptree["sceneView"] =  sceneViewED;
 
     return elementData;
 }
@@ -86,12 +86,12 @@ void
 ElementDataFactory::createT<model::Viewer>( const ElementData& elementData, Viewer& t ) const {
     const auto& ptree = elementData.getPropertyTree();
 
-    createT( ptree.get<ElementData>( "width"  ), t.width );
-    createT( ptree.get<ElementData>( "height" ), t.height );
-    createT( ptree.get<ElementData>( "timestamp" ) , t.timestamp );
-    createT( ptree.get<ElementData>( "sceneView" ) , t.sceneView );
-    createMatrix( ptree.get<ElementData>( "projection"), t.projectionMatrix.data() );
-    createMatrix( ptree.get<ElementData>( "modelview"), t.modelviewMatrix.data() );
+    createT( ptree.find("width")->second, t.width );
+    createT( ptree.find("height")->second, t.height );
+    createT( ptree.find("timestamp")->second , t.timestamp );
+    createT( ptree.find( "sceneView")->second , t.sceneView );
+    createMatrix( ptree.find("projection")->second, t.projectionMatrix.data() );
+    createMatrix( ptree.find("modelview")->second, t.modelviewMatrix.data() );
 }
 
 inline
