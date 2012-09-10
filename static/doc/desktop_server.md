@@ -1,4 +1,4 @@
-The integrated server{#sec_desktop_server}
+The Integrated Server{#sec_desktop_server}
 ===================================
 Each Tinia desktop program comes with the possibility to run a server from the
 program itself. The user may start up the ordinary Tinia desktop program, then
