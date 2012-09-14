@@ -67,8 +67,8 @@ ENDIF()
 # Remember to also update the list of components in the 
 # main CMakeLists.txt if you alter component names.
 
-  install( FILES ${qtcontroller_HEADERS}
-    DESTINATION include/tinia/qtcontroller  COMPONENT qtcontroller_dev)
+  install( DIRECTORY "../../include/tinia/qtcontroller" # ${qtcontroller_HEADERS}
+    DESTINATION include/tinia  COMPONENT qtcontroller_dev)
 
   install( FILES ${qtcontroller_HEADERS_MOC} ${qtcontroller_SOURCES_TO_BE_MOCED}
     DESTINATION include/tinia/qtcontroller/moc  COMPONENT qtcontroller_dev)
