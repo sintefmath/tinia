@@ -11,9 +11,9 @@ TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
 # Remember to also update the list of components in the 
 # main CMakeLists.txt if you alter component names.
 
-  install( FILES 
-    ${modelHeaders} 
-    DESTINATION include/tinia/model  
+  install( DIRECTORY
+    "../../include/tinia/model" 
+    DESTINATION include/tinia/  
     COMPONENT model_dev)
 
   install( TARGETS  

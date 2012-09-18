@@ -10,9 +10,9 @@ TARGET_LINK_LIBRARIES( jobcontroller ${Boost_LIBRARIES} model )
 # that using <component>-dev does not work with NSIS Windows installer.
 # Remember to also update the list of components in the 
 # main CMakeLists.txt if you alter component names.
-  install( FILES 
-    ${jobcontrollerHeaders} 
-    DESTINATION include/tinia/jobcontroller  
+  install( DIRECTORY 
+    "../../include/tinia/jobcontroller" 
+    DESTINATION include/tinia/
     COMPONENT jobcontroller_dev)
 
   install( TARGETS  

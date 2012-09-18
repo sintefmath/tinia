@@ -175,6 +175,10 @@ ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 ADD_SUBDIRECTORY( "tutorials/tutorial4/")
 ADD_SUBDIRECTORY( "tutorials/tutorial5/")
 
+install( FILES
+	"include/tinia/tinia.hpp" 
+    DESTINATION include/tinia/  
+    COMPONENT tinia_dev)
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
 
@@ -199,7 +203,8 @@ IF(WIN32)
          renderlistgl
          renderlistgl_dev
          qtcontroller
-         qtcontroller_dev         
+         qtcontroller_dev
+		 tinia_dev
          #simple_qt_job
          #tinia_3rdparty 
     )
