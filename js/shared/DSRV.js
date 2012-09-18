@@ -83,59 +83,79 @@ function DSRV(parameters) {
 
 
 DSRV.prototype = {
-    updateBoundingBox : function(bb) {
+    updateBoundingBox: function (bb) {
         bb = bb.split(" ");
         this.m_bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
         this.m_bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
+
+        // This is used to scale zooming levels
+        this.m_maxLength = Math.max(this.m_bbmax[0] - this.m_bbmin[0],
+            this.m_bbmax[1] - this.m_bbmin[1],
+            this.m_bbmax[2] - this.m_bbmin[1]);
     },
 
-    getBoundingBoxFromModel : function() {
+    getBoundingBoxFromModel: function () {
         this.updateBoundingBox(this.m_exposedModel.getElementValue(this.m_boundingBoxKey));
     },
 
-    setSize : function(w, h) {
+    setSize: function (w, h) {
 
         this.m_width = w;
         this.m_height = h;
         this.m_aspect = (w + 0.0) / h;
     },
-    mouseMoveEvent : function(event) {
-        switch(this.m_state) {
-        case this.ROTATE:
-            this.handleRotateMove(event.relativeX, event.relativeY);
+    mouseMoveEvent: function (event) {
+        switch (this.m_state) {
+            case this.ROTATE:
+                this.handleRotateMove(event.relativeX, event.relativeY);
 
-            break;
-        case this.ZOOM:
-            this.handleZoomMove(event.relativeX, event.relativeY);
-            break;
+                break;
+            case this.ZOOM:
+                this.handleZoomMove(event.relativeX, event.relativeY);
+                break;
         }
         this.updateMatrices();
         this.insertMatrices();
     },
 
-    mousePressEvent : function(event) {
+    mousePressEvent: function (event) {
         console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
-        switch(event.button) {
-        case this.ROTATE:
-            this.m_beginOrientation = quat4.create(this.m_orientation);
-            this.m_beginDirection = this.pointOnUnitSphere(event.relativeX, event.relativeY);
-            this.m_state = this.ROTATE;
-            break;
-        default:
-            this.m_state = -1;
+
+        // CTRL + Left mouse button is zoom.
+        if (event.ctrlKey && event.button == 0) {
+            console.log("Zooming start");
+            this.m_zoomStart = event.relativeY;
+            this.m_translateZBegin = this.m_translateZ;
+            this.m_state = this.ZOOM;
+            return;
+        }
+        switch (event.button) {
+            case this.ROTATE:
+                this.m_beginOrientation = quat4.create(this.m_orientation);
+                this.m_beginDirection = this.pointOnUnitSphere(event.relativeX, event.relativeY);
+                this.m_state = this.ROTATE;
+                break;
+            case this.ZOOM:
+                console.log("Zooming start");
+                this.m_zoomStart = event.relativeY;
+                this.m_translateZBegin = this.m_translateZ;
+                this.m_state = this.ZOOM;
+                break;
+            default:
+                this.m_state = -1;
         }
     },
 
-    mouseReleaseEvent : function(event) {
+    mouseReleaseEvent: function (event) {
         console.log("released");
         this.m_state = -1;
     },
 
-    keyPressEvent : function(event) {
+    keyPressEvent: function (event) {
         console.log(event.key);
     },
 
-    handleRotateMove: function(x, y) {
+    handleRotateMove: function (x, y) {
         var axis = vec3.create(this.m_beginDirection);
         var curr_dir = this.pointOnUnitSphere(x, y);
         axis = vec3.cross(axis, curr_dir);
@@ -150,7 +170,14 @@ DSRV.prototype = {
         }
     },
 
-    pointOnUnitSphere: function(x, y) {
+    handleZoomMove: function (x, y) {
+        console.log("Zooming move");
+        var scale = this.m_maxLength || this.m_height ? this.m_maxLength / this.m_height : 1;
+        this.m_translateZ = this.m_translateZBegin - (this.m_zoomStart - y) * scale;
+        console.log(this.m_translateZ);
+    },
+
+    pointOnUnitSphere: function (x, y) {
         var nx = ((2.0 * x) / this.m_width - 1.0) * this.m_aspect;
         var ny = -((2.0 * y) / this.m_height - 1.0);
         var r2 = nx * nx + ny * ny;
@@ -164,73 +191,73 @@ DSRV.prototype = {
         }
     },
 
-    updateMatrices: function()  {
+    updateMatrices: function () {
         var bbmax = this.m_bbmax;
         var bbmin = this.m_bbmin;
 
         // --- set up modelview matrix
         this.m_modelview = mat4.identity(mat4.create());
-        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, 0*this.m_translateZ]);
-        this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation) );
+        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, this.m_translateZ]);
+        this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation));
         this.m_modelview = mat4.translate(this.m_modelview,
-                                          [-0.5*(bbmin[0]+bbmax[0]),
-                                           -0.5*(bbmin[1]+bbmax[1]),
-                                           -0.5*(bbmin[2]+bbmax[2])
+                                          [-0.5 * (bbmin[0] + bbmax[0]),
+                                           -0.5 * (bbmin[1] + bbmax[1]),
+                                           -0.5 * (bbmin[2] + bbmax[2])
                                           ]);
 
         // --- set up projection matrix
 
         // the eight corners of the bounding box
-        var corners = [[ bbmin[0], bbmin[1], bbmin[2], 1.0 ],
-                       [ bbmin[0], bbmin[1], bbmax[2], 1.0 ],
-                       [ bbmin[0], bbmax[1], bbmin[2], 1.0 ],
-                       [ bbmin[0], bbmax[1], bbmax[2], 1.0 ],
-                       [ bbmax[0], bbmin[1], bbmin[2], 1.0 ],
-                       [ bbmax[0], bbmin[1], bbmax[2], 1.0 ],
-                       [ bbmax[0], bbmax[1], bbmin[2], 1.0 ],
-                       [ bbmax[0], bbmax[1], bbmax[2], 1.0 ]];
+        var corners = [[bbmin[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmax[2], 1.0]];
         // apply the modelview matrix to the eight corners to get the minimum
         // and maximum z in the camera's local coordinate system.
         var near, far;
-        for( i in corners ) {
+        for (i in corners) {
             var c = corners[i];
-            var p = mat4.multiplyVec4( this.m_modelview, c );
+            var p = mat4.multiplyVec4(this.m_modelview, c);
             //           window.console.log( p );
-            var z = (1.0/p[3])*p[2];
-            if( near == null ) {
+            var z = (1.0 / p[3]) * p[2];
+            if (near == null) {
                 near = z;
                 far = z;
             }
             else {
-                near = Math.max( near, z );
-                far = Math.min( far, z );
+                near = Math.max(near, z);
+                far = Math.min(far, z);
             }
         }
 
         // don't let far get closer than -epsilon.
         var epsilon = 0.001;
-        far = Math.min( -epsilon, far-epsilon );
+        far = Math.min(-epsilon, far - epsilon);
         // don't let near get closer than 0.01 of far, and make sure near is
         // closer than far
-        near = Math.min( 0.01*far, Math.max(far,near+epsilon) );
+        near = Math.min(0.01 * far, Math.max(far, near + epsilon));
 
 
         // use field of view and aspect ratio to determine width and height
-        var fov = Math.PI/2.0;
+        var fov = Math.PI / 2.0;
 
         var w2, h2;
-        if( this.m_aspect > 1.0 ) {
-            w2 = Math.tan( 0.5*fov )*-near;
-            h2 = w2/this.m_aspect;
+        if (this.m_aspect > 1.0) {
+            w2 = Math.tan(0.5 * fov) * -near;
+            h2 = w2 / this.m_aspect;
         }
         else {
-            h2 = Math.tan( 0.5*fov )*-near;
-            w2 = h2*this.m_aspect;
+            h2 = Math.tan(0.5 * fov) * -near;
+            w2 = h2 * this.m_aspect;
         }
-        this.m_projection = mat4.frustum( -w2, w2, -h2, h2, -near, -far );
+        this.m_projection = mat4.frustum(-w2, w2, -h2, h2, -near, -far);
     },
 
-    insertMatrices: function() {
+    insertMatrices: function () {
         var viewer = this.m_exposedModel.getElementValue(this.m_key);
         viewer.updateElement("modelview", this.m_modelview);
         viewer.updateElement("projection", this.m_projection);
