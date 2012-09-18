@@ -14,5 +14,5 @@ target_link_libraries ( tinia_javascript
 install( TARGETS 
     tinia_javascript LIBRARY 
     DESTINATION lib/ 
-    ARCHIVE DESTINATION /lib
-    COMPONENT qtcontroller)
+    ARCHIVE DESTINATION lib/
+	    COMPONENT qtcontroller)
