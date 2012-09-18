@@ -21,12 +21,13 @@ include(FindPackageHandleStandardArgs)
 set(BOOST_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
+FIND_PACKAGE( Boost 1.46 COMPONENTS filesystem unit_test_framework prg_exec_monitor thread date_time system )
 
 IF(${tinia_DESKTOP})
-  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript REQUIRED)
+  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript QtNetwork REQUIRED)
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
+      SET(QT_USE_QTNETWORK TRUE)
   SET(QT_USE_QTXML TRUE)
   SET(QT_USE_QTSCRIPT TRUE)
   ADD_DEFINITIONS(${QT_DEFINITIONS})
@@ -58,9 +59,9 @@ HINTS   "/usr/include/apr-1.0"
         "apr-1/"
         "apr-1.0")
 
-  find_package( LibXml2 REQUIRED )
 
 ENDIF()
+  find_package( LibXml2 REQUIRED )
 
 FIND_PATH( TINIA_INCLUDE_DIR tinia/model/ExposedModel.hpp
   "/usr/local/include/"
@@ -135,6 +136,20 @@ FIND_LIBRARY( tinia_jobcontroller_LIBRARY jobcontroller
 
 
 IF( ${tinia_DESKTOP} )
+	
+	FIND_LIBRARY( tinia_javascript_LIBRARY tinia_javascript
+    "/usr/local/lib/"
+    "/work/projects/tinia/"
+    "/work/projects/tinia/src/qtcontroller"
+    "$ENV{HOME}/projects/tinia/build/src/qtcontroller"
+    "$ENV{HOME}/lib/"
+    "$ENV{HOME}/install/lib/"
+    "${tinia_ROOT}/lib/"
+    "${tinia_ROOT}/lib/Release/"
+    "${tinia_ROOT}/lib/Debug/"
+    "../tinia/build/"
+    "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia/lib"
+  )
   FIND_LIBRARY( tinia_qtcontroller_LIBRARY qtcontroller
     "/usr/local/lib/"
     "/work/projects/tinia/"
@@ -151,7 +166,6 @@ IF( ${tinia_DESKTOP} )
 
 ENDIF()
 
-IF( ${tinia_SERVER} )
   FIND_LIBRARY( tinia_modelxml_LIBRARY modelxml
     "/usr/local/lib/"
     "/work/projects/tinia/"
@@ -166,6 +180,7 @@ IF( ${tinia_SERVER} )
     "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia/lib"
     )
 
+IF( ${tinia_SERVER} )
 
   FIND_LIBRARY( tinia_trell_LIBRARY trell
     "/usr/local/lib/"
@@ -192,7 +207,9 @@ find_package_handle_standard_args(Tinia  DEFAULT_MSG
                                   tinia_model_LIBRARY
                                   TINIA_INCLUDE_DIR
                                   tinia_RenderList_LIBRARY
-                                  tinia_RenderListGL_LIBRARY)
+                                  tinia_RenderListGL_LIBRARY
+								  tinia_modelxml_LIBRARY
+								  tinia_javascript_LIBRARY)
 ELSE()
 find_package_handle_standard_args(Tinia  DEFAULT_MSG
                                   tinia_jobcontroller_LIBRARY
@@ -244,11 +261,15 @@ IF(${tinia_DESKTOP})
     ${QT_QTOPENGL_LIBRARIES}
     ${tinia_qtcontroller_LIBRARY}
     ${GLEW_LIBRARY}
+	${LIBXML2_LIBRARIES}
+	${tinia_modelxml_LIBRARY}
+	${tinia_javascript_LIBRARY}
     )
  SET(TINIA_INCLUDE_DIRS}
     ${TINIA_INCLUDE_DIRS}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
+    ${LIBXML2_INCLUDE_DIRS}
 )
 ENDIF()
 
