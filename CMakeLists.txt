@@ -175,8 +175,9 @@ ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 ADD_SUBDIRECTORY( "tutorials/tutorial4/")
 ADD_SUBDIRECTORY( "tutorials/tutorial5/")
 
+FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")
 install( FILES
-	"include/tinia/tinia.hpp" 
+	${tinia_headerFiles} 
     DESTINATION include/tinia/  
     COMPONENT tinia_dev)
 
