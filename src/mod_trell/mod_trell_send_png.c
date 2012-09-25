@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -51,6 +51,8 @@ trell_send_png( trell_sconf_t*          sconf,
 {
     int i, j;
 
+    apr_time_t a = apr_time_now();
+
     // Todo: Move this into init code. Some care must be taken to make sure
     // it is reentrant.
     unsigned long crc_table[ 256 ];
@@ -66,6 +68,7 @@ trell_send_png( trell_sconf_t*          sconf,
         }
         crc_table[j] = c;
     }
+    apr_time_t b = apr_time_now();
 
     // Apply an PNG prediction filter, and do it upside-down effectively
     // flipping the image.
@@ -174,6 +177,13 @@ trell_send_png( trell_sconf_t*          sconf,
     APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
 
     apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+
+    apr_time_t q = apr_time_now();
+
+    float foo = ((float)(q-a)*(1000.0f/APR_USEC_PER_SEC));
+    float bar = ((float)(b-a)*(1000.0f/APR_USEC_PER_SEC));
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: sent png, used %f ms (%f ms is stupid work)", getpid(), foo, bar );
+
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
         return HTTP_INTERNAL_SERVER_ERROR;

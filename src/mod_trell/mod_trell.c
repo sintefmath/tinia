@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,6 +23,7 @@
 #include <util_script.h>
 #include <ap_config.h>
 #include <apr_strings.h>
+#include <apr_time.h>
 #include <http_log.h>
 
 #include <sys/types.h>
@@ -47,7 +48,7 @@ module AP_MODULE_DECLARE_DATA trell_module;
 
 
 /** Apache's entry-point to mod_trell. */
-static int trell_handler_body(request_rec *r)
+static int trell_handler_body_wrap(request_rec *r)
 {
     if (!r->handler || strcmp(r->handler, "trell") ) {
         return DECLINED;
@@ -176,9 +177,14 @@ static int trell_handler_body(request_rec *r)
 
 static int trell_handler(request_rec *r)
 {
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: begin.", getpid() );
-    int retval = trell_handler_body( r );
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: end = %d.", getpid(), retval );
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: --- %d: begin.", getpid() );
+    apr_time_t a = apr_time_now();
+    int retval = trell_handler_body_wrap( r );
+    apr_time_t b = apr_time_now();
+
+    float foo = ((float)(b-a)*(1000.0f/APR_USEC_PER_SEC));
+
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: --- %d: end = %d, time spent=%f ms", getpid(), retval, foo );
     return retval;
 }
 
@@ -385,12 +391,12 @@ mod_trell_register_hooks (apr_pool_t *p)
 
 module AP_MODULE_DECLARE_DATA trell_module =
 {
-	STANDARD20_MODULE_STUFF,
-	NULL,
-	NULL,
+    STANDARD20_MODULE_STUFF,
+    NULL,
+    NULL,
         mod_trell_create_svr_conf,
         mod_trell_merge_svr_conf,
         mod_trell_commands,
-	mod_trell_register_hooks,
+    mod_trell_register_hooks,
 };
 

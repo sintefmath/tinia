@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -112,6 +112,7 @@ trell_send_xml( trell_sconf_t*   sconf,
                        const char*      payload,
                        const size_t     payload_size )
 {
+    apr_time_t a = apr_time_now();
     size_t size = payload_size;
     if( size > 0 && payload[size-1] == '\0' ) {
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "Trimmed tailing zero from XML." );
@@ -135,6 +136,11 @@ trell_send_xml( trell_sconf_t*   sconf,
     APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
 
     apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+
+    apr_time_t q = apr_time_now();
+    float foo = ((float)(q-a)*(1000.0f/APR_USEC_PER_SEC));
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: sent xml, used %f ms", getpid(), foo );
+
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
         return HTTP_INTERNAL_SERVER_ERROR;
