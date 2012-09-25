@@ -38,7 +38,7 @@ IF(WIN32)
   #OPTION( TINIA_3RDPARTY_LOC "Location of Tinia 3rdparty" "$ENV{TINIA_3RDPARTY}" )
   SET( Tinia_3RDPARTY_LOC $ENV{TINIA_3RDPARTY} CACHE PATH "Location of Tinia 3rdparty" )
   SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
-	"${Tinia_3RDPARTY_LOC}" )
+        "${Tinia_3RDPARTY_LOC}" )
 ENDIF()
 
 
@@ -48,7 +48,7 @@ ENDIF()
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
         #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
-	#CAREFUL, this will append the above string for each time CMAKE is run!
+        #CAREFUL, this will append the above string for each time CMAKE is run!
 ENDIF()
 
 
@@ -84,10 +84,10 @@ FIND_PACKAGE( GLM REQUIRED )
 
 IF(${Tinia_SERVER})
 
-  FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
-    HINTS "/usr/include/apache2" "/usr/include/httpd/" 
+  FIND_PATH( APACHE_INCLUDE_DIR httpd.h
+    HINTS "/usr/include/apache2" "/usr/include/httpd/"
   )
-  
+
   FIND_LIBRARY( RT
     NAMES rt
     PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
@@ -97,7 +97,7 @@ IF(${Tinia_SERVER})
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-    
+
   FIND_PATH(APR_INCLUDE_DIR "apr.h"
 HINTS   "/usr/include/apr-1.0"
         "/usr/include/apr-1"
@@ -105,7 +105,7 @@ HINTS   "/usr/include/apr-1.0"
         "apr-1.0")
 ENDIF()
 
-include_directories( "./include" 
+include_directories( "./include"
   ${LIBXML2_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
@@ -160,7 +160,7 @@ ADD_SUBDIRECTORY( "tutorials/tutorial1/")
 ADD_SUBDIRECTORY( "tutorials/tutorial2/")
 ADD_SUBDIRECTORY( "tutorials/tutorial3/")
 ADD_SUBDIRECTORY( "tutorials/tutorial4/")
-ADD_SUBDIRECTORY( "tutorials/tutorial5/")
+#ADD_SUBDIRECTORY( "tutorials/tutorial5/")
 
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
@@ -176,9 +176,9 @@ IF(WIN32)
     SET( CPACK_NSIS_CONTACT "kjetil.olsen.lye@sintef.no" )
     SET(CPACK_PACKAGE_INSTALL_DIRECTORY "tinia-${version_number}")
     SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Akerselva")
-    SET( CPACK_COMPONENTS_ALL 
+    SET( CPACK_COMPONENTS_ALL
          model
-         model_dev   
+         model_dev
          jobcontroller
          jobcontroller_dev
          renderlist
@@ -186,9 +186,9 @@ IF(WIN32)
          renderlistgl
          renderlistgl_dev
          qtcontroller
-         qtcontroller_dev         
+         qtcontroller_dev
          #simple_qt_job
-         #tinia_3rdparty 
+         #tinia_3rdparty
     )
 ELSE()
     SET( CPACK_GENERATOR "DEB" )

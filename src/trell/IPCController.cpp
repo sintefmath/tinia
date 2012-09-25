@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,6 +28,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include "tinia/trell/IPCController.hpp"
 #include "tinia/trell/messenger.h"
 
@@ -458,12 +459,82 @@ IPCController::run(int argc, char **argv)
             // Then check for messages or timeout within a minute whatever comes first
             timeout.tv_sec += 5;
 
+            timespec time_a;
+            clock_gettime( CLOCK_REALTIME, &time_a );
             if( sem_timedwait( m_sem_query, &timeout ) == 0 ) {
-                std::cerr << "Got message.\n";
+
+                timespec time_b;
+                clock_gettime( CLOCK_REALTIME, &time_b );
+
                 msync( m_shmem_ptr, m_shmem_size, MS_SYNC );
+                trell_message_t src_copy = *(trell_message*)m_shmem_ptr;
+
+                timespec time_c;
+                clock_gettime( CLOCK_REALTIME, &time_c );
+
                 size_t osize = handle( (trell_message*)m_shmem_ptr, m_shmem_size );
+
+                timespec time_d;
+                clock_gettime( CLOCK_REALTIME, &time_d );
+
                 msync( m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
                 sem_post( m_sem_reply );
+
+                timespec time_e;
+                clock_gettime( CLOCK_REALTIME, &time_e);
+
+                std::cerr << "Handled msg, src=";
+                switch( src_copy.m_type ) {
+                case TRELL_MESSAGE_ERROR:
+                    std::cerr << "type_error"; break;
+                case TRELL_MESSAGE_OK:
+                    std::cerr << "type_ok"; break;
+                case TRELL_MESSAGE_XML:
+                    std::cerr << "type_xml"; break;
+                case TRELL_MESSAGE_SCRIPT:
+                    std::cerr << "type_script"; break;
+                case TRELL_MESSAGE_HEARTBEAT:           std::cerr << "type_heartbeat"; break;
+                case TRELL_MESSAGE_ARGS:                std::cerr << "type_args"; break;
+                case TRELL_MESSAGE_DIE:                 std::cerr << "type_die"; break;
+                case TRELL_MESSAGE_GET_POLICY_UPDATE:   std::cerr << "type_get_policy_update"; break;
+                case TRELL_MESSAGE_UPDATE_STATE:        std::cerr << "type_update_state"; break;
+                case TRELL_MESSAGE_GET_SNAPSHOT:
+                    std::cerr << "type_get_snapshot"; break;
+                case TRELL_MESSAGE_IMAGE:               std::cerr << "type_image"; break;
+                case TRELL_MESSAGE_GET_RENDERLIST:      std::cerr << "type_get_renderlist"; break;
+                case TRELL_MESSAGE_GET_SCRIPTS:         std::cerr << "type_get_scripts"; break;
+                }
+
+                std::cerr << ", dst=";
+                switch( ((trell_message*)m_shmem_ptr)->m_type ) {
+                case TRELL_MESSAGE_ERROR:
+                    std::cerr << "type_error"; break;
+                case TRELL_MESSAGE_OK:
+                    std::cerr << "type_ok"; break;
+                case TRELL_MESSAGE_XML:
+                    std::cerr << "type_xml"; break;
+                case TRELL_MESSAGE_SCRIPT:
+                    std::cerr << "type_script"; break;
+                case TRELL_MESSAGE_HEARTBEAT:           std::cerr << "type_heartbeat"; break;
+                case TRELL_MESSAGE_ARGS:                std::cerr << "type_args"; break;
+                case TRELL_MESSAGE_DIE:                 std::cerr << "type_die"; break;
+                case TRELL_MESSAGE_GET_POLICY_UPDATE:   std::cerr << "type_get_policy_update"; break;
+                case TRELL_MESSAGE_UPDATE_STATE:        std::cerr << "type_update_state"; break;
+                case TRELL_MESSAGE_GET_SNAPSHOT:
+                    std::cerr << "type_get_snapshot"; break;
+                case TRELL_MESSAGE_IMAGE:               std::cerr << "type_image"; break;
+                case TRELL_MESSAGE_GET_RENDERLIST:      std::cerr << "type_get_renderlist"; break;
+                case TRELL_MESSAGE_GET_SCRIPTS:         std::cerr << "type_get_scripts"; break;
+                }
+                std::cerr << ", total="    << (1e-6*((1000000000ull*(time_e.tv_sec-time_b.tv_sec) + time_e.tv_nsec)-time_b.tv_nsec)) << "ms";
+                std::cerr << ", sync_in="  << (1e-6*((1000000000ull*(time_c.tv_sec-time_b.tv_sec) + time_c.tv_nsec)-time_b.tv_nsec)) << "ms";
+                std::cerr << ", process="  << (1e-6*((1000000000ull*(time_d.tv_sec-time_c.tv_sec) + time_d.tv_nsec)-time_c.tv_nsec)) << "ms";
+                std::cerr << ", sync_out=" << (1e-6*((1000000000ull*(time_e.tv_sec-time_d.tv_sec) + time_e.tv_nsec)-time_d.tv_nsec)) << "ms";
+                std::cerr << " (waited="     << (1e-6*((1000000000ull*(time_b.tv_sec-time_a.tv_sec) + time_b.tv_nsec)-time_a.tv_nsec)) << "ms)";
+                std::cerr << "\n";
+
+
+
             }
 
             if( m_notify ) {
