@@ -67,6 +67,7 @@ dojo.declare("model.ExposedModelSender", null, {
     
     _send: function(xml) {
         this._updateInProgress = true;
+        var timeNow = new Date().getTime();
         dojo.rawXhrPost({
             url: this._makeURL(),
             postData : xml,
@@ -74,11 +75,15 @@ dojo.declare("model.ExposedModelSender", null, {
             
             preventCache: true,
             load : dojo.hitch(this, function(response, ioArgs) {
+                console.log("Time taken is: " + (new Date().getTime() - timeNow ));
+                var timeNext = new Date().getTime();
                 try {
                     this._updateComplete(response, ioArgs);
+                    
                 } catch( error ) {
                     
                 }
+                console.log("Time taken total is: " + (new Date().getTime() - timeNow ) + ", partial time is: " + (new Date().getTime() - timeNext));
                 return response;
             }),
             error: dojo.hitch(this, function(response, ioArgs) {
