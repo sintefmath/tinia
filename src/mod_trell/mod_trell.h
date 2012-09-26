@@ -27,6 +27,26 @@
 
 
 
+
+enum TrellComponent {
+    TRELL_COMPONENT_NONE = 0,
+    TRELL_COMPONENT_OPS,
+    TRELL_COMPONENT_MASTER,
+    TRELL_COMPONENT_JOB
+};
+
+enum TrellRequest {
+    TRELL_REQUEST_NONE = 0,
+    TRELL_REQUEST_STATIC_FILE,
+    TRELL_REQUEST_RPC_XML,
+    TRELL_REQUEST_POLICY_UPDATE_XML,
+    TRELL_REQUEST_STATE_UPDATE_XML,
+    TRELL_REQUEST_PNG,
+    TRELL_REQUEST_BMP,
+    TRELL_REQUEST_GET_RENDERLIST,
+    TRELL_REQUEST_GET_SCRIPT
+};
+
 /** Trell configuration structure.
   *
   * Elements set in httpd.conf.
@@ -48,6 +68,9 @@ typedef struct mod_trell_svr_conf
     /** WWW root for jobs, use TrellJobWWWRoot to set. */
     const char*   m_job_www_root;
 
+    const char*   m_img_format;
+    enum TrellRequest    m_base64_img_request;
+
     /** Schema that validates XML RPC queries to /ops */
     xmlSchemaPtr  m_rpc_ops_schema;
     /** Schema that validates XML RPC queries to /master */
@@ -57,24 +80,6 @@ typedef struct mod_trell_svr_conf
     /** Schema that validates XML RPC replies */
     xmlSchemaPtr  m_rpc_reply_schema;
 } trell_sconf_t;
-
-enum TrellComponent {
-    TRELL_COMPONENT_NONE = 0,
-    TRELL_COMPONENT_OPS,
-    TRELL_COMPONENT_MASTER,
-    TRELL_COMPONENT_JOB
-};
-
-enum TrellRequest {
-    TRELL_REQUEST_NONE = 0,
-    TRELL_REQUEST_STATIC_FILE,
-    TRELL_REQUEST_RPC_XML,
-    TRELL_REQUEST_POLICY_UPDATE_XML,
-    TRELL_REQUEST_STATE_UPDATE_XML,
-    TRELL_REQUEST_PNG,
-    TRELL_REQUEST_GET_RENDERLIST,
-    TRELL_REQUEST_GET_SCRIPT
-};
 
 enum TrellModAction {
     TRELL_MOD_ACTION_NONE,
@@ -100,6 +105,7 @@ typedef struct mod_trell_dispatch_info
 
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info,
+                        trell_sconf_t* sconf,
                         request_rec*           r );
 
 /** Handles long-polling request from client.
@@ -169,6 +175,11 @@ trell_send_xml_success( trell_sconf_t*  sconf,
 int
 trell_send_xml_failure( trell_sconf_t*  sconf,
                         request_rec*    r );
+
+int
+trell_send_bmp( request_rec* r,
+                trell_dispatch_info_t*  dispatch_info,
+                struct messenger* msgr );
 
 int
 trell_send_png( trell_sconf_t*          sconf,

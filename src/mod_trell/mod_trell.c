@@ -71,7 +71,7 @@ static int trell_handler_body_wrap(request_rec *r)
 
     int code;
     trell_dispatch_info_t dispatch_info;
-    code = trell_decode_path_info( &dispatch_info, r );
+    code = trell_decode_path_info( &dispatch_info, sconf, r );
     if( code != OK ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                        "mod_trell: decode_path_info fauled to decode request='%s'", r->path_info );
@@ -137,6 +137,7 @@ static int trell_handler_body_wrap(request_rec *r)
             return trell_handle_update_state( sconf, r, &dispatch_info );
             break;
         case TRELL_REQUEST_PNG:
+        case TRELL_REQUEST_BMP:
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
                 int rv = trell_handle_update_state( sconf, r, &dispatch_info );
@@ -255,6 +256,12 @@ trell_child_init(apr_pool_t *p, server_rec *s)
                        "mod_trell: Illegal configuration, giving up" );
     }
 
+    svr_conf->m_base64_img_request = TRELL_REQUEST_PNG;
+    if( svr_conf->m_img_format != NULL ) {
+        if( apr_strnatcasecmp( svr_conf->m_img_format, "bmp" ) == 0 ) {
+            svr_conf->m_base64_img_request = TRELL_REQUEST_BMP;
+        }
+    }
 
 
     xmlInitParser();
@@ -303,6 +310,7 @@ mod_trell_create_svr_conf( apr_pool_t* pool, server_rec* s )
     cfg->m_app_root_dir = NULL;
     cfg->m_schema_root_dir = NULL;
     cfg->m_job_www_root = NULL;
+    cfg->m_img_format = NULL;
     cfg->m_rpc_ops_schema = NULL;
     cfg->m_rpc_master_schema = NULL;
     cfg->m_rpc_job_schema = NULL;
@@ -322,6 +330,7 @@ mod_trell_merge_svr_conf( apr_pool_t* pool, void* base_, void* add_ )
     res->m_app_root_dir = (add->m_app_root_dir == NULL) ? base->m_app_root_dir : add->m_app_root_dir;
     res->m_schema_root_dir = (add->m_schema_root_dir == NULL) ? base->m_schema_root_dir : add->m_schema_root_dir;
     res->m_job_www_root = (add->m_job_www_root == NULL) ? base->m_job_www_root : add->m_job_www_root;
+    res->m_img_format = (add->m_img_format == NULL ) ? base->m_img_format : add->m_img_format;
     return res;
 }
 
@@ -374,8 +383,12 @@ static const command_rec mod_trell_commands[] = {
                    RSRC_CONF,
                    "Root directory where static job www resources reside"
     ),
-
-
+    AP_INIT_TAKE1( "TrellImgFormat",
+                   mod_trell_conf_string_set_callback,
+                   (void*)APR_OFFSETOF(struct mod_trell_svr_conf, m_img_format),
+                   RSRC_CONF,
+                   "Image format returned by base64 image fetch (BMP or PNG)"
+    ),
     { NULL }
 };
 

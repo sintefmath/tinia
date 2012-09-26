@@ -225,6 +225,12 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                     // messenger is unlock by send_png
                     // mrv = messenger_unlock( &msgr );
                 }
+                else if( dispatch_info->m_request == TRELL_REQUEST_BMP ) {
+                    retval = trell_send_bmp( r,
+                                             dispatch_info,
+                                             &msgr );
+                    mrv = messenger_unlock( &msgr );
+                }
                 else {
                     retval = HTTP_NOT_IMPLEMENTED;
                     mrv = messenger_unlock( &msgr );

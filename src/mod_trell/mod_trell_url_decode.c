@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,7 +24,9 @@
 
 
 int
-trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
+trell_decode_path_info( trell_dispatch_info_t* dispatch_info,
+                        trell_sconf_t* sconf,
+                        request_rec *r )
 {
     dispatch_info->m_component = TRELL_COMPONENT_NONE;
     dispatch_info->m_request = TRELL_REQUEST_NONE;
@@ -195,7 +197,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         require_key    = 1;
         require_width  = 1;
         require_height = 1;
-        dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_request = sconf->m_base64_img_request;//TRELL_REQUEST_BMP;
         dispatch_info->m_base64 = 1;
     }
     else if( strcmp( dispatch_info->m_requestname, "getRenderList.xml" ) == 0 ) {
