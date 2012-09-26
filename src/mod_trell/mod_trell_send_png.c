@@ -47,7 +47,9 @@ trell_send_png( trell_sconf_t*          sconf,
                 const int               width,
                 const int               height,
                 const char*             payload,
-                const size_t            payload_size )
+                const size_t            payload_size,
+                messenger_t*            messenger,
+                messenger_status_t*     messenger_status )
 {
     int i, j;
 
@@ -81,6 +83,15 @@ trell_send_png( trell_sconf_t*          sconf,
             filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = payload[ 3*width*(height-j-1) + 3*i + 0 ];
         }
     }
+
+    // we can now release the messenger before compressing.
+    if( messenger != NULL ) {
+        messenger_status_t status = messenger_unlock( messenger );
+        if( messenger_status != NULL ) {
+            *messenger_status = status;
+        }
+    }
+
     apr_time_t b = apr_time_now();
 
 

@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -209,6 +209,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                                "mod_trell: messenger_post('%s') failed: %s",
                                dispatch_info->m_jobid, messenger_strerror( mrv ) );
                 retval = HTTP_INTERNAL_SERVER_ERROR;
+                mrv = messenger_unlock( &msgr );
             }
             else if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
 
@@ -218,18 +219,23 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                                              msg->m_image.m_width,
                                              msg->m_image.m_height,
                                              msg->m_image.m_data,
-                                             0u );
+                                             0u,
+                                             &msgr,
+                                             &mrv );
+                    // messenger is unlock by send_png
+                    // mrv = messenger_unlock( &msgr );
                 }
                 else {
                     retval = HTTP_NOT_IMPLEMENTED;
+                    mrv = messenger_unlock( &msgr );
                 }
             }
             else {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                                "mod_trell: argh" );
+                mrv = messenger_unlock( &msgr );
             }
 
-            mrv = messenger_unlock( &msgr );
             if( mrv != MESSENGER_OK ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                                "mod_trell: messenger_unlock('%s') failed: %s",
