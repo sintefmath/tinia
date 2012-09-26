@@ -12,6 +12,7 @@ find_path(GLM_INCLUDE_DIR
 	"~/mylibs/glm"
 	"/usr/local/include/glm"
         "$ENV{PROGRAMFILES(x86)}/glm/include" # This is the default installation path    
+	"${GLM_ROOT}" #same as GLM_INCLUDE_DIR, but following find script convention
 )
 
 if(NOT GLM_INCLUDE_DIR OR GLM_INCLUDE_DIR MATCHES "NOTFOUND")

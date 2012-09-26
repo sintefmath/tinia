@@ -13,6 +13,7 @@ FIND_LIBRARY(GLEW_LIBRARY
   "$ENV{PROGRAMW6432}/Microsoft SDKs/Windows/v6.0A/Lib"
   "~/mylibs/glew/lib"
   "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v7.0A/Lib"
+  "${GLEW_ROOT}/lib"
   )
 
 #Find glew header
@@ -23,6 +24,7 @@ FIND_PATH(GLEW_INCLUDE_DIR "GL/glew.h"
   "$ENV{PROGRAMW6432}/Microsoft SDKs/Windows/v6.0A/Include"
   "~/mylibs/glew/include"
   "$ENV{ProgramFiles}/Microsoft SDKs/Windows/v7.0A/Include"
+  "${GLEW_ROOT}/include"
 )
 
 #check that we have found everything
