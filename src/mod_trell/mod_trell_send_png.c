@@ -68,7 +68,6 @@ trell_send_png( trell_sconf_t*          sconf,
         }
         crc_table[j] = c;
     }
-    apr_time_t b = apr_time_now();
 
     // Apply an PNG prediction filter, and do it upside-down effectively
     // flipping the image.
@@ -82,6 +81,7 @@ trell_send_png( trell_sconf_t*          sconf,
             filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = payload[ 3*width*(height-j-1) + 3*i + 0 ];
         }
     }
+    apr_time_t b = apr_time_now();
 
 
     uLong bound = compressBound( (3*width+1)*height );
@@ -182,7 +182,7 @@ trell_send_png( trell_sconf_t*          sconf,
 
     float foo = ((float)(q-a)*(1000.0f/APR_USEC_PER_SEC));
     float bar = ((float)(b-a)*(1000.0f/APR_USEC_PER_SEC));
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: sent png, used %f ms (%f ms is stupid work)", getpid(), foo, bar );
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: sent png, used %f ms (%f ms my stupid work)", getpid(), foo, bar );
 
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
