@@ -197,7 +197,7 @@ DSRV.prototype = {
 
         // --- set up modelview matrix
         this.m_modelview = mat4.identity(mat4.create());
-        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, this.m_translateZ]);
+        this.m_modelview = mat4.translate(this.m_modelview, [0, 0, -this.m_translateZ]);
         this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation));
         this.m_modelview = mat4.translate(this.m_modelview,
                                           [-0.5 * (bbmin[0] + bbmax[0]),
