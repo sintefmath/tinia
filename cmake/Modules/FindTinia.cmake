@@ -257,34 +257,36 @@ IF(${Tinia_FIND_DESKTOP} )
     ${tinia_qtcontroller_LIBRARY}
     ${LIBXML2_LIBRARIES}
     ${tinia_modelxml_LIBRARY}
-    ${tinia_javascript_LIBRARY}
+    #${tinia_javascript_LIBRARY}
     )
 
-  SET(TINIA_INCLUDE_DIRS}
+  SET(TINIA_INCLUDE_DIRS
     ${TINIA_INCLUDE_DIRS}
     ${QT_INCLUDE_DIR}
     ${QT_QTOPENGL_INCLUDE_DIR}
-    ${LIBXML2_INCLUDE_DIRS}
+    ${LIBXML2_INCLUDE_DIR}
     )
 ENDIF()
 
 IF(${Tinia_FIND_SERVER})
   SET(TINIA_LIBRARIES
     ${TINIA_LIBRARIES}
-    ${tinia_modelxml_LIBRARY}
+ #   ${tinia_modelxml_LIBRARY}
     ${tinia_trell_LIBRARY}
     ${RT}
     ${LIB_APR}
   )
 
-  SET(TINIA_INCLUDE_DIRS}
+  SET(TINIA_INCLUDE_DIRS
     ${TINIA_INCLUDE_DIRS}
     ${APACHE_INCLUDE_DIR}
     ${APR_INCLUDE_DIR}
-    ${LIBXML2_INCLUDE_DIRS}
+    ${LIBXML2_INCLUDE_DIR}
   )
 ENDIF()
 
 IF( NOT(${LIBXML2_FOUND}) )
   MESSAGE( "LibXml2 not found. \nYou can still build desktop projects, but loose the ability to use job as web-application or take it with you" )
+ELSE()
+    ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
 ENDIF()
