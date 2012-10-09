@@ -285,6 +285,6 @@ IF(${Tinia_FIND_SERVER})
   )
 ENDIF()
 
-IF( NOT(${LIBXML2_INCLUDE_DIRS}) )
+IF( NOT(${LIBXML2_FOUND}) )
   MESSAGE( "LibXml2 not found. \nYou can still build desktop projects, but loose the ability to use job as web-application or take it with you" )
 ENDIF()
