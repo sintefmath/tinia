@@ -167,15 +167,11 @@ DSRV.prototype = {
 
         var l = vec3.length(axis);
         if (Math.abs(l) > 1e-8) {
-            console.log("(x,y)=("+ x+", " + y+")");
             axis = vec3.normalize(axis);
-            console.log("curr_dir = (" + curr_dir[0] + ", " + curr_dir[1] + ", " + curr_dir[2] + ")");
             var a = Math.acos(vec3.dot(this.m_beginDirection, curr_dir));
-            console.log("axis = (" + axis[0] + ", " + axis[1] + ", " + axis[2] + ")");
             var q = quat4.fromAngleAxis(a, axis);
             this.m_orientation = quat4.create(this.m_beginOrientation);
             this.m_orientation = quat4.multiply(q, this.m_orientation);
-             console.log("orientation = (" + this.m_orientation[0] + ", " + this.m_orientation[1] +", " + this.m_orientation[2] + ", " + this.m_orientation[3] + ")");
         }
     },
 
