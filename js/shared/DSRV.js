@@ -16,6 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 function axisAngle(axis, angle) {
     var q = quat4.create();
     var s = Math.sin(0.5 * angle);
@@ -24,7 +25,7 @@ function axisAngle(axis, angle) {
     q[0] = s * axis[0];
     q[1] = s * axis[1];
     q[2] = s * axis[2];
-    q[3] = -c;
+    q[3] = c;
 
     return q;
 }
@@ -34,8 +35,8 @@ function DSRV(parameters) {
     this.m_key = parameters.key;
     this.m_boundingBoxKey = parameters.boundingBoxKey;
 
-    this.m_orientation = quat4.create();
-    this.m_orientation[3] = 1;
+    this.m_orientation = quat4.identity();
+
 
     this.m_projection = mat4.identity(mat4.create());
     this.m_modelview = mat4.identity(mat4.create());
@@ -48,7 +49,7 @@ function DSRV(parameters) {
     this.ROTATE = 0;
     this.ZOOM = 1;
 
-    this.m_beginDirection = vec3.create();
+    this.m_beginDirection = vec3.create([0,0,0]);
 
     this.m_translateZ = 4;
 
@@ -67,7 +68,7 @@ function DSRV(parameters) {
     this.m_exposedModel.addLocalListener(this.m_key, tinia.hitch(this, function(key, viewer) {
         var height = viewer.getElementValue("height");
         var width = viewer.getElementValue("width");
-        if(height != this.m_height || width != this.m_width) {
+        if(height !== this.m_height || width !== this.m_width) {
             this.setSize(width, height);
             this.updateMatrices();
             this.insertMatrices();
@@ -85,8 +86,9 @@ function DSRV(parameters) {
 DSRV.prototype = {
     updateBoundingBox: function (bb) {
         bb = bb.split(" ");
-        this.m_bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
-        this.m_bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
+
+        this.m_bbmin = vec3.create([bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0]);
+        this.m_bbmax = vec3.create([bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0]);
 
         // This is used to scale zooming levels
         this.m_maxLength = Math.max(this.m_bbmax[0] - this.m_bbmin[0],
@@ -100,9 +102,9 @@ DSRV.prototype = {
 
     setSize: function (w, h) {
 
-        this.m_width = w;
-        this.m_height = h;
-        this.m_aspect = (w + 0.0) / h;
+        this.m_width = w - 0.0;
+        this.m_height = h - 0.0;
+        this.m_aspect = (w - 0.0) / h;
     },
     mouseMoveEvent: function (event) {
         switch (this.m_state) {
@@ -114,15 +116,18 @@ DSRV.prototype = {
                 this.handleZoomMove(event.relativeX, event.relativeY);
                 break;
         }
-        this.updateMatrices();
-        this.insertMatrices();
+
+        if(this.m_state > -1) {
+            this.updateMatrices();
+            this.insertMatrices();
+        }
     },
 
     mousePressEvent: function (event) {
         console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
 
         // CTRL + Left mouse button is zoom.
-        if (event.ctrlKey && event.button == 0) {
+        if (event.ctrlKey && event.button === 0) {
             console.log("Zooming start");
             this.m_zoomStart = event.relativeY;
             this.m_translateZBegin = this.m_translateZ;
@@ -162,32 +167,37 @@ DSRV.prototype = {
 
         var l = vec3.length(axis);
         if (Math.abs(l) > 1e-8) {
-            vec3.normalize(axis);
-            var a = Math.acos(vec3.dot(curr_dir, this.m_beginDirection));
-            var q = axisAngle(axis, a);
+            console.log("(x,y)=("+ x+", " + y+")");
+            axis = vec3.normalize(axis);
+            console.log("curr_dir = (" + curr_dir[0] + ", " + curr_dir[1] + ", " + curr_dir[2] + ")");
+            var a = Math.acos(vec3.dot(this.m_beginDirection, curr_dir));
+            console.log("axis = (" + axis[0] + ", " + axis[1] + ", " + axis[2] + ")");
+            var q = quat4.fromAngleAxis(a, axis);
             this.m_orientation = quat4.create(this.m_beginOrientation);
-            this.m_orientation = quat4.multiply(this.m_orientation, q);
+            this.m_orientation = quat4.multiply(q, this.m_orientation);
+             console.log("orientation = (" + this.m_orientation[0] + ", " + this.m_orientation[1] +", " + this.m_orientation[2] + ", " + this.m_orientation[3] + ")");
         }
     },
 
     handleZoomMove: function (x, y) {
         console.log("Zooming move");
         var scale = this.m_maxLength || this.m_height ? this.m_maxLength / this.m_height : 1;
-        this.m_translateZ = this.m_translateZBegin - (this.m_zoomStart - y) * scale;
+        this.m_translateZ = this.m_translateZBegin - (y - this.m_zoomStart) * scale;
         console.log(this.m_translateZ);
     },
 
     pointOnUnitSphere: function (x, y) {
-        var nx = ((2.0 * x) / this.m_width - 1.0) * this.m_aspect;
-        var ny = -((2.0 * y) / this.m_height - 1.0);
+        var nx = (x / this.m_width - .5) * this.m_aspect;
+        var ny = -( y / this.m_height - .5);
         var r2 = nx * nx + ny * ny;
 
-        if (r2 < 1.0) {
+        if (r2 < 1 ) {
             return vec3.create([nx, ny, Math.sqrt(1.0 - r2)]);
         }
         else {
             var r = 1.0 / Math.sqrt(r2);
             return vec3.create([r * nx, r * ny, 0.0]);
+            //return vec3.create(nx, ny, 0.5/Math.sqrt(r2));
         }
     },
 
@@ -200,10 +210,10 @@ DSRV.prototype = {
         this.m_modelview = mat4.translate(this.m_modelview, [0, 0, -this.m_translateZ]);
         this.m_modelview = mat4.multiply(this.m_modelview, quat4.toMat4(this.m_orientation));
         this.m_modelview = mat4.translate(this.m_modelview,
-                                          [-0.5 * (bbmin[0] + bbmax[0]),
-                                           -0.5 * (bbmin[1] + bbmax[1]),
-                                           -0.5 * (bbmin[2] + bbmax[2])
-                                          ]);
+                                         [-0.5 * (bbmin[0] + bbmax[0]),
+                                          -0.5 * (bbmin[1] + bbmax[1]),
+                                          -0.5 * (bbmin[2] + bbmax[2])
+                                         ]);
 
         // --- set up projection matrix
 
@@ -254,7 +264,9 @@ DSRV.prototype = {
             h2 = Math.tan(0.5 * fov) * -near;
             w2 = h2 * this.m_aspect;
         }
-        this.m_projection = mat4.frustum(-w2, w2, -h2, h2, -near, -far);
+
+        //this.m_projection = mat4.frustum(-w2, w2, -h2, h2, -near, -far);
+        this.m_projection = mat4.perspective(90, this.m_aspect, -near, -far);
     },
 
     insertMatrices: function () {
