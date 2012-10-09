@@ -165,6 +165,7 @@ ENDIF()
 ADD_SUBDIRECTORY( "examples/rlview/" )
 ADD_SUBDIRECTORY( "examples/simplejob" )
 ADD_SUBDIRECTORY( "examples/fpsviewer" )
+ADD_SUBDIRECTORY( "examples/cuberenderer")
 
 
 #Tutorials
