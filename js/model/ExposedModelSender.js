@@ -36,7 +36,7 @@ dojo.declare("model.ExposedModelSender", null, {
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function() {
             this._parsingUpdate = false;
             if(this._repostUpdate) {
-                this._update();
+            //    this._update();
             }
             this._repostUpdate = false;
 
