@@ -253,6 +253,31 @@ The job can use this to get an update meant for the client. This version are for
    addElementWithRestriction( std::string key, T value, InputIterator begin,
                               InputIterator end );
 
+   /** Updates or adds restrictions to an element.
+     \param key The name of the element to update.
+     \param value the new value
+     \param restrictions the new restriction set.
+     \throw KeyNotFoundException if the key does not exist
+     \throw TypeException if the element is not of the specified type T
+     \throw RestrictionException if the value is not contained in restrictions.
+     */
+   template<class T, class TContainer>
+   void
+   updateRestrictions(std::string key, T value, TContainer restrictions);
+
+   /** Updates or adds restrictions to an element.
+     \param key The name of the element to update.
+     \param value the new value
+     \param begin the beginning of the restriction container
+     \param end the end of the restriction container
+     \throw KeyNotFoundException if the key does not exist
+     \throw TypeException if the element is not of the specified type T
+     \throw RestrictionException if the value is not contained in restrictions.
+     */
+   template<class T, class InputIterator>
+   void
+   updateRestrictions(std::string key, T value, InputIterator begin,
+                      InputIterator end);
 
    /** Check if an element with the given name is in the model.
       \param elementName Name of element.
@@ -505,6 +530,46 @@ template<class T, class TContainer>
 void
 ExposedModel::addElementWithRestriction( std::string key, T value, TContainer restrictions ) {
    addElementWithRestriction(key, value, restrictions.begin(), restrictions.end());
+}
+
+
+template<class T, class InputIterator>
+void
+ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
+                   InputIterator end) {
+    std::set<T> restrictionSet( begin, end );
+
+    if ( restrictionSet.find( value ) == restrictionSet.end() ) {
+        throw RestrictionException(boost::lexical_cast<std::string>(value));
+    }
+
+    std::set<std::string> restrictionStrings;
+
+    for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
+    {
+
+       std::string s = boost::lexical_cast<std::string>( *it );
+       restrictionStrings.insert( s );
+    }
+
+    // The copy given to the listener outside the lock.
+    impl::ElementData data;
+    {
+       std::string stringValue = boost::lexical_cast<std::string>(value);
+       scoped_lock(m_selfMutex);
+       impl::ElementData& elementData = findElementInternal(key);
+       elementData.setRestrictionSet( restrictionStrings );
+       elementData.setStringValue(stringValue);
+
+       data = elementData;
+    }
+    fireStateSchemaElementModified(key, data);
+}
+
+template<class T, class TContainer>
+void
+ExposedModel::updateRestrictions(std::string key, T value, TContainer restrictions) {
+    updateRestrictions(key, value, restrictions.begin(), restrictions.end());
 }
 
 template<class T, class InputIterator>

@@ -78,6 +78,7 @@ struct SchemaListenerFixture {
           modified_key = stateSchemaElement->getKey();
           modified_max = stateSchemaElement->getMaxConstraint();
           modified_min = stateSchemaElement->getMinConstraint();
+
          modified_registered = true;
       }
       bool added_registered;
@@ -93,6 +94,30 @@ struct SchemaListenerFixture {
 };
 
 }
+
+BOOST_FIXTURE_TEST_CASE(restrictionChange, SchemaListenerFixture)
+{
+
+    std::vector<std::string> restrictions1;
+    restrictions1.push_back("legal1");
+
+    BOOST_CHECK( !schemaListener.modified_registered );
+    BOOST_CHECK( !schemaListener.added_registered );
+    model.addElementWithRestriction<std::string>("restricted", "legal1", restrictions1);
+
+    BOOST_CHECK( schemaListener.added_registered );
+    //BOOST_CHECK( schemaListener.modified_registered );
+    schemaListener.modified_registered = false;
+    restrictions1.clear();
+    restrictions1.push_back("legal2");
+    model.updateRestrictions<std::string>("restricted", "legal2", restrictions1);
+    BOOST_CHECK(schemaListener.modified_registered);
+    BOOST_CHECK_EQUAL(std::string("restricted"), schemaListener.modified_key);
+    BOOST_CHECK_EQUAL(std::string("legal2"), model.getElementValue<std::string>("restricted"));
+
+    BOOST_CHECK_THROW(model.updateElement<std::string>("restricted", "legal1"), tinia::model::RestrictionException);
+}
+
 
 BOOST_FIXTURE_TEST_CASE(constraintsChange, SchemaListenerFixture)
 {
@@ -138,6 +163,7 @@ BOOST_FIXTURE_TEST_CASE(stateSchemaElementRemoved, SchemaListenerFixture)
 
    BOOST_CHECK(schemaListener.removed_registered);
 }
+
 
 BOOST_FIXTURE_TEST_CASE(stateSchemaElementModified, SchemaListenerFixture)
 {
