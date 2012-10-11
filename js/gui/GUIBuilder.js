@@ -36,6 +36,9 @@ dojo.require("dijit.form.VerticalSlider");
 dojo.require("dijit.layout.TabContainer");
 dojo.require("dijit.layout.TabController");
 dojo.require("dijit.form.Button");
+dojo.require("dojo.store.Memory");
+dojo.require("dijit.form.ComboBox");
+dojo.require("dojo.data.ItemFileWriteStore");
 
 
 dojo.require("gui.CheckBoxWithLabel");
@@ -53,7 +56,7 @@ dojo.declare("gui.GUIBuilder", null, {
         this._renderListURL = renderListURL;
         this._localMode = !!localMode;
         this._urlHandler = urlHandler;
-	this._showRenderList = renderList;
+        this._showRenderList = renderList;
     },
     
     buildGUI: function( root) {
@@ -111,16 +114,18 @@ dojo.declare("gui.GUIBuilder", null, {
                 element = this._makeButton(root);
                 break;
             case 'Canvas':
-                element = new gui.Canvas({"key" : root.key(), 
-                                          "renderlistKey" : root.renderlistKey(), 
-                                           "boundingboxKey": root.boundingBoxKey(),
-                                           "modelLib" : this._modelLib,
-                                            "localMode" : this._localMode,
-                                            "renderListURL" : this._renderListURL,
-                                            "resetViewKey"  : root.resetViewKey(),
-                                          "urlHandler" : this._urlHandler,
-					  "showRenderList" : this._showRenderList,
-                                            "scripts" : root.scripts()});
+                element = new gui.Canvas({
+                    "key" : root.key(), 
+                    "renderlistKey" : root.renderlistKey(), 
+                    "boundingboxKey": root.boundingBoxKey(),
+                    "modelLib" : this._modelLib,
+                    "localMode" : this._localMode,
+                    "renderListURL" : this._renderListURL,
+                    "resetViewKey"  : root.resetViewKey(),
+                    "urlHandler" : this._urlHandler,
+                    "showRenderList" : this._showRenderList,
+                    "scripts" : root.scripts()
+                    });
                 
                 break;
                 
@@ -182,9 +187,10 @@ dojo.declare("gui.GUIBuilder", null, {
     
     
     _makeTabLayout : function(root) {
-        var tabLayout = new dijit.layout.TabContainer({doLayout: false,
-                                                        controllerWidget: "dijit.layout.TabController"
-                                                       });
+        var tabLayout = new dijit.layout.TabContainer({
+            doLayout: false,
+            controllerWidget: "dijit.layout.TabController"
+        });
         
         for(var i = 0; i < root.length(); i++) {
             if(root.child(i)) {
@@ -197,7 +203,7 @@ dojo.declare("gui.GUIBuilder", null, {
                     "title"      : this._modelLib.getAnnotation(root.child(i).key()),
                     "closeable" : false,
                     "selected"  : i==0
-                    };
+                };
                 options.content = element ? element.domNode : "";
                 var contentPane = new dijit.layout.ContentPane(options);
 
@@ -226,7 +232,9 @@ dojo.declare("gui.GUIBuilder", null, {
                 
             });
         } else {
-            spinBox = new dijit.form.NumberSpinner({"style" : style});
+            spinBox = new dijit.form.NumberSpinner({
+                "style" : style
+            });
         }
         
         
@@ -329,27 +337,31 @@ dojo.declare("gui.GUIBuilder", null, {
         var options = [];
         for(var i = 0; i < restriction.length; i++) {
             options[i]=  {
+                name: restriction[i], 
                 label: restriction[i], 
-                value: restriction[i], 
+                value: restriction[i],
+                id : restriction[i],
                 selected: false
             };
             if(this._modelLib.getValue(root.key())== options[i].value) {
-                options.selected = true;
+                options[i].selected = true;
             }
         }
-        var combobox = new dijit.form.Select({
+        var combobox = new dijit.form.ComboBox({
             "name": root.key(), 
-            "options" : options, 
+            "options" : options, //new dojo.store.Memory(options), 
+            "store" : new dojo.store.Memory({data : options}),
             maxHeight:100, 
             selected: this._modelLib.getValue(root.key()), 
             value: this._modelLib.getValue(root.key())
         });
-        return this._addKeyValue(combobox, root, "value", ["change", "blur"]);
+        return this._addRestrictionListener(this._addKeyValue(combobox, root, "value", ["change", "blur"]), root);
     },
     
     _makeRadioButtons : function(root) {
         var layout = new gui.VerticalLayout();
         var restriction = this._modelLib.getRestriction(root.key());
+        
         for(var i = 0; i < restriction.length; i++) {
             (dojo.hitch(this, function() { // For closure (need options and radiobutton)
                 var options = {
@@ -376,6 +388,11 @@ dojo.declare("gui.GUIBuilder", null, {
                 layout.addChild(radioButton);
             }))();
         }
+    
+        this._modelLib.addLocalListener(root.key(), function(key, value) {
+            
+        })
+        
         return layout;
     },
     
@@ -431,50 +448,90 @@ dojo.declare("gui.GUIBuilder", null, {
             var min = this._modelLib.getMin(key);
             widget.set("minimum", this._modelLib.getMin(key));
             widget.set("maximum", this._modelLib.getMax(key));
-            widget.set("constraints", {"max" : max, "min": min} );
+            widget.set("constraints", {
+                "max" : max, 
+                "min": min
+            } );
         }, this);
         return widget;
     },
     
-    
-    
-    _addVisibilityToggles : function(widget, root) {
-        if(root.visibilityKey() && root.visibilityKey().length > 0) {
-            this._modelLib.addLocalListener(root.visibilityKey(), function(key, value) {
-                if(root.visibilityKeyInverted() == value) {
-                    dojo.style(widget.domNode, "display", "none");
+    _addRestrictionListener: function(widget, root) {
+        this._modelLib.addLocalListener(root.key(), dojo.hitch(this, function(key, value) {
+            var restriction = this._modelLib.getRestriction(key);
+            var options = []
+            for(var i = 0; i < restriction.length; i++) {
+                options[i]=  {
+                    name : restriction[i],
+                    id : restriction[i],
+                    label: restriction[i], 
+                    value: restriction[i], 
+                    selected: false
+                };
+
+                if(this._modelLib.getValue(root.key())== options[i].value) {
+                    options[i].selected = true;
                 }
-                else {
-                    dojo.style(widget.domNode, "display", "block");
-                }
-            });
-            if(this._modelLib.getValue(root.visibilityKey()) == root.visibilityKeyInverted()) {
-                dojo.style(widget.domNode, "display", "none");
-            }
-        }
-        if(root.enabledKey() && root.enabledKey().length > 0) {
-            this._modelLib.addLocalListener(root.enabledKey(), function(key, value) {
-                if(root.enabledKeyInverted() == value) {
-                    widget.set("disabled", true);
-                }
-                else {
-                    widget.set("disabled", false);
-                }
-            });
-            if(this._modelLib.getValue(root.enabledKey()) == root.enabledKeyInverted()) {
-                widget.set("disabled", true);
             }
             
-        }
-    },
+            var storeOptions = new dojo.data.ItemFileWriteStore({
+                data: {
+                    identifier: 'name', 
+                    items: options
+                }
+            });
+
+        console.log(options);
+            console.log(this._modelLib.getValue(root.key()));
+            console.log(new dojo.store.Memory(options));
+            widget.set("store", storeOptions);
+            widget.set("options", options);
+            widget.attr("store", storeOptions);
+            widget.attr("options", options);
+            
+        }));
+    return widget;
+},
     
-    _addLabel: function(widget, root,  slot) {
-        if(!slot) {
-            slot = "label";
+    
+    
+_addVisibilityToggles : function(widget, root) {
+    if(root.visibilityKey() && root.visibilityKey().length > 0) {
+        this._modelLib.addLocalListener(root.visibilityKey(), function(key, value) {
+            if(root.visibilityKeyInverted() == value) {
+                dojo.style(widget.domNode, "display", "none");
+            }
+            else {
+                dojo.style(widget.domNode, "display", "block");
+            }
+        });
+        if(this._modelLib.getValue(root.visibilityKey()) == root.visibilityKeyInverted()) {
+            dojo.style(widget.domNode, "display", "none");
         }
-        widget.set(slot, this._modelLib.getAnnotation(root.key()));
-        return widget;
     }
+    if(root.enabledKey() && root.enabledKey().length > 0) {
+        this._modelLib.addLocalListener(root.enabledKey(), function(key, value) {
+            if(root.enabledKeyInverted() == value) {
+                widget.set("disabled", true);
+            }
+            else {
+                widget.set("disabled", false);
+            }
+        });
+        if(this._modelLib.getValue(root.enabledKey()) == root.enabledKeyInverted()) {
+            widget.set("disabled", true);
+        }
+            
+    }
+},
+    
+_addLabel: function(widget, root,  slot) {
+    if(!slot) {
+        slot = "label";
+    }
+    widget.set(slot, this._modelLib.getAnnotation(root.key()));
+    return widget;
+}
 });
 
 

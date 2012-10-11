@@ -43,6 +43,10 @@ dojo.declare("gui.VerticalLayout", [dijit._Widget, dijit._Container],
         this._children[this._children.length] = node;
     },
     
+    clear : function() {
+        this.buildRendering();
+    },
+    
     removeChild : function(node) {
         this.domNode.removeChild(this._nodes[node.domNode.id]);
     },

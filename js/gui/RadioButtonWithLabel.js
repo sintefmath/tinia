@@ -36,7 +36,6 @@ dojo.declare("gui.RadioButtonWithLabel", [dijit._Widget], {
         this._setLabel(this._labelValue);
     },
     
-    
     on : function(event, func) {
         this._radioButton.on(event, func);
     },

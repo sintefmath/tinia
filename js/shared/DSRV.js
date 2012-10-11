@@ -75,6 +75,7 @@ function DSRV(parameters) {
         }
     }));
 
+    
     this.updateMatrices();
     this.insertMatrices();
 
@@ -266,6 +267,7 @@ DSRV.prototype = {
     },
 
     insertMatrices: function () {
+        
         var viewer = this.m_exposedModel.getElementValue(this.m_key);
         viewer.updateElement("modelview", this.m_modelview);
         viewer.updateElement("projection", this.m_projection);
