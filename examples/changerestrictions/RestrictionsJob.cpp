@@ -68,6 +68,7 @@ bool RestrictionsJob::init()
     }
 
     layout->addChild(new tinia::model::gui::ComboBox("restricted"));
+    layout->addChild(new tinia::model::gui::RadioButtons("restricted"));
 
     layout->addChild(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"));
     m_model->setGUILayout(layout,
