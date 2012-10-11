@@ -44,12 +44,13 @@ public:
    void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement);
 
 signals:
+   void newRestrictionsFromExposedModel();
    void setStateFromExposedModel(int);
    void clearFromExposedModel();
    void addItemsFromExposedModel(const QStringList& list);
 
 public slots:
-
+   void updateRestrictions();
 private slots:
    void activatedChanged(QString value);
 private:

@@ -46,6 +46,9 @@ ComboBox::ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
    setCurrentIndex(m_options.indexOf(m_model->getElementValueAsString(m_key).c_str()));
    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
+   connect(this, SIGNAL(newRestrictionsFromExposedModel()),
+           this, SLOT(updateRestrictions()));
+
 }
 
 
@@ -61,6 +64,7 @@ void ComboBox::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaEle
 
 void ComboBox::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
+    emit newRestrictionsFromExposedModel();
 }
 
 void ComboBox::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
@@ -76,7 +80,23 @@ ComboBox::~ComboBox()
 
 void ComboBox::activatedChanged(QString value)
 {
-   m_model->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
+    m_model->updateElementFromString(m_key, std::string( value.toLocal8Bit() ));
+}
+
+void ComboBox::updateRestrictions()
+{
+    // We must update the restriction set
+    clear();
+    m_options.clear();
+    auto restrictionSet = m_model->getRestrictionSet(m_key);
+    for(auto it = restrictionSet.begin(); it != restrictionSet.end(); it++)
+    {
+       m_options.append(it->c_str());
+    }
+    m_options.sort();
+
+
+    addItems(m_options);
 }
 
 }
