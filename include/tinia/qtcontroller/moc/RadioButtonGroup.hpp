@@ -51,8 +51,12 @@ public:
 
    void toggleRadioButtonFromExposedModel();
 public slots:
+   void updateRestriction();
 
+signals:
+   void newRestrictionReceived();
 private:
+   void addButtons();
    std::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
