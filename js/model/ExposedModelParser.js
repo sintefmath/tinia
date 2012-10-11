@@ -159,6 +159,25 @@ dojo.declare("model.StateSchemaParser", model.XMLHelper, {
                 parent.updateConstrainedElement(key, min, max);
             }
         }
+        var restriction = this.queryXSD(xmlElement, "restriction");
+        if(!restriction || restriction.length == 0) return;
+
+        var type = dojo.attr(restriction[0], "base");
+        if(type) {
+            type = type.replace("xsd:","");
+        }
+        
+        var enumerations = this.queryXSD(restriction[0], "enumeration");
+
+        if(enumerations && enumerations.length > 0) {
+
+            var restrictionList = [];
+            for (var i = 0; i < enumerations.length; i++) {
+                restrictionList[i] = dojo.attr(enumerations[i], "value");
+            }
+            
+            parent.updateRestrictions(key, restrictionList);
+        }
     },
     
     addSimpleElement: function(parent, type, key, xmlElement) {
@@ -286,8 +305,10 @@ dojo.declare("model.StateParser", model.XMLHelper, {
             throw "Trying to update key " + nodeName + " but it's not in the ExposedModel";
         }
         
-
         
+        if(parent.getLocalRevision(nodeName) > parent.getRevision()) {
+            return;
+        }
         if(parent.getType(nodeName) == "composite") {
             this.updateCompositeElement(parent, xmlElement, nodeName);
         }
