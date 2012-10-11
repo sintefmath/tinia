@@ -564,6 +564,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
        data = elementData;
     }
     fireStateSchemaElementModified(key, data);
+    fireStateElementModified(key, data);
 }
 
 template<class T, class TContainer>
