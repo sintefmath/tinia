@@ -115,13 +115,38 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         
         dojo.style(this._img, "padding", 0);
         dojo.style(this._img, "margin", 0);
-        this._placeImage();
         dojo.connect(this._img, "onload", dojo.hitch(this, this._loadComplete()));
 
         this._setAttrWidthHeight(this._img);
 
        this.domNode.appendChild(this._img);
+       
+       
+       // Create loading-div
+        this._loadingDiv = dojo.create("div");
+        dojo.style(this._loadingDiv, "position", "relative");
+        dojo.style(this._loadingDiv, "float", "none");
+        dojo.style(this._loadingDiv, "z-index", "3");
+        
+        
+        dojo.style(this._loadingDiv, "padding", 0);
+        dojo.style(this._loadingDiv, "margin", 0);
+        dojo.style(this._loadingDiv, "margin-left", "10px");
+        dojo.style(this._loadingDiv, "margin-top", "10px");
+        
+        this._loadingText = dojo.create("span");
+        this._loadingText.innerHTML = "Loading new image...";
+        dojo.style(this._loadingText, "font-size", "2em");
+        dojo.style(this._loadingText, "color", "#FF8B8B");
 
+        dojo.style(this._loadingText, "font-weight", "bold");
+        this._loadingDiv.appendChild(this._loadingText);
+        
+        this._setWidthHeight(this._loadingDiv);
+        this.domNode.appendChild(this._loadingDiv);
+        
+
+        this._placeImage();
         this._update();
 
 
@@ -142,12 +167,21 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._shouldUpdate = false;
         }));
 
+        dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
+           this._imageLoading = true;
+           this._showCorrect();
+        }));
+
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function(params) {
             // Temporary sanity fix for firefox
             if( ! params.response.substring(params.response.length-1).match(/^[0-9a-zA-z\=\+\/]/)) {
                 params.response = params.response.substring(0, params.response.length-1);
             }
             this._img.src="data:image/png;base64,"+params.response;
+            this._showCorrect();
+        }));
+        
+        dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function(params) {
             this._imageLoading = false;
             this._showCorrect();
         }));
@@ -169,9 +203,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 //	document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
         this.on("mouseover", dojo.hitch(this, function() {
             this._mouseOver = true;
+            this._showCorrect();
         }));
         this.on("mouseout", dojo.hitch(this, function() {
             this._mouseOver = false;
+            this._showCorrect();
         }));
   
 //        document.addEventListener("gesturestart", dojo.hitch(this, this._touchGestureBegin));
@@ -209,6 +245,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _placeImage : function() {
         this._img.style.top = (-this._height)+"px";
+        this._loadingDiv.style.top = (-2*this._height)+"px";
     },
     
     
@@ -388,13 +425,26 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _showCorrect: function() {
-        if( this._localMode || (this._showRenderList && this._active) ) {// ||  (this._imageLoading && this._mouseOver )) {
+
+        if( this._localMode || (this._showRenderList && this._active) || 
+            (this._imageLoading && this._mouseOver )) {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
         }
         else {
             dojo.style(this._img, "z-index", "2");
             this._img.style.zIndex = "2";
+        }
+        
+        if(this._loadingDiv) {
+            if(this._imageLoading && !this._active) {
+                this._loadingDiv.style.zIndex = "3";
+            //  dojo.style(this._loadingDiv, "z-index", "3");
+            }
+            else {
+                this._loadingDiv.style.zIndex = "0";
+            //dojo.style(this._loadingDiv, "z-index", "0");
+            }
         }
     },
 
