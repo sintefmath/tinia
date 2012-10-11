@@ -32,6 +32,13 @@ dojo.declare("model.ExposedModel", null, {
     
     setRevision : function(revision) {
         this._revision = revision;
+        for(var key in this._elements) {
+            this._elements[key].setRevision(revision);
+        }
+    },
+    
+    getLocalRevision: function(key) {
+        this._getElementData(key).getRevision();
     },
     
     getRevision: function() {
@@ -74,6 +81,35 @@ dojo.declare("model.ExposedModel", null, {
         var elementData = this._getElementData(key);
         elementData.setMax(max);
         elementData.setMin(min);
+    },
+    
+    updateRestrictions: function(key, restrictions) {
+        var elementData = this._getElementData(key);
+        var oldRestrictions = elementData.getRestriction();
+        var changed = false;
+        
+        for(var i = 0; i < oldRestrictions.length; i++) {
+            var found = false;
+            for(var j = 0; j < restrictions.length; j++) {
+                if(oldRestrictions[i] == restrictions[j]) {
+                    found = true;
+                }
+            }
+            if(!found) {
+                changed = true;
+            }
+        }
+        if(oldRestrictions.length != restrictions.length) {
+            changed = true;
+        }
+
+        if(!changed) {
+            return;
+        }
+
+        elementData.setRestriction(restrictions);
+        
+        this._notifyListeners(key, elementData);
     },
     
     updateConstrainedElement: function(key, min, max) {
@@ -284,14 +320,25 @@ dojo.declare("model.ElementData", null, {
             length = 1;
         }
         this._length = length;
+        this._revision = 0;
     },
     
     value: function() {
+
         return this._value;
     },
     
     setValue: function(value) {
+        this._revision++;
         this._value = value;
+    },
+    
+    getRevision: function() {
+        return this._revision;
+    },
+    
+    setRevision: function(revision) {
+        this._revision = revision;
     },
     
     type: function() {
@@ -311,6 +358,7 @@ dojo.declare("model.ElementData", null, {
     },
     
     setRestriction: function(restriction) {
+        this._restriction = [];
         for(var i = 0; i < restriction.length; i++) {
             this._restriction[i] = restriction[i];
         }
