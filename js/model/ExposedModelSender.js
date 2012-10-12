@@ -50,8 +50,8 @@ dojo.declare("model.ExposedModelSender", null, {
     },
     _update: function(key) {
         if(this._parsingUpdate) {
-            this._repostUpdate = true;
-            if (key) this._keys[key] = true;
+           // this._repostUpdate = true;
+            //if (key) this._keys[key] = true;
             return;
         }
         if(key)
