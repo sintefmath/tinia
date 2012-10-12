@@ -36,6 +36,9 @@
 #include <iostream>
 #include "tinia/model/File.hpp"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace tinia {
 namespace example {
@@ -44,14 +47,24 @@ class Timer {
 public:
     Timer(std::shared_ptr<tinia::model::ExposedModel>& exposedModel) : m_model(exposedModel) {
         m_model->addElement<std::string>("time", "0");
+        m_model->addElement<int>("elapsed", 0);
     }
 
     void operator()() {
         while(true) {
             boost::this_thread::sleep(boost::posix_time::millisec(500));
+            boost::posix_time::ptime currentTime = boost::posix_time::ptime(boost::posix_time::second_clock::local_time());
+
+            auto currentSeconds = currentTime.time_of_day().total_seconds();
+
+            m_model->updateElement<int>("elapsed", currentSeconds);
+
+
             m_model->updateElement<std::string>("time",
                                                 boost::lexical_cast<std::string>(
                                                 boost::posix_time::second_clock::local_time()));
+
+
         }
     }
 
@@ -104,8 +117,14 @@ bool ClockJob::renderFrame(const std::string &session, const std::string &key, u
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf( viewer.projectionMatrix.data() );
+
+
+    auto elapsed = m_model->getElementValue<int>("elapsed");
+    auto modelview =glm::rotate(glm::translate(glm::mat4(), glm::vec3(0.f, 0.f, -3.f)),
+                                               float(elapsed)*10.f, glm::vec3(0.f, 1.f,0.f));
+
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf( viewer.modelviewMatrix.data() );
+    glLoadMatrixf( glm::value_ptr(modelview));
 
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
