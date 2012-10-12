@@ -480,10 +480,6 @@ dojo.declare("gui.GUIBuilder", null, {
                     items: options
                 }
             });
-
-        console.log(options);
-            console.log(this._modelLib.getValue(root.key()));
-            console.log(new dojo.store.Memory(options));
             widget.set("store", storeOptions);
             widget.set("options", options);
             widget.attr("store", storeOptions);
