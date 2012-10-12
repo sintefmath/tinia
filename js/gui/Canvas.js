@@ -87,6 +87,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.style(this.domNode, "background", "black");
         dojo.style(this.domNode, "margin", "10px");
         dojo.style(this.domNode, "padding", "0px");
+        
+        dojo.addClass(this.domNode, "unselectable");
 
 
         this._setWidthHeight(this.domNode);
@@ -131,11 +133,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         
         dojo.style(this._loadingDiv, "padding", 0);
         dojo.style(this._loadingDiv, "margin", 0);
-        dojo.style(this._loadingDiv, "margin-left", "10px");
-        dojo.style(this._loadingDiv, "margin-top", "10px");
+        
+        dojo.addClass(this._loadingDiv, "unselectable");
         
         this._loadingText = dojo.create("span");
         this._loadingText.innerHTML = "Loading new image...";
+        dojo.style(this._loadingText, "margin-left", "10px");
+        dojo.style(this._loadingText, "margin-top", "10px");
+        
         dojo.style(this._loadingText, "font-size", "2em");
         dojo.style(this._loadingText, "color", "#FF8B8B");
 
