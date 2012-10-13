@@ -307,7 +307,7 @@ dojo.declare("model.StateParser", model.XMLHelper, {
         
         
         if(parent.getLocalRevision(nodeName) > parent.getRevision()) {
-            return;
+            //return;
         }
         if(parent.getType(nodeName) == "composite") {
             this.updateCompositeElement(parent, xmlElement, nodeName);

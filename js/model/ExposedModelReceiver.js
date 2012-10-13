@@ -38,7 +38,7 @@ dojo.declare("model.ExposedModelReceiver", null, {
     _longPoll : function() {
         dojo.xhrGet({
             url: this._url,
-            timeout: 5000,
+            timeout: 0,
             preventCache: true,
             
             content: {
@@ -50,6 +50,8 @@ dojo.declare("model.ExposedModelReceiver", null, {
             failOk : true,
             
             load : dojo.hitch(this, function(response, ioArgs) {
+
+
                 if(!response) {
                     //this._longPoll();
                     this._postUpdate(0);
@@ -57,7 +59,7 @@ dojo.declare("model.ExposedModelReceiver", null, {
                 }
                 if(response.dojoType && response.dojoType == "timeout" || (response.xhr && response.xhr.status == 408)) {
                     //this._longPoll();
-                    this._postUpdate(0);
+                  this._postUpdate(0);
                     return response;
                 }
                 
@@ -68,8 +70,8 @@ dojo.declare("model.ExposedModelReceiver", null, {
                 dojo.publish("/model/updateParsed", [{"response": response,
                                                             "ioArgs": ioArgs}]);
                                                     
-                //this._longPoll();
                 this._postUpdate(0);
+                //this._longPoll();
                 return response; 
             }),
            

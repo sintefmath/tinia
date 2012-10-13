@@ -269,7 +269,7 @@ void trell::IPCJobController::stateElementModified(model::StateElement *stateEle
    // We only want to do something if we're not updating the model ourselves
    // (otherwise we'll post an update on completion)
 
-   if(m_updateOngoing)
+   if(!m_updateOngoing)
    {
       notify();
    }
@@ -278,7 +278,7 @@ void trell::IPCJobController::stateElementModified(model::StateElement *stateEle
 void trell::IPCJobController::stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement)
 {
 
-   if(m_updateOngoing)
+   if(!m_updateOngoing)
    {
       notify();
    }
@@ -287,7 +287,7 @@ void trell::IPCJobController::stateSchemaElementAdded(model::StateSchemaElement 
 void trell::IPCJobController::stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement)
 {
 
-   if(m_updateOngoing)
+   if(!m_updateOngoing)
    {
       notify();
    }
@@ -296,7 +296,7 @@ void trell::IPCJobController::stateSchemaElementRemoved(model::StateSchemaElemen
 void trell::IPCJobController::stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement)
 {
 
-   if(m_updateOngoing)
+   if(!m_updateOngoing)
    {
       notify();
    }

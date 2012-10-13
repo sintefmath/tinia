@@ -40,6 +40,7 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
                  parent,
                  share_widget ),
 
+      m_perf_mode( perf_mode ),
       m_key(key),
       m_model(model),
       m_job(openglJob),
@@ -70,18 +71,19 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
         }
     }
 
-    connect(this, SIGNAL(updateFromExposedModel()), this, SLOT(updateGL()));
+    m_redraw_timer = new QTimer;
+    connect( m_redraw_timer, SIGNAL(timeout()), this, SLOT(updateGL()) );
+    m_redraw_timer->setInterval( m_perf_mode ? 0 : 10000000 );
+    m_redraw_timer->setSingleShot(false);
+    m_redraw_timer->start();
+
+    connect(this, SIGNAL(updateFromExposedModel()), this, SLOT(triggerRedraw()));
 
     m_model->addStateListener(this);
     makeCurrent();
 
     if( perf_mode ) {
         // redraw whenever the event queue is empty
-        m_redraw_timer = new QTimer;
-        connect( m_redraw_timer, SIGNAL(timeout()), this, SLOT(updateGL()) );
-        m_redraw_timer->setInterval(0);
-        m_redraw_timer->setSingleShot(false);
-        m_redraw_timer->start();
     }
 
     setFocusPolicy(Qt::ClickFocus);
@@ -154,6 +156,13 @@ void Canvas::paintGL()
                                            height() );
         }
     }
+    m_redraw_timer->setInterval( m_perf_mode ? 0 : 10000000 );
+    //m_redraw_timer->setInterval( 1000000 );
+}
+
+void Canvas::triggerRedraw()
+{
+    m_redraw_timer->setInterval( 0 );
 }
 
 void Canvas::resizeGL(int w, int h)

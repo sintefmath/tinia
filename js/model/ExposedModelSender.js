@@ -35,11 +35,6 @@ dojo.declare("model.ExposedModelSender", null, {
         
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function() {
             this._parsingUpdate = false;
-            if(this._repostUpdate) {
-            //    this._update();
-            }
-            this._repostUpdate = false;
-
         }));
     },
     
@@ -50,8 +45,6 @@ dojo.declare("model.ExposedModelSender", null, {
     },
     _update: function(key) {
         if(this._parsingUpdate) {
-            this._repostUpdate = true;
-            if (key) this._keys[key] = true;
             return;
         }
         if(key)
@@ -67,6 +60,7 @@ dojo.declare("model.ExposedModelSender", null, {
     
     _send: function(xml) {
         this._updateInProgress = true;
+        console.log("sending update");
         dojo.rawXhrPost({
             url: this._makeURL(),
             postData : xml,
