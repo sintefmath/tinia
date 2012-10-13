@@ -35,6 +35,9 @@
 #include "tinia/model/GUILayout.hpp"
 #include <iostream>
 #include "tinia/model/File.hpp"
+#ifdef __APPLE__
+#define CHECK_GL 
+#endif
 
 namespace tinia {
 namespace example {
@@ -268,7 +271,7 @@ bool TestJob::init()
    m_model->updateElement<int>( "renderlist", m_renderlist_db.latest() );
 
    glewInit();
-
+#ifndef __APPLE__
    static const GLfloat quad[ 4*4 ] = {
         1.f, -1.f, 0.f, 1.f,
         1.f,  1.f, 0.f, 1.f,
@@ -289,6 +292,8 @@ bool TestJob::init()
    glBindVertexArray( m_gpgpu_quad_vertex_array );
    glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
    glBindVertexArray( 0 );
+   CHECK_GL;
+#endif
    CHECK_GL;
 
 
@@ -333,7 +338,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     glClearColor(0, 0, 0, 1);
     glClear( GL_COLOR_BUFFER_BIT );
 
-	glViewport(0, 0, width, height);
+    glViewport(0, 0, width, height);
     tinia::model::Viewer viewer;
     m_model->getElementValue( key, viewer);
     glLoadIdentity();
@@ -352,6 +357,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
     glEnd();
     CHECK_GL;
 
+#ifndef __APPLE__
     // This works
     if(1) {
         glBindBuffer( GL_ARRAY_BUFFER, m_gpgpu_quad_buffer );
@@ -361,7 +367,7 @@ bool TestJob::renderFrame(const std::string &session, const std::string &key, un
         glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
         glDisableClientState( GL_VERTEX_ARRAY );
     }
-
+#endif
     // glBindVertexArray fails.
     if(0) {
         glBindVertexArray( m_gpgpu_quad_vertex_array );
