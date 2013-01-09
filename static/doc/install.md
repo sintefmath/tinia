@@ -9,14 +9,14 @@ Visual Studio 2010.
 Other fairly recent *NIXes will probably work, as long as they have a
 fairly recent C++ compiler supporting C++11.
 
-Compilation on Ubuntu 12.04
+Compilation on Ubuntu 12.04 and 12.10
 ---------------------------
-The supported Linux platform is Ubuntu 12.04 LTS, using GCC 4.6 utilizing 
+The supported Linux platform is Ubuntu 12.04 LTS and Ubuntu 12.10, utilizing 
 dependencies from the official repositories.
 
-### Dependencies 
+### Dependencies for Ubuntu 12.04
 
-Ubuntu packages (with dependencies) from Ubuntu 12.04:
+Ubuntu packages (with dependencies) for Ubuntu 12.04:
 
 - libxml2-dev
 - glew1.6-dev
@@ -28,6 +28,23 @@ Ubuntu packages (with dependencies) from Ubuntu 12.04:
 - apache2 (For server module)
 - apache2-dev (For server module).
 - build-essential
+
+### Dependencies for Ubuntu 12.10
+
+Ubuntu packages (with dependencies) for Ubuntu 12.10:
+
+- libxml2-dev
+- libglew-dev
+- libglm-dev
+- libqt4-dev
+- libapr1-dev
+- cmake
+- libboost-all-dev
+- apache2 (For server module)
+- apache2-prefork-dev (For server module).
+- build-essential
+
+### Compiling and installing on Ubuntu (both 12.04 and 12.10)
 
 Once these are installed a simple 
 
