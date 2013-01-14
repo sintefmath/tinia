@@ -1,23 +1,24 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
 #include <memory>
 #include "tinia/jobcontroller/Controller.hpp"
+#include "tinia/qtcontroller/moc/Interrupter.hpp"
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 #ifdef TINIA_HAVE_LIBXML
 #include <tinia/qtcontroller/moc/ServerController.hpp>
@@ -61,6 +62,10 @@ public:
     bool perfMode() const { return m_perf_mode; }
     bool renderListMode() const { return m_renderlist_mode; }
 
+    void
+    interruptJob();
+
+
     /**
       *
       * Recognized arguements:
@@ -87,6 +92,7 @@ private:
 #endif
 
     QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
+    std::unique_ptr<impl::Interrupter>     m_interrupter;
     jobcontroller::Job*                    m_job;
     std::unique_ptr<GUIBuilder>            m_builder;
     std::shared_ptr<model::ExposedModel>   m_model;
@@ -94,7 +100,7 @@ private:
     // We need to hold the scripts in memory untill we start up QApplication
     std::vector<std::string>                m_scriptsToParse;
     bool                                    m_perf_mode;
-    bool                                    m_renderlist_mode;    
+    bool                                    m_renderlist_mode;
 };
 
 } // namespace qtcontroller

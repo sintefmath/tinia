@@ -1,17 +1,17 @@
 /* Copyright STIFTELSEN SINTEF 2012
- * 
+ *
  * This file is part of the Tinia Framework.
- * 
+ *
  * The Tinia Framework is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The Tinia Framework is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -43,7 +43,7 @@ namespace qtcontroller {
 
 QTController::QTController()
     : m_root_context(NULL),
-      m_job(NULL),      
+      m_job(NULL),
       m_perf_mode( false ),
       m_renderlist_mode( false )
 {
@@ -65,6 +65,7 @@ void QTController::setJob(jobcontroller::Job *job)
     }
     else {
        m_job = job;
+       m_job->setController( this );
     }
 }
 
@@ -78,6 +79,13 @@ void QTController::fail()
 
 void QTController::finish()
 {
+}
+
+void QTController::interruptJob()
+{
+    if( m_interrupter ) {
+        m_interrupter->emitInterruptSignal();
+    }
 }
 
 void QTController::addScript(const std::string &script)
@@ -113,6 +121,11 @@ int QTController::run(int argc, char **argv)
     m_app.reset(  new QApplication( argc, argv ) );
 
     m_main_window.reset( new QMainWindow() );
+    m_interrupter.reset( new impl::Interrupter() );
+    if( m_job != NULL ) {
+        m_interrupter->setJob( m_job );
+    }
+
 #ifdef TINIA_HAVE_LIBXML
     setupServerController();
 #endif
@@ -147,11 +160,11 @@ int QTController::run(int argc, char **argv)
     m_main_window->setCentralWidget( m_builder->buildGUI( m_model->getGUILayout(model::gui::DESKTOP),
                                                           NULL ) );
 
-	if( dynamic_cast<jobcontroller::OpenGLJob*>( m_job ) ) {
-	if( !(dynamic_cast<jobcontroller::OpenGLJob*>(m_job))->initGL()) {
-		throw new std::runtime_error("Job did not initialize GL correctly");
-	}
-	}
+    if( dynamic_cast<jobcontroller::OpenGLJob*>( m_job ) ) {
+    if( !(dynamic_cast<jobcontroller::OpenGLJob*>(m_job))->initGL()) {
+        throw new std::runtime_error("Job did not initialize GL correctly");
+    }
+    }
     m_main_window->show();
 
     return m_app->exec();
