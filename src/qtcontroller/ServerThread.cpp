@@ -42,14 +42,17 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
             if(!handleNonStatic(os, getRequestURI(request), request)) {
-                os << getStaticContent(getRequestURI(request)) << "\n";
+                os << getStaticContent(getRequestURI(request)) << "\r\n";
             }
 
            // socket.disconnectFromHost();
 
         }
+            
+
         socket.close();
         socket.waitForDisconnected();
+
     }
 }
 
@@ -141,13 +144,13 @@ QString ServerThread::getStaticContent(const QString &uri)
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {
-        QString reply =QString("HTTP/1.0 200 Ok\r\n") +
+        QString reply =QString("HTTP/1.1 200 Ok\r\n") +
                 QString("Content-Type: ") + getMimeType(uri) +
-                QString("; charset=\"utf-8\"\r\n \n\n") + file.readAll() + "\n";
+                QString("; charset=\"utf-8\"\r\n\r\n\r\n") + file.readAll() + "\r\n";
         return reply;
     }
     else {
-        return "HTTP/1.0 404 Not Found\r\n";
+        return "HTTP/1.1 404 Not Found\r\n";
     }
 }
 
