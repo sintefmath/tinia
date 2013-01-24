@@ -77,8 +77,8 @@ QString getPostContent(const QString& request) {
 }
 
 QString httpHeader(const QString& mime, unsigned int code, const QString& encoding) {
-    QString result = "HTTP/1.1 " + QString::number(code) + "OK \r\n" +
-            + "Content-Type: " + mime + "; charset=\"" + encoding + "\"\r\n";
+    QString result = "HTTP/1.1 " + QString::number(code) + " OK\r\n" +
+            + "Content-Type: " + mime + "; charset=\"" + encoding + "\"\r\n\r\n";
     return result;
 }
 
