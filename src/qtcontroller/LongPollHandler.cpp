@@ -54,7 +54,7 @@ bool LongPollHandler::addExposedModelUpdate(QTextStream &os, unsigned int revisi
     //if(num>4) return true;
     auto length = m_xmlHandler.getExposedModelUpdate(m_buffer, sizeof(m_buffer), revision);
     if(length > 0) {
-        os << httpHeader("application/xml")<<"\n";
+        os << httpHeader("application/xml")<<"\r\n";
         os << QString(m_buffer)<< "\n";
         return true;
     }

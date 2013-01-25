@@ -90,7 +90,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
         }
         else if(file =="/updateState.xml") {
             updateState(os, request);
-            os << httpHeader("application/xml")<<"\n";
+            os << httpHeader("application/xml")<<"\r\n";
             return true;
         }
 
@@ -113,7 +113,7 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
 void ServerThread::getRenderList(QTextStream &os, const QString &request)
 {
     auto params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
-    os << httpHeader("application/xml") << "\n";
+    os << httpHeader("application/xml") << "\r\n";
     tinia::jobcontroller::OpenGLJob* openglJob = dynamic_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
     if(openglJob) {
         auto db = openglJob->getRenderList("session", params.get<0>());

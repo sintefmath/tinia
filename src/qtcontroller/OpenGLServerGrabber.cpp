@@ -53,7 +53,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
     img.save(&qBuffer, "png");
     os << httpHeader(getMimeType("file.txt"));
     QString str(QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64());
-    os << "\n"<<str;
+    os << "\r\n"<<str;
 
     m_glImageIsReady = false;
     m_waitMutex.unlock();
