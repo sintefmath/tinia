@@ -4,6 +4,7 @@
 #include "GL/glew.h"
 #include <QImage>
 #include <QBuffer>
+#include <QRegExp>
 #include "tinia/renderlist.hpp"
 #include <QFile>
 #include "tinia/qtcontroller/moc/LongPollHandler.hpp"
@@ -31,9 +32,27 @@ void ServerThread::run()
     socket.setSocketDescriptor(m_socket);
     socket.waitForReadyRead();
 
-
     if (socket.canReadLine()) {
+
         auto request = socket.readAll();
+        while(!request.contains("\r\n\r\n")) {
+            socket.waitForBytesWritten();
+            request += socket.readAll();
+        }
+        //Now we have the whole header
+        QRegExp contentLengthExpression("Content-Length: (\\d+)\\s*\\r\\n");
+
+        
+        if (contentLengthExpression.indexIn(request) != -1) {
+            auto contentLengthGroup = contentLengthExpression.cap(1);
+            int contentLength = contentLengthGroup.toInt();
+            
+            int headerSize = request.indexOf("\r\n\r\n") + 4;
+            while(request.size()  - headerSize < contentLength) {
+                socket.waitForBytesWritten();
+                request += socket.readAll();
+            }
+        }
         QTextStream os(&socket);
         if(isLongPoll(request)) {
             LongPollHandler handler(os, request, m_job->getExposedModel());
@@ -90,7 +109,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
         }
         else if(file =="/updateState.xml") {
             updateState(os, request);
-            os << httpHeader("application/xml")<<"\r\n";
+            os << httpHeader("application/xml") << "\r\n";
             return true;
         }
 
