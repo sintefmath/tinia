@@ -86,8 +86,8 @@ void RadioButtonGroup::addButtons()
 {
 
     // Populate the buttons
-    auto restrictions = m_model->getRestrictionSet(m_key);
-    for(auto it= restrictions.begin(); it != restrictions.end(); it++)
+    std::set<std::string> restrictions = m_model->getRestrictionSet(m_key);
+    for(std::set<std::string>::iterator it= restrictions.begin(); it != restrictions.end(); it++)
     {
         layout()->addWidget(new RadioButton(*it, m_key, m_model, this));
     }

@@ -30,12 +30,12 @@ QString getRequestURI(const QString& request) {
     return request.split(QRegExp("[ \r\n][ \r\n]*"))[1].split('?')[0];
 }
 bool isGetOrPost(const QString& request) {
-    auto method = request.split(QRegExp("[ \r\n][ \r\n]*"))[0];
+    QString method = request.split(QRegExp("[ \r\n][ \r\n]*"))[0];
     return method == "GET" || method == "POST";
 }
 
 QString getMimeType(const QString& file) {
-    auto extension = file.split('.').last();
+    QString extension = file.split('.').last();
 
     QMap<QString, QString> extensions;
 
@@ -50,18 +50,18 @@ QString getMimeType(const QString& file) {
 
 QMap<QString, QString> decodeGetParameters(const QString& request) {
     QMap<QString, QString> keyValue;
-    auto split1 = request.split(QRegExp("[ \r\n][ \r\n]*"));
+    QStringList split1 = request.split(QRegExp("[ \r\n][ \r\n]*"));
     if(split1.size() < 2) {
         return keyValue;
     }
 
-    auto split2 = split1[1].split('?');
+    QStringList split2 = split1[1].split('?');
     if(split2.size() < 2) {
         return keyValue;
     }
-    auto params = split2[1].split('&');
-    for(auto i = 0; i < params.size(); ++i) {
-        auto split = params[i].split('=');
+    QStringList params = split2[1].split('&');
+    for(size_t i = 0; i < params.size(); ++i) {
+        QStringList split = params[i].split('=');
         if(split.size()==1) {
             keyValue[split[0]] = "";
         } else if(split.size() > 1){

@@ -20,6 +20,7 @@
 #include <QObject>
 #include <tinia/model/Viewer.hpp>
 #include <QtScript>
+#include <QString>
 
 namespace tinia {
 namespace qtcontroller {

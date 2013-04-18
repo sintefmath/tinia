@@ -18,9 +18,13 @@
 
 #pragma once
 #include <QObject>
+#include <boost/shared_ptr.hpp>
 #include <tinia/model/ExposedModel.hpp>
 #include <tinia/qtcontroller/scripting/Viewer.hpp>
 #include <QtScript>
+#include <map>
+#include <QString>
+
 namespace tinia {
 namespace qtcontroller {
 namespace scripting {

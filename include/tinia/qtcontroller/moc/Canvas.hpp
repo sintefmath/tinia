@@ -68,7 +68,7 @@ public slots:
    void triggerRedraw();
 private:
    bool m_perf_mode;
-   std::vector<std::unique_ptr<scripting::EventHandler > > m_eventHandlers;
+   std::vector<boost::scoped_ptr<scripting::EventHandler > > m_eventHandlers;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;

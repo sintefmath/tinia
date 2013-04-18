@@ -36,8 +36,8 @@ ComboBox::ComboBox(std::string key, boost::shared_ptr<model::ExposedModel> model
 
 
 
-   auto restrictionSet = m_model->getRestrictionSet(m_key);
-   for(auto it = restrictionSet.begin(); it != restrictionSet.end(); it++)
+   std::set<std::string> restrictionSet = m_model->getRestrictionSet(m_key);
+   for(std::set<std::string>::iterator it = restrictionSet.begin(); it != restrictionSet.end(); it++)
    {
       m_options.append(it->c_str());
    }
@@ -88,8 +88,8 @@ void ComboBox::updateRestrictions()
     // We must update the restriction set
     clear();
     m_options.clear();
-    auto restrictionSet = m_model->getRestrictionSet(m_key);
-    for(auto it = restrictionSet.begin(); it != restrictionSet.end(); it++)
+    std::set<std::string> restrictionSet = m_model->getRestrictionSet(m_key);
+    for(std::set<std::string>::iterator it = restrictionSet.begin(); it != restrictionSet.end(); it++)
     {
        m_options.append(it->c_str());
     }

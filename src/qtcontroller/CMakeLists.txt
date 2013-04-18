@@ -18,7 +18,7 @@ IF(NOT ${LIBXML2_FOUND})
 
 ENDIF()
 QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
-QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
+QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
 QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
 
  add_library( qtcontroller

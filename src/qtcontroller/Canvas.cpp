@@ -51,12 +51,12 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
       m_renderlist_db( NULL ),
       m_renderlist_renderer( NULL )
 {
-    m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(viewerType.className(),
+    m_eventHandlers.push_back(boost::scoped_ptr<scripting::EventHandler>(new scripting::EventHandler(viewerType.className(),
                                                                                                    viewerType.parameters(),
                                                                                                    model,
                                                                                                    scripting::scriptEngineInstance())));
     for(size_t i = 0; i < scripts.size(); ++i) {
-        m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(scripts[i].className(),
+        m_eventHandlers.push_back(boost::scoped_ptr<scripting::EventHandler>(new scripting::EventHandler(scripts[i].className(),
                                                                                                        scripts[i].parameters(),
                                                                                                        model,
                                                                                                        scripting::scriptEngineInstance())));

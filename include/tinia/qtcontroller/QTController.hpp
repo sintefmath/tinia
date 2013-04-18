@@ -88,8 +88,8 @@ private:
 
     QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
     jobcontroller::Job*                    m_job;
-    boost::scoped_ptr<GUIBuilder>            m_builder;
-    boost::scoped_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<GUIBuilder>            m_builder;
+    boost::shared_ptr<model::ExposedModel>   m_model;
 
     // We need to hold the scripts in memory untill we start up QApplication
     std::vector<std::string>                m_scriptsToParse;

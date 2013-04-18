@@ -48,7 +48,7 @@ HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, QObject *parent) :
 
 void HTTPServer::incomingConnection(int socket)
 {
-    auto thread = new ServerThread(m_serverGrabber, m_job, socket);
+    ServerThread* thread = new ServerThread(m_serverGrabber, m_job, socket);
 
     //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 

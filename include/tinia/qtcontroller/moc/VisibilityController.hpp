@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QWidget>
 #include <string>
+#include <boost/shared_ptr.hpp>
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
 
@@ -34,7 +35,7 @@ namespace impl {
   */
 class VisibilityController : public QObject, public model::StateListener
 {
-    Q_OBJECT;
+    Q_OBJECT
 public:
     explicit
     VisibilityController( QWidget*                               widget,

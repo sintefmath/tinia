@@ -34,7 +34,7 @@ void ServerThread::run()
 
     if (socket.canReadLine()) {
 
-        auto request = socket.readAll();
+        QByteArray request = socket.readAll();
         while(!request.contains("\r\n\r\n")) {
             socket.waitForBytesWritten();
             request += socket.readAll();
@@ -44,7 +44,7 @@ void ServerThread::run()
 
         
         if (contentLengthExpression.indexIn(request) != -1) {
-            auto contentLengthGroup = contentLengthExpression.cap(1);
+            QString contentLengthGroup = contentLengthExpression.cap(1);
             int contentLength = contentLengthGroup.toInt();
             
             int headerSize = request.indexOf("\r\n\r\n") + 4;
@@ -83,13 +83,14 @@ bool ServerThread::isLongPoll(const QString &request)
 
 void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
 {
-    auto arguments =
+    boost::tuple<unsigned int, unsigned int,
+            std::string> arguments =
             parseGet<boost::tuple<unsigned int, unsigned int,
             std::string> >(decodeGetParameters(request), "width height key");
 
-    auto width = arguments.get<0>();
-    auto height = arguments.get<1>();
-    auto key = arguments.get<2>();
+    unsigned int width = arguments.get<0>();
+    unsigned int height = arguments.get<1>();
+    std::string key = arguments.get<2>();
 
     m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
 }
@@ -131,11 +132,11 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
 
 void ServerThread::getRenderList(QTextStream &os, const QString &request)
 {
-    auto params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
+    boost::tuple<std::string, unsigned int> params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
     os << httpHeader("application/xml") << "\r\n";
     tinia::jobcontroller::OpenGLJob* openglJob = dynamic_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
     if(openglJob) {
-        auto db = openglJob->getRenderList("session", params.get<0>());
+        const tinia::renderlist::DataBase* db = openglJob->getRenderList("session", params.get<0>());
         if(db) {
             std::string list = renderlist::getUpdateXML( db,
                                                          renderlist::ENCODING_JSON,

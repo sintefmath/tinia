@@ -57,7 +57,7 @@ EventHandler::EventHandler(const std::string &scriptClassName,
     QScriptValue scriptParameters = m_engine.newObject();
     scriptParameters.setProperty("exposedModel", m_engine.newQObject(&m_scriptModel));
 
-    for(auto param = parameters.begin(); param != parameters.end(); ++param) {
+    for(std::map<std::string, std::string>::const_iterator param = parameters.begin(); param != parameters.end(); ++param) {
         scriptParameters.setProperty(QString(param->first.c_str()), QString(param->second.c_str()));
     }
     m_scriptHandler =
@@ -72,7 +72,7 @@ EventHandler::EventHandler(const std::string &scriptClassName,
 void EventHandler::mouseMoveEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    auto error = m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler,
+    QScriptValue error = m_scriptHandler.property("mouseMoveEvent").call(m_scriptHandler,
                                                     QScriptValueList() << m_engine.newQObject(&scriptEvent));
 
     if(error.isError()) {
@@ -83,7 +83,7 @@ void EventHandler::mouseMoveEvent(QMouseEvent *event)
 void EventHandler::mousePressEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    auto error = m_scriptHandler.property("mousePressEvent").call(m_scriptHandler,
+    QScriptValue error = m_scriptHandler.property("mousePressEvent").call(m_scriptHandler,
                                                     QScriptValueList() << m_engine.newQObject(&scriptEvent));
 
     if(error.isError()) {
@@ -94,7 +94,7 @@ void EventHandler::mousePressEvent(QMouseEvent *event)
 void EventHandler::mouseReleaseEvent(QMouseEvent *event)
 {
     ScriptMouseEvent scriptEvent(*event);
-    auto error = m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
+    QScriptValue error = m_scriptHandler.property("mouseReleaseEvent").call(m_scriptHandler,
                                                        QScriptValueList() << m_engine.newQObject(&scriptEvent));
 
     if(error.isError()) {
@@ -105,7 +105,7 @@ void EventHandler::mouseReleaseEvent(QMouseEvent *event)
 void EventHandler::keyPressEvent(QKeyEvent *event)
 {
     KeyboardEvent scriptEvent(*event);
-    auto error = m_scriptHandler.property("keyPressEvent").call(m_scriptHandler,
+    QScriptValue error = m_scriptHandler.property("keyPressEvent").call(m_scriptHandler,
                                                        QScriptValueList() << m_engine.newQObject(&scriptEvent));
 
     if(error.isError()) {
