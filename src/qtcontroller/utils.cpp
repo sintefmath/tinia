@@ -31,7 +31,7 @@ std::string prettyName(std::string key, boost::shared_ptr<model::ExposedModel> m
    }
    else
    {
-      auto annotation =  element.getAnnotation();
+       std::map<std::string, std::string> annotation =  element.getAnnotation();
       return annotation["en"];
    }
 

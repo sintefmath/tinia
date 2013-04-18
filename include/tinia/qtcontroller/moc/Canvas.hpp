@@ -27,6 +27,7 @@
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -68,7 +69,7 @@ public slots:
    void triggerRedraw();
 private:
    bool m_perf_mode;
-   std::vector<boost::scoped_ptr<scripting::EventHandler > > m_eventHandlers;
+   std::vector<boost::shared_ptr<scripting::EventHandler > > m_eventHandlers;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;
