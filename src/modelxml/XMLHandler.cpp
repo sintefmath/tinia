@@ -27,7 +27,7 @@ namespace model {
 namespace impl {
 namespace xml {
 
-XMLHandler::XMLHandler(std::shared_ptr<model::ExposedModel> model)
+XMLHandler::XMLHandler(boost::shared_ptr<model::ExposedModel> model)
    : m_model(model), m_elementHandler(model)
 {
 }

@@ -21,7 +21,7 @@
 namespace tinia {
 namespace qtcontroller {
 namespace impl {
-ComboBox::ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+ComboBox::ComboBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                    QWidget *parent) :
    QComboBox(parent), m_model(model), m_key(key)
 {

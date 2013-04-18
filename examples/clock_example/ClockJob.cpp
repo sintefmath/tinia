@@ -45,7 +45,7 @@ namespace example {
 namespace {
 class Timer {
 public:
-    Timer(std::shared_ptr<tinia::model::ExposedModel>& exposedModel) : m_model(exposedModel) {
+    Timer(boost::shared_ptr<tinia::model::ExposedModel>& exposedModel) : m_model(exposedModel) {
         m_model->addElement<std::string>("time", "0");
         m_model->addElement<int>("elapsed", 0);
     }
@@ -55,7 +55,7 @@ public:
             boost::this_thread::sleep(boost::posix_time::millisec(500));
             boost::posix_time::ptime currentTime = boost::posix_time::ptime(boost::posix_time::second_clock::local_time());
 
-            auto currentSeconds = currentTime.time_of_day().total_seconds();
+            int currentSeconds = currentTime.time_of_day().total_seconds();
 
             m_model->updateElement<int>("elapsed", currentSeconds);
 
@@ -69,7 +69,7 @@ public:
     }
 
 private:
-    std::shared_ptr<tinia::model::ExposedModel> m_model;
+    boost::shared_ptr<tinia::model::ExposedModel> m_model;
 };
 }
 ClockJob::ClockJob() : m_timeThread(Timer(m_model))
@@ -85,7 +85,7 @@ bool ClockJob::init()
     m_model->addElement("viewer", viewer);
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
-    auto layout = new tinia::model::gui::VerticalLayout();
+	tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     layout->addChild(new tinia::model::gui::Label("time", true));
 
     layout->addChild(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"));
@@ -119,8 +119,8 @@ bool ClockJob::renderFrame(const std::string &session, const std::string &key, u
     glLoadMatrixf( viewer.projectionMatrix.data() );
 
 
-    auto elapsed = m_model->getElementValue<int>("elapsed");
-    auto modelview =glm::rotate(glm::translate(glm::mat4(), glm::vec3(0.f, 0.f, -3.f)),
+    int elapsed = m_model->getElementValue<int>("elapsed");
+	glm::mat4 modelview =glm::rotate(glm::translate(glm::mat4(), glm::vec3(0.f, 0.f, -3.f)),
                                                float(elapsed)*10.f, glm::vec3(0.f, 1.f,0.f));
 
     glMatrixMode(GL_MODELVIEW);

@@ -29,7 +29,7 @@ namespace impl {
   Returns the human readable name of the key (by getting the annotation).
   If the element has no annotation, it defaults to the key.
   */
-std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> model);
+std::string prettyName(std::string key, boost::shared_ptr<model::ExposedModel> model);
 
 
 }

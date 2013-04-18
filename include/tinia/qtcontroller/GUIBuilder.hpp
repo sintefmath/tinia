@@ -35,7 +35,7 @@ namespace qtcontroller {
 class GUIBuilder
 {
 public:
-    GUIBuilder(std::shared_ptr<model::ExposedModel> model,
+    GUIBuilder(boost::shared_ptr<model::ExposedModel> model,
                jobcontroller::Job* job,
                QTController* controller,
                const bool perf_mode,
@@ -54,7 +54,7 @@ public:
     void addScript(const std::string& script);
 
 private:
-    std::shared_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<model::ExposedModel>   m_model;
     jobcontroller::Job*                       m_job;
     QTController*                             m_controller;
     const bool                              m_perf_mode;

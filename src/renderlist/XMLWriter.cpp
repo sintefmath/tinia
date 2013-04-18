@@ -153,7 +153,7 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
         o << "  <updateItems>" << std::endl;
         if( !buffers.empty() ) {
             o << "    <buffers>" << std::endl;
-            for( auto it=buffers.begin(); it!=buffers.end(); ++it ) {
+			for( std::list<renderlist::Buffer*>::iterator it=buffers.begin(); it!=buffers.end(); ++it ) {
                 const Buffer* b = *it;
                 switch( b->type() ) {
                 case ELEMENT_INT:
@@ -177,7 +177,7 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
         }
         if( !shaders.empty() ) {
             o << "    <shaders>" << std::endl;
-            for( auto it=shaders.begin(); it!=shaders.end(); ++it ) {
+			for( std::list<renderlist::Shader*>::iterator it=shaders.begin(); it!=shaders.end(); ++it ) {
                 const Shader* s = *it;
                 const std::string& vs = s->vertexStage();
                 const std::string& tc = s->tessCtrlStage();
@@ -207,7 +207,7 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
         }
         if( !actions.empty() ) {
             o << "    <actions>" << std::endl;
-            for(auto it=actions.begin(); it!=actions.end(); ++it ) {
+            for(std::list<renderlist::Action*>::iterator it=actions.begin(); it!=actions.end(); ++it ) {
 
                 // --- <draw> --------------------------------------------------
                 if( typeid(**it) == typeid(Draw) ) {
@@ -432,14 +432,14 @@ getUpdateXML( const DataBase* database, const Encoding encoding, const Revision 
 
         if( needs_pruning ) {
             o << "  <pruneItems>" << std::endl;
-            for( auto it=keep.begin(); it!=keep.end(); ++it ) {
+			for( std::list<renderlist::Item*>::iterator it=keep.begin(); it!=keep.end(); ++it ) {
                 o << "    <keep id=\"" << (*it)->id() << "\"/>" << std::endl;
             }
             o << "  </pruneItems>" << std::endl;
         }
         if( new_draworder ) {
             o << "  <drawOrder>" << std::endl;
-            for( auto it=draworder.begin(); it!=draworder.end(); ++it ) {
+			for( std::list<renderlist::Action*>::iterator it=draworder.begin(); it!=draworder.end(); ++it ) {
                 o << "    <invoke action=\"" << (*it)->id() << "\"/>" << std::endl;
             }
             o << "  </drawOrder>" << std::endl;

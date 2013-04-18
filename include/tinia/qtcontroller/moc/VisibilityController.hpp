@@ -38,7 +38,7 @@ class VisibilityController : public QObject, public model::StateListener
 public:
     explicit
     VisibilityController( QWidget*                               widget,
-                          std::shared_ptr<model::ExposedModel>  model,
+                          boost::shared_ptr<model::ExposedModel>  model,
                           const std::string&                     key,
                           const bool                             inverted );
 
@@ -52,7 +52,7 @@ signals:
     setWidgetVisible( bool visibility );
 
 protected:
-    std::shared_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<model::ExposedModel>   m_model;
     const std::string                       m_key;
     const bool                              m_inverted;
 };

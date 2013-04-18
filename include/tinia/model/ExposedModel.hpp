@@ -19,16 +19,12 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <sstream>
 #include <stdexcept>
-// #include <initializer_list> // This include makes Visual Studio sad.
 #include <iostream>
 #include <algorithm>
-#include <type_traits>
 
-
+#include <boost/type_traits.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <boost/thread.hpp>
@@ -407,12 +403,12 @@ private:
    void incrementRevisionNumber(impl::ElementData &updatedElement);
 
 
-   void addAnnotationHelper( std::string element, std::unordered_map<std::string, std::string>& );
+   void addAnnotationHelper( std::string element, std::map<std::string, std::string>& );
 
    void addMatrixHelper( std::string key, const float* matrixData );
 
-   std::unordered_map<std::string, impl::ElementData> stateHash;
-//   std::unordered_map<std::string, impl::ElementData> stateHash;
+   std::map<std::string, impl::ElementData> stateHash;
+//   std::map<std::string, impl::ElementData> stateHash;
 
    unsigned int revisionNumber;
 
@@ -545,7 +541,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
 
     std::set<std::string> restrictionStrings;
 
-    for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
+    for(std::set<std::string>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
     {
 
        std::string s = boost::lexical_cast<std::string>( *it );
@@ -584,7 +580,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
 
    std::set<std::string> restrictionStrings;
 
-   for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); it++)
+   for(typename std::set<T>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); it++)
    {
 
       std::string s = boost::lexical_cast<std::string>( *it );
@@ -615,7 +611,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
   */
 template<bool B>
 struct UpdateElementHelper {
-   UpdateElementHelper( std::unordered_map<std::string, impl::ElementData>& stateHash,
+   UpdateElementHelper( std::map<std::string, impl::ElementData>& stateHash,
                         impl::ElementDataFactory& elementFactory )
       : stateHash( stateHash ),
         elementFactory( elementFactory )
@@ -624,7 +620,7 @@ struct UpdateElementHelper {
    template<class T>
    void operator()( std::string key, impl::ElementData& elementData, const T& value );
 
-   std::unordered_map<std::string, impl::ElementData>& stateHash;
+   std::map<std::string, impl::ElementData>& stateHash;
    impl::ElementDataFactory& elementFactory;
 };
 
@@ -661,7 +657,7 @@ void
 ExposedModel::updateElementHelper( std::string key, impl::ElementData& elementData, const T& value ) {
    // All classes except std::string are assumed to be complexTypes which require specialization
    // in impl::ElementDataFactory for serialization.
-   UpdateElementHelper<std::is_class<T>::value && !std::is_same<std::string, T>::value >
+   UpdateElementHelper<boost::is_class<T>::value && !boost::is_same<std::string, T>::value >
          updater( stateHash, elementFactory );
    updater( key, elementData, value );
 }
@@ -710,9 +706,9 @@ ExposedModel::getElementValue( std::string key, T& t ) {
    scoped_lock(m_selfMutex);
 
 
-   auto& elementData = findElementInternal(key);
-   auto myType = impl::TypeToXSDType<T>::getTypename();
-   auto storedType = elementData.getXSDType();
+   impl::ElementData& elementData = findElementInternal(key);
+   std::string myType = impl::TypeToXSDType<T>::getTypename();
+   std::string storedType = elementData.getXSDType();
    if ( storedType !=  myType ) {
        throw TypeException(myType, storedType);
    }
@@ -729,7 +725,7 @@ impl::ElementData& model::ExposedModel::addElementInternal(std::string key,
 
    addElementErrorChecking( key );
 
-   auto elementData = elementFactory.createElement( value );
+   impl::ElementData elementData = elementFactory.createElement( value );
 
    updateStateHash( key, elementData );
 
@@ -742,23 +738,23 @@ template<class InputIterator>
 void
 ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const InputIterator& end ) {
    using std::string;
-   std::unordered_map<std::string, std::string> annotationMap;
+   std::map<std::string, std::string> annotationMap;
 
-   std::for_each( begin, end, [&]( std::string s ) {
-                  auto pos = s.find( ":" );
-         if ( pos == string::npos ) {
-      throw std::invalid_argument( "Trying to set annotation that is not qualified with language code." );
-   }
+   for(InputIterator it = begin; it !=  end; ++it) {
+	   std::string s = *it;
+	   std::string::size_type pos = s.find( ":" );
+       if ( pos == string::npos ) {
+           throw std::invalid_argument( "Trying to set annotation that is not qualified with language code." );
+       }
 
-   string lang( s.begin(), s.begin() + pos );
-   string annotation( s.begin() + pos + 1, s.end() );
-   annotationMap[lang] = annotation;
-}
-);
+       string lang( s.begin(), s.begin() + pos );
+       string annotation( s.begin() + pos + 1, s.end() );
+       annotationMap[lang] = annotation;
+  }
 
 
 
-addAnnotationHelper( key, annotationMap );
+    addAnnotationHelper( key, annotationMap );
 }
 
 template<typename T>
@@ -780,7 +776,7 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     { // Lock block
         scoped_lock(m_selfMutex);
 
-        auto& elementData = findElementInternal(key);
+        impl::ElementData& elementData = findElementInternal(key);
 
         {
             std::stringstream ss;

@@ -18,7 +18,7 @@
 
 #include "tinia/jobcontroller/ComputeJob.hpp"
 #include "tinia/model/ExposedModel.hpp"
-
+#include <stdexcept>
 namespace tinia {
 namespace jobcontroller
 {
@@ -62,9 +62,10 @@ ComputeJob::operator()()
 void
 ComputeJob::start()
 {
+//	throw std::runtime_error("Start in " __FILE__ " at line " __LINE__ " is not implemented properly (std::move doesn't work in C++11)");
   assert(!m_computeThread.joinable());
   boost::thread t( boost::ref( *this ) );
-  m_computeThread = std::move( t );
+  //m_computeThread = std::move( t );
   m_model->updateElement("status", "running");
 }
 

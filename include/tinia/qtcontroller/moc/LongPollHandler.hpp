@@ -18,7 +18,7 @@ class LongPollHandler : public QObject, public tinia::model::StateListener
 public:
     explicit LongPollHandler(QTextStream& os,
                              const QString& request,
-                             std::shared_ptr<tinia::model::ExposedModel> model,
+                             boost::shared_ptr<tinia::model::ExposedModel> model,
                              QObject *parent = 0);
 
     ~LongPollHandler();
@@ -38,7 +38,7 @@ private:
     QString m_request;
     QWaitCondition m_waitCondition;
     QMutex m_mutex;
-    std::shared_ptr<tinia::model::ExposedModel> m_model;
+    boost::shared_ptr<tinia::model::ExposedModel> m_model;
     tinia::model::impl::xml::XMLHandler m_xmlHandler;
     QTextStream& m_textStream;
 };

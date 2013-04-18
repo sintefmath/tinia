@@ -25,7 +25,7 @@ namespace qtcontroller {
 namespace impl {
 FileDialogButton::FileDialogButton(std::string key,
                                    bool showValue,
-                                   std::shared_ptr<model::ExposedModel> model,
+                                   boost::shared_ptr<model::ExposedModel> model,
                                    QWidget *parent) :
     QPushButton(parent), m_key(key), m_model(model),
    m_controller(this, m_model, key, showValue)

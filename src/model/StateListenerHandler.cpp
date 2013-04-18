@@ -51,13 +51,13 @@ void model::impl::StateListenerHandler::fireStateElementModified(
       m_buffer.push_back(StateElement(*stateElement));
       return;
    }
-   for(auto it = m_listeners.begin(); it!= m_listeners.end(); it++)
+   for(std::list<model::StateListener*>::iterator it = m_listeners.begin(); it!= m_listeners.end(); it++)
    {
       (*it)->stateElementModified(stateElement);
    }
 
    std::list<model::StateListener*> &listeners = m_keylisteners[stateElement->getKey()];
-   for(auto it = listeners.begin(); it!= listeners.end(); it++)
+   for(std::list<model::StateListener*>::iterator it = listeners.begin(); it!= listeners.end(); it++)
    {
       (*it)->stateElementModified(stateElement);
    }

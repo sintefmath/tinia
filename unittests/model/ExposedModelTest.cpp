@@ -22,7 +22,7 @@
 #include <memory>
 #include <stdexcept>
 #include <iostream>
-#include <array>
+#include <boost/array.hpp>
 #include <vector>
 #include <ctime>
 #include <cstring>
@@ -266,14 +266,14 @@ BOOST_FIXTURE_TEST_CASE(restrictionSetCopy, ExposedModelFixture)
    restrictions.push_back("legal2");
    model.addElementWithRestriction<std::string>("myVal", "legal1", restrictions.begin(),
                                        restrictions.end());
-   auto restrictions2 = model.getRestrictionSet("myVal");
+   std::set<std::string> restrictions2 = model.getRestrictionSet("myVal");
 
    BOOST_CHECK_EQUAL_COLLECTIONS(restrictions.begin(), restrictions.end(),
                                  restrictions2.begin(), restrictions2.end());
 
    // Make sure this is a real copy
    restrictions2.erase("legal1");
-   auto restrictions3 = model.getRestrictionSet("myVal");
+   std::set<std::string> restrictions3 = model.getRestrictionSet("myVal");
    BOOST_CHECK(restrictions3.find("legal1")!=restrictions3.end());
 
    BOOST_CHECK(!model.emptyRestrictionSet("myVal"));
@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(getFullStateSchema, ExposedModelFixture)
 
       std::vector<bool> found;
       for(int i = 0; i < 9; i++) found.push_back(false);
-      for(auto it = elements.begin(); it!=elements.end(); it++)
+      for(std::vector<model::StateSchemaElement>::iterator it = elements.begin(); it!=elements.end(); it++)
       {
          std::string key = it->getKey();
          int i = (int)(key[key.size()-1]-'0');
@@ -415,7 +415,7 @@ BOOST_FIXTURE_TEST_CASE(DefaultLengthCheck, ExposedModelFixture)
 BOOST_FIXTURE_TEST_CASE(GetElementByValue, ExposedModelFixture)
 {
     model.addElement("one", 1);
-    auto one = model.getElementValue<int>("one");
+    int one = model.getElementValue<int>("one");
     BOOST_CHECK_EQUAL(1, one);
 }
 

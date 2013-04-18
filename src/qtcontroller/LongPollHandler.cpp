@@ -7,7 +7,7 @@ namespace qtcontroller {
 namespace impl {
 
 LongPollHandler::LongPollHandler(QTextStream& os,  const QString& request,
-                                           std::shared_ptr<tinia::model::ExposedModel> model,
+                                           boost::shared_ptr<tinia::model::ExposedModel> model,
                                            QObject *parent) :
     QObject(parent), m_request(request),
     m_model(model), m_xmlHandler(model), m_textStream(os)

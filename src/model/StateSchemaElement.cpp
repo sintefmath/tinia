@@ -53,7 +53,7 @@ bool model::StateSchemaElement::emptyAnnotation() const
    return m_data.emptyAnnotation();
 }
 
-const std::unordered_map<std::string, std::string> &
+const std::map<std::string, std::string> &
 model::StateSchemaElement::getAnnotation() const
 {
    return m_data.getAnnotation();

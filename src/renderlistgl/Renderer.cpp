@@ -60,7 +60,7 @@ Renderer::Renderer(const DataBase &db)
 const RenderBuffer*
 Renderer::buffer( const Id id ) const
 {
-    auto it = m_buffers.find( id );
+	std::map<Id, RenderBuffer*>::const_iterator it = m_buffers.find( id );
     if( it == m_buffers.end() ) {
         return NULL;
     }
@@ -72,7 +72,7 @@ Renderer::buffer( const Id id ) const
 const RenderShader*
 Renderer::shader( const Id id ) const
 {
-    auto it = m_shaders.find( id );
+    std::map<Id, RenderShader*>::const_iterator it = m_shaders.find( id );
     if( it == m_shaders.end() ) {
         return NULL;
     }
@@ -113,10 +113,10 @@ Renderer::pull()
                                        m_current_revision );
     RL_LOG_DEBUG( log, "pull from " << old_revision << " to " << m_current_revision );
 
-    for( auto it=buffers.begin(); it!=buffers.end(); ++it ) {
+    for( std::list<Buffer*>::iterator it=buffers.begin(); it!=buffers.end(); ++it ) {
         const Buffer* src = *it;
         RenderBuffer* dst = NULL;
-        auto jt = m_buffers.find( src->id() );
+        std::map<Id, RenderBuffer*>::iterator jt = m_buffers.find( src->id() );
         if( jt == m_buffers.end() ) {
             dst = new RenderBuffer( *this, src->id() );
             m_buffers[ src->id() ] = dst;
@@ -126,10 +126,10 @@ Renderer::pull()
         }
         dst->pull( src );
     }
-    for( auto it=shaders.begin(); it!=shaders.end(); ++it ) {
+    for( std::list<Shader*>::iterator it=shaders.begin(); it!=shaders.end(); ++it ) {
         const Shader* src = *it;
         RenderShader* dst = NULL;
-        auto jt = m_shaders.find( src->id() );
+        std::map<Id, RenderShader*>::iterator jt = m_shaders.find( src->id() );
         if( jt == m_shaders.end() ) {
             dst = new RenderShader( *this, src->id() );
             m_shaders[ src->id() ] = dst;
@@ -139,9 +139,9 @@ Renderer::pull()
         }
         dst->pull( src );
     }
-    for( auto it=actions.begin(); it!=actions.end(); ++it ) {
+    for( std::list<Action*>::iterator it=actions.begin(); it!=actions.end(); ++it ) {
         //std::cerr << log << "processing action " << (*it)->name() << ", type=" << typeid(**it).name() << std::endl;
-        auto jt = m_actions.find( (*it)->id() );
+        std::map<Id, RenderAction*>::iterator jt = m_actions.find( (*it)->id() );
         if( typeid(**it) == typeid(Draw) ) {
             const Draw* src = static_cast<const Draw*>( *it );
             RenderDraw* dst = NULL;
@@ -228,8 +228,8 @@ Renderer::pull()
 
     if( new_draworder ) {
         m_draw_order.clear();
-        for( auto it=draworder.begin(); it!=draworder.end(); ++it ) {
-            auto jt = m_actions.find( (*it)->id() );
+        for( std::list<Action*>::iterator it=draworder.begin(); it!=draworder.end(); ++it ) {
+            std::map<Id, RenderAction*>::iterator  jt = m_actions.find( (*it)->id() );
             if( jt != m_actions.end() ) {
                 m_draw_order.push_back( jt->second );
             }
@@ -277,7 +277,7 @@ Renderer::render( unsigned int  fbo,
                    projection_inverse,
                    modelview,
                    modelview_inverse );
-    for(auto it=m_draw_order.begin(); it!=m_draw_order.end(); ++it ) {
+    for(std::list<RenderAction*>::iterator it=m_draw_order.begin(); it!=m_draw_order.end(); ++it ) {
         CHECK_GL;
         (*it)->invoke( state );
         CHECK_GL;

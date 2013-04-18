@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <array>
+#include <boost/array.hpp>
 #include <algorithm>
 
 namespace tinia {
@@ -47,10 +47,10 @@ struct Viewer {
     }
 
     /** Pointer to a projectionMatrix, assumed to hold 16 continious float values. */
-    std::array<float, 16> projectionMatrix;
+    boost::array<float, 16> projectionMatrix;
 
     /** Pointer to a modelviewMatrix, assumed to hold 16 continious float values. */
-    std::array<float, 16> modelviewMatrix;
+	boost::array<float, 16> modelviewMatrix;
 
     int width;
     int height;

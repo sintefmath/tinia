@@ -28,7 +28,7 @@ Job::Job()
 
 }
 
-std::shared_ptr<model::ExposedModel> jobcontroller::Job::getExposedModel()
+boost::shared_ptr<model::ExposedModel> jobcontroller::Job::getExposedModel()
 {
    return m_model;
 }

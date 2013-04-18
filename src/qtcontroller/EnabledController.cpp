@@ -24,7 +24,7 @@ namespace qtcontroller {
 namespace impl {
 
 EnabledController::EnabledController( QWidget*                               widget,
-                                      std::shared_ptr<model::ExposedModel>  model,
+                                      boost::shared_ptr<model::ExposedModel>  model,
                                       const std::string&                     key,
                                       const bool                             inverted )
     : QObject( widget ),

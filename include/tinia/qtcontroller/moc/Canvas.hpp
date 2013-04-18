@@ -40,7 +40,7 @@ public:
                     std::string key,
                     const tinia::model::gui::ScriptArgument& viewerType,
                     const std::vector<tinia::model::gui::ScriptArgument>& scripts,
-                    std::shared_ptr<model::ExposedModel> model,
+                    boost::shared_ptr<model::ExposedModel> model,
                     QWidget* parent,
                     QGLWidget* share_widget,
                     bool perf_mode = false);
@@ -72,7 +72,7 @@ private:
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    jobcontroller::OpenGLJob* m_job;
    QTime                   m_last_fps_calc;
    unsigned int            m_frames;

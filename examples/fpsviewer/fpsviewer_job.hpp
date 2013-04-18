@@ -47,11 +47,11 @@ FPSViewer::FPSViewer()
     m_model->addElement("boundingbox", "-2 -2 -2 2 2 2");
 
     /** [layout] */
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     /** [layout] */
 
     /** [canvas] */
-    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
     canvas->setViewerType( std::string("FPSViewer") );
     /** [canvas] */
 

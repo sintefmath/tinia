@@ -45,7 +45,7 @@ public:
      */
     EventHandler(const std::string& scriptClassName,
                  const std::string& key,
-                 std::shared_ptr<tinia::model::ExposedModel> model,
+                 boost::shared_ptr<tinia::model::ExposedModel> model,
                  QScriptEngine& engine);
 
     /**
@@ -59,7 +59,7 @@ public:
      */
     EventHandler(const std::string &scriptClassName,
                  const std::map<std::string, std::string> parameters,
-                 std::shared_ptr<model::ExposedModel> model,
+                 boost::shared_ptr<model::ExposedModel> model,
                  QScriptEngine &engine);
 
     /** Will pass the event to "mouseMoveEvent" in the scriptclass
@@ -81,7 +81,7 @@ public:
 private:
     QScriptEngine& m_engine;
     ExposedModel m_scriptModel;
-    std::shared_ptr<tinia::model::ExposedModel> m_model;
+    boost::shared_ptr<tinia::model::ExposedModel> m_model;
     QScriptValue m_scriptHandler;
 };
 

@@ -23,7 +23,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-CheckBox::CheckBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+CheckBox::CheckBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                    QWidget *parent) :
    QCheckBox(parent), m_key(key), m_model(model)
 {

@@ -119,7 +119,7 @@ void isValid( tinia::model::gui::Container0D<T>* root,
 
 
 void isValid( tinia::model::gui::Tab* root, tinia::model::ExposedModel& model)  {
-    auto container =  dynamic_cast<tinia::model::gui::Container0D<tinia::model::gui::Element>*>(root);
+    tinia::model::gui::Container0D<tinia::model::gui::Element>* container =  dynamic_cast<tinia::model::gui::Container0D<tinia::model::gui::Element>*>(root);
     if(container != NULL) {
         isValid(container, model);
     }

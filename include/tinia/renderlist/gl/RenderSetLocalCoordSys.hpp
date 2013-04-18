@@ -38,8 +38,8 @@ public:
     void
     pull( const SetLocalCoordSys* a )
     {
-        std::copy_n( a->fromWorld(), 16, m_from_world );
-        std::copy_n( a->toWorld(), 16, m_to_world );
+		std::copy( a->fromWorld(), a->fromWorld() + 16, m_from_world );
+        std::copy( a->toWorld(), a->toWorld() + 16, m_to_world );
     }
 
     void

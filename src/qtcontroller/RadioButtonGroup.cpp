@@ -26,7 +26,7 @@ namespace qtcontroller {
 namespace impl {
 
 RadioButtonGroup::RadioButtonGroup(std::string key,
-                                   std::shared_ptr<model::ExposedModel> model,
+                                   boost::shared_ptr<model::ExposedModel> model,
                                    bool horizontal,
                                    QWidget *parent) :
     QGroupBox(parent), m_model(model), m_key(key)

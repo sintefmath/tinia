@@ -39,7 +39,7 @@ class RadioButtonGroup : public QGroupBox,
     Q_OBJECT
 public:
     explicit RadioButtonGroup(std::string key,
-                          std::shared_ptr<model::ExposedModel> model,
+                          boost::shared_ptr<model::ExposedModel> model,
                               bool horizontal,
                           QWidget *parent = 0);
 
@@ -57,7 +57,7 @@ signals:
    void newRestrictionReceived();
 private:
    void addButtons();
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
 }

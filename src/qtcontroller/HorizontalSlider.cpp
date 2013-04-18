@@ -27,7 +27,7 @@ namespace impl {
   Used templated min max and removed boos lexical cast
   */
 HorizontalSlider::HorizontalSlider(std::string key, bool withButtons,
-                                   std::shared_ptr<model::ExposedModel> model,
+                                   boost::shared_ptr<model::ExposedModel> model,
                                    QWidget *parent) :
     QWidget(parent), m_key(key), m_model(model)
 {

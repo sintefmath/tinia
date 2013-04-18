@@ -63,7 +63,7 @@ DataBase::itemByName( const std::string& name )
 {
     Logger log = getLogger( package + ".itemByName" );
 
-    auto it = m_name_map.find( name );
+	std::map<std::string,Item*>::iterator it = m_name_map.find( name );
     if( it != m_name_map.end() ) {
         return it->second;
     }
@@ -108,7 +108,7 @@ void
 DataBase::attachName( const std::string& name, Item* item )
 {
     Logger log = getLogger( package + ".attachName" );
-    auto it = m_name_map.find( name );
+	std::map<std::string, Item*>::iterator it = m_name_map.find( name );
     if( it != m_name_map.end() ) {
         RL_LOG_ERROR( log, "name '" << name << "' already in use." );
         return;
@@ -121,7 +121,7 @@ DataBase::detachName( const std::string& name, Item* item )
 {
     Logger log = getLogger(  package + ".detachName" );
 
-    auto it = m_name_map.find( name );
+	std::map<std::string, Item*>::iterator it = m_name_map.find( name );
     if( it == m_name_map.end() ) {
         RL_LOG_ERROR( log, "name '" << name << "' not in use" );
     }
@@ -148,7 +148,7 @@ DataBase::drawOrderAdd( const Id action_id )
 {
     Logger log = getLogger( package + ".drawOrderAdd[Id]" );
 
-    auto it = m_actions.find( action_id );
+	std::map<Id,Action*>::iterator it = m_actions.find( action_id );
     if( it == m_actions.end() ) {
         RL_LOG_ERROR( log, "couldn't find any actions with id=" << action_id );
         return this;
@@ -163,7 +163,7 @@ DataBase::drawOrderAdd( const std::string& action_name )
 {
     Logger log = getLogger( package + ".drawOrderAdd[string]" );
 
-    auto it = m_name_map.find( action_name );
+	std::map<std::string,Item*>::iterator it = m_name_map.find( action_name );
     if( it == m_name_map.end() ) {
         RL_LOG_ERROR( log, "couldn't find any items with name=" << action_name );
         return this;
@@ -203,7 +203,7 @@ DataBase::changes( std::list<Buffer*>&  modified_buffers,
 
     // --- buffers
     modified_buffers.clear();
-    for(auto it=m_buffers.begin(); it != m_buffers.end(); ++it ) {
+	for(std::map<Id,Buffer*>::const_iterator  it=m_buffers.begin(); it != m_buffers.end(); ++it ) {
         if( has_revision < it->second->m_revision ) {
             modified_buffers.push_back( it->second );
         }
@@ -217,7 +217,7 @@ DataBase::changes( std::list<Buffer*>&  modified_buffers,
 
     // --- shaders
     modified_shaders.clear();
-    for(auto it=m_shaders.begin(); it!=m_shaders.end(); ++it ) {
+	for(std::map<Id, Shader*>::const_iterator it=m_shaders.begin(); it!=m_shaders.end(); ++it ) {
         if( has_revision < it->second->m_revision ) {
             modified_shaders.push_back( it->second );
         }
@@ -227,7 +227,7 @@ DataBase::changes( std::list<Buffer*>&  modified_buffers,
     }
 
     // --- actions
-    for(auto it=m_actions.begin(); it!=m_actions.end(); ++it ) {
+	for(std::map<Id, Action*>::const_iterator it=m_actions.begin(); it!=m_actions.end(); ++it ) {
         if( has_revision < it->second->m_revision ) {
             modified_actions.push_back( it->second );
         }
@@ -252,11 +252,11 @@ DataBase::process( bool delete_unused )
     Logger log = getLogger( package + ".process" );
     bool retval = true;
 
-    std::unordered_map<Id,bool> in_use;
+    std::map<Id,bool> in_use;
     std::list<Action*> draw_order;
 
     Id curr_shader = ~0u;
-    for(auto it=m_draworder.begin(); it!=m_draworder.end(); ++it ) {
+	for(std::list<Action*>::iterator it=m_draworder.begin(); it!=m_draworder.end(); ++it ) {
 
         // --- process SetShader action ----------------------------------------
         if( typeid(**it) == typeid(SetShader) ) {
@@ -266,7 +266,7 @@ DataBase::process( bool delete_unused )
                 retval = false;
             }
             else {
-                auto jt = m_shaders.find( a->shaderId() );
+				std::map<Id, Shader*>::iterator jt = m_shaders.find( a->shaderId() );
                 if( jt == m_shaders.end() ) {
                     RL_LOG_ERROR( log, "SetShader with illegal shader id: " << a->shaderId() );
                     retval = false;
@@ -303,7 +303,7 @@ DataBase::process( bool delete_unused )
                 retval = false;
             }
             else {
-                auto jt = m_shaders.find( a->shaderId() );
+				std::map<Id, Shader*>::iterator jt = m_shaders.find( a->shaderId() );
                 if( jt == m_shaders.end() ) {
                     RL_LOG_ERROR( log, "SetUniforms with illegal shader id: " << a->shaderId() );
                     retval = false;
@@ -350,7 +350,7 @@ DataBase::process( bool delete_unused )
                         success = false;
                     }
                     else {
-                        auto jt = m_buffers.find( a->bufferId(i) );
+						std::map<Id, Buffer*>::iterator jt = m_buffers.find( a->bufferId(i) );
                         if( jt == m_buffers.end() ) {
                             RL_LOG_ERROR( log, "SetInputs with input from non-existing buffer id=" << a->bufferId(i) );
                             success = false;
@@ -394,7 +394,7 @@ DataBase::process( bool delete_unused )
                     retval = false;
                 }
                 else {
-                    auto jt = m_buffers.find( a->indexBufferId() );
+					std::map<Id, Buffer*>::iterator jt = m_buffers.find( a->indexBufferId() );
                     if( jt == m_buffers.end() ) {
                         RL_LOG_ERROR( log, "Draw with indices from non-existing buffer id=" << a->indexBufferId() );
                         retval = false;
@@ -509,7 +509,7 @@ DataBase::createBuffer( const std::string& name )
 void
 DataBase::deleteBuffer( const Id id )
 {
-    auto it = m_buffers.find( id );
+	std::map<Id, Buffer*>::iterator it = m_buffers.find( id );
     if( it != m_buffers.end() ) {
         Buffer* b = it->second;
         if( !b->name().empty() ) {
@@ -538,7 +538,7 @@ DataBase::createShader( const std::string& name )
 void
 DataBase::deleteShader( const Id id )
 {
-    auto it = m_shaders.find( id );
+	std::map<Id, Shader*>::iterator it = m_shaders.find( id );
     if( it != m_shaders.end() ) {
         Shader* s = it->second;
         if( !s->name().empty() ) {
@@ -579,7 +579,7 @@ template SetUniforms*            DataBase::createAction<SetUniforms>( const std:
 void
 DataBase::deleteAction( const Id id )
 {
-    auto it = m_actions.find( id );
+	std::map<Id, Action*>::iterator it = m_actions.find( id );
     if( it != m_actions.end() ) {
         Action* a = it->second;
         if(!a->name().empty()) {

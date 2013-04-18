@@ -179,7 +179,7 @@ class Container1D
 public:
     ~Container1D()
     {
-        for( auto it = m_children.begin(); it != m_children.end(); ++it ) {
+        for( std::vector<ChildType*>::iterator it = m_children.begin(); it != m_children.end(); ++it ) {
             delete *it;
         }
     }
@@ -207,7 +207,7 @@ public:
 
     ~Container2D()
     {
-        for(auto it = m_children.begin(); it != m_children.end(); ++it ) {
+        for(typename std::vector<ChildType*>::iterator it = m_children.begin(); it != m_children.end(); ++it ) {
             if( *it != NULL ) {
                 delete *it;
             }

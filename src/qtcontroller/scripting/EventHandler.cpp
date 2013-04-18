@@ -27,7 +27,7 @@ namespace scripting {
 
 EventHandler::EventHandler(const std::string& scriptClassName,
                            const std::string& key,
-                           std::shared_ptr<tinia::model::ExposedModel> model,
+                           boost::shared_ptr<tinia::model::ExposedModel> model,
                            QScriptEngine& engine)
     : m_engine(engine),
       m_scriptModel(model, &m_engine),
@@ -48,7 +48,7 @@ EventHandler::EventHandler(const std::string& scriptClassName,
 
 EventHandler::EventHandler(const std::string &scriptClassName,
                            const std::map<std::string, std::string> parameters,
-                           std::shared_ptr<model::ExposedModel> model,
+                           boost::shared_ptr<model::ExposedModel> model,
                            QScriptEngine &engine)
     : m_engine(engine),
       m_scriptModel(model, &m_engine),

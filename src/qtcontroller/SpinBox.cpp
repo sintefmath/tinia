@@ -23,7 +23,7 @@ namespace qtcontroller {
 namespace impl {
 
 
-SpinBox::SpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+SpinBox::SpinBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
    QSpinBox(parent), m_key(key.c_str()), m_model(model)
 {

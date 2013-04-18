@@ -103,8 +103,8 @@ RenderShader::compileShader( GLuint shader, const std::string& source )
     }
     if( loglength > 1 ) {
         std::vector<GLchar> clog( loglength );
-        glGetShaderInfoLog( shader, loglength, NULL, clog.data() );
-        RL_LOG_ERROR( log, "compilation log:" << std::endl << clog.data() );
+        glGetShaderInfoLog( shader, loglength, NULL, &clog[0] );
+        RL_LOG_ERROR( log, "compilation log:" << std::endl << &clog[0] );
     }
     if( status != GL_TRUE ) {
         RL_LOG_ERROR( log, "Compilation failed" );
@@ -124,8 +124,8 @@ RenderShader::linkProgram( GLuint program )
     glGetProgramiv( program, GL_INFO_LOG_LENGTH, &loglength );
     if( loglength > 1 ) {
         std::vector<GLchar> clog( loglength );
-        glGetProgramInfoLog( program, loglength, NULL, clog.data() );
-        RL_LOG_ERROR( log, "Link log: " << std::endl << std::string( clog.data() ) );
+        glGetProgramInfoLog( program, loglength, NULL, &clog[0] );
+        RL_LOG_ERROR( log, "Link log: " << std::endl << std::string( &clog[0] ) );
     }
 
     GLint status;

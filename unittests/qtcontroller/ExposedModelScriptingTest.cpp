@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_SUITE(ExposedModelScripting)
 
 namespace {
 struct ModelScriptingFixture {
-    std::shared_ptr<tinia::model::ExposedModel> model;
+    boost::shared_ptr<tinia::model::ExposedModel> model;
     tinia::qtcontroller::scripting::ExposedModel scriptingModel;
     QScriptEngine eng;
 
@@ -87,8 +87,8 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithoutScriptBool, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptString, ModelScriptingFixture) {
 
     model->addElement<std::string>("key", "value");
-    auto scriptObject = eng.newQObject(&scriptingModel);
-    auto function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 'newValue'); })");
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 'newValue'); })");
     function.call(QScriptValue(), QScriptValueList() << scriptObject);
 
     std::string newValue;
@@ -99,9 +99,9 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptString, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptInt, ModelScriptingFixture) {
 
     model->addElement<int>("key", 0);
-    auto scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
 
-    auto function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 1); })");
+    QScriptValue function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 1); })");
     function.call(QScriptValue(), QScriptValueList() << scriptObject);
 
     int newValue;
@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptInt, ModelScriptingFixture) {
     BOOST_CHECK_EQUAL(1, newValue);
 
     // Check that strings work here as well;
-    auto functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '2'); })");
+    QScriptValue functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '2'); })");
     functionString.call(QScriptValue(), QScriptValueList() << scriptObject);
     model->getElementValue("key", newValue);
     BOOST_CHECK_EQUAL(2, newValue);
@@ -119,9 +119,9 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptInt, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptDouble, ModelScriptingFixture) {
 
     model->addElement<double>("key", 0.0);
-    auto scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
 
-    auto function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 1.0); })");
+    QScriptValue function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', 1.0); })");
     function.call(QScriptValue(), QScriptValueList() << scriptObject);
 
     double newValue;
@@ -129,7 +129,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptDouble, ModelScriptingFixture) {
     BOOST_CHECK_EQUAL(1, newValue);
 
     // Check that strings work here as well;
-    auto functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '2.0'); })");
+    QScriptValue functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '2.0'); })");
     functionString.call(QScriptValue(), QScriptValueList() << scriptObject);
     model->getElementValue("key", newValue);
     BOOST_CHECK_EQUAL(2, newValue);
@@ -138,9 +138,9 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptDouble, ModelScriptingFixture) {
 BOOST_FIXTURE_TEST_CASE(UpdateWithScriptBool, ModelScriptingFixture) {
 
     model->addElement<bool>("key", true);
-    auto scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
 
-    auto function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', false); })");
+    QScriptValue function = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', false); })");
     function.call(QScriptValue(), QScriptValueList() << scriptObject);
 
     bool newValue;
@@ -148,7 +148,7 @@ BOOST_FIXTURE_TEST_CASE(UpdateWithScriptBool, ModelScriptingFixture) {
     BOOST_CHECK_EQUAL(false, newValue);
 
     // Check that strings work here as well;
-    auto functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '1'); })");
+    QScriptValue functionString = eng.evaluate("(function(exposedModel) {exposedModel.updateElement('key', '1'); })");
     functionString.call(QScriptValue(), QScriptValueList() << scriptObject);
     model->getElementValue("key", newValue);
     BOOST_CHECK_EQUAL(true, newValue);
@@ -158,9 +158,9 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueString, ModelScriptingFixture) {
     model->addElement<std::string>("key", "value");
 
 
-    auto scriptObject = eng.newQObject(&scriptingModel);
-    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
-    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    QScriptValue result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL("value", result.toString().toStdString());
 }
 
@@ -168,14 +168,14 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueInt, ModelScriptingFixture) {
     model->addElement<int>("key", 42);
 
 
-    auto scriptObject = eng.newQObject(&scriptingModel);
-    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
-    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    QScriptValue result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL(42, result.toNumber());
 
     // Also ensure the type is correct:
-    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
-    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    QScriptValue typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL("number", typeResult.toString().toStdString());
 }
 
@@ -183,14 +183,14 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueDouble, ModelScriptingFixture) {
     model->addElement<double>("key", 42.5);
 
 
-    auto scriptObject = eng.newQObject(&scriptingModel);
-    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
-    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    QScriptValue result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL(42.5, result.toNumber());
 
     // Also ensure the type is correct:
-    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
-    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    QScriptValue typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL("number", typeResult.toString().toStdString());
 }
 
@@ -198,14 +198,14 @@ BOOST_FIXTURE_TEST_CASE(GetElementValueBool, ModelScriptingFixture) {
     model->addElement<bool>("key", true);
 
 
-    auto scriptObject = eng.newQObject(&scriptingModel);
-    auto function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
-    auto result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue scriptObject = eng.newQObject(&scriptingModel);
+    QScriptValue function = eng.evaluate("(function(model) { return model.getElementValue('key'); })");
+    QScriptValue result = function.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL(true, result.toBool());
 
     // Also ensure the type is correct:
-    auto functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
-    auto typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
+    QScriptValue functionType = eng.evaluate("(function(model) { return typeof(model.getElementValue('key')); })");
+    QScriptValue typeResult = functionType.call(QScriptValue(), QScriptValueList() << scriptObject);
     BOOST_CHECK_EQUAL("boolean", typeResult.toString().toStdString());
 }
 
@@ -258,7 +258,7 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
             "viewer.updateElement('width', 42);"
             "})";
 
-    auto function = eng.evaluate(script);
+    QScriptValue function = eng.evaluate(script);
     function.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
 
     tinia::model::Viewer modelViewer = v.viewer();
@@ -271,14 +271,14 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithoutModelWithScript, ModelScriptingFixture)
     BOOST_CHECK_EQUAL(modelViewer.width, 42);
     for(int i = 0; i < 16; ++i) {
         QString fetchModelView = "(function(viewer) { return viewer.getElementValue('modelview')[" + QString::number(i) + "]; })";
-        auto fetchModelViewFunction = eng.evaluate(fetchModelView);
-        auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
+        QScriptValue fetchModelViewFunction = eng.evaluate(fetchModelView);
+        QScriptValue modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
         BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
 
 
         QString fetchProjection = "(function(viewer) { return viewer.getElementValue('projection')[" + QString::number(i)+ "]; })";
-        auto fetchProjectionFunction = eng.evaluate(fetchProjection);
-        auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
+        QScriptValue fetchProjectionFunction = eng.evaluate(fetchProjection);
+        QScriptValue projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&v));
         BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
     }
 
@@ -303,14 +303,14 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
     model->addElement("viewer", v);
     for(int i = 0; i < 16; ++i) {
         QString fetchModelView = "(function(model) { return model.getElementValue('viewer').getElementValue('modelview')[" + QString::number(i) + "]; })";
-        auto fetchModelViewFunction = eng.evaluate(fetchModelView);
-        auto modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+        QScriptValue fetchModelViewFunction = eng.evaluate(fetchModelView);
+        QScriptValue modelViewResult = fetchModelViewFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
         BOOST_CHECK_EQUAL(i + 1, modelViewResult.toNumber());
 
 
         QString fetchProjection = "(function(model) {  return model.getElementValue('viewer').getElementValue('projection')[" + QString::number(i)+ "]; })";
-        auto fetchProjectionFunction = eng.evaluate(fetchProjection);
-        auto projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
+        QScriptValue fetchProjectionFunction = eng.evaluate(fetchProjection);
+        QScriptValue projectionResult = fetchProjectionFunction.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
         BOOST_CHECK_EQUAL(16 - i, projectionResult.toNumber());
     }
 
@@ -335,7 +335,7 @@ BOOST_FIXTURE_TEST_CASE(ViewerTestWithModel, ModelScriptingFixture)  {
 
             "})";
 
-    auto function = eng.evaluate(script);
+    QScriptValue function = eng.evaluate(script);
     function.call(QScriptValue(), QScriptValueList() << eng.newQObject(&scriptingModel));
 
 

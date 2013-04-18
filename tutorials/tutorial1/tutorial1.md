@@ -64,7 +64,7 @@ This happens, for instance, when the user interacts with the OpenGL canvas using
 In our implementation of [renderFrame](@ref tinia::tutorial::Tutorial1Job::renderFrame) we first obtain the Viewer object we defined in the constructor.
 \snippet Tutorial1_Job.hpp viewer
 
-Objects of type [Viewer](@ref tinia::model::Viewer) contain the ModelView and Projection matrices. The matrices are stored as row-major in a `std::array<float, 16>`.
+Objects of type [Viewer](@ref tinia::model::Viewer) contain the ModelView and Projection matrices. The matrices are stored as row-major in a `boost::array<float, 16>`.
 You may treat the `data()` any way you'd like. In this example, we hand them directly to the `glLoadMatrixf` function, though a more typical use would be to use
 them as uniform values to a shader.
 

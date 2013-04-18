@@ -26,7 +26,7 @@ namespace qtcontroller {
 namespace impl {
 
 StringController::StringController( QWidget *widget,
-                                    std::shared_ptr<model::ExposedModel>   model,
+                                    boost::shared_ptr<model::ExposedModel>   model,
                                     const std::string&                      key,
                                     const bool                              show_value,
                                     const QString&                          suffix )

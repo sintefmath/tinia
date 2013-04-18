@@ -18,7 +18,7 @@
 
 #pragma once
 #include "tinia/model/ExposedModel.hpp"
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace tinia {
 namespace jobcontroller {
@@ -48,10 +48,10 @@ public:
 
    void quit();
 
-   virtual std::shared_ptr<model::ExposedModel> getExposedModel();
+   virtual boost::shared_ptr<model::ExposedModel> getExposedModel();
 
 protected:
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

@@ -50,7 +50,7 @@ using namespace tinia::qtcontroller::impl;
 namespace tinia {
 namespace qtcontroller {
 
-GUIBuilder::GUIBuilder( std::shared_ptr<model::ExposedModel>   model,
+GUIBuilder::GUIBuilder( boost::shared_ptr<model::ExposedModel>   model,
                         jobcontroller::Job*                       job,
                         QTController*                             controller,
                         const bool                              perf_mode,

@@ -23,7 +23,7 @@ namespace qtcontroller {
 namespace scripting {
 namespace {
 
-void setMatrix(std::array<float, 16>& arr, QScriptValue val) {
+void setMatrix(boost::array<float, 16>& arr, QScriptValue val) {
     for(int i = 0; i < 16; ++i) {
         arr[i] = val.property(i).toNumber();
     }
