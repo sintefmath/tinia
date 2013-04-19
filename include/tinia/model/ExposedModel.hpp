@@ -67,6 +67,7 @@ class ExposedModel {
 public:
    typedef class ExposedModelLock ExposedModelLock;
    ExposedModel();
+   ~ExposedModel();
 
    std::string getElementMaxConstraint(std::string key) const;
    std::string getElementMinConstraint(std::string key) const;

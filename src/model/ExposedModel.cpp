@@ -53,6 +53,12 @@ ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
 {
 }
 
+ExposedModel::~ExposedModel() {
+    if(m_gui == NULL) {
+        delete m_gui;
+    }
+}
+
 void
 ExposedModel::incrementRevisionNumber(impl::ElementData &updatedElement) {
    updatedElement.setRevisionNumber(revisionNumber);

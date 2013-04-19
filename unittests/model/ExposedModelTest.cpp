@@ -402,6 +402,7 @@ BOOST_FIXTURE_TEST_CASE(ExposedModelGUITestCase, ExposedModelFixture)
 
    std::vector<model::StateSchemaElement> elements;
    model.getFullStateSchema(elements);
+   
 }
 
 BOOST_FIXTURE_TEST_CASE(DefaultLengthCheck, ExposedModelFixture)
