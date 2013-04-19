@@ -24,7 +24,7 @@
 
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/TypeToXSDType.hpp"
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>

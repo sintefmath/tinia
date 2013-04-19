@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/type_traits.hpp>
 #include <boost/lexical_cast.hpp>

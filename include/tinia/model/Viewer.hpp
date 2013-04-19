@@ -17,7 +17,7 @@
  */
 
 #pragma once
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/array.hpp>
 #endif

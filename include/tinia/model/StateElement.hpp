@@ -20,7 +20,7 @@
 
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/ElementDataFactory.hpp"
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/shared_ptr.hpp>
 #endif

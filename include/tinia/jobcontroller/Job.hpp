@@ -18,7 +18,7 @@
 
 #pragma once
 #include "tinia/model/ExposedModel.hpp"
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/shared_ptr.hpp>
 #endif

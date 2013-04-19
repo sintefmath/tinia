@@ -19,7 +19,7 @@
 #pragma once
 #include <string>
 #include <stdexcept>
-// QTs moc doesn't like boost JOIN
+// QT's moc doesn't like boost JOIN
 #ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
