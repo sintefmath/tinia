@@ -54,7 +54,7 @@ ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
 }
 
 ExposedModel::~ExposedModel() {
-    if(m_gui == NULL) {
+    if(m_gui != NULL) {
         delete m_gui;
     }
 }
