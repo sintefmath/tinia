@@ -28,7 +28,7 @@
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/xml/utils.hpp"
 #include "tinia/model/impl/xml/ElementHandler.hpp"
-// QT's moc doesn't like boost JOIN
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
 #ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
 #endif
