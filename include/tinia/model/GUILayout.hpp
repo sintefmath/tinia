@@ -164,7 +164,7 @@ public:
         }
     }
 
-    void setChild( ChildType* child ) { m_child = child; }
+    void setChild( ChildType* child ) { if (m_child != NULL ) { delete m_child; } m_child = child; }
     ChildType* child() { return m_child; }
     const ChildType* child() const { return m_child; }
 
