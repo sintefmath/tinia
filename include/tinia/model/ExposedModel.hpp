@@ -23,19 +23,20 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
-
+// QTs moc doesn't like boost JOIN
+#ifndef Q_MOC_RUN 
 #include <boost/type_traits.hpp>
 #include <boost/lexical_cast.hpp>
-
 #include <boost/thread.hpp>
-
+#include <boost/property_tree/ptree.hpp>
+#endif
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/TypeToXSDType.hpp"
 #include "tinia/model/impl/ElementDataFactory.hpp"
 #include "tinia/model/impl/StateListenerHandler.hpp"
 #include "tinia/model/impl/StateSchemaListenerHandler.hpp"
 #include "tinia/model/GUILayout.hpp"
-#include <boost/property_tree/ptree.hpp>
+
 #include "tinia/model/Viewer.hpp"
 #include <tinia/model/exceptions/BoundsExceededException.hpp>
 #include <tinia/model/exceptions/RestrictionException.hpp>

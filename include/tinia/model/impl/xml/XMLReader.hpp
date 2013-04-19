@@ -28,7 +28,10 @@
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/xml/utils.hpp"
 #include "tinia/model/impl/xml/ElementHandler.hpp"
+// QTs moc doesn't like boost JOIN
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
+#endif
 
 
 

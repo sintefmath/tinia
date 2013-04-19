@@ -18,7 +18,10 @@
 
 #pragma once
 #include <stdexcept>
+// QTs moc doesn't like boost JOIN
+#ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
+#endif
 
 namespace tinia { namespace model {
 class BoundsExceededException : public std::invalid_argument {

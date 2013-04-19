@@ -22,8 +22,11 @@
 #include <string>
 #include <memory>
 #include <iostream>
+// QTs moc doesn't like boost JOIN
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <boost/lexical_cast.hpp>
+#endif
 #include <set>
 
 #include "tinia/model/Viewer.hpp"

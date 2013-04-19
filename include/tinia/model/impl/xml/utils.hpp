@@ -19,9 +19,12 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+// QTs moc doesn't like boost JOIN
+#ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
-#include <libxml/tree.h>
 #include <boost/property_tree/ptree.hpp>
+#endif
+#include <libxml/tree.h>
 #include <iostream>
 
 
