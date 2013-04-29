@@ -400,7 +400,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
     
     {
         xmlDocPtr doc = xmlHandler.getCompleteDocument();
-        xmlNodePtr mode = doc->children;
+        // xmlNodePtr mode = doc->children;
 
         xmlNodePtr node = xpathQuery( doc, "//" + elementName  );
         BOOST_REQUIRE( node != 0 );
@@ -413,7 +413,7 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
     model->updateElement( elementName, updatedValue );
     {
         xmlDocPtr  doc = xmlHandler.getCompleteDocument();
-        xmlNodePtr mode = doc->children;
+        // xmlNodePtr mode = doc->children;
         xmlNodePtr node = xpathQuery( doc, "//" + elementName );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
@@ -582,7 +582,7 @@ BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
 
     {
         xmlDocPtr doc = xmlHandler.getCompleteDocument();
-        xmlNodePtr model = doc->children;
+        // xmlNodePtr model = doc->children;
         xmlNodePtr node = xpathQuery( doc, "//xsd:element[@name='render_mode']");
         BOOST_REQUIRE( node != 0 );
 
@@ -626,7 +626,7 @@ BOOST_FIXTURE_TEST_CASE( AddAnnotationResult, AnnotationFixture ) {
 
      {
         xmlDocPtr  doc = xmlHandler.getCompleteDocument();
-        xmlNodePtr model = doc->children;
+        // xmlNodePtr model = doc->children;
         xmlNodePtr node = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:annotation/xsd:documentation[@xml:lang='en']");
         BOOST_REQUIRE( node != 0 );
 

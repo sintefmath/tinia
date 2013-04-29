@@ -72,7 +72,7 @@ void getXmlNodeContentAsType( xmlNodePtr node, T& t ) {
 template<typename U>
 void print0(const boost::property_tree::basic_ptree<std::string, U> &pt, const int level) {
     //boost::property_tree::basic_ptree::const_iterator end = pt.end();
-    boost::property_tree::basic_ptree<std::string, U>::const_iterator end = pt.end();
+    typename boost::property_tree::basic_ptree<std::string, U>::const_iterator end = pt.end();
     //boost::property_tree::basic_ptree<T, U>::const_iterator it = pt.begin();
     auto it = pt.begin();
     for ( ; it != end; ++it) {

@@ -60,7 +60,7 @@ QMap<QString, QString> decodeGetParameters(const QString& request) {
         return keyValue;
     }
     QStringList params = split2[1].split('&');
-    for(size_t i = 0; i < params.size(); ++i) {
+    for(int i = 0; i < params.size(); ++i) {
         QStringList split = params[i].split('=');
         if(split.size()==1) {
             keyValue[split[0]] = "";
