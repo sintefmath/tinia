@@ -14,7 +14,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-ServerThread::ServerThread(OpenGLServerGrabber& grabber,
+ServerThread::ServerThread(ImageSource& grabber,
                            tinia::jobcontroller::Job* job,
                            int socket,
                            QObject *parent) :

@@ -14,15 +14,20 @@ class HTTPServer : public QTcpServer
 {
     Q_OBJECT
 public:
+
+    /**
+     * Takes control over imageSource
+     */
     explicit HTTPServer(tinia::jobcontroller::Job*,
-                        QObject *parent = 0);
+        tinia::qtcontroller::ImageSource* imageSource,
+        QObject *parent = 0);
 
     void incomingConnection(int socket);
     
-
+private:
     tinia::jobcontroller::Job* m_job;
 
-    tinia::qtcontroller::impl::OpenGLServerGrabber m_serverGrabber;
+    boost::scoped_ptr<tinia::qtcontroller::ImageSource> m_serverGrabber;
 
 };
 

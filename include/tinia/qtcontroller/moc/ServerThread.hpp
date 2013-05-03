@@ -12,7 +12,7 @@ namespace impl {
 class ServerThread : public QRunnable
 {
 public:
-    explicit ServerThread(OpenGLServerGrabber& grabber,
+    explicit ServerThread(ImageSource& grabber,
                           tinia::jobcontroller::Job* job,
                           int socket,
                           QObject *parent = 0);
@@ -46,7 +46,7 @@ private:
     tinia::model::impl::xml::XMLHandler m_xmlHandler;
     tinia::jobcontroller::Job* m_job;
 
-    OpenGLServerGrabber& m_grabber;
+    ImageSource& m_grabber;
 };
 
 } // namespace impl
