@@ -113,7 +113,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // with the same keys, but we disallow it.
     apr_hash_t* form = apr_hash_make( r->pool );
     if( r->args != NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: args=%s.", r->args );
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: args=%s.", r->args );
         char* last;
         const char* delim = "&";
         char* pair = apr_strtok( r->args, delim, &last );

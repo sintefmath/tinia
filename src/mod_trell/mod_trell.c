@@ -73,7 +73,7 @@ static int trell_handler_body(request_rec *r)
     code = trell_decode_path_info( &dispatch_info, r );
     if( code != OK ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: decode_path_info fauled to decode request='%s'", r->path_info );
+                       "mod_trell: decode_path_info failed to decode request='%s'", r->path_info );
         return code;
     }
 

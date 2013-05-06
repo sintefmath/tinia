@@ -254,7 +254,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                                 trell_dispatch_info_t*  dispatch_info )
 {
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r,
                    "mod_trell: has revision = %d", dispatch_info->m_revision );
 
     messenger_t msgr;
@@ -312,7 +312,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
 
                 // we got an update
                 else if( msg->m_type == TRELL_MESSAGE_XML ) {
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "XML size=%d", (int)msg->m_size );
+                    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "XML size=%d", (int)msg->m_size );
 
                     // new state
                     retval = trell_send_xml( sconf,
@@ -367,7 +367,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                            messenger_strerror( mrv ) );
         }
 
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: returned %d", retval );
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: returned %d", retval );
         return retval;
     }
 }
