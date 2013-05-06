@@ -104,7 +104,7 @@ trell_xml_error_s_cb( void* ctx, const char* msg, ... )
     va_start( args, msg );
     fmsg = apr_pvsprintf( s->process->pool, msg, args );
     va_end( args );
-    ap_log_perror( APLOG_MARK, APLOG_ERR, 0, s->process->pool,
+    ap_log_perror( APLOG_MARK, APLOG_NOTICE, 0, s->process->pool,
                    "mod_trell: libxml2: %s", fmsg );
 }
 
@@ -118,7 +118,7 @@ trell_xml_error_r_cb( void* ctx, const char* msg, ... )
     va_start( args, msg );
     fmsg = apr_pvsprintf( r->pool, msg, args );
     va_end( args );
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r,
                    "mod_trell: libxml2: %s", fmsg );
 }
 
