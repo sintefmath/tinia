@@ -75,7 +75,7 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
    impl::ElementData before;
 
    {// Lock scope
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
       impl::ElementData& element = findElementInternal(key);
       before = element;
@@ -93,7 +93,7 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
 
 // For debugging purposes
 void ExposedModel::printCurrentState() {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    cout << "----------------- Current stateHash ---------------" << endl;
    for(std::map<std::string, impl::ElementData>::iterator kv = stateHash.begin(); kv != stateHash.end(); ++kv) {
        cout << kv->first << " (" << kv->second.getXSDType() << ") : " << endl;
@@ -125,7 +125,7 @@ void
 ExposedModel::addAnnotationHelper( std::string key, std::map<std::string, std::string> & annotationMap ) {
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
       impl::ElementData& elementData = findElementInternal(key);
       elementData.setAnnotation( annotationMap );
@@ -208,7 +208,7 @@ ExposedModel::removeElement( std::string key ) {
 
 bool
 ExposedModel::hasElement( std::string elementName ) const {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    return stateHash.find( elementName) != stateHash.end();
 }
 
@@ -216,14 +216,14 @@ ExposedModel::hasElement( std::string elementName ) const {
 string
 ExposedModel::getElementValueAsString( string key)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    return findElementInternal(key).getStringValue();
 }
 
 void
 ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
    // Locking whole method
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
    const impl::ElementData& elementData = findElementInternal(key);
    if (elementData.getLength() != impl::ElementData::MATRIX_LENGTH) {
@@ -240,7 +240,7 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
 // Updates to send *to* the client, version for non-xml-capable jobs/controllers.
 void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, impl::ElementData> > &updatedElements, const unsigned has_revision ) const
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    updatedElements.resize(0);
    for(std::map<std::string, impl::ElementData>::const_iterator kv = stateHash.begin(); kv != stateHash.end(); ++kv) {
                  
@@ -274,14 +274,14 @@ void model::ExposedModel::addStateSchemaListener(
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(listener);
 }
 
@@ -289,39 +289,39 @@ void model::ExposedModel::addStateSchemaListener(std::string key,
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(std::string key,
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::addStateListener(model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(listener);
 }
 
 
 void model::ExposedModel::removeStateListener(model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(listener);
 }
 
 void model::ExposedModel::addStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(key,    listener);
 }
 
 void model::ExposedModel::removeStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(key, listener);
 }
 
@@ -329,7 +329,7 @@ void model::ExposedModel::getStateUpdate(
       std::vector<model::StateElement> &updatedElements,
       const unsigned int has_revision)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it!=stateHash.end(); it++)
    {
       impl::ElementData& data = it->second;
@@ -344,7 +344,7 @@ void model::ExposedModel::getStateSchemaUpdate(
       std::vector<model::StateSchemaElement> &updatedElements,
       const unsigned int has_revision)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it!=stateHash.end(); it++)
    {
       impl::ElementData& data = it->second;
@@ -359,7 +359,7 @@ void model::ExposedModel::getStateSchemaUpdate(
 void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaElement> &stateSchemaElements)
 {
 
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
    for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it != stateHash.end(); it++)
    {
@@ -371,7 +371,7 @@ void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaEleme
 
 void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateElements)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it != stateHash.end(); it++)
    {
       stateElements.push_back(StateElement(it->first, impl::ElementData(it->second)));
@@ -381,7 +381,7 @@ void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateEl
 void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
                                                        const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
 
    m_stateSchemaListenerHandler.fireStateSchemaElementAdded(&element);
@@ -390,7 +390,7 @@ void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
 void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
                                                          const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementRemoved(&element);
 }
@@ -398,7 +398,7 @@ void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
 void model::ExposedModel::fireStateSchemaElementModified(std::string key,
                                                           const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementModified(&element);
 }
@@ -406,7 +406,7 @@ void model::ExposedModel::fireStateSchemaElementModified(std::string key,
 void model::ExposedModel::fireStateElementModified(std::string key,
                                                     const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateElement element(key, data);
    m_stateListenerHandler.fireStateElementModified(&element);
 }
@@ -456,7 +456,7 @@ const model::impl::ElementData &model::ExposedModel::findElementInternal(const s
 std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 {
    // This returns a deep copy to avoid any possible threading-problems.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    std::set<std::string> destinationSet;
    std::set<std::string> sourceSet = findElementInternal(key).getEnumerationSet();
    for(std::set<std::string>::iterator it = sourceSet.begin(); it!=sourceSet.end(); it++)
@@ -468,7 +468,7 @@ std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 
 bool model::ExposedModel::emptyRestrictionSet(std::string key)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
 
    impl::ElementData& elementData = findElementInternal(key);
@@ -483,7 +483,7 @@ model::StateSchemaElement model::ExposedModel::getStateSchemaElement(std::string
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
    impl::ElementData& elementData = findElementInternal(key);
    return StateSchemaElement(key, elementData);
@@ -493,8 +493,7 @@ std::string model::ExposedModel::getElementMaxConstraint(std::string key) const
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
-
+    scoped_lock lock(m_selfMutex);
 
    const impl::ElementData& elementData = findElementInternal(key);
    return elementData.getMaxConstraint();
@@ -504,7 +503,7 @@ std::string model::ExposedModel::getElementMinConstraint(std::string key) const
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
    const impl::ElementData& elementData = findElementInternal(key);
    return elementData.getMinConstraint();
@@ -538,11 +537,13 @@ void model::ExposedModel::makeDefaultGUILayout()
 
 void model::ExposedModel::holdStateEvents()
 {
+    scoped_lock lock(m_listenerHandlersMutex);
    m_stateListenerHandler.holdEvents();
 }
 
 void model::ExposedModel::releaseStateEvents()
 {
+    scoped_lock lock(m_listenerHandlersMutex);
    m_stateListenerHandler.releaseEvents();
 }
 

@@ -287,7 +287,7 @@ The job can use this to get an update meant for the client. This version are for
    /** Returning the revision number.
  \deprecated An controller should implement its own revision scheme.
 */
-   inline int getRevisionNumber(void) const { scoped_lock(m_selfMutex); return revisionNumber; }
+   inline int getRevisionNumber(void) const { scoped_lock lock(m_selfMutex); return revisionNumber; }
 
 
    /**
@@ -442,8 +442,8 @@ private:
    // Locking made easy
    typedef boost::recursive_mutex mutex_type;
    typedef mutex_type::scoped_lock scoped_lock;
-   mutex_type m_selfMutex;
-   mutex_type m_listenerHandlersMutex;
+   mutable mutex_type m_selfMutex;
+   mutable mutex_type m_listenerHandlersMutex;
 
    mutex_type& getExposedModelMutex();
 
@@ -456,8 +456,13 @@ private:
      */
    void makeDefaultGUILayout();
 
+
+
+
    // --- private utilities used during development ---
    // (must be public in order to be used from unit tests...)
+
+
 public:
    void printCurrentState();
 };
@@ -484,7 +489,7 @@ ExposedModel::addElement( std::string key, T value, const std::string annotation
 
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       data = addElementInternal(key, value);
    }
    if( !annotation.empty() ) {
@@ -502,7 +507,7 @@ ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, 
 
    impl::ElementData data;
    { // Lock scope
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       impl::ElementData& elementData = addElementInternal(key, value);
 
       {
@@ -554,7 +559,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
     impl::ElementData data;
     {
        std::string stringValue = boost::lexical_cast<std::string>(value);
-       scoped_lock(m_selfMutex);
+       scoped_lock lock(m_selfMutex);
        impl::ElementData& elementData = findElementInternal(key);
        elementData.setRestrictionSet( restrictionStrings );
        elementData.setStringValue(stringValue);
@@ -592,7 +597,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
    // The copy given to the listener outside the lock.
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       impl::ElementData& elementData = addElementInternal(key, value);
       elementData.setRestrictionSet( restrictionStrings );
 
@@ -671,7 +676,7 @@ ExposedModel::updateElement( std::string key, T value ) {
    impl::ElementData data;
    std::string stringValueBeforeUpdate;
    {// Lock block
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
 
 
@@ -705,7 +710,7 @@ void
 ExposedModel::getElementValue( std::string key, T& t ) {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
 
    impl::ElementData& elementData = findElementInternal(key);
@@ -776,7 +781,7 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     bool emitChange = false;
     bool emitValueChange = false;
     { // Lock block
-        scoped_lock(m_selfMutex);
+        scoped_lock lock(m_selfMutex);
 
         impl::ElementData& elementData = findElementInternal(key);
 
