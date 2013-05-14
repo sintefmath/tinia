@@ -15,8 +15,10 @@ ELSE()
   OPTION( Tinia_SERVER "Build mod_trell and related components?" OFF)
 ENDIF()
 
-OPTION( Tinia_DESKTOP "Build qtcontroller?" ON)
-
+OPTION( Tinia_DESKTOP "Build qtcontroller?" ON )
+OPTION( Tinia_BUILD_EXAMPLES "Build example jobs?" ON )
+OPTION( Tinia_BUILD_TUTORIALS "Build tutorials?" ON )
+OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
 
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
@@ -151,32 +153,41 @@ IF(${Tinia_SERVER})
 ENDIF()
 
 # Unit tests
-ADD_SUBDIRECTORY( "unittests/model/" )
-IF(${LIBXML2_FOUND})
-  ADD_SUBDIRECTORY( "unittests/modelxml/" )
-ENDIF()
-ADD_SUBDIRECTORY( "unittests/renderlist/" )
-ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
-IF(${Tinia_DESKTOP})
-   ADD_SUBDIRECTORY( "unittests/qtcontroller/" )
+IF( Tinia_BUILD_UNIT_TESTS )
+  ADD_SUBDIRECTORY( "unittests/model/" )
+  IF(${LIBXML2_FOUND})
+    ADD_SUBDIRECTORY( "unittests/modelxml/" )
+  ENDIF()
+  ADD_SUBDIRECTORY( "unittests/renderlist/" )
+  ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
+  IF(${Tinia_DESKTOP})
+    ADD_SUBDIRECTORY( "unittests/qtcontroller/" )
+  ENDIF()
 ENDIF()
 
 # Examples
-ADD_SUBDIRECTORY( "examples/rlview/" )
-ADD_SUBDIRECTORY( "examples/simplejob" )
-ADD_SUBDIRECTORY( "examples/fpsviewer" )
-ADD_SUBDIRECTORY( "examples/cuberenderer")
-ADD_SUBDIRECTORY( "examples/changerestrictions")
-ADD_SUBDIRECTORY( "examples/clock_example")
-
+IF( Tinia_BUILD_EXAMPLES )
+  ADD_SUBDIRECTORY( "examples/rlview/" )
+  ADD_SUBDIRECTORY( "examples/simplejob" )
+  IF(${Tinia_DESKTOP})
+    ADD_SUBDIRECTORY( "examples/fpsviewer" )
+  ENDIF()
+  ADD_SUBDIRECTORY( "examples/cuberenderer")
+  ADD_SUBDIRECTORY( "examples/changerestrictions")
+  ADD_SUBDIRECTORY( "examples/clock_example")
+ENDIF()
 
 
 #Tutorials
-ADD_SUBDIRECTORY( "tutorials/tutorial1/")
-ADD_SUBDIRECTORY( "tutorials/tutorial2/")
-ADD_SUBDIRECTORY( "tutorials/tutorial3/")
-ADD_SUBDIRECTORY( "tutorials/tutorial4/")
-ADD_SUBDIRECTORY( "tutorials/tutorial5/")
+IF( Tinia_BUILD_TUTORIALS )
+  ADD_SUBDIRECTORY( "tutorials/tutorial1/")
+  ADD_SUBDIRECTORY( "tutorials/tutorial2/")
+  ADD_SUBDIRECTORY( "tutorials/tutorial3/")
+  ADD_SUBDIRECTORY( "tutorials/tutorial4/")
+  IF(${Tinia_DESKTOP})
+    ADD_SUBDIRECTORY( "tutorials/tutorial5/")
+  ENDIF()
+ENDIF()
 
 FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")
 install( FILES
