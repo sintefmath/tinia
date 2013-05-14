@@ -62,17 +62,15 @@ ComputeJob::operator()()
 void
 ComputeJob::start()
 {
-//	throw std::runtime_error("Start in " __FILE__ " at line " __LINE__ " is not implemented properly (std::move doesn't work in C++11)");
-  assert(!m_computeThread.joinable());
-  boost::thread t( boost::ref( *this ) );
-  //m_computeThread = std::move( t );
+  assert(!m_computeThread || !m_computeThread->joinable());
+  m_computeThread.reset(new boost::thread(boost::ref(*this)));
   m_model->updateElement("status", "running");
 }
 
 bool
 ComputeJob::isRunning()
 {
-	if (!m_computeThread.joinable())
+	if (!m_computeThread->joinable())
 	{
 		return false;
 	}
@@ -85,9 +83,9 @@ void
 ComputeJob::cleanup()
 {
   m_model->updateElement("status", "terminating");
-  if (m_computeThread.joinable())
+  if (!m_computeThread || m_computeThread->joinable())
   {
-    m_computeThread.join();
+    m_computeThread->join();
   }
   m_model->updateElement("status", "terminated");
 }

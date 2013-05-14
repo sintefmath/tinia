@@ -21,6 +21,7 @@
 //#include <mutex> 
 #include "tinia/jobcontroller/Job.hpp"
 #include <boost/thread/thread.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace tinia {
 namespace jobcontroller
@@ -63,7 +64,7 @@ protected:
 
 
 private:
-  boost::thread m_computeThread;
+  boost::scoped_ptr<boost::thread> m_computeThread;
 
 };
 
