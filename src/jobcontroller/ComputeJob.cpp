@@ -70,7 +70,7 @@ ComputeJob::start()
 bool
 ComputeJob::isRunning()
 {
-	if (!m_computeThread->joinable())
+	if (!m_computeThread || !m_computeThread->joinable())
 	{
 		return false;
 	}
@@ -83,7 +83,7 @@ void
 ComputeJob::cleanup()
 {
   m_model->updateElement("status", "terminating");
-  if (!m_computeThread || m_computeThread->joinable())
+  if (m_computeThread && m_computeThread->joinable())
   {
     m_computeThread->join();
   }
