@@ -43,15 +43,28 @@ HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, tinia::qtcontroller::Imag
     QTcpServer(parent), m_job(job),
     m_serverGrabber(imageSource)
 {
-    listen(QHostAddress::Any, 8080);
+    qDebug("Listening to port 8080");
+    if( ! listen(QHostAddress::Any, 8080) ) {
+        qDebug() << "Error in starting server. Error was " <<
+                    errorString() << "\n";
+        throw std::runtime_error("Could not start HTTP server");
+    }
+
+    if( !isListening() ) {
+        qDebug() << "Server is not started, started listening, but it's not listening!"
+                 << " Error was: " << errorString() << "\n";
+        throw std::runtime_error("Could not start HTTP server");
+    }
 }
 
 void HTTPServer::incomingConnection(int socket)
 {
+    qDebug("Creating new serverthread for incoming connection");
     ServerThread* thread = new ServerThread(*m_serverGrabber, m_job, socket);
 
     //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
+    qDebug("Starting up server instance");
     QThreadPool::globalInstance()->start(thread);
 }
 
