@@ -52,7 +52,7 @@ IF(MSVC10)
 	#CAREFUL, this will append the above string for each time CMAKE is run!
 ENDIF()
 
-
+FIND_PACKAGE(PugiXML REQUIRED)
 # We don't need XML support on Windows (only needed for mod_trell...)
 IF(Tinia_SERVER)
     find_package( LibXml2 REQUIRED )
@@ -128,6 +128,7 @@ include_directories( "./include"
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
+  ${PUGIXML_INCLUDE_DIR}
 )
 
 link_directories(
