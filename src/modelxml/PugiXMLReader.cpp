@@ -1,6 +1,7 @@
 #include "tinia/model/impl/xml/PugiXMLReader.hpp"
 #include <pugixml.hpp>
 #include <sstream>
+#include <boost/property_tree/xml_parser.hpp>
 
 namespace tinia { namespace model { namespace impl { namespace xml {
 
@@ -35,13 +36,13 @@ void PugiXMLReader::readState(const std::string& documentString) {
 
         tinia::model::StateSchemaElement schemaElement
                 = m_exposedModel->getStateSchemaElement(key);
-
-        // We can update everything except complex type and matrix easily
+        // We can update everything except complex type
         if (schemaElement.getXSDType() == "xsd:complexType") {
-            // We have a complex type
-        }
-        else if (schemaElement.getLength() == ElementData::MATRIX_LENGTH) {
-            // Matrix type
+            StringStringPTree complexInformation;
+            std::stringstream xmlAsText;
+            stateIt->print(xmlAsText);
+            boost::property_tree::read_xml(xmlAsText, complexInformation);
+            m_exposedModel->updateElementFromPTree(key, complexInformation);
         } else {
             // All other types may be updated directly
             m_exposedModel->updateElementFromString(key, stateIt->first_child().value());
