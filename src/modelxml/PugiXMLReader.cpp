@@ -287,6 +287,24 @@ void PugiXMLReader::readSchema(const std::string &documentString)
         if (!foundHandler) {
             throw std::runtime_error("Did not know how to handle element");
         }
+
+        // Lastly we need to update annotations
+        pugi::xml_node annotation = schemaIt->select_single_node("xsd:annotation").node();
+
+        if (annotation) {
+            std::vector<std::string> annotationStrings;
+            for(pugi::xml_node_iterator it = annotation.begin();
+                it != annotation.end(); ++it)
+            {
+                if (std::string(it->name()) ==std::string("xsd:documentation")) {
+                    annotationStrings.push_back(
+                                it->attribute("xml:lang").as_string()
+                                + std::string(":")
+                                + std::string(it->first_child().value()));
+                }
+            }
+            m_exposedModel->addAnnotation(name, annotationStrings.begin(), annotationStrings.end());
+        }
     }
 
 }
