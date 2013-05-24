@@ -1,4 +1,3 @@
-#pragma once
 #include "tinia/qtcontroller/impl/synchronous_http_get.hpp"
 
 #include <QEventLoop>
