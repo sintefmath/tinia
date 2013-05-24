@@ -548,7 +548,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
 
     std::set<std::string> restrictionStrings;
 
-    for(std::set<std::string>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
+    for(typename std::set<T>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
     {
 
        std::string s = boost::lexical_cast<std::string>( *it );
