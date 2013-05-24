@@ -31,14 +31,12 @@ namespace {
         {
             std::string expectedType = tinia::model::impl::TypeToXSDType<SimpleType>::getTypename();
             if (expectedType == type) {
-                if (!handleRestrictions(name, type, node, model)) {
-                    // We have a simple type without restriction
+                if ( !model.hasElement(name)) {
                     SimpleType value;
                     model.addElement<SimpleType>(name, value);
-                    return true;
-                } else {
-                    return true;
                 }
+                handleRestrictions(name, type, node, model);
+                return true;
             }
             return false;
         }
@@ -52,13 +50,13 @@ namespace {
          * @param model
          * @return true if restrictions was handled, false otherwise
          */
-        bool handleRestrictions(const std::string& name,
+        void handleRestrictions(const std::string& name,
                                 const std::string& type,
                                 pugi::xml_node& node,
                                 tinia::model::ExposedModel &model) const
         {
             // Check if we have restrictions:
-            pugi::xml_node restrictionsNode = node.select_single_node("//xsd:restriction").node();
+            pugi::xml_node restrictionsNode = node.select_single_node("*/xsd:restriction").node();
 
             if (restrictionsNode) {
                 // See if it's max/min
@@ -75,9 +73,22 @@ namespace {
                     SimpleType minValue = boost::lexical_cast<SimpleType>(minNode.attribute("value").as_string());
                     SimpleType maxValue = boost::lexical_cast<SimpleType>(maxNode.attribute("value").as_string());
 
-                    // Add element
-                    model.addConstrainedElement<SimpleType>(name, minValue, minValue, maxValue);
-                    return true;
+                    // Update
+                    try {
+                        // Try with previous value
+                        model.updateConstraints<SimpleType>(
+                                    name,
+                                    model.getElementValue<SimpleType>(name),
+                                    minValue,
+                                    maxValue);
+                    } catch(tinia::model::BoundsExceededException&) {
+                        model.updateConstraints<SimpleType>(
+                                    name,
+                                    minValue,
+                                    minValue,
+                                    maxValue);
+                    }
+
                 }
                 else if (restrictionsNode.select_single_node("xsd:enumeration")){
                     // We have a restriction list
@@ -85,17 +96,29 @@ namespace {
                     for (pugi::xml_node_iterator it = restrictionsNode.begin();
                          it != restrictionsNode.end(); ++it)
                     {
-                        restriction.push_back(boost::lexical_cast<SimpleType>(it->attribute("value").as_string()));
+                        SimpleType restrictionValue =
+                                boost::lexical_cast<SimpleType>(it->attribute("value").as_string());
+                        restriction.push_back(restrictionValue);
                     }
 
-                    model.addElementWithRestriction<SimpleType>(name, restriction[0], restriction);
-                    return true;
+
+
+                    try {
+                        // Try with previous value
+                        model.updateRestrictions<SimpleType>(
+                                    name,
+                                    model.getElementValue<SimpleType>(name),
+                                    restriction.begin(),
+                                    restriction.end());
+                    } catch(tinia::model::RestrictionException&) {
+                        model.updateRestrictions<SimpleType>(name,
+                                                            restriction[0],
+                                restriction.begin(),
+                                restriction.end());
+                    }
                 }
 
             }
-
-            // Didn't find any restrictions
-            return false;
         }
     };
 
@@ -237,7 +260,7 @@ void PugiXMLReader::readSchema(const std::string &documentString)
         }
         else
         {
-            pugi::xml_node restrictionNode = schemaIt->select_single_node("//xsd:restriction").node();
+            pugi::xml_node restrictionNode = schemaIt->select_single_node("xsd:simpleType/xsd:restriction").node();
 
             if (restrictionNode) {
                 type = restrictionNode.attribute("base").as_string();
