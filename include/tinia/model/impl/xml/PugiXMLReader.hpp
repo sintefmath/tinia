@@ -20,6 +20,11 @@ public:
      */
     void readState(const std::string& documentString);
 
+    /**
+     * @brief readSchema reads the schema of the XML document and updates the model
+     * @param documentString the document string to read.
+     */
+    void readSchema(const std::string& documentString);
 private:
     boost::shared_ptr<tinia::model::ExposedModel> m_exposedModel;
 };
