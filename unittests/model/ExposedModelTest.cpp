@@ -22,7 +22,6 @@
 #include <memory>
 #include <stdexcept>
 #include <iostream>
-#include <boost/array.hpp>
 #include <vector>
 #include <ctime>
 #include <cstring>

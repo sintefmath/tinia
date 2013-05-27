@@ -73,7 +73,7 @@ impl::ElementData::setStringValue( std::string inputString ) {
 	if( getLength() > 1 ) {
 		std::vector<std::string> splitted;
 		boost::split( splitted, inputString, boost::is_any_of(" ") );
-        for( size_t i = 0; i < getLength(); i++  ) {
+        for( int i = 0; i < getLength(); i++  ) {
 			checkValue( splitted[i] );
 		}
 	}

@@ -19,7 +19,6 @@
 #pragma once
 #include "boost/thread.hpp"
 #include "tinia/model/ExposedModel.hpp"
-#include <memory>
 #include <boost/shared_ptr.hpp>
 
 namespace tinia {

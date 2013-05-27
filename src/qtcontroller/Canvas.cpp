@@ -20,7 +20,6 @@
 #include <iostream>
 #include "glm/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
-#include <boost/array.hpp>
 #include <tinia/jobcontroller/OpenGLJob.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 

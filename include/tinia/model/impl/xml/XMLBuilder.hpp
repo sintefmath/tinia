@@ -158,7 +158,6 @@ private:
     xmlNsPtr xsi;
     xmlNsPtr tns;
 
-    //const std::map<std::string, model::impl::ElementData> stateHash;
     const unsigned int revisionNumber;
 
 

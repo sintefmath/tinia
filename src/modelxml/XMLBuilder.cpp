@@ -127,8 +127,8 @@ void
                 }
 
                 if ( !elementData.emptyRestrictionSet() ) {
-                    std::set<std::string> restrictions = elementData.getEnumerationSet();
-                    for(std::set<std::string>::iterator it = restrictions.begin(); it != restrictions.end(); ++it) {
+                    const std::set<std::string>& restrictions = elementData.getEnumerationSet();
+                    for(std::set<std::string>::const_iterator it = restrictions.begin(); it != restrictions.end(); ++it) {
                         xmlNodePtr enumeration = xmlNewChild( restriction, xsd, BAD_CAST "enumeration", 0 );
                         xmlSetProp( enumeration, BAD_CAST "value", BAD_CAST it->c_str() );
                     }
