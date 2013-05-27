@@ -39,11 +39,11 @@ void addDefaultScripts(QScriptEngine &engine) {
             throw std::runtime_error("Could not open javascript file: " + line.toStdString());
         }
 
-        auto error = engine.evaluate(javascriptFile.readAll());
+        QScriptValue error = engine.evaluate(javascriptFile.readAll());
         if(error.isError()) {
             throw std::runtime_error(error.toString().toStdString());
         }
-        auto exception = engine.uncaughtException();
+        QScriptValue exception = engine.uncaughtException();
         if(exception.isError()) {
             throw std::runtime_error(exception.toString().toStdString());
         }

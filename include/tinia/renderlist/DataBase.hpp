@@ -19,7 +19,7 @@
 #pragma once
 #include <string>
 #include <list>
-#include <unordered_map>
+#include <map>
 #include "RenderList.hpp"
 
 namespace tinia {
@@ -151,10 +151,10 @@ protected:
     Revision                                m_deletion_rev;     ///< Revision when most recent delete was done.
     Revision                                m_draworder_rev;    ///< Revision of the draw order.
     Revision                                m_process_rev;      ///< Revision when most recent process was done.
-    std::unordered_map<std::string,Item*>   m_name_map;
-    std::unordered_map<Id,Buffer*>          m_buffers;
-    std::unordered_map<Id,Shader*>          m_shaders;
-    std::unordered_map<Id,Action*>          m_actions;
+    std::map<std::string,Item*>   m_name_map;
+    std::map<Id,Buffer*>          m_buffers;
+    std::map<Id,Shader*>          m_shaders;
+    std::map<Id,Action*>          m_actions;
     std::list<Action*>                      m_draworder;
 
     Id

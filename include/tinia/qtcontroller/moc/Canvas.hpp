@@ -27,6 +27,7 @@
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
+#include <boost/scoped_ptr.hpp>
 
 namespace tinia {
 namespace qtcontroller {
@@ -40,7 +41,7 @@ public:
                     std::string key,
                     const tinia::model::gui::ScriptArgument& viewerType,
                     const std::vector<tinia::model::gui::ScriptArgument>& scripts,
-                    std::shared_ptr<model::ExposedModel> model,
+                    boost::shared_ptr<model::ExposedModel> model,
                     QWidget* parent,
                     QGLWidget* share_widget,
                     bool perf_mode = false);
@@ -68,11 +69,11 @@ public slots:
    void triggerRedraw();
 private:
    bool m_perf_mode;
-   std::vector<std::unique_ptr<scripting::EventHandler > > m_eventHandlers;
+   std::vector<boost::shared_ptr<scripting::EventHandler > > m_eventHandlers;
    std::string m_key;
    std::string m_boundingBoxKey;
    std::string m_resetViewKey;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    jobcontroller::OpenGLJob* m_job;
    QTime                   m_last_fps_calc;
    unsigned int            m_frames;

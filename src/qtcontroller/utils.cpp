@@ -22,7 +22,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> model)
+std::string prettyName(std::string key, boost::shared_ptr<model::ExposedModel> model)
 {
    model::StateSchemaElement element = model->getStateSchemaElement(key);
    if(element.emptyAnnotation())
@@ -31,7 +31,7 @@ std::string prettyName(std::string key, std::shared_ptr<model::ExposedModel> mod
    }
    else
    {
-      auto annotation =  element.getAnnotation();
+       std::map<std::string, std::string> annotation =  element.getAnnotation();
       return annotation["en"];
    }
 

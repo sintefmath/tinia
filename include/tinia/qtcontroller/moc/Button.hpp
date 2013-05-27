@@ -31,7 +31,7 @@ class Button : public QPushButton
 {
     Q_OBJECT
 public:
-    explicit Button(std::string key, std::shared_ptr<model::ExposedModel> model,
+    explicit Button(std::string key, boost::shared_ptr<model::ExposedModel> model,
                     QWidget *parent = 0);
 
    ~Button();
@@ -41,7 +41,7 @@ public slots:
    void clickedButton();
 private:
    std::string m_key;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 
 };
 

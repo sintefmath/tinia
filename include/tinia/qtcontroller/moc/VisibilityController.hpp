@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QWidget>
 #include <string>
+#include <boost/shared_ptr.hpp>
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
 
@@ -34,11 +35,11 @@ namespace impl {
   */
 class VisibilityController : public QObject, public model::StateListener
 {
-    Q_OBJECT;
+    Q_OBJECT
 public:
     explicit
     VisibilityController( QWidget*                               widget,
-                          std::shared_ptr<model::ExposedModel>  model,
+                          boost::shared_ptr<model::ExposedModel>  model,
                           const std::string&                     key,
                           const bool                             inverted );
 
@@ -52,7 +53,7 @@ signals:
     setWidgetVisible( bool visibility );
 
 protected:
-    std::shared_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<model::ExposedModel>   m_model;
     const std::string                       m_key;
     const bool                              m_inverted;
 };

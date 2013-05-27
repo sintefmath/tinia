@@ -18,7 +18,7 @@
 
 #include "tinia/jobcontroller/ComputeJob.hpp"
 #include "tinia/model/ExposedModel.hpp"
-
+#include <stdexcept>
 namespace tinia {
 namespace jobcontroller
 {
@@ -62,16 +62,15 @@ ComputeJob::operator()()
 void
 ComputeJob::start()
 {
-  assert(!m_computeThread.joinable());
-  boost::thread t( boost::ref( *this ) );
-  m_computeThread = std::move( t );
+  assert(!m_computeThread || !m_computeThread->joinable());
+  m_computeThread.reset(new boost::thread(boost::ref(*this)));
   m_model->updateElement("status", "running");
 }
 
 bool
 ComputeJob::isRunning()
 {
-	if (!m_computeThread.joinable())
+	if (!m_computeThread || !m_computeThread->joinable())
 	{
 		return false;
 	}
@@ -84,9 +83,9 @@ void
 ComputeJob::cleanup()
 {
   m_model->updateElement("status", "terminating");
-  if (m_computeThread.joinable())
+  if (m_computeThread && m_computeThread->joinable())
   {
-    m_computeThread.join();
+    m_computeThread->join();
   }
   m_model->updateElement("status", "terminated");
 }

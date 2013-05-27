@@ -75,7 +75,7 @@ void ParseGetHelper<i>::parse(Sequence& seq, const QMap<QString, QString>& param
 template<typename Sequence>
 Sequence parseGet(const QMap<QString, QString>& parameters, QString keysAsString) {
     Sequence sequence;
-    auto keys = keysAsString.split(" ");
+    QStringList keys = keysAsString.split(" ");
 
     ParseGetHelper<boost::tuples::length<Sequence>::value - 1> helper;
     helper.parse(sequence, parameters, keys);

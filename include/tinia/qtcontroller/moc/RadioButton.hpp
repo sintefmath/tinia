@@ -32,7 +32,7 @@ class RadioButton : public QRadioButton, public model::StateListener
     Q_OBJECT
 public:
     explicit RadioButton(std::string value, std::string key,
-                         std::shared_ptr<model::ExposedModel> model,
+                         boost::shared_ptr<model::ExposedModel> model,
                          QWidget *parent = 0);
 
    ~RadioButton();
@@ -45,7 +45,7 @@ public slots:
 private:
    std::string m_value;
    std::string m_key;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 
 };
 

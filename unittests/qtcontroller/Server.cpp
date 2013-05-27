@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(DecodeGetUriThrow) {
 BOOST_AUTO_TEST_CASE(GetParams)  {
     QString request = "GET filename.txt?key1=val&key2&key3=val2";
 
-    auto params = tinia::qtcontroller::impl::decodeGetParameters(request);
+    QMap<QString, QString> params = tinia::qtcontroller::impl::decodeGetParameters(request);
     BOOST_CHECK_EQUAL(3, params.size());
     BOOST_CHECK_EQUAL(std::string("val"), params["key1"].toStdString());
     BOOST_CHECK(params.contains("key2"));
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ParseGet) {
     params["key"] = "value";
     params["uintKey"] = "42";
     params["intKey"] = "-43";
-    auto args = tinia::qtcontroller::impl::parseGet<boost::tuple<std::string, unsigned int, int>>(params, "key uintKey intKey");
+    boost::tuple<std::string, unsigned int, int> args = tinia::qtcontroller::impl::parseGet<boost::tuple<std::string, unsigned int, int>>(params, "key uintKey intKey");
     BOOST_CHECK_EQUAL("value", args.get<0>());
     BOOST_CHECK_EQUAL(42, args.get<1>());
     BOOST_CHECK_EQUAL(-43, args.get<2>());

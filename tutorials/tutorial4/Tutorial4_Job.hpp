@@ -59,11 +59,11 @@ Tutorial4Job::Tutorial4Job()
     m_model->addElement("boundingbox", "0 0 0 1 1 1");
 
     /** [layout] */
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     /** [layout] */
 
     /** [canvas] */
-    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
     /** [canvas] */
 
     /** [boundingbox] */
@@ -105,7 +105,7 @@ Tutorial4Job::Tutorial4Job()
             "{\n"
             "    gl_FragColor = vec4( 1,0,1, 1.0 );\n"
             "}\n";
-    auto shader = m_database.createShader("shader");
+    tinia::renderlist::Shader* shader = m_database.createShader("shader");
     shader->setVertexStage(vertexShader);
     shader->setFragmentStage(fragmentShader);
     /** [shader] */

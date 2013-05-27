@@ -19,7 +19,6 @@
 #pragma once
 #include "RenderList.hpp"
 #include "Item.hpp"
-#include <initializer_list>
 
 namespace tinia {
 namespace renderlist {
@@ -45,14 +44,10 @@ public:
     const int*
     intData() const;
 
-    Buffer*
-    set( std::initializer_list<float> list );
 
     Buffer*
     set( const float* data, size_t count );
 
-    Buffer*
-    set( std::initializer_list<int> list );
 
     Buffer*
     set( const int* data, size_t count );

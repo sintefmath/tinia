@@ -39,7 +39,7 @@ public:
       hasSeenEvent = true;
    }
 
-   std::shared_ptr<model::ExposedModel> model;
+   boost::shared_ptr<model::ExposedModel> model;
    bool hasSeenEvent;
 
 };

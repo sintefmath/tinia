@@ -39,16 +39,16 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, QObject *parent) :
+HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, tinia::qtcontroller::ImageSource* imageSource, QObject *parent) :
     QTcpServer(parent), m_job(job),
-    m_serverGrabber(job)
+    m_serverGrabber(imageSource)
 {
     listen(QHostAddress::Any, 8080);
 }
 
 void HTTPServer::incomingConnection(int socket)
 {
-    auto thread = new ServerThread(m_serverGrabber, m_job, socket);
+    ServerThread* thread = new ServerThread(*m_serverGrabber, m_job, socket);
 
     //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 

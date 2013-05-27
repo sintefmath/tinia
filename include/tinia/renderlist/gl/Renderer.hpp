@@ -17,8 +17,8 @@
  */
 
 #pragma once
-#include <unordered_map>
 #include <list>
+#include <map>
 #include <boost/utility.hpp>
 #include <tinia/renderlist/RenderList.hpp>
 
@@ -85,9 +85,9 @@ public:
 protected:
     const DataBase&                         m_db;
     Revision                                m_current_revision;
-    std::unordered_map<Id,RenderBuffer*>    m_buffers;
-    std::unordered_map<Id,RenderShader*>    m_shaders;
-    std::unordered_map<Id,RenderAction*>    m_actions;
+    std::map<Id,RenderBuffer*>    m_buffers;
+    std::map<Id,RenderShader*>    m_shaders;
+    std::map<Id,RenderAction*>    m_actions;
     std::list<RenderAction*>                m_draw_order;
 
 };

@@ -19,20 +19,20 @@
 #pragma once
 #include "boost/thread.hpp"
 #include "tinia/model/ExposedModel.hpp"
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 namespace tinia {
 namespace model {
 class ExposedModelLock
 {
 public:
-   ExposedModelLock(std::shared_ptr<ExposedModel> model);
+   ExposedModelLock(boost::shared_ptr<ExposedModel> model);
    ~ExposedModelLock();
 
 
 private:
    ExposedModel::scoped_lock m_scoped_lock;
-   std::shared_ptr<ExposedModel> m_model;
+   boost::shared_ptr<ExposedModel> m_model;
 };
 
 } // namespace model

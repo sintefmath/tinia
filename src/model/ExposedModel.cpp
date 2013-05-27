@@ -19,12 +19,14 @@
 #include "tinia/model/ExposedModel.hpp"
 
 #include <algorithm>
-#include <unordered_map>
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <string>
 #include <iterator>
 #include <sstream>
+#include <map>
+#include <iterator>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -51,6 +53,12 @@ ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
 {
 }
 
+ExposedModel::~ExposedModel() {
+    if(m_gui != NULL) {
+        delete m_gui;
+    }
+}
+
 void
 ExposedModel::incrementRevisionNumber(impl::ElementData &updatedElement) {
    updatedElement.setRevisionNumber(revisionNumber);
@@ -67,9 +75,9 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
    impl::ElementData before;
 
    {// Lock scope
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
-      auto& element = findElementInternal(key);
+      impl::ElementData& element = findElementInternal(key);
       before = element;
       incrementRevisionNumber(element);
       element.setStringValue( value );
@@ -85,15 +93,13 @@ void ExposedModel::updateElementFromString( const std::string &key, const std::s
 
 // For debugging purposes
 void ExposedModel::printCurrentState() {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    cout << "----------------- Current stateHash ---------------" << endl;
-   std::for_each(stateHash.begin(), stateHash.end(),
-                 [this]( std::pair<std::string, impl::ElementData> kv ) {
-                 cout << kv.first << " (" << kv.second.getXSDType() << ") : " << endl;
-         kv.second.print();
-}
-);
-cout << "---------------------------------------------------" << endl;
+   for(std::map<std::string, impl::ElementData>::iterator kv = stateHash.begin(); kv != stateHash.end(); ++kv) {
+       cout << kv->first << " (" << kv->second.getXSDType() << ") : " << endl;
+       kv->second.print();
+   }
+    cout << "---------------------------------------------------" << endl;
 }
 
 
@@ -101,7 +107,7 @@ cout << "---------------------------------------------------" << endl;
 void ExposedModel::updateElementFromPTree( const std::string &key, const StringStringPTree &value )
 {
       scoped_lock lock(m_selfMutex);
-    auto& element = findElementInternal(key);
+      impl::ElementData& element = findElementInternal(key);
       incrementRevisionNumber(element);
       // We jump right past the root, since that is not stored in the impl::ElementData's propertyTree, evidently...
       // pt_print("argument to ExposedModel::updateElementFromPTree", value.begin()->second);
@@ -116,12 +122,12 @@ void ExposedModel::updateElementFromPTree( const std::string &key, const StringS
 
 
 void
-ExposedModel::addAnnotationHelper( std::string key, std::unordered_map<std::string, std::string> & annotationMap ) {
+ExposedModel::addAnnotationHelper( std::string key, std::map<std::string, std::string> & annotationMap ) {
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
-      auto& elementData = findElementInternal(key);
+      impl::ElementData& elementData = findElementInternal(key);
       elementData.setAnnotation( annotationMap );
 
       // Copy
@@ -150,7 +156,7 @@ void
 ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
    scoped_lock lock(m_selfMutex);
 
-   auto& elementData = findElementInternal(key);
+   impl::ElementData& elementData = findElementInternal(key);
    if ( elementData.getLength() != impl::ElementData::MATRIX_LENGTH ) {
        throw TypeException("Matrix", elementData.getXSDType());
    }
@@ -166,7 +172,7 @@ ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
 
 void
 ExposedModel::addMatrixHelper(std::string key, const float *matrixData) {
-   auto elementData = elementFactory.createMatrixElement( matrixData );
+    impl::ElementData elementData = elementFactory.createMatrixElement( matrixData );
    incrementRevisionNumber( elementData );
    stateHash[key] = elementData;
 }
@@ -174,7 +180,7 @@ ExposedModel::addMatrixHelper(std::string key, const float *matrixData) {
 
 void
 ExposedModel::addAnnotation( std::string key, std::string annotation ) {
-   std::unordered_map<std::string, std::string> annotationMap;
+   std::map<std::string, std::string> annotationMap;
    annotationMap["en"]= annotation;
    addAnnotationHelper( key, annotationMap );
 }
@@ -189,7 +195,7 @@ void
 ExposedModel::removeElement( std::string key ) {
 
    scoped_lock lock(m_selfMutex);
-   auto it = stateHash.find( key );
+   std::map<std::string, impl::ElementData>::iterator it = stateHash.find( key );
    if ( it == stateHash.end() ) {
        throw KeyNotFoundException(key);
    }
@@ -202,7 +208,7 @@ ExposedModel::removeElement( std::string key ) {
 
 bool
 ExposedModel::hasElement( std::string elementName ) const {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    return stateHash.find( elementName) != stateHash.end();
 }
 
@@ -210,16 +216,16 @@ ExposedModel::hasElement( std::string elementName ) const {
 string
 ExposedModel::getElementValueAsString( string key)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    return findElementInternal(key).getStringValue();
 }
 
 void
 ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
    // Locking whole method
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
-   auto& elementData = findElementInternal(key);
+   const impl::ElementData& elementData = findElementInternal(key);
    if (elementData.getLength() != impl::ElementData::MATRIX_LENGTH) {
        throw TypeException(elementData.getXSDType(), "Matrix");
    }
@@ -234,18 +240,16 @@ ExposedModel::getMatrixValue( std::string key, float* matrixData ) const {
 // Updates to send *to* the client, version for non-xml-capable jobs/controllers.
 void ExposedModel::getExposedModelUpdate(std::vector< std::pair<std::string, impl::ElementData> > &updatedElements, const unsigned has_revision ) const
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    updatedElements.resize(0);
-   std::for_each(stateHash.begin(), stateHash.end(),
-                 [has_revision /* , this */, &updatedElements ]( std::pair<std::string, impl::ElementData> kv ) {
-                 impl::ElementData& elementData = kv.second;
+   for(std::map<std::string, impl::ElementData>::const_iterator kv = stateHash.begin(); kv != stateHash.end(); ++kv) {
+                 
+         const impl::ElementData& elementData = kv->second;
          // printf("Current rev=%d, rev_0=%d, element(%s) has rev=%d\n", revisionNumber, has_revision, kv.first.c_str(), elementData.getRevisionNumber());
          if ( elementData.getRevisionNumber() >= has_revision )
-         // printf("going to add (%s, %s)\n", kv.first.c_str(), elementData.getStringValue().c_str() );
-         updatedElements.push_back( std::make_pair( kv.first, elementData ) );
+            updatedElements.push_back( std::make_pair( kv->first, elementData ) );
 
-}
-);
+   }
 }
 
 
@@ -270,14 +274,14 @@ void model::ExposedModel::addStateSchemaListener(
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(listener);
 }
 
@@ -285,39 +289,39 @@ void model::ExposedModel::addStateSchemaListener(std::string key,
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(std::string key,
       model::StateSchemaListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::addStateListener(model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(listener);
 }
 
 
 void model::ExposedModel::removeStateListener(model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(listener);
 }
 
 void model::ExposedModel::addStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.addStateListener(key,    listener);
 }
 
 void model::ExposedModel::removeStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock listenerLock(m_listenerHandlersMutex);
    m_stateListenerHandler.removeStateListener(key, listener);
 }
 
@@ -325,8 +329,8 @@ void model::ExposedModel::getStateUpdate(
       std::vector<model::StateElement> &updatedElements,
       const unsigned int has_revision)
 {
-   scoped_lock(m_selfMutex);
-   for(auto it = stateHash.begin(); it!=stateHash.end(); it++)
+   scoped_lock lock(m_selfMutex);
+   for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it!=stateHash.end(); it++)
    {
       impl::ElementData& data = it->second;
       if(data.getRevisionNumber()>=has_revision)
@@ -340,8 +344,8 @@ void model::ExposedModel::getStateSchemaUpdate(
       std::vector<model::StateSchemaElement> &updatedElements,
       const unsigned int has_revision)
 {
-   scoped_lock(m_selfMutex);
-   for(auto it = stateHash.begin(); it!=stateHash.end(); it++)
+   scoped_lock lock(m_selfMutex);
+   for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it!=stateHash.end(); it++)
    {
       impl::ElementData& data = it->second;
       if(data.getRevisionNumber()>=has_revision)
@@ -355,9 +359,9 @@ void model::ExposedModel::getStateSchemaUpdate(
 void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaElement> &stateSchemaElements)
 {
 
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
-   for(auto it = stateHash.begin(); it != stateHash.end(); it++)
+   for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it != stateHash.end(); it++)
    {
       std::string key(it->first.c_str());
       impl::ElementData data = it->second;
@@ -367,8 +371,8 @@ void model::ExposedModel::getFullStateSchema(std::vector<model::StateSchemaEleme
 
 void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateElements)
 {
-   scoped_lock(m_selfMutex);
-   for(auto it = stateHash.begin(); it != stateHash.end(); it++)
+   scoped_lock lock(m_selfMutex);
+   for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it != stateHash.end(); it++)
    {
       stateElements.push_back(StateElement(it->first, impl::ElementData(it->second)));
    }
@@ -377,7 +381,7 @@ void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateEl
 void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
                                                        const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
 
    m_stateSchemaListenerHandler.fireStateSchemaElementAdded(&element);
@@ -386,7 +390,7 @@ void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
 void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
                                                          const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementRemoved(&element);
 }
@@ -394,7 +398,7 @@ void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
 void model::ExposedModel::fireStateSchemaElementModified(std::string key,
                                                           const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementModified(&element);
 }
@@ -402,7 +406,7 @@ void model::ExposedModel::fireStateSchemaElementModified(std::string key,
 void model::ExposedModel::fireStateElementModified(std::string key,
                                                     const model::impl::ElementData &data)
 {
-   scoped_lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_listenerHandlersMutex);
    model::StateElement element(key, data);
    m_stateListenerHandler.fireStateElementModified(&element);
 }
@@ -432,7 +436,7 @@ void model::ExposedModel::guiIsValid(model::gui::Element *rootElement)
 
 model::impl::ElementData &model::ExposedModel::findElementInternal(const std::string &key)
 {
-    auto result = stateHash.find(key);
+    std::map<std::string, impl::ElementData>::iterator result = stateHash.find(key);
     if ( result == stateHash.end() ) {
         throw KeyNotFoundException(key);
     }
@@ -441,7 +445,7 @@ model::impl::ElementData &model::ExposedModel::findElementInternal(const std::st
 
 const model::impl::ElementData &model::ExposedModel::findElementInternal(const std::string &key) const
 {
-    auto result = stateHash.find(key);
+    std::map<std::string, impl::ElementData>::const_iterator result = stateHash.find(key);
     if ( result == stateHash.end() ) {
         throw KeyNotFoundException(key);
     }
@@ -452,10 +456,10 @@ const model::impl::ElementData &model::ExposedModel::findElementInternal(const s
 std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 {
    // This returns a deep copy to avoid any possible threading-problems.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
    std::set<std::string> destinationSet;
-   auto sourceSet = findElementInternal(key).getEnumerationSet();
-   for(auto it = sourceSet.begin(); it!=sourceSet.end(); it++)
+   std::set<std::string> sourceSet = findElementInternal(key).getEnumerationSet();
+   for(std::set<std::string>::iterator it = sourceSet.begin(); it!=sourceSet.end(); it++)
    {
       destinationSet.insert(it->c_str());
    }
@@ -464,10 +468,10 @@ std::set<std::string> model::ExposedModel::getRestrictionSet(std::string key)
 
 bool model::ExposedModel::emptyRestrictionSet(std::string key)
 {
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
 
-   auto& elementData = findElementInternal(key);
+   impl::ElementData& elementData = findElementInternal(key);
    return elementData.emptyRestrictionSet();
 }
 
@@ -479,9 +483,9 @@ model::StateSchemaElement model::ExposedModel::getStateSchemaElement(std::string
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
-   auto& elementData = findElementInternal(key);
+   impl::ElementData& elementData = findElementInternal(key);
    return StateSchemaElement(key, elementData);
 }
 
@@ -489,10 +493,9 @@ std::string model::ExposedModel::getElementMaxConstraint(std::string key) const
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+    scoped_lock lock(m_selfMutex);
 
-
-   const auto& elementData = findElementInternal(key);
+   const impl::ElementData& elementData = findElementInternal(key);
    return elementData.getMaxConstraint();
 }
 
@@ -500,9 +503,9 @@ std::string model::ExposedModel::getElementMinConstraint(std::string key) const
 {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
-   const auto& elementData = findElementInternal(key);
+   const impl::ElementData& elementData = findElementInternal(key);
    return elementData.getMinConstraint();
 }
 
@@ -512,7 +515,7 @@ void model::ExposedModel::makeDefaultGUILayout()
    // Make something simple:
      Grid* grid = new Grid(stateHash.size(), 1);
    int index = 0;
-   for(auto it = stateHash.begin(); it != stateHash.end(); it++)
+   for(std::map<std::string, impl::ElementData>::iterator it = stateHash.begin(); it != stateHash.end(); it++)
    {
       impl::ElementData& data = it->second;
       std::string t = data.getWidgetType();
@@ -534,11 +537,13 @@ void model::ExposedModel::makeDefaultGUILayout()
 
 void model::ExposedModel::holdStateEvents()
 {
+    scoped_lock lock(m_listenerHandlersMutex);
    m_stateListenerHandler.holdEvents();
 }
 
 void model::ExposedModel::releaseStateEvents()
 {
+    scoped_lock lock(m_listenerHandlersMutex);
    m_stateListenerHandler.releaseEvents();
 }
 

@@ -21,7 +21,7 @@
 namespace tinia {
 namespace model {
 
-ExposedModelLock::ExposedModelLock(std::shared_ptr<ExposedModel> model)
+ExposedModelLock::ExposedModelLock(boost::shared_ptr<ExposedModel> model)
    : m_scoped_lock(model->getExposedModelMutex()),
      m_model(model)
 {

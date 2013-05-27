@@ -18,6 +18,7 @@
 
 #pragma once
 #include <stdexcept>
+
 namespace tinia { namespace model {
 class KeyNotFoundException : public std::invalid_argument {
 public:

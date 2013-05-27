@@ -26,7 +26,7 @@ namespace impl {
   \todo Make this change when the annotation changes
   */
 TabWidgetChildren::TabWidgetChildren(std::string key,
-                                     std::shared_ptr<model::ExposedModel> model,
+                                     boost::shared_ptr<model::ExposedModel> model,
                                      QTabWidget *parent) :
     QWidget(parent)
 {

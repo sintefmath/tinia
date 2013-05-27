@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
 #include <tinia/model/exceptions/RestrictionException.hpp>
@@ -39,89 +40,16 @@ impl::ElementData::ElementData()
   length( impl::ElementData::LENGTH_NOT_SET )
 {}
 
-#if 0
-impl::ElementData::ElementData(const impl::ElementData &from)
-   :
-   // Deep copy
-     stringValue(from.stringValue),//.begin(), from.stringValue.end()),
-     xsdType(from.xsdType),//.begin(), from.xsdType.end()),
-     widgetType( from.widgetType),//.begin(), from.widgetType.end()),
-     minConstraint(from.minConstraint),//.begin(), from.minConstraint.end()),
-     maxConstraint( from.maxConstraint),//.begin(), from.maxConstraint.end()),
-     length(from.length)
-{
-
-   for(auto it = from.enumerationSet.begin();
-       it != from.enumerationSet.end(); it++)
-   {
-      std::string inputString((*it).c_str());
-      enumerationSet.insert(inputString);
-   }
-
-   for(auto it = from.annotationMap.begin();
-       it != from.annotationMap.end(); it++)
-   {
-      annotationMap[it->first.c_str()] =it->second.c_str();
-   }
-
-      for(auto it=from.propertyTree.begin(); it != from.propertyTree.end();
-          it++)
-      {
-          propertyTree[it->first] = it->second;
-
-      }
-
-
-}
-
-impl::ElementData &impl::ElementData::operator=(const impl::ElementData &from)
-{
-    // Deep copy
-      stringValue = from.stringValue;//.begin(), from.stringValue.end()),
-      xsdType = from.xsdType;//.begin(), from.xsdType.end()),
-      widgetType =  from.widgetType;//.begin(), from.widgetType.end()),
-      minConstraint = from.minConstraint;//.begin(), from.minConstraint.end()),
-      maxConstraint =  from.maxConstraint;//.begin(), from.maxConstraint.end()),
-      length = from.length;
-
-
-    for(auto it = from.enumerationSet.begin();
-        it != from.enumerationSet.end(); it++)
-    {
-       std::string inputString((*it).c_str());
-       enumerationSet.insert(inputString);
-    }
-
-    for(auto it = from.annotationMap.begin();
-        it != from.annotationMap.end(); it++)
-    {
-       annotationMap[it->first.c_str()] =it->second.c_str();
-    }
-
-
-
-        for(auto it=from.propertyTree.begin(); it != from.propertyTree.end();
-            it++)
-        {
-
-            propertyTree[it->first] = it->second;
-
-        }
-
-
-
-    return *this;
-}
-#endif
 template<typename T>
 bool impl::ElementData::isWithinLimits(T& value, const std::string& stringValue) {
 	if( !emptyRestrictionSet() ) {
 		bool within = false;
-		std::for_each(getEnumerationSet().begin(), getEnumerationSet().end(), [&stringValue, &within](const std::string allowed) {
+		for(std::set<std::string>::const_iterator it = getEnumerationSet().begin(); it !=  getEnumerationSet().end(); ++it) {
+			const std::string& allowed = *it;
 			if( allowed == stringValue ) {
 				within = true;
 			}
-		});
+		}
 		return within;
 	}
 
@@ -145,7 +73,7 @@ impl::ElementData::setStringValue( std::string inputString ) {
 	if( getLength() > 1 ) {
 		std::vector<std::string> splitted;
 		boost::split( splitted, inputString, boost::is_any_of(" ") );
-        for( auto i = 0; i < getLength(); i++  ) {
+        for( int i = 0; i < getLength(); i++  ) {
 			checkValue( splitted[i] );
 		}
 	}
@@ -196,22 +124,11 @@ typedef boost::property_tree::basic_ptree<std::string, std::string> StringString
 void impl::ElementData::setPropertyTreeValue_r( std::map<std::string, impl::ElementData> &pt, const StringStringPTree &sspt, const int level )
 {
     if ( pt.size() != sspt.size() ) {
-        /*
-//        pt_print("properties from string-string-ptree", sspt);
-        printf("pt.size()=%d\n", int(pt.size()));
-
-        PropertyTree::iterator            end2  = pt.end();
-        PropertyTree::iterator            it2  = pt.begin();
-        for (; it2 != end2; it2++) {
-            impl::ElementData ed = it2->second.get_value<impl::ElementData>();
-            ed.print();
-        }
-*/
         throw std::runtime_error("Huh?! The string-string ptree has a different topology than the string-impl::ElementData ptree.");
     }
-    auto end  = sspt.end();
-    auto it2  = pt.begin();
-    for (auto it   = sspt.begin(); it != end; it++, it2++) {
+    StringStringPTree::const_iterator end  = sspt.end();
+    std::map<std::string, impl::ElementData>::iterator it2  = pt.begin();
+    for (StringStringPTree::const_iterator it   = sspt.begin(); it != end; it++, it2++) {
         const string name = it->first;
 
         const string value = it->second.get_value<string>();
@@ -303,11 +220,11 @@ impl::ElementData::emptyAnnotation() const {
 }
 
 void
-impl::ElementData::setAnnotation( std::unordered_map<std::string, std::string>& annotationMap ) {
+impl::ElementData::setAnnotation( std::map<std::string, std::string>& annotationMap ) {
     this->annotationMap = annotationMap;
 }
 
-const std::unordered_map<std::string, std::string>&
+const std::map<std::string, std::string>&
 impl::ElementData::getAnnotation() const {
     return annotationMap;
 }
@@ -349,7 +266,7 @@ void impl::ElementData::print(void) const
         if (!emptyRestrictionSet()) {
             printf("        Restriction set:");
             const std::set<std::string> restr = getEnumerationSet();
-            for( auto it = restr.begin(); it!=restr.end(); it++) {
+            for( std::set<std::string>::const_iterator it = restr.begin(); it!=restr.end(); it++) {
                 cout << " " << *it;
             }
             cout << endl;

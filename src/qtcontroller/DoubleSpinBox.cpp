@@ -22,7 +22,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-DoubleSpinBox::DoubleSpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+DoubleSpinBox::DoubleSpinBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                  QWidget *parent) :
    QDoubleSpinBox(parent), m_key(key.c_str()), m_model(model)
 {

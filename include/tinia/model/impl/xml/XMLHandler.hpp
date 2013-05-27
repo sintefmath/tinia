@@ -31,7 +31,7 @@ namespace xml {
 class XMLHandler
 {
 public:
-   XMLHandler(std::shared_ptr<model::ExposedModel> model);
+   XMLHandler(boost::shared_ptr<model::ExposedModel> model);
 
    /** The job can use this to update the state given new information from the client.
       \param buffer The memory buffer to which the xml document will be written.
@@ -51,7 +51,7 @@ public:
    xmlDocPtr getCompleteDocument();
 
 private:
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    XMLTransporter m_xmlTransporter;
    XMLReader m_xmlReader;
    ElementHandler m_elementHandler;

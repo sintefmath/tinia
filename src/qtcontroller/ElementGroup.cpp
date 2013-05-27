@@ -25,7 +25,7 @@ namespace qtcontroller {
 namespace impl {
 
 ElementGroup::ElementGroup(std::string key, bool showLabel,
-                           std::shared_ptr<model::ExposedModel> model,
+                           boost::shared_ptr<model::ExposedModel> model,
                            QWidget *parent) :
     QGroupBox(parent), m_key(key), m_model(model)
 {

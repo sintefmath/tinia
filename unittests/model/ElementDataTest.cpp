@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE( gettersAndSetters ) {
     ed.setRestrictionSet( restrictionSet );
     BOOST_CHECK( restrictionSet == ed.getEnumerationSet() );
 
-	std::unordered_map<std::string, std::string> annotationMap;
+	std::map<std::string, std::string> annotationMap;
 	annotationMap["en"]= "strawberry jam";
 
     ed.setAnnotation( annotationMap );
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE( propertyTree ) {
     model::impl::ElementData ed;
 
     //typedef boost::property_tree::basic_ptree<std::string, model::impl::ElementData> PropertyTree;
-    auto& pt = ed.getPropertyTree();
+    model::impl::ElementData::PropertyTree& pt = ed.getPropertyTree();
     BOOST_CHECK( pt.empty() );
 }
 

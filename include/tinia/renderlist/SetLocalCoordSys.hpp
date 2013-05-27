@@ -38,8 +38,8 @@ public:
     SetLocalCoordSys*
     setOrientation( const float* from_world, const float* to_world )
     {
-        std::copy_n( from_world, 16, m_from_world );
-        std::copy_n( to_world, 16, m_to_world );
+        std::copy( from_world, from_world + 16, m_from_world );
+        std::copy( to_world, to_world + 16, m_to_world );
         m_db.taint( this, false );
         return this;
     }
@@ -55,8 +55,8 @@ private:
                                         0.f, 1.f, 0.f, 0.f,
                                         0.f, 0.f, 1.f, 0.f,
                                         0.f, 0.f, 0.f, 1.f };
-        std::copy_n( unit, 16, m_from_world );
-        std::copy_n( unit, 16, m_to_world );
+        std::copy( unit, unit + 16, m_from_world );
+        std::copy( unit, unit + 16, m_to_world );
     }
 };
 

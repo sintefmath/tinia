@@ -18,12 +18,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <initializer_list>
 #include <string>
 #include <memory>
 #include <stdexcept>
 #include <iostream>
-#include <array>
+#include <boost/array.hpp>
 #include <vector>
 #include <ctime>
 #include <cstring>
@@ -68,7 +67,7 @@ struct Fixture {
     }
     ~Fixture() {}
 
-    std::shared_ptr<tinia::model::ExposedModel> model;
+    boost::shared_ptr<tinia::model::ExposedModel> model;
     tinia::model::impl::xml::XMLTransporter xmlTransporter;
     // There is an xmlTransporter in model, but we are not allowed to access that one directly,
     // something we want to do for testing purposes.
@@ -98,14 +97,14 @@ BOOST_FIXTURE_TEST_CASE( getCompleteDocument,Fixture ) {
     puChilds.push_back( (xmlChar*)"State" );
     puChilds.push_back( (xmlChar*)"GuiLayout" );
 
-    auto model = doc->children;
+    xmlNodePtr model = doc->children;
 
     BOOST_REQUIRE( model != NULL );
     BOOST_CHECK( xmlStrEqual( model->name, (xmlChar*)( "ExposedModelUpdate" ) ) );
 
-    auto child = model->children;
+    xmlNodePtr child = model->children;
 
-    for( auto i = 0u; i < puChilds.size(); ++i ) {
+    for( size_t i = 0u; i < puChilds.size(); ++i ) {
         BOOST_CHECK( xmlStrEqual( child->name, puChilds[i] ) );
         child = child->next;
     }
@@ -161,29 +160,29 @@ BOOST_FIXTURE_TEST_CASE( addUncontrainedInteger, Fixture ) {
 
 
 
-    auto doc = xmlHandler.getCompleteDocument();
+    xmlDocPtr doc = xmlHandler.getCompleteDocument();
     //xmlSaveFormatFile( "-", doc, 1 );
-    auto xpathContext = xmlXPathNewContext( doc );
+    xmlXPathContextPtr xpathContext = xmlXPathNewContext( doc );
 
     const std::string stateNodeXpathExpr = "/ExposedModelUpdate/State/isovalue";
-    auto stateNodeXpathObject = xmlXPathEvalExpression( (xmlChar*)( stateNodeXpathExpr.c_str() ), xpathContext );
+    xmlXPathObjectPtr stateNodeXpathObject = xmlXPathEvalExpression( (xmlChar*)( stateNodeXpathExpr.c_str() ), xpathContext );
 
     // Check that we only have one isovalue-node
     BOOST_CHECK_EQUAL( stateNodeXpathObject->nodesetval->nodeNr, 1 );
-    auto stateNode = stateNodeXpathObject->nodesetval->nodeTab[0];
-    auto stateContent = xmlNodeGetContent( stateNode );
+    xmlNodePtr stateNode = stateNodeXpathObject->nodesetval->nodeTab[0];
+    xmlChar* stateContent = xmlNodeGetContent( stateNode );
     BOOST_CHECK( xmlStrEqual( stateContent, (xmlChar*)( "-4" )));
 
     // Check that the stateSchema is defined properly
     xmlXPathRegisterNs( xpathContext, BAD_CAST "xsd", BAD_CAST xsd.c_str() );
     const std::string stateSchemaXpathExpr = "/ExposedModelUpdate/StateSchema/xsd:schema/xsd:element[@name='State']/xsd:complexType/xsd:all/xsd:element[@name='isovalue']";
-    auto schemaNodeXpathObject = xmlXPathEvalExpression( (xmlChar*)( stateSchemaXpathExpr.c_str() ), xpathContext );
+    xmlXPathObjectPtr schemaNodeXpathObject = xmlXPathEvalExpression( (xmlChar*)( stateSchemaXpathExpr.c_str() ), xpathContext );
     BOOST_REQUIRE_EQUAL( schemaNodeXpathObject->nodesetval->nodeNr, 1 );
 
-    auto elementNode = schemaNodeXpathObject->nodesetval->nodeTab[0];
+    xmlNodePtr elementNode = schemaNodeXpathObject->nodesetval->nodeTab[0];
     // Get the type attribute
     BOOST_REQUIRE( xmlHasProp( elementNode, BAD_CAST "type" ) );
-    auto typeValue = xmlGetProp( elementNode, BAD_CAST "type" );
+    xmlChar* typeValue = xmlGetProp( elementNode, BAD_CAST "type" );
     BOOST_CHECK( xmlStrEqual( typeValue, BAD_CAST "xsd:integer" ) );
 
     // Clean up stuff
@@ -202,28 +201,28 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
     const int minValue = 2;
     const int maxValue = 42;
     model->addConstrainedElement( "timestep", 40, minValue, maxValue );
-    auto doc = xmlHandler.getCompleteDocument();
+    xmlDocPtr doc = xmlHandler.getCompleteDocument();
 
     //xmlSaveFormatFile( "-", doc, 1 );
 
-    auto node = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType" );
+    xmlNodePtr node = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType" );
     BOOST_REQUIRE( node != 0 );
 
     // Check that we have a restriction subnode
-    auto restriction = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction" );
+    xmlNodePtr restriction = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction" );
     BOOST_REQUIRE( restriction != 0 );
     BOOST_REQUIRE( xmlHasProp( restriction, BAD_CAST "base" ) );
 
     // Check that the base="xsd:integer" attribute is set
     {
-        auto baseType = xmlGetProp( restriction, BAD_CAST "base" );
+        xmlChar* baseType = xmlGetProp( restriction, BAD_CAST "base" );
         BOOST_CHECK( xmlStrEqual( baseType, BAD_CAST "xsd:integer" ) );
         xmlFree( baseType );
     }
 
     // Check that minInclusive has the right value
     {
-        auto minInclusive = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction/xsd:minInclusive" );
+        xmlNodePtr minInclusive = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction/xsd:minInclusive" );
         BOOST_REQUIRE( minInclusive != 0 );
         BOOST_REQUIRE( xmlHasProp( minInclusive, BAD_CAST "value" ) );
 
@@ -235,7 +234,7 @@ BOOST_FIXTURE_TEST_CASE( addConstrainedInteger, Fixture ) {
 
     // Check that maxInclusive has the right value
     {
-        auto maxInclusive = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction/xsd:maxInclusive" );
+        xmlNodePtr maxInclusive = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:simpleType/xsd:restriction/xsd:maxInclusive" );
         BOOST_REQUIRE( maxInclusive != 0 );
         BOOST_REQUIRE( xmlHasProp( maxInclusive, BAD_CAST "value" ) );
 
@@ -262,12 +261,15 @@ struct AddMatrixFixture : public Fixture {
     AddMatrixFixture():
         matrixName( "projection" )
     {
-        generate( myMatrix.begin(), myMatrix.end(), []()->int { static int i = 1; i++; return i; } );
+        for(int i = 0; i < 16; ++i) {
+            myMatrix[i] = i + 1;
+        }
+        
         model->addMatrixElement( matrixName, myMatrix.data() );
     }
 
     const std::string matrixName;
-    std::array<float, 16> myMatrix;
+    boost::array<float, 16> myMatrix;
 };
 
 BOOST_FIXTURE_TEST_CASE( addMatrixElement, AddMatrixFixture ) {
@@ -279,9 +281,9 @@ BOOST_FIXTURE_TEST_CASE( updateMatrixElement, AddMatrixFixture ) {
     std::vector<float> v0(16, -1.0f );
     std::vector<float> v1(16, 0.0f );
 
-    model->updateMatrixValue( matrixName, v0.data() );
+    model->updateMatrixValue( matrixName, &v0[0] );
 
-    model->getMatrixValue( matrixName, v1.data() );
+    model->getMatrixValue( matrixName, &v1[0] );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( v0.begin(), v0.end(), v1.begin(), v1.end() );
 
@@ -290,48 +292,47 @@ BOOST_FIXTURE_TEST_CASE( updateMatrixElement, AddMatrixFixture ) {
 BOOST_FIXTURE_TEST_CASE( readMatrixElement, AddMatrixFixture ) {
     std::vector<float> v(16, -1.0f );
 
-    model->getMatrixValue( matrixName, v.data() );
+    model->getMatrixValue( matrixName, &v[0] );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( v.begin(), v.end(), myMatrix.begin(), myMatrix.end() );
-    BOOST_CHECK_THROW( model->getMatrixValue( "notAMatrixName", v.data() ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->getMatrixValue( "notAMatrixName", &v[0] ), std::invalid_argument );
     model->addElement( "AnInt", -4 );
-    BOOST_CHECK_THROW( model->getMatrixValue( "AnInt", v.data() ), std::invalid_argument );
+    BOOST_CHECK_THROW( model->getMatrixValue( "AnInt", &v[0] ), std::invalid_argument );
 }
 
 BOOST_FIXTURE_TEST_CASE( matrixSchemaDefinition, AddMatrixFixture ) {
     // Check that the schema-type is defined properly
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto simpleType = xpathQuery( doc, "//xsd:element[@name='projection']" );
+    xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        xmlNodePtr simpleType = xpathQuery( doc, "//xsd:element[@name='projection']" );
         BOOST_REQUIRE( simpleType != 0 );
 
-        auto listType = xpathQuery( doc, "//xsd:element[@name='projection']/xsd:restriction/xsd:simpleType/xsd:list[@itemType='xsd:float']" );
+        xmlNodePtr listType = xpathQuery( doc, "//xsd:element[@name='projection']/xsd:restriction/xsd:simpleType/xsd:list[@itemType='xsd:float']" );
         BOOST_REQUIRE( listType != 0 );
 
-        auto length = xpathQuery( doc, "//xsd:element[@name='projection']/xsd:restriction/xsd:length[@value='16']" );
+        xmlNodePtr length = xpathQuery( doc, "//xsd:element[@name='projection']/xsd:restriction/xsd:length[@value='16']" );
         BOOST_REQUIRE( length != 0 );
-    }
-    );
+
 }
 
 BOOST_FIXTURE_TEST_CASE( addMatrixElementXMLContents, AddMatrixFixture ) {
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto projectionMatrix = xpathQuery( doc, "//projection" );
-        BOOST_REQUIRE( projectionMatrix != 0 );
+    xmlDocPtr doc = xmlHandler.getCompleteDocument();
+    xmlNodePtr projectionMatrix = xpathQuery( doc, "//projection" );
+    BOOST_REQUIRE( projectionMatrix != 0 );
 
-        std::string stringContents;
-        tinia::model::impl::xml::getXmlNodeContentAsType( projectionMatrix, stringContents );
+    std::string stringContents;
+    tinia::model::impl::xml::getXmlNodeContentAsType( projectionMatrix, stringContents );
 
-        vector<string> splitted;
-        boost::split( splitted, stringContents, boost::is_any_of(" ") );
+    vector<string> splitted;
+    boost::split( splitted, stringContents, boost::is_any_of(" ") );
 
-        BOOST_REQUIRE_EQUAL( splitted.size(), myMatrix.size() );
+    BOOST_REQUIRE_EQUAL( splitted.size(), myMatrix.size() );
 
-        vector<float> readMatrix( splitted.size() );
-        transform( splitted.begin(), splitted.end(), readMatrix.begin(), []( std::string s ) {
-                  return boost::lexical_cast<float>( s ); }
-                  );
-        BOOST_CHECK_EQUAL_COLLECTIONS( myMatrix.begin(), myMatrix.end(), readMatrix.begin(), readMatrix.end() );
-    } );
+    vector<float> readMatrix( splitted.size() );
+    for(size_t i = 0; i < splitted.size(); ++i) {
+        readMatrix[i]= boost::lexical_cast<float>(splitted[i]);
+    }
+    BOOST_CHECK_EQUAL_COLLECTIONS( myMatrix.begin(), myMatrix.end(), readMatrix.begin(), readMatrix.end() );
+
 }
 
 
@@ -342,8 +343,8 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
 
     // Check that we have a sane revision number;
     {
-        auto doc = xmlHandler.getCompleteDocument();
-        auto model = doc->children;
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        xmlNodePtr model = doc->children;
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
 
         tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
@@ -356,8 +357,8 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumber, Fixture ) {
     {
         model->addElement( "isovalue", 42 );
 
-        auto doc = xmlHandler.getCompleteDocument();
-        auto model = doc->children;
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        xmlNodePtr model = doc->children;
 
         tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
 
@@ -372,18 +373,21 @@ BOOST_FIXTURE_TEST_CASE( IncrementRevisionNumberOnUpdate, Fixture ) {
     const int startValue = 42;
     const std::string elementName = "isovalue";
     model->addElement( elementName, startValue );
-
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
+    {
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        xmlNodePtr model = doc->children;
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
         tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[0] );
-    } );
+    } 
 
     model->updateElement( elementName, 64 );
-
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
+    {
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        xmlNodePtr model = doc->children;
+   
         BOOST_REQUIRE( xmlHasProp( model, BAD_CAST "revision" ) );
         tinia::model::impl::xml::getXmlPropAsType( model, "revision", revisionNumbers[1] );
-    } );
+    } 
 
     BOOST_CHECK_GT( revisionNumbers[1], revisionNumbers[0] );
 }
@@ -393,25 +397,29 @@ BOOST_FIXTURE_TEST_CASE( UpdateUnconstrainedElement, Fixture ) {
     const int startValue = 42;
     std::string elementName = "isovalue";
     model->addElement( elementName, startValue );
+    
+    {
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        // xmlNodePtr mode = doc->children;
 
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto node = xpathQuery( doc, "//" + elementName  );
+        xmlNodePtr node = xpathQuery( doc, "//" + elementName  );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
         tinia::model::impl::xml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( startValue, readValue );
-    } );
+    }
 
     const int updatedValue = 64;
     model->updateElement( elementName, updatedValue );
-
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto node = xpathQuery( doc, "//" + elementName );
+    {
+        xmlDocPtr  doc = xmlHandler.getCompleteDocument();
+        // xmlNodePtr mode = doc->children;
+        xmlNodePtr node = xpathQuery( doc, "//" + elementName );
         BOOST_REQUIRE( node != 0 );
         int readValue = 0;
         tinia::model::impl::xml::getXmlNodeContentAsType( node, readValue );
         BOOST_CHECK_EQUAL( updatedValue, readValue );
-    } );
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE( UpdatedElementThatIsNotAdded, Fixture ) {
@@ -572,8 +580,10 @@ BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
 	restrictionList.push_back("solid");
     model->addElementWithRestriction<std::string>( elementName, "points", restrictionList );
 
-    TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto node = xpathQuery( doc, "//xsd:element[@name='render_mode']");
+    {
+        xmlDocPtr doc = xmlHandler.getCompleteDocument();
+        // xmlNodePtr model = doc->children;
+        xmlNodePtr node = xpathQuery( doc, "//xsd:element[@name='render_mode']");
         BOOST_REQUIRE( node != 0 );
 
         node = xpathQuery( doc, "//xsd:element[@name='render_mode']/xsd:simpleType/xsd:restriction");
@@ -589,7 +599,7 @@ BOOST_FIXTURE_TEST_CASE( StringRestrictionXSD, Fixture ) {
         );
 #endif
 
-    } );
+    } 
 
 }
 
@@ -614,14 +624,16 @@ BOOST_FIXTURE_TEST_CASE( AddAnnotationResult, AnnotationFixture ) {
     model->addElement( elementName, 10 );
     model->addAnnotation( elementName, annotation );
 
-     TestHelper( xmlHandler, [&]( xmlDocPtr doc, xmlNodePtr model ) {
-        auto node = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:annotation/xsd:documentation[@xml:lang='en']");
+     {
+        xmlDocPtr  doc = xmlHandler.getCompleteDocument();
+        // xmlNodePtr model = doc->children;
+        xmlNodePtr node = xpathQuery( doc, "//xsd:element[@name='timestep']/xsd:annotation/xsd:documentation[@xml:lang='en']");
         BOOST_REQUIRE( node != 0 );
 
         std::string readAnnotation;
         tinia::model::impl::xml::getXmlNodeContentAsType( node, readAnnotation );
         BOOST_CHECK_EQUAL( readAnnotation, annotation );
-    } );
+    }
 }
 
 struct MultiLangAnnotationFixture : public Fixture {

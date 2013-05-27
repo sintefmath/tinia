@@ -13,7 +13,7 @@ ServerController::ServerController(tinia::jobcontroller::Job* job,
 void ServerController::startServer(bool start)
 {
     if(start) {
-        m_server = new HTTPServer(m_job, this);
+        m_server = new HTTPServer(m_job, new OpenGLServerGrabber(m_job), this);
     }
     else if(m_server != NULL) {
         delete m_server;
