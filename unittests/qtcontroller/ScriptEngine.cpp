@@ -22,19 +22,19 @@
 BOOST_AUTO_TEST_SUITE(ScriptEngine)
 
 BOOST_AUTO_TEST_CASE(TestUniqueness) {
-    auto& a = tinia::qtcontroller::scripting::scriptEngineInstance();
-    auto& b = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& a = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& b = tinia::qtcontroller::scripting::scriptEngineInstance();
     BOOST_CHECK_EQUAL(&a, &b);
 }
 
 BOOST_AUTO_TEST_CASE(TestScriptAdd) {
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
     engine.evaluate("function functionAddedInThisTest() { return 42; }");
 
     BOOST_CHECK(engine.evaluate("functionAddedInThisTest").isFunction());
     BOOST_CHECK_EQUAL(42, engine.evaluate("functionAddedInThisTest()").toNumber());
 
-    auto& otherEngine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& otherEngine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     BOOST_CHECK(otherEngine.evaluate("functionAddedInThisTest").isFunction());
     BOOST_CHECK_EQUAL(42, otherEngine.evaluate("functionAddedInThisTest()").toNumber());

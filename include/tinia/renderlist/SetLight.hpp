@@ -95,8 +95,8 @@ public:
     SetLight*
     setOrientation( const float* from_world, const float* to_world )
     {
-        std::copy_n( from_world, 16, m_from_world );
-        std::copy_n( to_world, 16, m_to_world );
+        std::copy( from_world, from_world + 16, m_from_world );
+        std::copy( to_world, to_world + 16, m_to_world );
         m_db.taint( this, false );
         return this;
     }
@@ -128,8 +128,8 @@ private:
         m_attenuation[2] = 0.f;
         m_falloff[0] = 3.14f;
         m_falloff[1] = 0.0;
-        std::copy_n( unit, 16, m_from_world );
-        std::copy_n( unit, 16, m_to_world );
+        std::copy( unit, unit + 16, m_from_world );
+        std::copy( unit, unit + 16, m_to_world );
     }
 };
 

@@ -35,7 +35,7 @@ class SpinBox : public QSpinBox, public model::StateListener, public model::Stat
 {
     Q_OBJECT
 public:
-    explicit SpinBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+    explicit SpinBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                      QWidget *parent = 0);
     ~SpinBox();
     void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
@@ -50,7 +50,7 @@ public slots:
 
 private:
     std::string m_key;
-    std::shared_ptr<model::ExposedModel> m_model;
+    boost::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

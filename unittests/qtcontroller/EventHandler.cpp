@@ -20,11 +20,12 @@
 #include <tinia/qtcontroller/scripting/EventHandler.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 #include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
+#include <boost/make_shared.hpp>
 
 BOOST_AUTO_TEST_SUITE(EventHandler)
 
 BOOST_AUTO_TEST_CASE(MethodsCalled) {
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
     model->addElement<int>("moveCalled", 0);
     model->addElement<int>("pressCalled", 0);
     model->addElement<int>("releaseCalled", 0);
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
     engine.evaluate(script);
 
     tinia::qtcontroller::scripting::EventHandler handler("TestEventHandler", "key", model, engine);
@@ -96,7 +97,7 @@ BOOST_AUTO_TEST_CASE(MethodsCalled) {
 }
 
 BOOST_AUTO_TEST_CASE(EventObject) {
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
 
     QString script =
             "moveX = -1;\n"
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(EventObject) {
             "       releaseY = event.relativeY;\n"
             "   }\n"
             "}\n";
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(EventObject) {
 }
 
 BOOST_AUTO_TEST_CASE(ButtonsTest) {
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
 
     QString script =
             "buttonMove = -2;\n"
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 
@@ -233,7 +234,7 @@ BOOST_AUTO_TEST_CASE(ButtonsTest) {
 }
 
 BOOST_AUTO_TEST_CASE(Modifiers) {
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
 
     QString script =
             "alt = false;\n"
@@ -248,7 +249,7 @@ BOOST_AUTO_TEST_CASE(Modifiers) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE(KeyTest) {
             "    key = params.key;\n"
             "}\n";
     QScriptEngine engine;
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
     engine.evaluate(script);
 
     tinia::qtcontroller::scripting::EventHandler handler("KeyTest", "KeyFromTest", model, engine);
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE(MapTest) {
             "    keyMap = params.key;\n"
             "}\n";
     QScriptEngine engine;
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
     engine.evaluate(script);
 
     std::map<std::string, std::string> params;
@@ -363,7 +364,7 @@ BOOST_AUTO_TEST_CASE(MapTest) {
 }
 
 BOOST_AUTO_TEST_CASE(KeyPressEventTest) {
-    auto model = std::make_shared<tinia::model::ExposedModel>();
+    boost::shared_ptr<tinia::model::ExposedModel> model = boost::make_shared<tinia::model::ExposedModel>();
 
     QString script =
             "key = 0\n"
@@ -374,7 +375,7 @@ BOOST_AUTO_TEST_CASE(KeyPressEventTest) {
             "   }\n"
             "}\n";
 
-    auto& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
+    QScriptEngine& engine = tinia::qtcontroller::scripting::scriptEngineInstance();
 
     engine.evaluate(script);
 

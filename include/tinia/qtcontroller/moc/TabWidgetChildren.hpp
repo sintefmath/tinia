@@ -32,7 +32,7 @@ class TabWidgetChildren : public QWidget, public model::StateSchemaListener
     Q_OBJECT
 public:
     explicit TabWidgetChildren(std::string key,
-                               std::shared_ptr<model::ExposedModel> model,
+                               boost::shared_ptr<model::ExposedModel> model,
                                QTabWidget *parent = 0);
    void stateSchemaElementAdded(model::StateSchemaElement *stateSchemaElement) {}
    void stateSchemaElementRemoved(model::StateSchemaElement *stateSchemaElement) {}
@@ -42,7 +42,7 @@ signals:
 
 public slots:
 private:
-      std::shared_ptr<model::ExposedModel> m_model;
+      boost::shared_ptr<model::ExposedModel> m_model;
       std::string m_key;
 
 };

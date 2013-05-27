@@ -29,12 +29,12 @@ namespace xml {
 
 
 xmlNodePtr xpathQuery( xmlDocPtr doc, std::string xpathExpression ) {
-    auto xpathContext = xmlXPathNewContext( doc );
+    xmlXPathContextPtr xpathContext = xmlXPathNewContext( doc );
 
     xmlXPathRegisterNs( xpathContext, BAD_CAST "tns", BAD_CAST "http://cloudviz.sintef.no/V1/model" );
     xmlXPathRegisterNs( xpathContext, BAD_CAST "xsd", BAD_CAST "http://www.w3.org/2001/XMLSchema" );
 
-    auto xpathObject = xmlXPathEvalExpression( (xmlChar*)( xpathExpression.c_str() ), xpathContext );
+    xmlXPathObjectPtr xpathObject = xmlXPathEvalExpression( (xmlChar*)( xpathExpression.c_str() ), xpathContext );
 
     xmlNodePtr retval = 0;
 

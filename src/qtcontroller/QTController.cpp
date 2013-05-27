@@ -92,7 +92,7 @@ void QTController::setupServerController() {
 
     // Set up toolbar
     m_toolBar = new QToolBar(m_main_window.get());
-    auto action = m_toolBar->addAction("Run server (http://localhost:8080/index.html)", m_serverController,
+    QAction* action = m_toolBar->addAction("Run server (http://localhost:8080/index.html)", m_serverController,
                                        SLOT(startServer(bool)));
     action->setCheckable(true);
 
@@ -162,7 +162,7 @@ void QTController::initScript()
     scripting::addDefaultScripts(scripting::scriptEngineInstance());
     for(size_t i = 0; i < m_scriptsToParse.size(); ++i) {
 
-        auto error = scripting::scriptEngineInstance().evaluate(QString(m_scriptsToParse[i].c_str()));
+        QScriptValue error = scripting::scriptEngineInstance().evaluate(QString(m_scriptsToParse[i].c_str()));
         if(error.isError()) {
             throw std::runtime_error("Error parsing script: "
                                      + error.toString().toStdString()

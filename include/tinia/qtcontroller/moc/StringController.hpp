@@ -38,7 +38,7 @@ class StringController
 public:
     explicit
     StringController( QWidget*                               widget,
-                      std::shared_ptr<model::ExposedModel>  model,
+                      boost::shared_ptr<model::ExposedModel>  model,
                       const std::string&                     key,
                       const bool                             show_value,
                       const QString&                         suffix = "" );
@@ -58,7 +58,7 @@ public slots:
     textChangeFromQt( const QString& text );
 
 private:
-    std::shared_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<model::ExposedModel>   m_model;
     const std::string                       m_key;
     const bool                              m_show_value;
     std::string                             m_current_value;

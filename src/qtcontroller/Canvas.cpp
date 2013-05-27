@@ -20,7 +20,6 @@
 #include <iostream>
 #include "glm/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
-#include <array>
 #include <tinia/jobcontroller/OpenGLJob.hpp>
 #include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
 
@@ -32,7 +31,7 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
                 std::string                             key,
                 const tinia::model::gui::ScriptArgument& viewerType,
                 const std::vector<tinia::model::gui::ScriptArgument>& scripts,
-                std::shared_ptr<model::ExposedModel>   model,
+                boost::shared_ptr<model::ExposedModel>   model,
                 QWidget*                                parent,
                 QGLWidget*                              share_widget,
                 bool                                    perf_mode)
@@ -51,12 +50,12 @@ Canvas::Canvas( jobcontroller::OpenGLJob*                 openglJob,
       m_renderlist_db( NULL ),
       m_renderlist_renderer( NULL )
 {
-    m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(viewerType.className(),
+    m_eventHandlers.push_back(boost::shared_ptr<scripting::EventHandler>(new scripting::EventHandler(viewerType.className(),
                                                                                                    viewerType.parameters(),
                                                                                                    model,
                                                                                                    scripting::scriptEngineInstance())));
     for(size_t i = 0; i < scripts.size(); ++i) {
-        m_eventHandlers.push_back(std::unique_ptr<scripting::EventHandler>(new scripting::EventHandler(scripts[i].className(),
+        m_eventHandlers.push_back(boost::shared_ptr<scripting::EventHandler>(new scripting::EventHandler(scripts[i].className(),
                                                                                                        scripts[i].parameters(),
                                                                                                        model,
                                                                                                        scripting::scriptEngineInstance())));

@@ -32,7 +32,7 @@ class ElementGroup : public QGroupBox, public model::StateListener
     Q_OBJECT
 public:
     explicit ElementGroup(std::string key, bool showLabel,
-                          std::shared_ptr<model::ExposedModel> model,
+                          boost::shared_ptr<model::ExposedModel> model,
                           QWidget *parent = 0);
    ~ElementGroup();
    void stateElementModified(model::StateElement *stateElement);
@@ -43,7 +43,7 @@ public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 };
 
 }

@@ -30,7 +30,7 @@ ScriptMouseEvent::ScriptMouseEvent(const QMouseEvent& event, QObject *parent) :
 
 int ScriptMouseEvent::button()
 {
-    auto b = m_event.button();
+    Qt::MouseButton b = m_event.button();
     if(b == Qt::LeftButton ) {
         return 0;
     }

@@ -18,8 +18,9 @@
 
 #pragma once
 #include <string>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 #include "tinia/model/ExposedModel.hpp"
+
 namespace tinia {
 namespace model {
 namespace impl {
@@ -28,14 +29,14 @@ namespace xml {
 class ElementHandler
 {
 public:
-   ElementHandler(std::shared_ptr<model::ExposedModel> model);
+   ElementHandler(boost::shared_ptr<model::ExposedModel> model);
    void updateElementFromString(const std::string& key,
                                 const std::string& stringValue);
    void updateElementFromPTree(const std::string& key,
                                const model::StringStringPTree& tree);
 
 private:
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

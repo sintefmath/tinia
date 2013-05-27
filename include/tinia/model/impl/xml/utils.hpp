@@ -19,9 +19,12 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
-#include <libxml/tree.h>
 #include <boost/property_tree/ptree.hpp>
+#endif
+#include <libxml/tree.h>
 #include <iostream>
 
 
@@ -52,7 +55,7 @@ void getXmlPropAsType( xmlNodePtr node, std::string property, T& t ) {
         throw std::runtime_error( "Node is missing property:" + property );
     }
 
-    auto propValue = xmlGetProp( node, BAD_CAST property.c_str() );
+    xmlChar* propValue = xmlGetProp( node, BAD_CAST property.c_str() );
     xmlCharToType( propValue, t );
 
     xmlFree( propValue );
@@ -61,7 +64,7 @@ void getXmlPropAsType( xmlNodePtr node, std::string property, T& t ) {
 /** Get the contents of a node converted to a type. */
 template<class T>
 void getXmlNodeContentAsType( xmlNodePtr node, T& t ) {
-    auto content = xmlNodeGetContent( node );
+    xmlChar* content = xmlNodeGetContent( node );
     xmlCharToType( content, t );
     xmlFree( content );
 }
@@ -69,13 +72,13 @@ void getXmlNodeContentAsType( xmlNodePtr node, T& t ) {
 template<typename U>
 void print0(const boost::property_tree::basic_ptree<std::string, U> &pt, const int level) {
     //boost::property_tree::basic_ptree::const_iterator end = pt.end();
-    auto end = pt.end();
+    typename boost::property_tree::basic_ptree<std::string, U>::const_iterator end = pt.end();
     //boost::property_tree::basic_ptree<T, U>::const_iterator it = pt.begin();
     auto it = pt.begin();
     for ( ; it != end; ++it) {
         for (int i=0; i<level; i++)
             std::cout << " ";
-        auto val = it->second;
+        U val = it->second;
         std::string valstr = "qwqw";
         //std::string valstr = it->second.get_value<std::string>();
         std::cout << it->first << ": " << valstr << std::endl;

@@ -17,6 +17,7 @@
  */
 
 #include <tinia/renderlist/SetUniforms.hpp>
+#include <algorithm>
 
 namespace tinia {
 namespace renderlist {
@@ -147,7 +148,7 @@ SetUniforms::setFloat1v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT;
     u.m_type = UNIFORM_FLOAT;
-    std::copy_n( v, 1, u.m_payload.m_float );
+    std::copy( v, v + 1, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }
@@ -158,7 +159,7 @@ SetUniforms::setFloat2v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT2;
     u.m_type = UNIFORM_FLOAT2;
-    std::copy_n( v, 2, u.m_payload.m_float );
+	std::copy( v, v+2, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }
@@ -169,7 +170,7 @@ SetUniforms::setFloat3v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT3;
     u.m_type = UNIFORM_FLOAT3;
-    std::copy_n( v, 3, u.m_payload.m_float );
+    std::copy( v, v + 3, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }
@@ -193,7 +194,7 @@ SetUniforms::setFloat4v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT4;
     u.m_type = UNIFORM_FLOAT4;
-    std::copy_n( v, 4, u.m_payload.m_float );
+    std::copy( v, v + 4, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }
@@ -204,7 +205,7 @@ SetUniforms::setFloat3x3v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT3X3;
     u.m_type = UNIFORM_FLOAT3X3;
-    std::copy_n( v, 9, u.m_payload.m_float );
+    std::copy( v, v + 9, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }
@@ -215,7 +216,7 @@ SetUniforms::setFloat4x4v( const std::string& symbol, const float *v )
     Uniform& u = m_uniforms[ findOrAddUniform( symbol ) ];
     bool rethink = u.m_type != UNIFORM_FLOAT4X4;
     u.m_type = UNIFORM_FLOAT4X4;
-    std::copy_n( v, 16, u.m_payload.m_float );
+    std::copy( v, v + 16, u.m_payload.m_float );
     m_db.taint( this, rethink );
     return this;
 }

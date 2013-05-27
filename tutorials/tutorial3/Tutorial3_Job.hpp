@@ -32,7 +32,7 @@ class Tutorial3Listener : public tinia::model::StateListener {
 public:
     // We need the model to update the boundingbox
     /**[listenerctor]*/
-    Tutorial3Listener(std::shared_ptr<tinia::model::ExposedModel> model)
+    Tutorial3Listener(boost::shared_ptr<tinia::model::ExposedModel> model)
         : m_model(model)
     {
         /**[listenerctor]*/
@@ -67,7 +67,7 @@ public:
      /** [stateelementmodified]*/
 
 private:
-    std::shared_ptr<tinia::model::ExposedModel> m_model;
+    boost::shared_ptr<tinia::model::ExposedModel> m_model;
 };
 /** [listener] */
 
@@ -84,7 +84,7 @@ public:
                       const size_t height );
 private:
     /** [mlistener] */
-    std::unique_ptr<Tutorial3Listener> m_listener;
+    boost::scoped_ptr<Tutorial3Listener> m_listener;
     /** [mlistener] */
 };
 /** [class]*/
@@ -108,17 +108,17 @@ Tutorial3Job::Tutorial3Job()
     /** [annotation] */
 
     /** [label] */
-    auto label1 = new tinia::model::gui::Label("s1");
-    auto label2 = new tinia::model::gui::Label("s2");
-    auto label3 = new tinia::model::gui::Label("s3");
+    tinia::model::gui::Label* label1 = new tinia::model::gui::Label("s1");
+    tinia::model::gui::Label* label2 = new tinia::model::gui::Label("s2");
+    tinia::model::gui::Label* label3 = new tinia::model::gui::Label("s3");
     /** [label] */
 
     /** [layout] */
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     /** [layout] */
 
     /** [canvas] */
-    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
     /** [canvas] */
 
     /** [boundingbox] */
@@ -130,13 +130,13 @@ Tutorial3Job::Tutorial3Job()
     /** [add] */
 
     /**[slider]*/
-    auto slider1 = new tinia::model::gui::HorizontalSlider("s1");
-    auto slider2 = new tinia::model::gui::HorizontalSlider("s2");
-    auto slider3 = new tinia::model::gui::HorizontalSlider("s3");
+    tinia::model::gui::HorizontalSlider* slider1 = new tinia::model::gui::HorizontalSlider("s1");
+    tinia::model::gui::HorizontalSlider* slider2 = new tinia::model::gui::HorizontalSlider("s2");
+    tinia::model::gui::HorizontalSlider* slider3 = new tinia::model::gui::HorizontalSlider("s3");
     /**[slider]*/
 
     /** [grid] */
-    auto grid = new tinia::model::gui::Grid(3, 3);
+    tinia::model::gui::Grid* grid = new tinia::model::gui::Grid(3, 3);
     grid->setChild(0, 0, label1);
     grid->setChild(0, 1, slider1);
     grid->setChild(0, 2, new tinia::model::gui::HorizontalExpandingSpace());

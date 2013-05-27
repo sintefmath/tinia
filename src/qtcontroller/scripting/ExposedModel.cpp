@@ -22,7 +22,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace scripting {
 
-ExposedModel::ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
+ExposedModel::ExposedModel(boost::shared_ptr<tinia::model::ExposedModel> model,
                            QScriptEngine *engine,
                            QObject *parent)
     : QObject(parent), m_engine(engine), m_model(model)
@@ -45,8 +45,8 @@ void ExposedModel::stateElementModified(model::StateElement *stateElement)
 
 void ExposedModel::updateElement(const QString &key, QScriptValue value)
 {
-    auto schemaElement = m_model->getStateSchemaElement(key.toStdString());
-    auto type = schemaElement.getXSDType();
+    tinia::model::StateSchemaElement schemaElement = m_model->getStateSchemaElement(key.toStdString());
+    std::string type = schemaElement.getXSDType();
 
     if(type.find("xsd:") != std::string::npos) {
         type = type.substr(4);
@@ -74,8 +74,8 @@ void ExposedModel::updateElement(const QString &key, QScriptValue value)
 
 QScriptValue ExposedModel::getElementValue(const QString &key)
 {
-    auto schemaElement = m_model->getStateSchemaElement(key.toStdString());
-    auto type = schemaElement.getXSDType();
+    tinia::model::StateSchemaElement schemaElement = m_model->getStateSchemaElement(key.toStdString());
+    std::string type = schemaElement.getXSDType();
     if(type.find("xsd:") != std::string::npos) {
         type = type.substr(4);
     }
@@ -101,7 +101,7 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
         return QScriptValue(QString(value.c_str()));
     }
     if (type == std::string("complexType")) {
-        auto v = new Viewer(m_engine);
+        Viewer* v = new Viewer(m_engine);
         m_model->getElementValue(key.toStdString(), v->viewer());
         return m_engine->newQObject(v);
     }
@@ -114,9 +114,9 @@ void ExposedModel::addLocalListener(const QString &key, QScriptValue function)
 }
 
 void ExposedModel::notifyListeners(QString key) {
-    auto listenersFound = m_listeners.find(key.toStdString());
+    std::map<std::string, std::vector<QScriptValue> >::iterator listenersFound = m_listeners.find(key.toStdString());
     if(listenersFound != m_listeners.end()) {
-        auto& listeners = listenersFound->second;
+        std::vector<QScriptValue>& listeners = listenersFound->second;
         for(size_t i = 0; i < listeners.size(); ++i) {
             listeners[i].call(QScriptValue(), QScriptValueList()
                               << key

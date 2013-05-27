@@ -18,7 +18,10 @@
 
 #pragma once
 #include "tinia/model/ExposedModel.hpp"
-#include <memory>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
+#include <boost/shared_ptr.hpp>
+#endif
 
 namespace tinia {
 namespace jobcontroller {
@@ -48,10 +51,10 @@ public:
 
    void quit();
 
-   virtual std::shared_ptr<model::ExposedModel> getExposedModel();
+   virtual boost::shared_ptr<model::ExposedModel> getExposedModel();
 
 protected:
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 };
 }
 }

@@ -23,7 +23,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-Button::Button(std::string key, std::shared_ptr<model::ExposedModel> model,
+Button::Button(std::string key, boost::shared_ptr<model::ExposedModel> model,
                QWidget *parent) :
    QPushButton(parent), m_key(key), m_model(model)
 {

@@ -50,7 +50,7 @@ using namespace tinia::qtcontroller::impl;
 namespace tinia {
 namespace qtcontroller {
 
-GUIBuilder::GUIBuilder( std::shared_ptr<model::ExposedModel>   model,
+GUIBuilder::GUIBuilder( boost::shared_ptr<model::ExposedModel>   model,
                         jobcontroller::Job*                       job,
                         QTController*                             controller,
                         const bool                              perf_mode,
@@ -202,8 +202,8 @@ QWidget* GUIBuilder::buildGUI(model::gui::Element* root, QWidget *parent )
 
 void GUIBuilder::addScript(const std::string &script)
 {
-    auto& engine = scripting::scriptEngineInstance();
-    auto error = engine.evaluate(QString(script.c_str()));
+    QScriptEngine& engine = scripting::scriptEngineInstance();
+    QScriptValue error = engine.evaluate(QString(script.c_str()));
     if(error.isError()) {
         throw std::runtime_error("Error in JavaScript code: "
                                  + error.toString().toStdString());

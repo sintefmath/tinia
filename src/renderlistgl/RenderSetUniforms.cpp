@@ -60,25 +60,25 @@ RenderSetUniforms::pull( const SetUniforms* a )
             case UNIFORM_SEMANTIC:
                 break;
             case UNIFORM_INT:
-                std::copy_n( a->intData(i), 1, u.m_payload.m_int );
+                std::copy( a->intData(i), a->intData(i) + 1, u.m_payload.m_int );
                 break;
             case UNIFORM_FLOAT:
-                std::copy_n( a->floatData(i), 1, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 1, u.m_payload.m_float );
                 break;
             case UNIFORM_FLOAT2:
-                std::copy_n( a->floatData(i), 2, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 2, u.m_payload.m_float );
                 break;
             case UNIFORM_FLOAT3:
-                std::copy_n( a->floatData(i), 3, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 3, u.m_payload.m_float );
                 break;
             case UNIFORM_FLOAT4:
-                std::copy_n( a->floatData(i), 4, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 4, u.m_payload.m_float );
                 break;
             case UNIFORM_FLOAT3X3:
-                std::copy_n( a->floatData(i), 9, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 9, u.m_payload.m_float );
                 break;
             case UNIFORM_FLOAT4X4:
-                std::copy_n( a->floatData(i), 16, u.m_payload.m_float );
+                std::copy( a->floatData(i), a->floatData(i) + 16, u.m_payload.m_float );
                 break;
             }
         }

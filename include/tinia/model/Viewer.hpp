@@ -17,8 +17,10 @@
  */
 
 #pragma once
-
-#include <array>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
+#include <boost/array.hpp>
+#endif
 #include <algorithm>
 
 namespace tinia {
@@ -47,10 +49,10 @@ struct Viewer {
     }
 
     /** Pointer to a projectionMatrix, assumed to hold 16 continious float values. */
-    std::array<float, 16> projectionMatrix;
+    boost::array<float, 16> projectionMatrix;
 
     /** Pointer to a modelviewMatrix, assumed to hold 16 continious float values. */
-    std::array<float, 16> modelviewMatrix;
+	boost::array<float, 16> modelviewMatrix;
 
     int width;
     int height;

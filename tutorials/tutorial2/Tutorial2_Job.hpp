@@ -45,11 +45,11 @@ Tutorial2Job::Tutorial2Job()
     m_model->addElement("boundingbox", "0 0 0 1 1 1");
 
     /** [layout] */
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     /** [layout] */
 
     /** [canvas] */
-    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
     /** [canvas] */
 
     /** [boundingbox] */

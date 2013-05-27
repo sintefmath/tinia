@@ -31,7 +31,7 @@ class CheckBox : public QCheckBox, public model::StateListener
 {
     Q_OBJECT
 public:
-    explicit CheckBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+    explicit CheckBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                       QWidget *parent = 0);
    ~CheckBox();
 
@@ -46,7 +46,7 @@ public slots:
 
 private:
    std::string m_key;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
 
 };
 

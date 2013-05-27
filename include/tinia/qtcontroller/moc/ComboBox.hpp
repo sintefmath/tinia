@@ -34,7 +34,7 @@ class ComboBox : public QComboBox, public model::StateListener,
 {
     Q_OBJECT
 public:
-    explicit ComboBox(std::string key, std::shared_ptr<model::ExposedModel> model,
+    explicit ComboBox(std::string key, boost::shared_ptr<model::ExposedModel> model,
                       QWidget *parent = 0);
    ~ComboBox();
 
@@ -55,7 +55,7 @@ private slots:
    void activatedChanged(QString value);
 private:
    QStringList m_options;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
 };
 
