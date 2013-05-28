@@ -16,7 +16,6 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_AUTO_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 #include <typeinfo>
 #include <tinia/renderlist/DataBase.hpp>

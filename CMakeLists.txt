@@ -163,6 +163,9 @@ IF( Tinia_BUILD_UNIT_TESTS )
   IF(${Tinia_DESKTOP})
     ADD_SUBDIRECTORY( "unittests/qtcontroller/" )
   ENDIF()
+  IF( ${LIBXML2_FOUND} AND ${Tinia_DESKTOP} )
+    ADD_SUBDIRECTORY( "unittests/combined/" )
+  ENDIF()
 ENDIF()
 
 # Examples
