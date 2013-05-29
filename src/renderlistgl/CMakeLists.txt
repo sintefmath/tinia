@@ -1,7 +1,7 @@
 FILE( GLOB renderlistgl_SRC "*.cpp" )
 FILE( GLOB renderlistgl_HEADERS "../../include/tinia/renderlist/gl/*.hpp" )
-ADD_LIBRARY( renderlistgl STATIC ${renderlistgl_SRC} ${renderlistgl_HEADERS} )
-TARGET_LINK_LIBRARIES( renderlistgl
+ADD_LIBRARY( tinia_renderlistgl STATIC ${renderlistgl_SRC} ${renderlistgl_HEADERS} )
+TARGET_LINK_LIBRARIES( tinia_renderlistgl
                       ${GLEW_LIBRARY}
                       ${OPENGL_LIBRARIES} )
 
@@ -17,7 +17,7 @@ TARGET_LINK_LIBRARIES( renderlistgl
     COMPONENT renderlistgl_dev)
 
   install( TARGETS  
-    renderlistgl LIBRARY
+    tinia_renderlistgl LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT renderlistgl)

@@ -10,9 +10,9 @@ IF(NOT WIN32)
 ENDIF()
 
 IF(NOT WIN32)
-  OPTION( Tinia_SERVER "Build mod_trell and related components?" ON)
+  OPTION( Tinia_SERVER "Build mod_tinia_trell and related components?" ON)
 ELSE()
-  OPTION( Tinia_SERVER "Build mod_trell and related components?" OFF)
+  OPTION( Tinia_SERVER "Build mod_tinia_trell and related components?" OFF)
 ENDIF()
 
 OPTION( Tinia_DESKTOP "Build qtcontroller?" ON )
@@ -53,7 +53,7 @@ IF(MSVC10)
 ENDIF()
 
 
-# We don't need XML support on Windows (only needed for mod_trell...)
+# We don't need XML support on Windows (only needed for mod_tinia_trell...)
 IF(Tinia_SERVER)
     find_package( LibXml2 REQUIRED )
 ELSE()

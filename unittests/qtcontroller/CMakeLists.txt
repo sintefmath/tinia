@@ -14,7 +14,7 @@ ADD_EXECUTABLE( qtcontroller_unittest
   ${qtcontrollerTestHeaders} )
 
 IF(${LIBXML2_FOUND})
-TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES} model modelxml qtcontroller tinia_javascript ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
+TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} ${LIBXML2_LIBRARIES} tinia_model tinia_modelxml tinia_qtcontroller tinia_javascript ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
 ELSE()
-TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} model qtcontroller tinia_javascript ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
+TARGET_LINK_LIBRARIES( qtcontroller_unittest ${Boost_LIBRARIES} tinia_model tinia_qtcontroller tinia_javascript ${QT_LIBRARIES} ${OPENGL_LIBRARIES})
 ENDIF()

@@ -15,4 +15,4 @@ install( TARGETS
     tinia_javascript LIBRARY 
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
-	    COMPONENT qtcontroller)
+        COMPONENT qtcontroller)

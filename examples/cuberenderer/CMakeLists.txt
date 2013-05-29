@@ -7,15 +7,15 @@ IF(${Tinia_DESKTOP})
     )
   TARGET_LINK_LIBRARIES(cube_qt_job
       ${LIBXML2_LIBRARIES} 
-    qtcontroller
-    renderlist
-    renderlistgl
+    tinia_qtcontroller
+    tinia_renderlist
+    tinia_renderlistgl
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
-    model
-    jobcontroller
+    tinia_model
+    tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
 
@@ -44,12 +44,12 @@ IF(${Tinia_SERVER})
     ${OPENGL_LIBRARIES}
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
-    model 
-    modelxml
-    renderlist
-    renderlistgl
-    jobcontroller
-    trell
+    tinia_model
+    tinia_modelxml
+    tinia_renderlist
+    tinia_renderlistgl
+    tinia_jobcontroller
+    tinia_trell
     )
 
     
