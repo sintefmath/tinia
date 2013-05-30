@@ -2,6 +2,12 @@ PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 SET( version_number "0.2.5" )
 
+
+# Tagging debug-libraries
+# Note: If the postfix string is changed, remember also to modify the contents of config/debug/mod_trell.load!
+SET(CMAKE_DEBUG_POSTFIX "d")
+
+
 # Set shared for linux:
 IF(NOT WIN32)
     IF(NOT DEFINED ${BUILD_SHARED_LIBS})

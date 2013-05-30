@@ -21,11 +21,22 @@ INSTALL( TARGETS mod_tinia_trell
   COMPONENT mod_trell
 )
 
+
+INSTALL( FILES ../../config/dbg/mod_trell.load ../../config/mod_trell.conf
+  DESTINATION share/tinia/conf
+  PERMISSIONS WORLD_READ OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+  CONFIGURATIONS Debug
+  COMPONENT mod_trell
+)
+
 INSTALL( FILES ../../config/mod_trell.load ../../config/mod_trell.conf
   DESTINATION share/tinia/conf
   PERMISSIONS WORLD_READ OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ
+  CONFIGURATIONS Release
   COMPONENT mod_trell
 )
+
+
 INSTALL( DIRECTORY "../../js"
   DESTINATION var/trell
   COMPONENT mod_trell
