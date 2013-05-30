@@ -167,7 +167,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
 
     glBindFramebuffer( GL_FRAMEBUFFER, it->second.m_fbo );
     fbo_ = it->second.m_fbo;
-    if( it->second.m_width != width || it->second.m_height != height ) {
+    if( it->second.m_width != int(width) || it->second.m_height != int(height) ) {
 
         std::cerr << "Resizing renderbuffers." << std::endl;
 

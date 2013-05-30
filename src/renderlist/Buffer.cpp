@@ -46,6 +46,7 @@ Buffer::count() const
         return m_payload.size()/sizeof(int);
         break;
     }
+    return 0;
 }
 
 const float*
