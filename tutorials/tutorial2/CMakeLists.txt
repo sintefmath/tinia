@@ -16,7 +16,7 @@ ADD_EXECUTABLE(tutorial2_desktop
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
 
-    jobcontroller
+    tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
 ENDIF()

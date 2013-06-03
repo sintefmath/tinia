@@ -3,7 +3,7 @@ FILE( GLOB jobcontrollerHeaders "../../include/tinia/jobcontroller/*.hpp" )
 
 ADD_LIBRARY( tinia_jobcontroller ${jobcontrollerSrc} ${jobcontrollerHeaders} )
 
-TARGET_LINK_LIBRARIES( tinia_jobcontroller ${Boost_LIBRARIES} model )
+TARGET_LINK_LIBRARIES( tinia_jobcontroller ${Boost_LIBRARIES} tinia_model )
 
 
 # The reason for the development name to be <component>_dev is

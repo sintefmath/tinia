@@ -7,4 +7,4 @@ ADD_EXECUTABLE( jobcontroller_unittest
   ${jobcontrollerTestSrc} 
   ${jobcontrollerTestHeaders} )
 
-TARGET_LINK_LIBRARIES( jobcontroller_unittest ${Boost_LIBRARIES} model jobcontroller)
+TARGET_LINK_LIBRARIES( jobcontroller_unittest ${Boost_LIBRARIES} tinia_model tinia_jobcontroller)
