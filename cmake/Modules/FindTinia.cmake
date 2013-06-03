@@ -14,6 +14,21 @@ ELSE()
     #MESSAGE( "No components" )
 ENDIF()
 
+
+IF(WIN32)
+  SET( Tinia_3RDPARTY_LOC $ENV{TINIA_3RDPARTY} CACHE PATH "Location of Tinia 3rdparty" )
+  SET( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${Tinia_3RDPARTY_LOC}" )
+ENDIF()
+
+
+#message("====================================================================================================")
+#message("This is CMAKE_PREFIX_PATH:")
+#foreach (_bl ${CMAKE_PREFIX_PATH})
+#  message( "${_bl}" )
+#endforeach()
+#message("====================================================================================================")
+
+
 include(FindPackageHandleStandardArgs)
 # Yes, we really DO want to find the libraries Tinia links against, in
 # order to ensure that the user doesn't need to worry about which libraries
@@ -291,3 +306,10 @@ IF( NOT(${LIBXML2_FOUND}) )
 ELSE()
   ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
 ENDIF()
+
+#message("====================================================================================================")
+#message("This is TINIA_LIBRARIES:")
+#foreach (_bl ${TINIA_LIBRARIES})
+#  message( "${_bl}" )
+#endforeach()
+#message("====================================================================================================")
