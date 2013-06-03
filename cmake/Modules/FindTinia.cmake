@@ -75,7 +75,7 @@ FIND_PATH( TINIA_INCLUDE_DIR tinia/model/ExposedModel.hpp
   )
 
 
-FIND_LIBRARY( tinia_RenderList_LIBRARY renderlist
+FIND_LIBRARY( tinia_RenderList_LIBRARY NAMES tinia_renderlist tinia_renderlistd
   "/usr/local/lib/"
   "/work/projects/tinia/"
   "/work/projects/tinia/src/renderlist"
@@ -90,7 +90,7 @@ FIND_LIBRARY( tinia_RenderList_LIBRARY renderlist
   )
 
 
-FIND_LIBRARY( tinia_RenderListGL_LIBRARY renderlistgl
+FIND_LIBRARY( tinia_RenderListGL_LIBRARY NAMES tinia_renderlistgl tinia_renderlistgld
   "/usr/local/lib/"
   "/work/projects/tinia/"
   "/work/projects/tinia/src/renderlistgl/"
@@ -105,7 +105,7 @@ FIND_LIBRARY( tinia_RenderListGL_LIBRARY renderlistgl
   )
 
 
-FIND_LIBRARY( tinia_model_LIBRARY model
+FIND_LIBRARY( tinia_model_LIBRARY NAMES tinia_model tinia_modeld
   "/usr/local/lib/"
   "/work/projects/tinia/"
   "/work/projects/tinia/src/model"
@@ -120,7 +120,7 @@ FIND_LIBRARY( tinia_model_LIBRARY model
   )
 
 
-FIND_LIBRARY( tinia_jobcontroller_LIBRARY jobcontroller
+FIND_LIBRARY( tinia_jobcontroller_LIBRARY NAMES tinia_jobcontroller tinia_jobcontrollerd
  "/usr/local/lib/"
   "/work/projects/tinia/"
   "/work/projects/tinia/src/jobcontroller"
@@ -137,7 +137,7 @@ FIND_LIBRARY( tinia_jobcontroller_LIBRARY jobcontroller
 
 IF( ${Tinia_FIND_DESKTOP} )
 	
-  FIND_LIBRARY( tinia_javascript_LIBRARY tinia_javascript
+  FIND_LIBRARY( tinia_javascript_LIBRARY NAMES tinia_javascript tinia_javascriptd
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/qtcontroller"
@@ -150,7 +150,7 @@ IF( ${Tinia_FIND_DESKTOP} )
     "../tinia/build/"
     "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia/lib"
   )
-  FIND_LIBRARY( tinia_qtcontroller_LIBRARY qtcontroller
+  FIND_LIBRARY( tinia_qtcontroller_LIBRARY NAMES tinia_qtcontroller tinia_qtcontrollerd
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/qtcontroller"
@@ -166,7 +166,7 @@ IF( ${Tinia_FIND_DESKTOP} )
 
 ENDIF()
 
-FIND_LIBRARY( tinia_modelxml_LIBRARY modelxml
+FIND_LIBRARY( tinia_modelxml_LIBRARY NAMES tinia_modelxml tinia_modelxmld
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/modelxml"
@@ -182,7 +182,7 @@ FIND_LIBRARY( tinia_modelxml_LIBRARY modelxml
 
 IF( ${Tinia_FIND_SERVER} )
 
-  FIND_LIBRARY( tinia_trell_LIBRARY trell
+  FIND_LIBRARY( tinia_trell_LIBRARY NAMES tinia_trell tinia_trelld
     "/usr/local/lib/"
     "/work/projects/tinia/"
     "/work/projects/tinia/src/trell"
@@ -236,7 +236,8 @@ SET(TINIA_INCLUDE_DIRS
   ${TINIA_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS} )
+  ${Boost_INCLUDE_DIRS}
+)
 
 
 SET(TINIA_LIBRARIES
@@ -247,7 +248,7 @@ SET(TINIA_LIBRARIES
   ${OPENGL_LIBRARIES}
   ${tinia_RenderList_LIBRARY}
   ${tinia_RenderListGL_LIBRARY}
-)
+  )
 
 IF(${Tinia_FIND_DESKTOP} )
   SET(TINIA_LIBRARIES
@@ -258,20 +259,20 @@ IF(${Tinia_FIND_DESKTOP} )
     ${LIBXML2_LIBRARIES}
     ${tinia_modelxml_LIBRARY}
     #${tinia_javascript_LIBRARY}
-    )
+  )
 
   SET(TINIA_INCLUDE_DIRS
     ${TINIA_INCLUDE_DIRS}
     ${QT_INCLUDE_DIR}
     ${QT_QTOPENGL_INCLUDE_DIR}
     ${LIBXML2_INCLUDE_DIR}
-    )
+  )
 ENDIF()
 
 IF(${Tinia_FIND_SERVER})
   SET(TINIA_LIBRARIES
     ${TINIA_LIBRARIES}
- #   ${tinia_modelxml_LIBRARY}
+    #   ${tinia_modelxml_LIBRARY}
     ${tinia_trell_LIBRARY}
     ${RT}
     ${LIB_APR}
@@ -288,5 +289,5 @@ ENDIF()
 IF( NOT(${LIBXML2_FOUND}) )
   MESSAGE( "LibXml2 not found. \nYou can still build desktop projects, but loose the ability to use job as web-application or take it with you" )
 ELSE()
-    ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
+  ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
 ENDIF()
