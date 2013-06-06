@@ -32,44 +32,39 @@ ENDIF()
 
 
 
-message("====================================================================================================")
-message("JENKINS_URL:")
-message("${JENKINS_URL}")
-if ( JENKINS_URL )
-  message("yes")
-else()
-  message("no")
-endif()
-message("JENKINS_ON_GATES:")
-message("${JENKINS_ON_GATES}")
-if ( JENKINS_ON_GATES )
-  message("yes")
-else()
-  message("no")
-endif()
-message("====================================================================================================")
-
 IF(WIN32)
   ADD_DEFINITIONS( -DBOOST_ALL_NO_LIB )
   ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
   ADD_DEFINITIONS( -D_CRT_SECURE_NO_WARNINGS )
   if( JENKINS_ON_GATES )
     message("====================================================================================================")
-    message("ENV HOME:")
-    message("$ENV{HOME}")
-    set( CMAKE_INSTALL_PREFIX "$ENV{HOME}/workspace/tinia" CACHE PATH "Path to install tinia")
+    message("going to install stuff on jenkins on gates")
+
+    set( CMAKE_INSTALL_PREFIX "../tinia-install" CACHE PATH "Path to install tinia")
     message("CMAKE_INSTALL_PREFIX:")
     message("${CMAKE_INSTALL_PREFIX}")
-    set( CMAKE_INSTALL_PREFIX "/d/shared-data/jenkins/workspace/tinia-install-jenkins" CACHE PATH "Path to install tinia") # Is this path available in some CMake or ENV variable?!
-    message("CMAKE_INSTALL_PREFIX:")
-    message("${CMAKE_INSTALL_PREFIX}")
+
+    message("CMAKE_MODULE_PATH:")
+    message("${CMAKE_MODULE_PATH}")
+
     message("====================================================================================================")
   else()
     SET( CMAKE_INSTALL_PREFIX "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia" CACHE PATH "Path to install tinia")
   endif()
   SET( Tinia_3RDPARTY_LOC $ENV{TINIA_3RDPARTY} CACHE PATH "Location of Tinia 3rdparty" )
-  SET(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}
-	"${Tinia_3RDPARTY_LOC}" )
+  SET( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${Tinia_3RDPARTY_LOC}" )
+
+  message("====================================================================================================")
+  message("do we find the 3rd party stuff?")
+
+  message("CMAKE_PREFIX_PATH:")
+  message("${CMAKE_PREFIX_PATH}")
+
+  message("Tinia_3RDPARTY_LOC:")
+  message("${Tinia_3RDPARTY_LOC}")
+
+  message("====================================================================================================")
+
 ENDIF()
 
 
