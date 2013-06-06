@@ -61,7 +61,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
 ENDIF()
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
-        #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
+        SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
 	#CAREFUL, this will append the above string for each time CMAKE is run!
 ENDIF()
 
