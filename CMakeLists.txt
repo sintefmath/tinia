@@ -55,15 +55,18 @@ IF(WIN32)
   SET( Tinia_3RDPARTY_LOC $ENV{TINIA_3RDPARTY} CACHE PATH "Location of Tinia 3rdparty" )
   SET( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${Tinia_3RDPARTY_LOC}" )
 
+  #message("====================================================================================================")
+  #message("do we find the 3rd party stuff?")
+  # No, on Windows it is supplied through the path variable. So the two set-statements above are probably useless?!
+  #message("CMAKE_PREFIX_PATH:")
+  #message("${CMAKE_PREFIX_PATH}")
+  #message("Tinia_3RDPARTY_LOC:")
+  #message("${Tinia_3RDPARTY_LOC}")
+  #message("====================================================================================================")
+
   message("====================================================================================================")
-  message("do we find the 3rd party stuff?")
-
-  message("CMAKE_PREFIX_PATH:")
-  message("${CMAKE_PREFIX_PATH}")
-
-  message("Tinia_3RDPARTY_LOC:")
-  message("${Tinia_3RDPARTY_LOC}")
-
+  message("CMAKE_MODULE_PATH:")
+  message("${CMAKE_MODULE_PATH}")
   message("====================================================================================================")
 
 ENDIF()
