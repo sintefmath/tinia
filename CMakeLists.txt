@@ -40,7 +40,8 @@ IF(WIN32)
     message("====================================================================================================")
     message("going to install stuff on jenkins on gates")
 
-    set( CMAKE_INSTALL_PREFIX "../tinia-install" CACHE PATH "Path to install tinia")
+#    set( CMAKE_INSTALL_PREFIX "../tinia-install" CACHE PATH "Path to install tinia")
+    set( CMAKE_INSTALL_PREFIX "../tinia-install" )
     message("CMAKE_INSTALL_PREFIX:")
     message("${CMAKE_INSTALL_PREFIX}")
 
