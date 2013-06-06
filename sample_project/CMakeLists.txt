@@ -3,6 +3,44 @@ cmake_minimum_required(VERSION 2.8)
 # Set this to where you have your FindTinia.cmake.
 SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/Modules")
 
+
+
+
+if( JENKINS_ON_GATES )
+  message("====================================================================================================")
+  message("CMAKE_MODULE_PATH:")
+  message("${CMAKE_MODULE_PATH}")
+  
+  SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/Modules")
+
+  message("CMAKE_MODULE_PATH:")
+  message("${CMAKE_MODULE_PATH}")
+  message("====================================================================================================")
+  
+  message("====================================================================================================")
+  message("Tinia_3RDPARTY_LOC:")
+  message("${Tinia_3RDPARTY_LOC}")
+
+  set( Tinia_3RDPARTY_LOC "/d/shared-data/tinia/tinia_3rdparty" )
+
+  message("Tinia_3RDPARTY_LOC:")
+  message("${Tinia_3RDPARTY_LOC}")
+  message("====================================================================================================")
+
+  message("====================================================================================================")
+  message("CMAKE_PREFIX_PATH:")
+  message("${CMAKE_PREFIX_PATH}")
+
+  set( CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/../../tinia-install" )
+
+  message("CMAKE_PREFIX_PATH:")
+  message("${CMAKE_PREFIX_PATH}")
+  message("====================================================================================================")
+
+endif()
+
+
+
 # It's smart to have different options for building a server of dekstop version
 IF(NOT WIN32)
        OPTION(SERVER "Build server version?" ON)
