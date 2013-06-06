@@ -32,6 +32,16 @@ ENDIF()
 
 
 
+message("====================================================================================================")
+message("JENKINS_URL:")
+message("${JENKINS_URL}")
+if ( JENKINS_URL )
+  message("yes")
+else()
+  message("no")
+endif()
+message("====================================================================================================")
+
 IF(WIN32)
   ADD_DEFINITIONS( -DBOOST_ALL_NO_LIB )
   ADD_DEFINITIONS( -D_SCL_SECURE_NO_WARNINGS )
