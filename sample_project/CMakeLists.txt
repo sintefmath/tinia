@@ -31,7 +31,7 @@ if( JENKINS_ON_GATES )
   message("CMAKE_PREFIX_PATH:")
   message("${CMAKE_PREFIX_PATH}")
 
-  set( CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH} ${CMAKE_SOURCE_DIR}/../../tinia-install" )
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/../../tinia-install" )
 
   message("CMAKE_PREFIX_PATH:")
   message("${CMAKE_PREFIX_PATH}")
@@ -41,7 +41,7 @@ if( JENKINS_ON_GATES )
   message("CMAKE_PREFIX_PATH:")
   message("${CMAKE_PREFIX_PATH}")
 
-  set( CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH} ${Tinia_3RDPARTY_LOC}/lib" "${Tinia_3RDPARTY_LOC}" )
+  list(APPEND CMAKE_PREFIX_PATH "${Tinia_3RDPARTY_LOC}/lib" "${Tinia_3RDPARTY_LOC}" )
 
   message("CMAKE_PREFIX_PATH:")
   message("${CMAKE_PREFIX_PATH}")
