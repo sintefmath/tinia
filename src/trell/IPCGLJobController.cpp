@@ -28,8 +28,27 @@ IPCGLJobController::IPCGLJobController(bool is_master)
     : IPCJobController( is_master ),
       m_openGLJob( NULL ),
       m_display( NULL ),
-      m_context( NULL )
+      m_context( NULL ),
+      m_framebuffer_configs( NULL ),
+      m_pbuffer_width(1),
+      m_pbuffer_height(1)
 {
+}
+
+void 
+IPCGLJobController::resizePbuffer()
+{
+ int pbuffer_attribs[] = {
+        GLX_PBUFFER_WIDTH, m_pbuffer_width,
+        GLX_PBUFFER_HEIGHT, m_pbuffer_height,
+        GLX_LARGEST_PBUFFER, GL_FALSE,
+        GLX_PRESERVED_CONTENTS, GL_TRUE,
+        None
+    };
+    m_pbuffer = glXCreatePbuffer( m_display,
+                                  m_framebuffer_configs[0],
+                                  pbuffer_attribs );
+    
 }
 
 bool
@@ -52,34 +71,25 @@ IPCGLJobController::init( const std::string& xml )
         None
     };
     int framebuffer_configs_N;
-    GLXFBConfig* framebuffer_configs = glXChooseFBConfig( m_display,
+    m_framebuffer_configs = glXChooseFBConfig( m_display,
                                                           DefaultScreen( m_display),
                                                           framebufffer_attribs,
                                                           &framebuffer_configs_N );
-    if( (framebuffer_configs == NULL) || (framebuffer_configs_N == 0 ) ) {
+    if( (m_framebuffer_configs == NULL) || (framebuffer_configs_N == 0 ) ) {
         std::cerr << "Failed to find suitable framebuffer configs." << std::endl;
         return false;
     }
 
-    int pbuffer_attribs[] = {
-        GLX_PBUFFER_WIDTH, 500,
-        GLX_PBUFFER_HEIGHT, 500,
-        GLX_LARGEST_PBUFFER, GL_FALSE,
-        GLX_PRESERVED_CONTENTS, GL_TRUE,
-        None
-    };
-    m_pbuffer = glXCreatePbuffer( m_display,
-                                  framebuffer_configs[0],
-                                  pbuffer_attribs );
+    resizePbuffer();
     // FIXME: How to check for errors? Aren't these sent as events?
     m_context = glXCreateNewContext( m_display,
-                                     framebuffer_configs[0],
+                                     m_framebuffer_configs[0],
                                      GLX_RGBA_TYPE,
                                      NULL,
                                      GL_TRUE );
     if( m_context == NULL ) {
         std::cerr << "Failed to create context." << std::endl;
-        XFree( framebuffer_configs );
+        XFree( m_framebuffer_configs );
         return false;
     }
     glXMakeCurrent( m_display, m_pbuffer, m_context );
@@ -139,6 +149,16 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                  const std::string&  key )
 {
   GLuint fbo_;
+
+    if ((width > m_pbuffer_width) || (height > m_pbuffer_height)) {
+	if (width > m_pbuffer_width)
+	    m_pbuffer_width = width;
+	if (height > m_pbuffer_height)
+	    m_pbuffer_height = height;
+
+	resizePbuffer();
+    }
+
     glXMakeCurrent( m_display, m_pbuffer, m_context );
 
     if( key.empty() ) {
