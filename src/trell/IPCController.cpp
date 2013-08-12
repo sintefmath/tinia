@@ -402,7 +402,11 @@ IPCController::run(int argc, char **argv)
 
                 msg->m_type = TRELL_MESSAGE_ARGS;
                 msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-                strcpy( msg->m_args_payload.m_job_id, m_id.c_str() );
+		int i = 0;
+		for( i; i < strlen(m_id.c_str()); ++i){
+		  msg->m_args_payload.m_job_id[i] = m_id.c_str()[i];
+		}
+		msg->m_args_payload.m_job_id[i] = '\0';
 
                 mrv = messenger_post( &m_master_mbox, TRELL_MSGHDR_SIZE );
                 if( mrv != MESSENGER_OK ) {
@@ -569,7 +573,11 @@ IPCController::sendHeartBeat()
     msg->m_type = TRELL_MESSAGE_HEARTBEAT;
     msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
     msg->m_ping_payload.m_state = m_job_state;
-    strcpy( msg->m_ping_payload.m_job_id, m_id.c_str() );
+    int i = 0;
+    for( i; i < strlen(m_id.c_str()); ++i){
+      msg->m_ping_payload.m_job_id[i] = m_id.c_str()[i];
+    }
+    msg->m_ping_payload.m_job_id[i] = '\0';
 
     bool retval = true;
 
