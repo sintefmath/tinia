@@ -403,7 +403,7 @@ IPCController::run(int argc, char **argv)
                 msg->m_type = TRELL_MESSAGE_ARGS;
                 msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
 		int i = 0;
-		for( i; i < strlen(m_id.c_str()); ++i){
+		for( i; i < m_id.size(); ++i){
 		  msg->m_args_payload.m_job_id[i] = m_id.c_str()[i];
 		}
 		msg->m_args_payload.m_job_id[i] = '\0';
@@ -574,7 +574,7 @@ IPCController::sendHeartBeat()
     msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
     msg->m_ping_payload.m_state = m_job_state;
     int i = 0;
-    for( i; i < strlen(m_id.c_str()); ++i){
+    for( i; i < m_id.size(); ++i){
       msg->m_ping_payload.m_job_id[i] = m_id.c_str()[i];
     }
     msg->m_ping_payload.m_job_id[i] = '\0';
