@@ -41,7 +41,7 @@ public:
       * \param for_real  Actually do forking etc (which is skipped in some test
       *                  scenarios).
       */
-    Master( bool for_real = false, const char* application_root = "not set" );
+    Master( bool for_real = false );
 
 protected:
     bool                                    m_for_real;

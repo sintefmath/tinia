@@ -227,9 +227,9 @@ trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
    
 
     const char* env[] = {
-        apr_psprintf( r->pool, "TINIA_JOB_ID=%s",       svr_conf->m_master_id ),
-        apr_psprintf( r->pool, "TINIA_MASTER_ID=%s",    svr_conf->m_master_id ),
-        apr_psprintf( r->pool, "TINIA_APP_ROOT=%s", svr_conf->m_app_root_dir ),
+        apr_psprintf( r->pool, "TINIA_JOB_ID=%s",    svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_MASTER_ID=%s", svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_APP_ROOT=%s",  svr_conf->m_app_root_dir ),
         NULL
     };
     
@@ -238,7 +238,6 @@ trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
         svr_conf->m_master_exe,
         svr_conf->m_master_id,      // name of job to start
         svr_conf->m_master_id,      // id of master job
-        svr_conf->m_app_root_dir,
         NULL
     };
 

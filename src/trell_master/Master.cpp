@@ -50,7 +50,7 @@ static const std::string ret_success = ret_header + "<result>SUCCESS</result>" +
 static const std::string ret_failure = ret_header + "<result>FAILURE</result>" + ret_footer;
 }
 
-Master::Master( bool for_real, const char* application_root )
+Master::Master( bool for_real )
     : IPCController( true ),
       m_for_real( for_real )
 {
@@ -631,11 +631,22 @@ Master::addJob( const std::string& id, const std::string& exe, const std::string
             dup2( e, 2 );
             close( e );
 
-            execl( it->second.m_executable.c_str(),
-                   it->second.m_executable.c_str(),
-                   it->second.m_id.c_str(),
-                   getMasterID().c_str(),
-                   NULL );
+            std::string env_job_id    = "TINIA_JOB_ID=" + it->second.m_id;
+            std::string env_master_id = "TINIA_MASTER_ID=" + getMasterID();
+            
+            const char* env[3] = {
+                env_job_id.c_str(),
+                env_master_id.c_str(),
+                NULL
+            };
+            
+            
+            execle( it->second.m_executable.c_str(),
+                    it->second.m_executable.c_str(),
+                    it->second.m_id.c_str(),
+                    getMasterID().c_str(),
+                    NULL,
+                    env );
             std::cerr << "Failed to exec: " << strerror(errno) << "\n";
 
             // Notify master that things went wrong
