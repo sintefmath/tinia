@@ -52,9 +52,16 @@ static const std::string ret_failure = ret_header + "<result>FAILURE</result>" +
 
 Master::Master( bool for_real, const char* application_root )
     : IPCController( true ),
-      m_for_real( for_real ),
-      m_application_root( application_root )
+      m_for_real( for_real )
 {
+    const char* app_root = getenv( "TINIA_APP_ROOT" );
+    if( app_root == NULL ) {
+        std::cerr << "TINIA_APP_ROOT env variable not set!" << std::endl;
+        exit( EXIT_FAILURE );
+    }
+    m_application_root = std::string( app_root );
+
+    std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
 }
 
 

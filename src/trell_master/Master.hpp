@@ -45,7 +45,7 @@ public:
 
 protected:
     bool                                    m_for_real;
-    const std::string                       m_application_root;
+    std::string                             m_application_root;
 
     /** The internal represenation of a job. */
     struct Job {

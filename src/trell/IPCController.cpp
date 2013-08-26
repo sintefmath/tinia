@@ -302,6 +302,20 @@ IPCController::run(int argc, char **argv)
     // argv[1] - job name
     // argv[2] - master id
 
+    
+    // Env-variables that contain the info we need to start the job,
+    // will replace the argument-based approach.
+    
+    const char* tinia_job_id = getenv( "TINIA_JOB_ID" );
+    if( tinia_job_id != NULL ) {
+        std::cerr << "tinia_job_id=" << tinia_job_id << std::endl;
+    }
+    const char* tinia_master_id = getenv( "TINIA_MASTER_ID" );
+    if( tinia_master_id != NULL ) {
+        std::cerr << "tinia_master_id=" << tinia_master_id << std::endl;
+    }
+   
+    
     if( argc != 3 ) {
         std::cerr << "argc != 3, exiting.\n";
         return EXIT_FAILURE;

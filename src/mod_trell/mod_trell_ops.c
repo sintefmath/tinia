@@ -226,6 +226,13 @@ trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
     }
    
 
+    const char* env[] = {
+        apr_psprintf( r->pool, "TINIA_JOB_ID=%s",       svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_MASTER_ID=%s",    svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_APP_ROOT=%s", svr_conf->m_app_root_dir ),
+        NULL
+    };
+    
     // Set up arguments            
     const char* args[5] = {
         svr_conf->m_master_exe,
@@ -240,7 +247,7 @@ trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
     rv = apr_proc_create( &newproc,
                           svr_conf->m_master_exe,
                           args,
-                          NULL, // env
+                          env,
                           procattr,
                           r->pool );
     if( rv != APR_SUCCESS ) {
