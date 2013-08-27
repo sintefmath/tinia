@@ -647,7 +647,9 @@ Master::addJob( const std::string& id,
             env.push_back( strdup( env_job_id.c_str() ) );
             env.push_back( strdup( env_master_id.c_str() ) );
             for( int i=0; environ[i] != NULL; i++ ) {
-                env.push_back( strdup( environ[i] ) );
+                if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
+                    env.push_back( strdup( environ[i] ) );
+                }
             }
             env.push_back( NULL );
             
