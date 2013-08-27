@@ -132,30 +132,6 @@ Master::handle( trell_message* msg, size_t buf_size )
         }
 
     }
-    else if( msg->m_type == TRELL_MESSAGE_ARGS ) {
-        std::string job = msg->m_args_payload.m_job_id;
-        std::cerr << "Got request for args from '" << job << "'.\n";
-        auto it = m_jobs.find( job );
-        if( it == m_jobs.end() ) {
-            std::cerr << "Cannot find job '" << job << "'.\n";
-        }
-        else {
-            const string& xml = it->second.m_xml;
-            if( xml.empty() ) {
-                std::cerr << "XML for job '" << job << "' is empty.\n";
-            }
-            else {
-                if( buf_size <= TRELL_MSGHDR_SIZE + xml.size() + 1 ) {
-                    std::cerr << "Buffer too small.\n";
-                }
-                else {
-                    return_type = TRELL_MESSAGE_XML;
-                    osize = xml.size()+1;
-                    strcpy( msg->m_xml_payload, xml.c_str() );
-                }
-            }
-        }
-    }
     else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
         std::string job = msg->m_ping_payload.m_job_id;
         setJobState( job, msg->m_ping_payload.m_state, true );
@@ -172,9 +148,9 @@ Master::handle( trell_message* msg, size_t buf_size )
 
 
 bool
-Master::init( const std::string& xml )
+Master::init( )
 {
-    if( IPCController::init(xml) ) {
+    if( IPCController::init() ) {
         snarfMasterState();
         return true;
     }
@@ -638,7 +614,6 @@ Master::addJob( const std::string& id,
     it->second.m_state = TRELL_JOBSTATE_NOT_STARTED;
     it->second.m_last_ping = getTime();
     it->second.m_args = args;
-    it->second.m_xml = xml;
     if( m_for_real ) {
         fsync( 1 );
         fsync( 2 );

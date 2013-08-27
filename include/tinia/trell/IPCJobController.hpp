@@ -102,7 +102,7 @@ protected:
     /** \copydoc MessageBox::init */
     virtual
     bool
-    init( const std::string& xml );
+    init();
 
     /** \copydoc MessageBox::periodic */
     virtual

@@ -61,8 +61,6 @@ protected:
         time_t                              m_last_ping;
         /** Application argument list (excluding application name). */
         std::vector<std::string>            m_args;
-        /** The XML document that spawned this job. */
-        std::string                         m_xml;
     };
     /** The set of managed jobs. */
     std::unordered_map<std::string, Job>    m_jobs;
@@ -92,7 +90,7 @@ protected:
       *
       */
     bool
-    init( const std::string& xml );
+    init();
 
     /** \copydoc MessageBox::periodic
       *

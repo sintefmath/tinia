@@ -404,48 +404,8 @@ IPCController::run(int argc, char **argv)
     timespec last_periodic;
     clock_gettime( CLOCK_REALTIME, &last_periodic );
 
-    std::string xml;
-    if( !m_is_master && m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        messenger_status_t mrv;
-
-        mrv = messenger_lock( &m_master_mbox );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << __func__ << ": messenger_lock(master): " << messenger_strerror( mrv ) << "\n";
-        }
-        else {
-            size_t msg_size =(m_id.length()+1u) + offsetof( trell_message, m_args_payload );
-            if( msg_size < m_master_mbox.m_shmem_size ) {
-                trell_message* msg = reinterpret_cast<trell_message*>( m_master_mbox.m_shmem_ptr );
-
-                msg->m_type = TRELL_MESSAGE_ARGS;
-                msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-                strcpy( msg->m_args_payload.m_job_id, m_id.c_str() );
-
-                mrv = messenger_post( &m_master_mbox, TRELL_MSGHDR_SIZE );
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_post(master): " << messenger_strerror( mrv ) << "\n";
-                }
-                else {
-                    if( msg->m_type == TRELL_MESSAGE_XML ) {
-                        xml = std::string( msg->m_xml_payload, msg->m_xml_payload+msg->m_size );
-                    }
-                }
-            }
-            mrv = messenger_unlock( &m_master_mbox );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_unlock(master): " << messenger_strerror( mrv ) << "\n";
-            }
-        }
-
-        if( xml.empty() ) {
-            m_job_state = TRELL_JOBSTATE_FAILED;
-            std::cerr << "Failed to get arguments.\n";
-        }
-    }
-
-
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        if( !init(xml) ) {
+        if( !init() ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
             std::cerr << "Init failed.\n";
         }
@@ -626,7 +586,7 @@ IPCController::periodic()
 
 
 bool
-IPCController::init( const std::string& xml )
+IPCController::init()
 {
     return true;
 }
