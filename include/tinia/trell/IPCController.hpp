@@ -112,8 +112,8 @@ protected:
       * with superclass, that is:
       * \code
       * bool
-      * Foo::init( const std::string& xml ) {
-      *     if( Super::init( xml ) ) {
+      * Foo::init( ) {
+      *     if( Super::init( ) ) {
       *         // ... do stuff ...
       *         return true or false;
       *     }
@@ -123,15 +123,12 @@ protected:
       * }
       * \endcode
       *
-      * \param xml  A string that contains the xml document that was passed from
-      *             the client starting this job. This might contain extra nodes
-      *             that contains arguments.
       * \returns    True if everything is OK, or false if the process should
       *             terminate.
       */
     virtual
     bool
-    init( const std::string& xml );
+    init( );
 
     /** Hook that is invoked every now and then.
       *

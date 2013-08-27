@@ -27,6 +27,8 @@
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
+#include "apr_strings.h"
+#include "apr_env.h"
 
 int
 trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r )
@@ -55,13 +57,247 @@ trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r )
     }
 }
 
+static const char* master_job_pidfile_path = "/tmp/trell_master.pid";
 
+
+/** Kill a process with a given pid.
+ *
+ * Used to from the apache module thread to kill the trell master job, and 
+ * we try to wait and determine if the process is dead.
+ */
+static int
+trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
+{
+    int i;
+    apr_status_t rv;
+
+    // Shaky..?
+    apr_proc_t proc;
+    
+    proc.pid = pid;
+    proc.in = NULL;
+    proc.out = NULL;
+    proc.err = NULL;
+    
+    // This is slightly shaky as well, since we're not necessarily the parent
+    // process, and if the child isn't waited upon, we have a defunct/zombie.
+    
+    rv = apr_proc_kill( &proc, SIGINT );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: %s@%d", __FILE__, __LINE__ );
+        return rv;
+    }
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Sent pid=%d SIGINT", proc.pid );
+    for(i=0; i<3; i++ ) {
+        int exitcode;
+        apr_exit_why_e why=0;
+        rv = apr_proc_wait( &proc, &exitcode, &why, APR_NOWAIT );
+        if( rv == APR_CHILD_DONE ) {
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: SIGINT why=%d", why );
+            return APR_SUCCESS;
+        }
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Child not done, sleeping it=%d", i );
+        apr_sleep( 1000000 );
+    }
+    
+
+    rv = apr_proc_kill( &proc, SIGKILL );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: %s@%d", __FILE__, __LINE__ );
+        return rv;
+    }
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Sent pid=%d SIGKILL", proc.pid );
+    for(i=0; i<3; i++ ) {
+        int exitcode;
+        apr_exit_why_e why=0;
+        rv = apr_proc_wait( &proc, &exitcode, &why, APR_NOWAIT );
+        if( rv == APR_CHILD_DONE ) {
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: SIGKILL why=%d", why );
+            return APR_SUCCESS;
+        }
+
+        if( rv != APR_CHILD_NOTDONE ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "mod_trell: child neither done nor notdone." );
+        }
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Child not done, sleeping it=%d", i );
+        apr_sleep( 1000000 );
+    }
+    ap_log_rerror( APLOG_MARK, APLOG_CRIT, OK, r, "mod_trell: Failed to kill master job." );
+}
+
+/** Record the master job pid into a file on disc. */
+static int
+trell_set_master_pid( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
+{
+    apr_status_t rv;
+
+    apr_file_t* pidfile = NULL;
+    rv = apr_file_open( &pidfile, master_job_pidfile_path,
+                        APR_FOPEN_CREATE | APR_WRITE | APR_TRUNCATE | APR_XTHREAD,
+                        APR_OS_DEFAULT, r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: Failed to open master job pid file for writing." );
+        return rv;
+    }
+    
+    apr_file_printf( pidfile, "%d\n", pid );
+    apr_file_close( pidfile );
+    
+    return APR_SUCCESS;
+}
+
+
+/** Read the master job pid from file on disc. */
+static int
+trell_get_master_pid( trell_sconf_t* svr_conf,  request_rec* r, pid_t* pid )
+{
+    apr_status_t rv;
+
+    apr_file_t* pidfile = NULL;
+    rv = apr_file_open( &pidfile, master_job_pidfile_path,
+                        APR_READ, APR_OS_DEFAULT, r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: Failed to open master job pid file for reading." );
+        return rv;
+    }
+
+    char* line = (char*)apr_palloc( r->pool, sizeof(unsigned char)*256 );
+    rv = apr_file_gets( line, 256, pidfile );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: %s@%d", __FILE__, __LINE__ );
+        return rv;
+    }
+    *pid = apr_atoi64( line );
+    return APR_SUCCESS;
+}
+
+/** Try to start a process running the master job. */
+static int
+trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
+{
+    apr_status_t rv;
+    
+    // Open file into which master job stdout is piped.
+    apr_file_t* master_stdout = NULL;
+    rv = apr_file_open( &master_stdout,
+                        apr_psprintf( r->pool, "/tmp/%s.stdout", svr_conf->m_master_id ),
+                        APR_FOPEN_CREATE | APR_WRITE | APR_TRUNCATE | APR_XTHREAD,
+                        APR_OS_DEFAULT, r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: Failed to open master job stdout" );
+        return rv;
+    }
+        
+    // Open file into which master job stderr is piped.
+    apr_file_t* master_stderr = NULL;
+    rv = apr_file_open( &master_stderr,
+                        apr_psprintf( r->pool, "/tmp/%s.stderr", svr_conf->m_master_id ),
+                        APR_FOPEN_CREATE | APR_WRITE | APR_TRUNCATE | APR_XTHREAD,
+                        APR_OS_DEFAULT, r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: Failed to open master job stderr" );
+        return rv;
+    }
+
+    // Create process attribute and set file handles for pipes
+    apr_procattr_t* procattr;
+    
+    rv = apr_procattr_create( &procattr, r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: apr_procattr_create failed" );
+        return rv;
+    }
+    
+    rv = apr_procattr_child_out_set( procattr, master_stdout, NULL );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: apr_procattr_child_out_set failed" );
+        return rv;
+    }
+    
+    rv = apr_procattr_child_err_set( procattr, master_stderr, NULL );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: apr_procattr_child_err_set failed" );
+        return rv;
+    }
+    
+    rv = apr_procattr_cmdtype_set( procattr, APR_PROGRAM );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: apr_procattr_cmdtype_set failed" );
+        return rv;
+    }
+
+
+    const char* env[7] = {
+        apr_psprintf( r->pool, "TINIA_JOB_ID=%s",    svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_MASTER_ID=%s", svr_conf->m_master_id ),
+        apr_psprintf( r->pool, "TINIA_APP_ROOT=%s",  svr_conf->m_app_root_dir ),
+        NULL,   // PATH
+        NULL,   // LD_LIBRARY_PATH
+        NULL,   // DISPLAY
+        NULL
+    };
+
+    // Copy PATH and LD_LIBRARY_PATH from the current environement, if set. It
+    // might be an idea to pass these variables through the apache-config,
+    // allowing more detailded control on jobs.
+    int p = 3;
+    char* PATH = NULL;
+    if( (apr_env_get( &PATH, "PATH", r->pool ) == APR_SUCCESS ) &&
+            (PATH != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "PATH=%s", PATH );
+    } 
+    char* LD_LIBRARY_PATH = NULL;
+    if( (apr_env_get( &LD_LIBRARY_PATH, "LD_LIBRARY_PATH", r->pool ) == APR_SUCCESS ) &&
+            (LD_LIBRARY_PATH != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "LD_LIBRARY_PATH=%s", LD_LIBRARY_PATH );
+    }
+    char* DISPLAY = NULL;
+    if( (apr_env_get( &DISPLAY, "DISPLAY", r->pool ) == APR_SUCCESS ) &&
+            (DISPLAY != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "DISPLAY=%s", DISPLAY );
+    }
+    
+    // Set up arguments            
+    const char* args[2] = {
+        svr_conf->m_master_exe,
+        NULL
+    };
+
+    
+    apr_proc_t newproc;
+    rv = apr_proc_create( &newproc,
+                          svr_conf->m_master_exe,
+                          args,
+                          env,
+                          procattr,
+                          r->pool );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: Failed to execute '%s'", svr_conf->m_master_exe );
+        return rv;
+    }
+    
+    rv = trell_set_master_pid( svr_conf, r, newproc.pid );
+    if( rv != APR_SUCCESS ) {
+        return rv;
+    }
+    
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Master running at pid %d", newproc.pid );
+    return APR_SUCCESS;    
+}
+
+/** Run the master-job start/restart-procedure. */
 int
 trell_ops_do_restart_master( trell_sconf_t* svr_conf,  request_rec* r )
 {
     int success = 0;
 
 
+    
+    
+    
     sem_t* trell_lock = NULL;
 
     trell_lock = sem_open( "/trell_lock", O_CREAT, 0666, 1 );
@@ -76,99 +312,22 @@ trell_ops_do_restart_master( trell_sconf_t* svr_conf,  request_rec* r )
             // wait doesn't manage to unzombify the child.
 
             // First, check if there is a master running and kill it
-            FILE* pidfile = fopen( "/tmp/trell_master.pid", "r" );
-            if( pidfile != NULL ) {
-                ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                               "mod_trell: Found existing pid-file" );
-                int pid;
-                int fscanf_res = fscanf( pidfile, "%d", &pid );
-		if(fscanf_res == EOF)
-		  fprintf(stderr, "whoops, error getting pid\n");
-
-                fclose( pidfile );
+            pid_t pid;
+            if( trell_get_master_pid( svr_conf, r, &pid ) == APR_SUCCESS ) {
+                ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Found existing pid: %d", pid );
                 if( pid > 0 ) {
-                    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                                   "mod_trell: Existing pid = %d", pid );
-                    if( kill( pid, SIGINT ) == 0 ) {
-                        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                                       "mod_trell: Sent SIGINT" );
-
-                        // Give the process up to 3 secs to shut down
-                        int i;
-                        for( i=0; i<3; i++) {
-                            int status;
-                            if( waitpid( pid, &status, WNOHANG ) == pid ) {
-                                break;
-                            }
-                            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                                           "mod_trell: Sleeping (%i)", i );
-                            sleep( 1 );
-                        }
-                        if( kill( pid, SIGKILL ) == 0 ) {
-                            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                                           "mod_trell: Sent SIGKILL" );
-                            for( i=0; i<3; i++) {
-                                int status;
-                                if( waitpid( pid, &status, WNOHANG ) == pid ) {
-                                    break;
-                                }
-                                ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                                               "mod_trell: Sleeping (%i)", i );
-                                sleep( 1 );
-                            }
-                        }
-                    }
+                    trell_kill_process( svr_conf, r, pid );
                 }
             }
-
+            
             // Start master
-            const char* exe = svr_conf->m_master_exe;
-
-            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                           "mod_trell: Preparing to fork and execute '%s'", exe );
-
-            // Step 1: Flush stdout and stderr, to avoid duplicate log messages.
-            fsync( 1 );
-            fsync( 2 );
-            // Step 2: Fork
-            pid_t pid =  fork();
-            if( pid == -1 ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, OK, r,
-                               "mod_trell: Failed to fork" );
-            }
-            else if( pid == 0 ) {
-                char buf[256];
-
-                // Fork successful, we are the child. Redirect IO to files.
-                snprintf( buf, sizeof(buf), "/tmp/%s.stdout", svr_conf->m_master_id );
-                int o = creat( buf, 0666 );
-                dup2( o, 1 );
-                close( o );
-
-                snprintf( buf, sizeof(buf), "/tmp/%s.stderr", svr_conf->m_master_id );
-                int e = creat( buf, 0666 );
-                dup2( e, 2 );
-                close( e );
-                execl( exe,                      // binary
-                       exe,                      // binary is first arg as by convention
-                       svr_conf->m_master_id,    // name of job to start
-                       svr_conf->m_master_id,    // id of master job
-                       svr_conf->m_app_root_dir, // app root directory
-                       NULL );
-                fprintf( stderr, "Failed to exec master.\n" );
-                exit( EXIT_FAILURE );
-            }
-            else {
-                // Fork successful, we are the parent. Record pid.
-                FILE* pidfile = fopen( "/tmp/trell_master.pid", "w" );
-                if( pidfile != NULL ) {
-                    fprintf( pidfile, "%d\n", pid );
-                    fclose( pidfile );
-                }
-                ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Master running at pid %d", pid );
+            if( trell_start_master( svr_conf, r ) ) {
                 success = 1;
             }
-
+            else {
+                success = 0;
+            }
+            
             // Release lock
             sem_post( trell_lock );
         }

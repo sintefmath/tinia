@@ -41,11 +41,11 @@ public:
       * \param for_real  Actually do forking etc (which is skipped in some test
       *                  scenarios).
       */
-    Master( bool for_real = false, const char* application_root = "not set" );
+    Master( bool for_real = false );
 
 protected:
     bool                                    m_for_real;
-    const std::string                       m_application_root;
+    std::string                             m_application_root;
 
     /** The internal represenation of a job. */
     struct Job {
@@ -59,8 +59,8 @@ protected:
         TrellJobState                       m_state;
         /** Timestamp for last state update. */
         time_t                              m_last_ping;
-        /** The XML document that spawned this job. */
-        std::string                         m_xml;
+        /** Application argument list (excluding application name). */
+        std::vector<std::string>            m_args;
     };
     /** The set of managed jobs. */
     std::unordered_map<std::string, Job>    m_jobs;
@@ -76,11 +76,12 @@ protected:
             ACTION_KILL_JOB,
             ACTION_ADD_JOB,
             ACTION_GET_JOB_LIST
-        }                       m_action;
-        std::string             m_job;
-        std::string             m_application;
-        bool                    m_force;
-        std::string             m_session;
+        }                           m_action;
+        std::string                 m_job;
+        std::string                 m_application;
+        std::vector<std::string>    m_args;
+        bool                        m_force;
+        std::string                 m_session;
     };
 
     /** \copydoc MessageBox::init
@@ -89,7 +90,7 @@ protected:
       *
       */
     bool
-    init( const std::string& xml );
+    init();
 
     /** \copydoc MessageBox::periodic
       *
@@ -155,11 +156,15 @@ protected:
       *
       * \arg id  The server-wide unique id of the job.
       * \arg exe The path of the executable that implements the job.
+      * \arg args Application arguments (excluding application binary).
       * \arg xml The XML message that requested the job to be created. Arguments
       *          can be passed here.
       */
     bool
-    addJob( const std::string& id,const std::string& exe, const std::string& xml );
+    addJob( const std::string& id,
+            const std::string& exe,
+            const std::vector<std::string>& args,
+            const std::string& xml );
 
     /** Kill a job.
       *

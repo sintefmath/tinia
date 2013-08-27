@@ -50,11 +50,18 @@ static const std::string ret_success = ret_header + "<result>SUCCESS</result>" +
 static const std::string ret_failure = ret_header + "<result>FAILURE</result>" + ret_footer;
 }
 
-Master::Master( bool for_real, const char* application_root )
+Master::Master( bool for_real )
     : IPCController( true ),
-      m_for_real( for_real ),
-      m_application_root( application_root )
+      m_for_real( for_real )
 {
+    const char* app_root = getenv( "TINIA_APP_ROOT" );
+    if( app_root == NULL ) {
+        std::cerr << "TINIA_APP_ROOT env variable not set!" << std::endl;
+        exit( EXIT_FAILURE );
+    }
+    m_application_root = std::string( app_root );
+
+    std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
 }
 
 
@@ -98,6 +105,7 @@ Master::handle( trell_message* msg, size_t buf_size )
         case ParsedXML::ACTION_ADD_JOB:
             if( addJob( data.m_job,
                         data.m_application,
+                        data.m_args,
                         string( msg->m_xml_payload, msg->m_size ) ) ) {
                 retval = ret_success;
             }
@@ -124,30 +132,6 @@ Master::handle( trell_message* msg, size_t buf_size )
         }
 
     }
-    else if( msg->m_type == TRELL_MESSAGE_ARGS ) {
-        std::string job = msg->m_args_payload.m_job_id;
-        std::cerr << "Got request for args from '" << job << "'.\n";
-        auto it = m_jobs.find( job );
-        if( it == m_jobs.end() ) {
-            std::cerr << "Cannot find job '" << job << "'.\n";
-        }
-        else {
-            const string& xml = it->second.m_xml;
-            if( xml.empty() ) {
-                std::cerr << "XML for job '" << job << "' is empty.\n";
-            }
-            else {
-                if( buf_size <= TRELL_MSGHDR_SIZE + xml.size() + 1 ) {
-                    std::cerr << "Buffer too small.\n";
-                }
-                else {
-                    return_type = TRELL_MESSAGE_XML;
-                    osize = xml.size()+1;
-                    strcpy( msg->m_xml_payload, xml.c_str() );
-                }
-            }
-        }
-    }
     else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
         std::string job = msg->m_ping_payload.m_job_id;
         setJobState( job, msg->m_ping_payload.m_state, true );
@@ -164,9 +148,9 @@ Master::handle( trell_message* msg, size_t buf_size )
 
 
 bool
-Master::init( const std::string& xml )
+Master::init( )
 {
-    if( IPCController::init(xml) ) {
+    if( IPCController::init() ) {
         snarfMasterState();
         return true;
     }
@@ -246,6 +230,7 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
             // Parameter nodes
             NODE_JOB,
             NODE_APPLICATION,
+            NODE_ARG,
             NODE_FORCE,
             NODE_SESSION
         };
@@ -298,6 +283,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                 else if( xmlStrEqual( name, BAD_CAST "application")) {
                     n = NODE_APPLICATION;
                 }
+                else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
+                    n = NODE_ARG;
+                }
                 else if( xmlStrEqual( name, BAD_CAST "force")) {
                     n = NODE_FORCE;
                 }
@@ -318,6 +306,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                         break;
                     case NODE_APPLICATION:
                         data.m_application = reinterpret_cast<const char*>( text );
+                        break;
+                    case NODE_ARG:
+                        data.m_args.push_back( reinterpret_cast<const char*>( text ) );
                         break;
                     case NODE_FORCE:
                         if( xmlStrEqual( text, BAD_CAST "1" ) || xmlStrEqual( text, BAD_CAST "true" ) ) {
@@ -350,14 +341,17 @@ Master::encodeMasterState()
 {
     std::stringstream o;
     o << ret_header;
-    o << "<jobList>";
+    o << "<jobList>\n";
     for(auto it=m_jobs.begin(); it!=m_jobs.end(); ++it ) {
         const Job& job = it->second;
-        o << "<jobInfo>";
-        o << "<job>" << job.m_id << "</job>";
-        o << "<pid>" << job.m_pid << "</pid>";
-        o << "<application>" << job.m_executable << "</application>";
-        o << "<state updated=\"" << job.m_last_ping << "\">";
+        o << "  <jobInfo>\n";
+        o << "    <job>" << job.m_id << "</job>\n";
+        o << "    <pid>" << job.m_pid << "</pid>\n";
+        o << "    <application>" << job.m_executable << "</application>\n";
+        for( auto kt=job.m_args.begin(); kt!=job.m_args.end(); ++kt ) {
+            o << "    <arg>" << (*kt) << "</arg>\n";
+        }
+        o << "    <state updated=\"" << job.m_last_ping << "\">";
         switch( job.m_state ) {
         case TRELL_JOBSTATE_NOT_STARTED: o << "NOT_STARTED"; break;
         case TRELL_JOBSTATE_RUNNING: o << "RUNNING"; break;
@@ -366,12 +360,12 @@ Master::encodeMasterState()
         case TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY: o << "TERMINATED_SUCCESSFULLY"; break;
         case TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY: o << "TERMINATED_UNSUCCESSFULLY"; break;
         }
-        o << "</state>";
-        o << "<allowed>";
-        o << "</allowed>";
-        o << "</jobInfo>";
+        o << "</state>\n";
+        o << "    <allowed>";
+        o << "</allowed>\n";
+        o << "  </jobInfo>";
     }
-    o << "</jobList>";
+    o << "</jobList>\n";
     o << ret_footer;
     return o.str();
 }
@@ -388,6 +382,7 @@ Master::snarfMasterState()
             NODE_JOB,
             NODE_PID,
             NODE_APPLICATION,
+            NODE_ARG,
             NODE_STATE
         };
         std::vector<NodeType> stack;
@@ -416,6 +411,9 @@ Master::snarfMasterState()
                     else if( xmlStrEqual( name, BAD_CAST "application" ) ) {
                         type = NODE_APPLICATION;
                     }
+                    else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
+                        type = NODE_ARG;
+                    }
                     else if( xmlStrEqual( name, BAD_CAST "state" ) ) {
                         type = NODE_STATE;
                     }
@@ -442,6 +440,9 @@ Master::snarfMasterState()
                     case NODE_APPLICATION:
                         job.m_executable = reinterpret_cast<const char*>( text );
                         fields |= (1<<stack.back());
+                        break;
+                    case NODE_ARG:
+                        job.m_args.push_back( reinterpret_cast<const char*>( text ) );
                         break;
                     case NODE_STATE:
                         if( xmlStrEqual( text, BAD_CAST "NOT_STARTED" ) ) {
@@ -575,12 +576,19 @@ Master::stdoutPath( const std::string job ) const
 }
 
 bool
-Master::addJob( const std::string& id, const std::string& exe, const std::string& xml )
+Master::addJob( const std::string& id,
+                const std::string& exe,
+                const std::vector<std::string>& args,
+                const std::string& xml )
 {
     if( id.empty() || exe.empty() ) {
         return false;
     }
-
+    std::cerr << "ADDJOB " << xml << "\n";
+    for(auto it=args.begin(); it!=args.end(); ++it ) {
+        std::cerr << "ARG " << *it << "\n";
+    }
+    
     for(auto it=id.begin(); it!=id.end(); ++it ) {
         if( !(isalnum( *it ) || *it=='_' ) ) {
             std::cerr << "Illegal job id.\n";
@@ -605,7 +613,7 @@ Master::addJob( const std::string& id, const std::string& exe, const std::string
     it->second.m_executable =  m_application_root + "/" + exe;
     it->second.m_state = TRELL_JOBSTATE_NOT_STARTED;
     it->second.m_last_ping = getTime();
-    it->second.m_xml = xml;
+    it->second.m_args = args;
     if( m_for_real ) {
         fsync( 1 );
         fsync( 2 );
@@ -624,11 +632,31 @@ Master::addJob( const std::string& id, const std::string& exe, const std::string
             dup2( e, 2 );
             close( e );
 
-            execl( it->second.m_executable.c_str(),
-                   it->second.m_executable.c_str(),
-                   it->second.m_id.c_str(),
-                   getMasterID().c_str(),
-                   NULL );
+            // create arguments
+            std::vector<char*> arg;
+            arg.push_back( strdup( it->second.m_executable.c_str() ) );
+            for(auto kt=args.begin(); kt!=args.end(); ++kt) {
+                arg.push_back( strdup( kt->c_str() ) );
+            }
+            arg.push_back( NULL );
+
+            // copy and add to environment             
+            std::string env_job_id    = "TINIA_JOB_ID=" + it->second.m_id;
+            std::string env_master_id = "TINIA_MASTER_ID=" + getMasterID();
+            std::vector<char*> env;
+            env.push_back( strdup( env_job_id.c_str() ) );
+            env.push_back( strdup( env_master_id.c_str() ) );
+            for( int i=0; environ[i] != NULL; i++ ) {
+                if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
+                    env.push_back( strdup( environ[i] ) );
+                }
+            }
+            env.push_back( NULL );
+            
+            // and run...
+            execvpe( it->second.m_executable.c_str(),
+                     reinterpret_cast<char* const*>( arg.data() ),
+                     reinterpret_cast<char* const*>( env.data() ) );
             std::cerr << "Failed to exec: " << strerror(errno) << "\n";
 
             // Notify master that things went wrong
