@@ -298,28 +298,6 @@ int
 IPCController::run(int argc, char **argv)
 {
     m_cleanup_pid = getpid();
-    // argv[0] - exe
-    // argv[1] - job name
-    // argv[2] - master id
-
-    
-    // Env-variables that contain the info we need to start the job,
-    // will replace the argument-based approach.
-    
-    const char* tinia_job_id = getenv( "TINIA_JOB_ID" );
-    if( tinia_job_id != NULL ) {
-        std::cerr << "tinia_job_id=" << tinia_job_id << std::endl;
-    }
-    const char* tinia_master_id = getenv( "TINIA_MASTER_ID" );
-    if( tinia_master_id != NULL ) {
-        std::cerr << "tinia_master_id=" << tinia_master_id << std::endl;
-    }
-   
-    
-    if( argc != 3 ) {
-        std::cerr << "argc != 3, exiting.\n";
-        return EXIT_FAILURE;
-    }
 
     // Install signal handlers, trying to maximize the likelyhood of a decent
     // cleanup
@@ -348,8 +326,24 @@ IPCController::run(int argc, char **argv)
 //    kill( getpid(), SIGUSR1 );
 
 
+    for( int i=0; environ[i] != NULL; i++ ) {
+        std::cerr << "ENV " << i <<": " << environ[i] << std::endl;
+    }
 
-    m_id = std::string( argv[1] );
+    for( int i=0; i<argc; i++ ) {
+        std::cerr << "ARG " << i << ": " << argv[i] << std::endl;
+    }    
+
+    // m_id = env[ TINIA_JOB_ID ].
+    const char* tinia_job_id = getenv( "TINIA_JOB_ID" );
+    if( tinia_job_id == NULL ) {
+        std::cerr << "Environment variable 'TINIA_JOB_ID' not set, exiting.\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+    else {
+        m_id = std::string( tinia_job_id );
+    }
+
     if( m_id.empty() ) {
         std::cerr << "empty id, exiting.\n";
         m_job_state = TRELL_JOBSTATE_FAILED;
@@ -361,7 +355,16 @@ IPCController::run(int argc, char **argv)
         }
     }
 
-    m_master_id = std::string( argv[2] );
+    // m_master_id = env[ TINIA_MASTER_ID ].
+    const char* tinia_master_id = getenv( "TINIA_MASTER_ID" );
+    if( tinia_master_id == NULL ) {
+        std::cerr << "Environment variable 'TINIA_MASTER_ID' not set, exiting.\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+    else {
+        m_master_id = std::string( tinia_master_id );
+    }
+
     m_shmem_name      = "/" + m_id + "_shmem";
     m_sem_lock_name   = "/" + m_id + "_lock";
     m_sem_query_name  = "/" + m_id + "_query";

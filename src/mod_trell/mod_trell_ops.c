@@ -28,6 +28,7 @@
 #include "mod_trell.h"
 
 #include "apr_strings.h"
+#include "apr_env.h"
 
 int
 trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r )
@@ -224,20 +225,44 @@ trell_start_master( trell_sconf_t* svr_conf,  request_rec* r )
         ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "mod_trell: apr_procattr_cmdtype_set failed" );
         return rv;
     }
-   
 
-    const char* env[] = {
+
+    const char* env[7] = {
         apr_psprintf( r->pool, "TINIA_JOB_ID=%s",    svr_conf->m_master_id ),
         apr_psprintf( r->pool, "TINIA_MASTER_ID=%s", svr_conf->m_master_id ),
         apr_psprintf( r->pool, "TINIA_APP_ROOT=%s",  svr_conf->m_app_root_dir ),
+        NULL,   // PATH
+        NULL,   // LD_LIBRARY_PATH
+        NULL,   // DISPLAY
         NULL
     };
+
+    // Copy PATH and LD_LIBRARY_PATH from the current environement, if set. It
+    // might be an idea to pass these variables through the apache-config,
+    // allowing more detailded control on jobs.
+    int p = 3;
+    char* PATH = NULL;
+    if( (apr_env_get( &PATH, "PATH", r->pool ) == APR_SUCCESS ) &&
+            (PATH != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "PATH=%s", PATH );
+    } 
+    char* LD_LIBRARY_PATH = NULL;
+    if( (apr_env_get( &LD_LIBRARY_PATH, "LD_LIBRARY_PATH", r->pool ) == APR_SUCCESS ) &&
+            (LD_LIBRARY_PATH != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "LD_LIBRARY_PATH=%s", LD_LIBRARY_PATH );
+    }
+    char* DISPLAY = NULL;
+    if( (apr_env_get( &DISPLAY, "DISPLAY", r->pool ) == APR_SUCCESS ) &&
+            (DISPLAY != NULL) )
+    {
+        env[p++] = apr_psprintf( r->pool, "DISPLAY=%s", DISPLAY );
+    }
     
     // Set up arguments            
-    const char* args[5] = {
+    const char* args[2] = {
         svr_conf->m_master_exe,
-        svr_conf->m_master_id,      // name of job to start
-        svr_conf->m_master_id,      // id of master job
         NULL
     };
 

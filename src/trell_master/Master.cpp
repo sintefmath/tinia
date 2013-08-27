@@ -657,22 +657,29 @@ Master::addJob( const std::string& id,
             dup2( e, 2 );
             close( e );
 
+            // create arguments
+            std::vector<char*> arg;
+            arg.push_back( strdup( it->second.m_executable.c_str() ) );
+            for(auto kt=args.begin(); kt!=args.end(); ++kt) {
+                arg.push_back( strdup( kt->c_str() ) );
+            }
+            arg.push_back( NULL );
+
+            // copy and add to environment             
             std::string env_job_id    = "TINIA_JOB_ID=" + it->second.m_id;
             std::string env_master_id = "TINIA_MASTER_ID=" + getMasterID();
+            std::vector<char*> env;
+            env.push_back( strdup( env_job_id.c_str() ) );
+            env.push_back( strdup( env_master_id.c_str() ) );
+            for( int i=0; environ[i] != NULL; i++ ) {
+                env.push_back( strdup( environ[i] ) );
+            }
+            env.push_back( NULL );
             
-            const char* env[3] = {
-                env_job_id.c_str(),
-                env_master_id.c_str(),
-                NULL
-            };
-            
-            
-            execle( it->second.m_executable.c_str(),
-                    it->second.m_executable.c_str(),
-                    it->second.m_id.c_str(),
-                    getMasterID().c_str(),
-                    NULL,
-                    env );
+            // and run...
+            execvpe( it->second.m_executable.c_str(),
+                     reinterpret_cast<char* const*>( arg.data() ),
+                     reinterpret_cast<char* const*>( env.data() ) );
             std::cerr << "Failed to exec: " << strerror(errno) << "\n";
 
             // Notify master that things went wrong
