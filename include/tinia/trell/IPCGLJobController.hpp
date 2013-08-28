@@ -78,9 +78,12 @@ private:
 
     Display*                                            m_display;
     GLXContext                                          m_context;
-
+    GLXFBConfig*                                        m_framebuffer_configs;
 
     GLXPbuffer                                          m_pbuffer;
+
+    GLuint                                              m_pbuffer_width;
+    GLuint                                              m_pbuffer_height;
 
     std::unordered_map<std::string, RenderEnvironment>  m_render_environments;
 
@@ -89,6 +92,9 @@ private:
 
     bool
     checkForGLError() const;
+
+    void
+    resizePbuffer();
 
 };
 
