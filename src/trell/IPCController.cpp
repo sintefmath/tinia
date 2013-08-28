@@ -404,6 +404,7 @@ IPCController::run(int argc, char **argv)
     timespec last_periodic;
     clock_gettime( CLOCK_REALTIME, &last_periodic );
 
+
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
         if( !init() ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
@@ -546,7 +547,12 @@ IPCController::sendHeartBeat()
     msg->m_type = TRELL_MESSAGE_HEARTBEAT;
     msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
     msg->m_ping_payload.m_state = m_job_state;
-    strcpy( msg->m_ping_payload.m_job_id, m_id.c_str() );
+    int i = 0, idSize = m_id.size();
+    const char* idString = m_id.c_str();
+    for( i; i < idSize ; ++i){
+      msg->m_ping_payload.m_job_id[i] = idString[i];
+    }
+    msg->m_ping_payload.m_job_id[i] = '\0';
 
     bool retval = true;
 
