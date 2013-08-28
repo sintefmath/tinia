@@ -437,7 +437,7 @@ IPCController::run(int argc, char **argv)
             timeout.tv_sec += 5;
 
             if( sem_timedwait( m_sem_query, &timeout ) == 0 ) {
-                std::cerr << "Got message.\n";
+                //std::cerr << "Got message.\n";
                 msync( m_shmem_ptr, m_shmem_size, MS_SYNC );
                 size_t osize = handle( (trell_message*)m_shmem_ptr, m_shmem_size );
                 msync( m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
