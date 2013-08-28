@@ -18,9 +18,13 @@
 
 #pragma once
 #include <QObject>
+#include <boost/shared_ptr.hpp>
 #include <tinia/model/ExposedModel.hpp>
 #include <tinia/qtcontroller/scripting/Viewer.hpp>
 #include <QtScript>
+#include <map>
+#include <QString>
+
 namespace tinia {
 namespace qtcontroller {
 namespace scripting {
@@ -29,7 +33,7 @@ class ExposedModel : public QObject, public tinia::model::StateListener
 {
     Q_OBJECT
 public:
-    explicit ExposedModel(std::shared_ptr<tinia::model::ExposedModel> model,
+    explicit ExposedModel(boost::shared_ptr<tinia::model::ExposedModel> model,
                           QScriptEngine* engine, QObject *parent = 0);
 
     ~ExposedModel();
@@ -48,7 +52,7 @@ public slots:
 
 private:
     QScriptEngine* m_engine;
-    std::shared_ptr<tinia::model::ExposedModel> m_model;
+    boost::shared_ptr<tinia::model::ExposedModel> m_model;
 
     std::map<std::string, std::vector<QScriptValue > > m_listeners;
 };

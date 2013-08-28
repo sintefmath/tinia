@@ -298,14 +298,6 @@ int
 IPCController::run(int argc, char **argv)
 {
     m_cleanup_pid = getpid();
-    // argv[0] - exe
-    // argv[1] - job name
-    // argv[2] - master id
-
-    if( argc != 3 ) {
-        std::cerr << "argc != 3, exiting.\n";
-        return EXIT_FAILURE;
-    }
 
     // Install signal handlers, trying to maximize the likelyhood of a decent
     // cleanup
@@ -334,8 +326,24 @@ IPCController::run(int argc, char **argv)
 //    kill( getpid(), SIGUSR1 );
 
 
+    for( int i=0; environ[i] != NULL; i++ ) {
+        std::cerr << "ENV " << i <<": " << environ[i] << std::endl;
+    }
 
-    m_id = std::string( argv[1] );
+    for( int i=0; i<argc; i++ ) {
+        std::cerr << "ARG " << i << ": " << argv[i] << std::endl;
+    }    
+
+    // m_id = env[ TINIA_JOB_ID ].
+    const char* tinia_job_id = getenv( "TINIA_JOB_ID" );
+    if( tinia_job_id == NULL ) {
+        std::cerr << "Environment variable 'TINIA_JOB_ID' not set, exiting.\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+    else {
+        m_id = std::string( tinia_job_id );
+    }
+
     if( m_id.empty() ) {
         std::cerr << "empty id, exiting.\n";
         m_job_state = TRELL_JOBSTATE_FAILED;
@@ -347,7 +355,16 @@ IPCController::run(int argc, char **argv)
         }
     }
 
-    m_master_id = std::string( argv[2] );
+    // m_master_id = env[ TINIA_MASTER_ID ].
+    const char* tinia_master_id = getenv( "TINIA_MASTER_ID" );
+    if( tinia_master_id == NULL ) {
+        std::cerr << "Environment variable 'TINIA_MASTER_ID' not set, exiting.\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+    else {
+        m_master_id = std::string( tinia_master_id );
+    }
+
     m_shmem_name      = "/" + m_id + "_shmem";
     m_sem_lock_name   = "/" + m_id + "_lock";
     m_sem_query_name  = "/" + m_id + "_query";
@@ -387,53 +404,9 @@ IPCController::run(int argc, char **argv)
     timespec last_periodic;
     clock_gettime( CLOCK_REALTIME, &last_periodic );
 
-    std::string xml;
-    if( !m_is_master && m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        messenger_status_t mrv;
-
-        mrv = messenger_lock( &m_master_mbox );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << __func__ << ": messenger_lock(master): " << messenger_strerror( mrv ) << "\n";
-        }
-        else {
-            size_t msg_size =(m_id.length()+1u) + offsetof( trell_message, m_args_payload );
-            if( msg_size < m_master_mbox.m_shmem_size ) {
-                trell_message* msg = reinterpret_cast<trell_message*>( m_master_mbox.m_shmem_ptr );
-
-                msg->m_type = TRELL_MESSAGE_ARGS;
-                msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-		int i = 0, idSize = m_id.size();
-		const char* idString = m_id.c_str();
-		for( i; i < idSize; ++i){
-		  msg->m_args_payload.m_job_id[i] = idString[i];
-		}
-		msg->m_args_payload.m_job_id[i] = '\0';
-
-                mrv = messenger_post( &m_master_mbox, TRELL_MSGHDR_SIZE );
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_post(master): " << messenger_strerror( mrv ) << "\n";
-                }
-                else {
-                    if( msg->m_type == TRELL_MESSAGE_XML ) {
-                        xml = std::string( msg->m_xml_payload, msg->m_xml_payload+msg->m_size );
-                    }
-                }
-            }
-            mrv = messenger_unlock( &m_master_mbox );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_unlock(master): " << messenger_strerror( mrv ) << "\n";
-            }
-        }
-
-        if( xml.empty() ) {
-            m_job_state = TRELL_JOBSTATE_FAILED;
-            std::cerr << "Failed to get arguments.\n";
-        }
-    }
-
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        if( !init(xml) ) {
+        if( !init() ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
             std::cerr << "Init failed.\n";
         }
@@ -619,7 +592,7 @@ IPCController::periodic()
 
 
 bool
-IPCController::init( const std::string& xml )
+IPCController::init()
 {
     return true;
 }

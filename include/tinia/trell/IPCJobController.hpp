@@ -102,7 +102,7 @@ protected:
     /** \copydoc MessageBox::init */
     virtual
     bool
-    init( const std::string& xml );
+    init();
 
     /** \copydoc MessageBox::periodic */
     virtual
@@ -154,7 +154,7 @@ protected:
     void stateSchemaElementModified(model::StateSchemaElement *stateSchemaElement);
 
 protected:
-    std::shared_ptr<model::ExposedModel>    m_model;
+    boost::shared_ptr<model::ExposedModel>    m_model;
     jobcontroller::Job*                        m_job;
     model::impl::xml::XMLHandler*                m_xmlHandler;
     volatile bool                            m_updateOngoing;

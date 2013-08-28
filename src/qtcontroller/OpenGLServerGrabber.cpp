@@ -62,7 +62,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
 
 void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QString key)
 {
-    auto openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
+    tinia::jobcontroller::OpenGLJob* openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
     if(!openGLJob) {
         throw std::invalid_argument("This is not an OpenGL job!");
     }

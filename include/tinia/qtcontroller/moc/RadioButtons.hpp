@@ -34,7 +34,7 @@ class RadioButtons : public QGroupBox
     Q_OBJECT
 public:
     explicit RadioButtons(std::string key,
-                          std::shared_ptr<model::ExposedModel> model,
+                          boost::shared_ptr<model::ExposedModel> model,
                           QWidget *parent = 0);
 
 signals:
@@ -45,7 +45,7 @@ private slots:
    void buttonChecked(bool);
 
 private:
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    std::string m_key;
    QList<QRadioButton*> m_buttons;
 };

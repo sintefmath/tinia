@@ -19,7 +19,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <type_traits>
 
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/Viewer.hpp"
@@ -82,8 +81,8 @@ BOOST_FIXTURE_TEST_CASE( addgetViewer, ViewerFixture ) {
 
 
 BOOST_FIXTURE_TEST_CASE( validateTypeTraits, ViewerFixture ) {
-    BOOST_CHECK( std::is_class<Viewer>::value );
-    BOOST_CHECK( !std::is_class<int>::value );
+    BOOST_CHECK( boost::is_class<Viewer>::value );
+    BOOST_CHECK( !boost::is_class<int>::value );
 }
 
 BOOST_FIXTURE_TEST_CASE( updateViewer, ViewerFixture ) {
@@ -103,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE(getViewerByValue, ViewerFixture) {
     viewer.height = 2 * viewer.height + 1;
     model.addElement("viewerTest", viewer);
 
-    auto v = model.getElementValue<tinia::model::Viewer>("viewerTest");
+    tinia::model::Viewer v = model.getElementValue<tinia::model::Viewer>("viewerTest");
 
     BOOST_CHECK_EQUAL(v.height, viewer.height);
 

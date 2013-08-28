@@ -30,7 +30,8 @@ function
 updateJobList( req )
 {
     var doc, div, table, row, cell, reply, jobList, jobInfo, item, spec,
-    stdout, stderr, suicide, kill, wipe, interact;
+    stdout, stderr, suicide, kill, wipe, interact, t;
+    var id_list = new Array;
 
     doc = req.responseXML;
     if( doc == null ) {
@@ -73,6 +74,7 @@ updateJobList( req )
                             for( item=jobInfo.firstChild; item; item=item.nextSibling ) {
                                 if( item.nodeName == 'job' ) {
                                     spec['id'] = item.childNodes[0].nodeValue;
+                                    id_list.push( spec['id'] );
                                 }
                                 else if( item.nodeName == 'pid' ) {
                                     spec['pid'] = item.childNodes[0].nodeValue;
@@ -148,6 +150,19 @@ updateJobList( req )
         div.removeChild( div.childNodes[0] );
     }
     div.appendChild( table );
+
+    // If jobid is nothing, try to create a new jobid.
+    t = document.getElementById( 'jobid' );
+    if( (t != null) && (t.value.length == 0) ) {
+        for( var q=1; q<1000; q++) {
+            var candidate = 'job_'+q;
+            if( id_list.indexOf(candidate) == -1 ) {
+                t.value = candidate;
+                break;
+            }
+        }
+    }
+
 }
 
 
@@ -217,7 +232,7 @@ wipe( job )
 
 function guiAddJob()
 {
-    var job, application, t;
+    var job, application, args, t, q, xml;
 
     t = document.getElementById( 'jobid' );
     if( t == null ) {
@@ -232,19 +247,38 @@ function guiAddJob()
     }
     application = t.value;
 
+    t = document.getElementById( 'jobargs' );
+    if( t==null) {
+        return;
+    }
+    args = t.value.match(/[^"\s]+|"(?:\\"|[^"])+"/g);
+
     if( !job ) {
         alert( "Empty job name" );
         return;
     }
     if( !application ) {
-        alert( "Empty job executble" );
+        alert( "Empty job executable" );
         return;
     }
-    rpcMaster( '<addJob>'+
-               '  <job>'+job+'</job>'+
-               '  <application>'+application+'</application>'+
-               '</addJob>',
-               update );
+
+    xml = '<addJob>\n'
+        + '  <job>'+job+'</job>\n'
+        + '  <application>'+application+'</application>\n'
+    for( t in args ) {
+        xml = xml
+            + '  <arg>'
+            + args[t].replace( /^"(.*)"$/, "$1" )     // Strip enclosing quotation marks, if exists.
+                     .replace( /\&/g, '&amp;' )       // & -> &amp;
+                     .replace( /\\"/g, '&quot;' )     // \" -> &quot;
+                     .replace( /</g, '&lt;' )         // < -> &lt;
+                     .replace( />/g, '&gt;' )         // > -> &gt;
+            + '</arg>\n';
+    }
+    xml = xml
+        + '</addJob>\n';
+    
+    rpcMaster( xml, update );
 }
 
 
@@ -279,8 +313,12 @@ function guiAddJob()
 </TR>
 <TR>
 <TD>Executable:</TD>
-<TD><INPUT id="jobexe" type="text" size="32" value="stest_job" title="Path to the executable of the job"/></TD>
-<TD ALIGN=RIGHT><BUTTON  type="button" onclick="guiAddJob();" title="Spawns a new job">Commit</BUTTON></TD>
+<TD><INPUT id="jobexe" type="text" size="32" value="test_job" title="Path to the executable of the job"/></TD>
+</TR>
+<TR>
+    <TD>Arguments:</TD>
+    <TD><INPUT id="jobargs" type="text" size="32" value="" title="Command line arguments for the job"/></TD>
+    <TD ALIGN=RIGHT><BUTTON  type="button" onclick="guiAddJob();" title="Spawns a new job">Commit</BUTTON></TD>
 </TR>
 </TABLE>
 </P>

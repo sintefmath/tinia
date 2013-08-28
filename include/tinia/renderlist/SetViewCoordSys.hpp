@@ -45,8 +45,8 @@ public:
     SetViewCoordSys*
     setProjection( const float* m4x4, const float* m4x4_inv )
     {
-        std::copy_n( m4x4, 16, m_projection );
-        std::copy_n( m4x4_inv, 16, m_projection_inverse );
+        std::copy( m4x4, m4x4 + 16, m_projection );
+        std::copy( m4x4_inv, m4x4_inv + 16, m_projection_inverse );
         m_db.taint( this, false );
         return this;
     }
@@ -54,8 +54,8 @@ public:
     SetViewCoordSys*
     setOrientation( const float* from_world, const float* to_world )
     {
-        std::copy_n( from_world, 16, m_from_world );
-        std::copy_n( to_world, 16, m_to_world );
+        std::copy( from_world, from_world + 16, m_from_world );
+        std::copy( to_world, to_world + 16, m_to_world );
         m_db.taint( this, false );
         return this;
     }
@@ -73,10 +73,10 @@ private:
                                           0.f, 1.f, 0.f, 0.f,
                                           0.f, 0.f, 1.f, 0.f,
                                           0.f, 0.f, 0.f, 1.f };
-        std::copy_n( unit, 16, m_projection );
-        std::copy_n( unit, 16, m_projection_inverse );
-        std::copy_n( unit, 16, m_from_world );
-        std::copy_n( unit, 16, m_to_world );
+        std::copy( unit, unit + 16, m_projection );
+        std::copy( unit, unit + 16, m_projection_inverse );
+        std::copy( unit, unit + 16, m_from_world );
+        std::copy( unit, unit + 16, m_to_world );
     }
 };
 

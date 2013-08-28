@@ -5,12 +5,13 @@
 #include <QWaitCondition>
 #include <QTextStream>
 #include "tinia/jobcontroller.hpp"
+#include "tinia/qtcontroller/ImageSource.hpp"
 
 namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-class OpenGLServerGrabber : public QObject
+class OpenGLServerGrabber : public QObject, public ImageSource
 {
     Q_OBJECT
 public:

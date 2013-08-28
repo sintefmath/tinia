@@ -7,7 +7,7 @@ namespace qtcontroller {
 namespace impl {
 
 LongPollHandler::LongPollHandler(QTextStream& os,  const QString& request,
-                                           std::shared_ptr<tinia::model::ExposedModel> model,
+                                           boost::shared_ptr<tinia::model::ExposedModel> model,
                                            QObject *parent) :
     QObject(parent), m_request(request),
     m_model(model), m_xmlHandler(model), m_textStream(os)
@@ -24,8 +24,8 @@ void LongPollHandler::handle()
 {
     unsigned int revision = 0;
     try {
-        auto args = decodeGetParameters(m_request);
-        auto params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(m_request), "revision");
+        QMap<QString, QString> args = decodeGetParameters(m_request);
+        boost::tuple<unsigned int> params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(m_request), "revision");
         revision = params.get<0>();
     } catch(std::invalid_argument& e) {
         // Don't have to do anything;
@@ -52,7 +52,7 @@ void LongPollHandler::stateElementModified(model::StateElement *stateElement)
 bool LongPollHandler::addExposedModelUpdate(QTextStream &os, unsigned int revision)
 {
     //if(num>4) return true;
-    auto length = m_xmlHandler.getExposedModelUpdate(m_buffer, sizeof(m_buffer), revision);
+    size_t length = m_xmlHandler.getExposedModelUpdate(m_buffer, sizeof(m_buffer), revision);
     if(length > 0) {
         os << httpHeader("application/xml")<<"\r\n";
         os << QString(m_buffer)<< "\n";

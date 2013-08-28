@@ -176,9 +176,9 @@ static int trell_handler_body(request_rec *r)
 
 static int trell_handler(request_rec *r)
 {
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: begin.", getpid() );
+    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: begin.", getpid() );
     int retval = trell_handler_body( r );
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: end = %d.", getpid(), retval );
+    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: end = %d.", getpid(), retval );
     return retval;
 }
 

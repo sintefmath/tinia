@@ -55,7 +55,7 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementAdded(
       model::StateSchemaElement *element)
 {
 
-   for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
+	for(std::list<StateSchemaListener*>::iterator it = m_listeners.begin(); it != m_listeners.end(); it++)
    {
       (*it)->stateSchemaElementAdded(element);
    }
@@ -63,8 +63,8 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementAdded(
    std::string key = element->getKey();
    if(m_keyListeners.find(key)!=m_keyListeners.end())
    {
-      auto listeners = m_keyListeners[key];
-      for(auto it = listeners.begin(); it != listeners.end(); it++)
+       std::list<StateSchemaListener*> listeners = m_keyListeners[key];
+       for(std::list<StateSchemaListener*>::iterator it = listeners.begin(); it != listeners.end(); it++)
       {
          (*it)->stateSchemaElementAdded(element);
       }
@@ -74,7 +74,7 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementAdded(
 void model::impl::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
       model::StateSchemaElement *element)
 {
-   for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
+    for(std::list<model::StateSchemaListener*>::iterator it = m_listeners.begin(); it != m_listeners.end(); it++)
    {
       (*it)->stateSchemaElementRemoved(element);
    }
@@ -82,8 +82,8 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
    std::string key = element->getKey();
    if(m_keyListeners.find(key)!=m_keyListeners.end())
    {
-      auto listeners = m_keyListeners[key];
-      for(auto it = listeners.begin(); it != listeners.end(); it++)
+       std::list<model::StateSchemaListener*> listeners = m_keyListeners[key];
+       for(std::list<model::StateSchemaListener*>::iterator it = listeners.begin(); it != listeners.end(); ++it)
       {
          (*it)->stateSchemaElementRemoved(element);
       }
@@ -93,7 +93,7 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementRemoved(
 void model::impl::StateSchemaListenerHandler::fireStateSchemaElementModified(
       model::StateSchemaElement *element)
 {
-   for(auto it = m_listeners.begin(); it != m_listeners.end(); it++)
+    for(std::list<model::StateSchemaListener*>::iterator it = m_listeners.begin(); it != m_listeners.end(); it++)
    {
       (*it)->stateSchemaElementModified(element);
    }
@@ -101,8 +101,8 @@ void model::impl::StateSchemaListenerHandler::fireStateSchemaElementModified(
    std::string key = element->getKey();
    if(m_keyListeners.find(key)!=m_keyListeners.end())
    {
-      auto listeners = m_keyListeners[key];
-      for(auto it = listeners.begin(); it != listeners.end(); it++)
+      std::list<model::StateSchemaListener*> listeners = m_keyListeners[key];
+      for(std::list<model::StateSchemaListener*>::iterator it = listeners.begin(); it != listeners.end(); it++)
       {
          (*it)->stateSchemaElementModified(element);
       }

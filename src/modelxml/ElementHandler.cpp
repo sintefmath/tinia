@@ -19,7 +19,7 @@
 #include "tinia/model/impl/xml/ElementHandler.hpp"
 
 namespace tinia {
-model::impl::xml::ElementHandler::ElementHandler(std::shared_ptr<model::ExposedModel> model)
+model::impl::xml::ElementHandler::ElementHandler(boost::shared_ptr<model::ExposedModel> model)
    : m_model(model)
 {
 }

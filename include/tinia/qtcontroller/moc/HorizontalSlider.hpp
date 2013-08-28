@@ -35,7 +35,7 @@ class HorizontalSlider : public QWidget, public model::StateListener, public mod
     Q_OBJECT
 public:
     explicit HorizontalSlider(std::string key, bool withButtons,
-                              std::shared_ptr<model::ExposedModel> model,
+                              boost::shared_ptr<model::ExposedModel> model,
                               QWidget *parent = 0);
 
    ~HorizontalSlider();
@@ -52,7 +52,7 @@ public slots:
 private:
    void addButtons();
    std::string m_key;
-   std::shared_ptr<model::ExposedModel> m_model;
+   boost::shared_ptr<model::ExposedModel> m_model;
    QSlider* m_slider;
 
 };

@@ -164,7 +164,7 @@ public:
         }
     }
 
-    void setChild( ChildType* child ) { m_child = child; }
+    void setChild( ChildType* child ) { if (m_child != NULL ) { delete m_child; } m_child = child; }
     ChildType* child() { return m_child; }
     const ChildType* child() const { return m_child; }
 
@@ -179,7 +179,7 @@ class Container1D
 public:
     ~Container1D()
     {
-        for( auto it = m_children.begin(); it != m_children.end(); ++it ) {
+        for( typename std::vector<ChildType*>::iterator it = m_children.begin(); it != m_children.end(); ++it ) {
             delete *it;
         }
     }
@@ -207,7 +207,7 @@ public:
 
     ~Container2D()
     {
-        for(auto it = m_children.begin(); it != m_children.end(); ++it ) {
+        for(typename std::vector<ChildType*>::iterator it = m_children.begin(); it != m_children.end(); ++it ) {
             if( *it != NULL ) {
                 delete *it;
             }

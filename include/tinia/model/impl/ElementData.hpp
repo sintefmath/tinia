@@ -20,12 +20,13 @@
 
 #include <map>
 #include <string>
-#include <unordered_set>
-#include <unordered_map>
 #include <memory>
 #include <iostream>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree_fwd.hpp>
 #include <boost/lexical_cast.hpp>
+#endif
 #include <set>
 
 #include "tinia/model/Viewer.hpp"
@@ -124,10 +125,10 @@ public:
       \param annotationMap Contains mapping between language code and annotation string.
              Eg: ["en"]->"An annotation", ["no"]->"En beskrivelse"
       */
-    void setAnnotation( std::unordered_map<std::string, std::string>& annotationMap);
+    void setAnnotation( std::map<std::string, std::string>& annotationMap);
 
     /** Get the annotation of the element. */
-    const std::unordered_map<std::string, std::string>& getAnnotation() const;
+    const std::map<std::string, std::string>& getAnnotation() const;
 
     /** Get the revision number for the previous changeof this element. */
     unsigned int getRevisionNumber() const { return preChangeRevisionNumber; }
@@ -175,7 +176,7 @@ private:
     std::string minConstraint;
     std::string maxConstraint;
     std::set<std::string> enumerationSet;
-    std::unordered_map<std::string, std::string> annotationMap;
+	std::map<std::string, std::string> annotationMap;
     int preChangeRevisionNumber; // The revision number just prior to updating this element
     int length;
 
@@ -216,7 +217,7 @@ ElementData::violatingRestriction( const T& value ) const {
     }
 
     std::string sValue = boost::lexical_cast<std::string>( value );
-    auto& restrictionSet = getEnumerationSet();
+    const std::set<std::string>& restrictionSet = getEnumerationSet();
 
     return restrictionSet.find( sValue ) == restrictionSet.end();
 }

@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( TestVec3Add ) {
             "var c = vec3.create();"
             "return vec3.add(a, b, c);"
             "})";
-    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    QScriptValue returnValue = engine.evaluate(script).call(QScriptValue());
     BOOST_CHECK_EQUAL(2, returnValue.property(0).toNumber());
     BOOST_CHECK_EQUAL(2, returnValue.property(1).toNumber());
     BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( TestVec3Subtract ) {
             "var c = vec3.create();"
             "return vec3.subtract(a, b, c);"
             "})";
-    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    QScriptValue returnValue = engine.evaluate(script).call(QScriptValue());
     BOOST_CHECK_EQUAL(-2, returnValue.property(0).toNumber());
     BOOST_CHECK_EQUAL(0, returnValue.property(1).toNumber());
     BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( TestMat4MultiplyWithVec4) {
             "return mat4.multiplyVec3(A, x);"
             "})";
 
-    auto returnValue = engine.evaluate(script).call(QScriptValue());
+    QScriptValue returnValue = engine.evaluate(script).call(QScriptValue());
     BOOST_CHECK_EQUAL(2, returnValue.property(0).toNumber());
     BOOST_CHECK_EQUAL(2, returnValue.property(1).toNumber());
     BOOST_CHECK_EQUAL(2, returnValue.property(2).toNumber());

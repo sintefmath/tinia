@@ -63,15 +63,15 @@ XMLBuilder::setExposedModelAttributes() {
 
 void
 XMLBuilder::buildSchemaXML() {
-   auto schemaroot = xmlNewChild( schema, xsd, BAD_CAST "schema", 0 );
+   xmlNodePtr schemaroot = xmlNewChild( schema, xsd, BAD_CAST "schema", 0 );
 
-   auto state = xmlNewChild( schemaroot, xsd, BAD_CAST "element", 0 );
+   xmlNodePtr state = xmlNewChild( schemaroot, xsd, BAD_CAST "element", 0 );
    xmlSetProp( state, BAD_CAST "name", BAD_CAST "State" );
 
-   auto complexType = xmlNewChild( state, xsd, BAD_CAST"complexType", 0 );
-   auto all = xmlNewChild( complexType, xsd, BAD_CAST "all", 0 );
+   xmlNodePtr complexType = xmlNewChild( state, xsd, BAD_CAST"complexType", 0 );
+   xmlNodePtr all = xmlNewChild( complexType, xsd, BAD_CAST "all", 0 );
 
-   for(auto it = m_stateSchemaDelta.begin(); it!=m_stateSchemaDelta.end(); it++)
+   for(std::vector<model::StateSchemaElement>::const_iterator it = m_stateSchemaDelta.begin(); it!=m_stateSchemaDelta.end(); it++)
    {
       buildSchemaXMLForElement( all, (*it).getKey(), *it );
    }
@@ -90,21 +90,21 @@ XMLBuilder::buildSchemaXMLForElement( xmlNodePtr parent, const std::string& name
 void
 
 XMLBuilder::buildComplexTypeSchemaXML( xmlNodePtr parent, const std::string& name, const model::StateSchemaElement& elementData )   {
-   auto elementNode = xmlNewChild( parent, xsd, BAD_CAST "complexType", 0 );
+   xmlNodePtr elementNode = xmlNewChild( parent, xsd, BAD_CAST "complexType", 0 );
    xmlSetProp( elementNode, BAD_CAST "name", BAD_CAST name.c_str() );
-   auto sequenceNode = xmlNewChild( elementNode, xsd, BAD_CAST "sequence", 0 );
+   xmlNodePtr sequenceNode = xmlNewChild( elementNode, xsd, BAD_CAST "sequence", 0 );
 
-   const auto& ptree = elementData.getPropertyTree();
+   const ElementData::PropertyTree& ptree = elementData.getPropertyTree();
 
    typedef model::StateSchemaElement::PropertyTree::value_type value_type;
-   for_each( ptree.begin(), ptree.end(), [sequenceNode, this]( const value_type& kv ) {
-             buildSchemaXMLForElement( sequenceNode, kv.first, model::StateSchemaElement(kv.first, kv.second) );
-} );
+   for(ElementData::PropertyTree::const_iterator it = ptree.begin(); it !=  ptree.end(); ++it) {
+       buildSchemaXMLForElement( sequenceNode, it->first, model::StateSchemaElement(it->first, it->second) );
+   }
 }
 
 void
     XMLBuilder::buildSimpleTypeSchemaXML( xmlNodePtr parent, const std::string& name, const model::StateSchemaElement& elementData ) {
-        auto elementNode = xmlNewChild( parent, xsd, BAD_CAST "element", 0 );
+        xmlNodePtr elementNode = xmlNewChild( parent, xsd, BAD_CAST "element", 0 );
 
         xmlSetProp( elementNode, BAD_CAST "name", BAD_CAST name.c_str() );
 
@@ -114,36 +114,35 @@ void
             if ( elementData.getLength() != elementData.LENGTH_NOT_SET ) {
                 buildMatrixTypeSchemaXML( elementNode );
             } else {
-                auto simpleType = xmlNewChild( elementNode, xsd, BAD_CAST "simpleType", 0 );
-                auto restriction = xmlNewChild( simpleType, xsd, BAD_CAST "restriction", 0 );
+                xmlNodePtr simpleType = xmlNewChild( elementNode, xsd, BAD_CAST "simpleType", 0 );
+                xmlNodePtr restriction = xmlNewChild( simpleType, xsd, BAD_CAST "restriction", 0 );
                 xmlSetProp( restriction, BAD_CAST "base", BAD_CAST elementData.getXSDType().c_str() );
 
                 if ( !elementData.emptyConstraints() ) {
-                    auto minInclusive = xmlNewChild( restriction, xsd, BAD_CAST "minInclusive", 0 );
+                    xmlNodePtr minInclusive = xmlNewChild( restriction, xsd, BAD_CAST "minInclusive", 0 );
                     xmlSetProp( minInclusive, BAD_CAST "value", BAD_CAST elementData.getMinConstraint().c_str() );
 
-                    auto maxInclusive = xmlNewChild( restriction, xsd, BAD_CAST "maxInclusive", 0 );
+                    xmlNodePtr maxInclusive = xmlNewChild( restriction, xsd, BAD_CAST "maxInclusive", 0 );
                     xmlSetProp( maxInclusive, BAD_CAST "value", BAD_CAST elementData.getMaxConstraint().c_str() );
                 }
 
                 if ( !elementData.emptyRestrictionSet() ) {
-                    auto& restrictions = elementData.getEnumerationSet();
-                    for_each( restrictions.begin(), restrictions.end(), [restriction, this]( std::string s ) {
-                        auto enumeration = xmlNewChild( restriction, xsd, BAD_CAST "enumeration", 0 );
-                        xmlSetProp( enumeration, BAD_CAST "value", BAD_CAST s.c_str() );
-                    });
+                    const std::set<std::string>& restrictions = elementData.getEnumerationSet();
+                    for(std::set<std::string>::const_iterator it = restrictions.begin(); it != restrictions.end(); ++it) {
+                        xmlNodePtr enumeration = xmlNewChild( restriction, xsd, BAD_CAST "enumeration", 0 );
+                        xmlSetProp( enumeration, BAD_CAST "value", BAD_CAST it->c_str() );
+                    }
                 }
             }
         }
 
         if ( !elementData.emptyAnnotation() ) {
-            auto annotationNode = xmlNewChild( elementNode, xsd, BAD_CAST "annotation", 0 );
-            const auto& annotation  = elementData.getAnnotation();
-            for_each( annotation.begin(), annotation.end(), [annotationNode, this]( const std::pair<std::string, std::string>& pair ) {
-                auto docNode = xmlNewChild( annotationNode, xsd, BAD_CAST "documentation", BAD_CAST pair.second.c_str() );
-                xmlSetProp( docNode, BAD_CAST "xml:lang", BAD_CAST pair.first.c_str() );
+            xmlNodePtr annotationNode = xmlNewChild( elementNode, xsd, BAD_CAST "annotation", 0 );
+            const std::map<std::string, std::string>& annotation  = elementData.getAnnotation();
+            for(std::map<std::string, std::string>::const_iterator it = annotation.begin(); it !=  annotation.end(); ++it) {
+                xmlNodePtr docNode = xmlNewChild( annotationNode, xsd, BAD_CAST "documentation", BAD_CAST it->second.c_str() );
+                xmlSetProp( docNode, BAD_CAST "xml:lang", BAD_CAST it->first.c_str() );
             }
-            );
         }
 }
 
@@ -151,7 +150,7 @@ void
 void
 XMLBuilder::buildStateXML( const unsigned rev_number_start ) {
 
-   for(auto it = m_stateDelta.begin(); it!=m_stateDelta.end(); it++)
+    for(std::vector<model::StateElement>::const_iterator it = m_stateDelta.begin(); it!=m_stateDelta.end(); ++it)
    {
       buildStateXMLForElement( state, (*it).getKey(), *it );
    }
@@ -159,7 +158,7 @@ XMLBuilder::buildStateXML( const unsigned rev_number_start ) {
 
 void
 XMLBuilder::buildStateXMLForElement( xmlNodePtr parent, const std::string& name, const model::StateElement& elementData ) {
-   auto child = xmlNewChild( parent, 0, BAD_CAST name.c_str(), 0 );
+   xmlNodePtr child = xmlNewChild( parent, 0, BAD_CAST name.c_str(), 0 );
    if ( isComplexElement( elementData ) ) {
       buildComplexElementStateXML( child, elementData );
    } else {
@@ -174,24 +173,24 @@ XMLBuilder::buildSimpleElementStateXML( xmlNodePtr node, const model::StateEleme
 
 void
 XMLBuilder::buildComplexElementStateXML( xmlNodePtr node, const model::StateElement& elementData ) {
-   const auto& ptree = elementData.getPropertyTree();
+    const ElementData::PropertyTree& ptree = elementData.getPropertyTree();
 
    typedef model::StateElement::PropertyTree::value_type value_type;
-   for_each( ptree.begin(), ptree.end(), [=]( const value_type& kv ) {
-         buildStateXMLForElement( node, kv.first, StateElement(kv.first, kv.second) );
-} );
+   for( ElementData::PropertyTree::const_iterator  it = ptree.begin(); it != ptree.end(); ++it) {
+         buildStateXMLForElement( node, it->first, StateElement(it->first, it->second) );
+    }
 }
 
 
 void
 XMLBuilder::buildMatrixTypeSchemaXML( xmlNodePtr elementRoot ) {
-   auto restriction = xmlNewChild( elementRoot, xsd, BAD_CAST "restriction", 0 );
+   xmlNodePtr restriction = xmlNewChild( elementRoot, xsd, BAD_CAST "restriction", 0 );
 
-   auto simpleType = xmlNewChild( restriction, xsd, BAD_CAST "simpleType", 0 );
-   auto listNode = xmlNewChild( simpleType, xsd, BAD_CAST "list", 0 );
+   xmlNodePtr simpleType = xmlNewChild( restriction, xsd, BAD_CAST "simpleType", 0 );
+   xmlNodePtr listNode = xmlNewChild( simpleType, xsd, BAD_CAST "list", 0 );
    xmlSetProp( listNode, BAD_CAST "itemType", BAD_CAST "xsd:float" );
 
-   auto lengthNode = xmlNewChild( restriction, xsd, BAD_CAST "length", 0 );
+   xmlNodePtr lengthNode = xmlNewChild( restriction, xsd, BAD_CAST "length", 0 );
    xmlSetProp( lengthNode, BAD_CAST "value", BAD_CAST "16" );
 }
 
@@ -213,16 +212,16 @@ XMLBuilder::elementLacksRestrictions( const model::StateSchemaElement& elementDa
 // The first generation
 void
 XMLBuilder::buildSimpleGuiLayout_alpha() {
-   auto tabs = xmlNewChild( guiLayout, 0, BAD_CAST "tabs", 0 );
-   auto tab = xmlNewChild( tabs, 0, BAD_CAST "tab", 0 );
+   xmlNodePtr tabs = xmlNewChild( guiLayout, 0, BAD_CAST "tabs", 0 );
+   xmlNodePtr tab = xmlNewChild( tabs, 0, BAD_CAST "tab", 0 );
    /*auto title = */xmlNewChild( tab, 0, BAD_CAST "title", BAD_CAST "Simple Layout" );
-   auto grid = xmlNewChild(  tab, 0, BAD_CAST "grid", 0 );
-   auto row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-   auto cella = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
+   xmlNodePtr grid = xmlNewChild(  tab, 0, BAD_CAST "grid", 0 );
+   xmlNodePtr row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
+   xmlNodePtr cella = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
    /*auto canvas = */xmlNewChild( cella, 0, BAD_CAST "Canvas", 0 );
 
    row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-   auto cellb = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
+   xmlNodePtr cellb = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
    grid = xmlNewChild( cellb, 0, BAD_CAST "grid", 0 );
 
    row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
@@ -240,47 +239,7 @@ XMLBuilder::buildSimpleGuiLayout_alpha() {
 
 }
 
-void
-XMLBuilder::buildSimpleGuiLayout() {
 
-   auto tabs = xmlNewChild( guiLayout, 0, BAD_CAST "tabs", 0 );
-   auto tab = xmlNewChild( tabs, 0, BAD_CAST "tab", 0 );
-   /*auto title = */xmlNewChild( tab, 0, BAD_CAST "title", BAD_CAST "Simple Layout" );
-   auto grid = xmlNewChild(  tab, 0, BAD_CAST "grid", 0 );
-   auto row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-   auto cella = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
-   /*auto canvas = */xmlNewChild( cella, 0, BAD_CAST "Canvas", 0 );
-
-   row = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-   auto cellb = xmlNewChild( row, 0, BAD_CAST "cell", 0 );
-   grid = xmlNewChild( cellb, 0, BAD_CAST "grid", 0 );
-
-   for(auto it = m_stateSchemaDelta.begin(); it !=m_stateSchemaDelta.end();
-       it++)
-   {
-      auto row2 = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-      auto cell0 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
-      auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );
-      xmlSetProp( key, BAD_CAST "parameter", BAD_CAST it->getKey().c_str() );
-      auto cell1 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
-      const string widgetType = it->getWidgetType();
-      auto value = xmlNewChild( cell1, 0, BAD_CAST widgetType.c_str(), 0 );
-      xmlSetProp( value, BAD_CAST "parameter", BAD_CAST it->getKey().c_str() );
-   }
-   //   for_each( stateHash.begin(), stateHash.end(),
-   //             [grid]( const std::pair<std::string, model::impl::ElementData>& kv ) {
-   //             auto row2 = xmlNewChild( grid, 0, BAD_CAST "row", 0 );
-   //         auto cell0 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
-   //   auto key = xmlNewChild( cell0, 0, BAD_CAST "string", 0 );
-   //   xmlSetProp( key, BAD_CAST "parameter", BAD_CAST kv.first.c_str() );
-   //   auto cell1 = xmlNewChild( row2, 0, BAD_CAST "cell", 0 );
-   //   const string widgetType = kv.second.getWidgetType();
-   //   auto value = xmlNewChild( cell1, 0, BAD_CAST widgetType.c_str(), 0 );
-   //   xmlSetProp( value, BAD_CAST "parameter", BAD_CAST kv.first.c_str() );
-   //}
-   //);
-
-}
 
 
 
@@ -428,7 +387,7 @@ xmlNodePtr XMLBuilder::addExposedModelGUIElement(model::gui::KeyValue *element,
 {
 
 
-   auto xmlElement = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
+   xmlNodePtr xmlElement = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
    addElementKeys(xmlElement, element);
 
    return xmlElement;
@@ -440,7 +399,7 @@ xmlNodePtr XMLBuilder::addElementGroup(model::gui::ElementGroup *element,
 
 
    using namespace model::gui;
-   auto xmlElement = xmlNewChild(parent, 0, BAD_CAST "ElementGroup", 0);
+   xmlNodePtr xmlElement = xmlNewChild(parent, 0, BAD_CAST "ElementGroup", 0);
    xmlSetProp(xmlElement, BAD_CAST "key", BAD_CAST element->key().c_str());
 
    buildGUILayout(element->child(), xmlElement);
@@ -459,7 +418,7 @@ xmlNodePtr XMLBuilder::addLayout(std::string type,
 {
 
 
-   auto element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
+   xmlNodePtr element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
    for(size_t i = 0; i < layout->children(); i++)
    {
       buildGUILayout(layout->child(i), element);
@@ -471,13 +430,13 @@ xmlNodePtr XMLBuilder::addGridLayout(std::string type, model::gui::Grid *grid, x
 {
 
 
-   auto xmlGrid = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
+   xmlNodePtr xmlGrid = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
    for(size_t i = 0; i < grid->height(); i++)
    {
-      auto row = xmlNewChild(xmlGrid, 0, BAD_CAST "Row", 0);
+      xmlNodePtr row = xmlNewChild(xmlGrid, 0, BAD_CAST "Row", 0);
       for(size_t j = 0; j < grid->width(); j++)
       {
-         auto cell = xmlNewChild(row, 0, BAD_CAST "Cell", 0);
+         xmlNodePtr cell = xmlNewChild(row, 0, BAD_CAST "Cell", 0);
          if(grid->child(i,j) != NULL)
          {
             buildGUILayout(grid->child(i,j), cell);
@@ -492,14 +451,14 @@ xmlNodePtr XMLBuilder::addGridLayout(std::string type, model::gui::Grid *grid, x
 xmlNodePtr XMLBuilder::addTabLayout(std::string type, model::gui::TabLayout *tabLayout, xmlNodePtr parent)
 {
 using namespace model::gui;
-   auto element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
+   xmlNodePtr element = xmlNewChild(parent, 0, BAD_CAST type.c_str(), 0);
 
 
 
    for(size_t i = 0; i < tabLayout->children(); i++)
    {
       Tab* child = tabLayout->child(i);
-      auto tab = xmlNewChild(element, 0, BAD_CAST "Tab", 0);
+      xmlNodePtr tab = xmlNewChild(element, 0, BAD_CAST "Tab", 0);
       addElementKeys(tab, child);
       buildGUILayout(child->child(), tab);
    }
@@ -511,7 +470,7 @@ xmlNodePtr XMLBuilder::addCanvas(model::gui::Canvas* element,
 {
 
 
-   auto xmlElement = addExposedModelGUIElement(element, "Canvas", parent);
+   xmlNodePtr xmlElement = addExposedModelGUIElement(element, "Canvas", parent);
 
 
 
@@ -521,27 +480,27 @@ xmlNodePtr XMLBuilder::addCanvas(model::gui::Canvas* element,
    xmlSetProp(xmlElement, BAD_CAST "boundingboxKey", BAD_CAST element->boundingBoxKey().c_str());
    xmlSetProp(xmlElement, BAD_CAST "resetViewKey", BAD_CAST element->resetViewKey().c_str());
 
-   auto scripts = xmlNewChild(xmlElement, 0, BAD_CAST "scripts", 0);
-   auto mainViewer = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
+   xmlNodePtr scripts = xmlNewChild(xmlElement, 0, BAD_CAST "scripts", 0);
+   xmlNodePtr mainViewer = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
    xmlSetProp(mainViewer, BAD_CAST "className", BAD_CAST element->viewerType().className().c_str());
-   for(auto it = element->viewerType().parameters().begin();
+   for(std::map<std::string, std::string>::const_iterator it = element->viewerType().parameters().begin();
        it != element->viewerType().parameters().end();
        ++it)
    {
-       auto arg = xmlNewChild(mainViewer, 0, BAD_CAST "parameter", 0);
+       xmlNodePtr arg = xmlNewChild(mainViewer, 0, BAD_CAST "parameter", 0);
        xmlSetProp(arg, BAD_CAST "name", BAD_CAST it->first.c_str());
        xmlSetProp(arg, BAD_CAST "value", BAD_CAST it->second.c_str());
    }
 
    for(size_t i = 0; i < element->scripts().size(); ++i) {
-       const auto& scriptArg = element->scripts()[i];
-       auto  script = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
+       const tinia::model::gui::ScriptArgument& scriptArg = element->scripts()[i];
+       xmlNodePtr  script = xmlNewChild( scripts, 0 , BAD_CAST "script", 0);
        xmlSetProp(script, BAD_CAST "className", BAD_CAST scriptArg.className().c_str());
-       for(auto it = scriptArg.parameters().begin();
+       for(std::map<std::string, std::string>::const_iterator it = scriptArg.parameters().begin();
            it != scriptArg.parameters().end();
            ++it)
        {
-           auto arg = xmlNewChild(script, 0, BAD_CAST "parameter", 0);
+           xmlNodePtr arg = xmlNewChild(script, 0, BAD_CAST "parameter", 0);
            xmlSetProp(arg, BAD_CAST "name", BAD_CAST it->first.c_str());
            xmlSetProp(arg, BAD_CAST "value", BAD_CAST it->second.c_str());
        }
@@ -552,18 +511,14 @@ xmlNodePtr XMLBuilder::addCanvas(model::gui::Canvas* element,
 
 xmlNodePtr XMLBuilder::addHorizontalLayout(model::gui::HorizontalLayout *layout, xmlNodePtr parent)
 {
-
-
-   auto xmlElement = addLayout("HorizontalLayout", layout, parent);
+   xmlNodePtr xmlElement = addLayout("HorizontalLayout", layout, parent);
    return xmlElement;
 
 }
 
 xmlNodePtr XMLBuilder::addVerticalLayout(model::gui::VerticalLayout *layout, xmlNodePtr parent)
 {
-
-
-   auto xmlElement = addLayout("VerticalLayout", layout, parent);
+   xmlNodePtr xmlElement = addLayout("VerticalLayout", layout, parent);
    return xmlElement;
 
 }
@@ -602,7 +557,7 @@ xmlNodePtr XMLBuilder::addElementKeys(xmlNodePtr xmlElementPtr,
 
 xmlNodePtr XMLBuilder::addPopupButton(xmlNodePtr parent, model::gui::PopupButton *button)
 {
-   auto buttonXml = addExposedModelGUIElement(button, "PopupButton", parent);
+    xmlNodePtr buttonXml = addExposedModelGUIElement(button, "PopupButton", parent);
 
 
    buildGUILayout(button->child(), buttonXml);

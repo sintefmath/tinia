@@ -26,7 +26,7 @@ namespace qtcontroller {
 namespace impl {
 
 StringController::StringController( QWidget *widget,
-                                    std::shared_ptr<model::ExposedModel>   model,
+                                    boost::shared_ptr<model::ExposedModel>   model,
                                     const std::string&                      key,
                                     const bool                              show_value,
                                     const QString&                          suffix )
@@ -46,8 +46,8 @@ StringController::StringController( QWidget *widget,
             m_current_value = m_key;
         }
         else {
-            auto annotations = element.getAnnotation();
-            auto annotation = annotations["en"];
+            std::map<std::string, std::string> annotations = element.getAnnotation();
+            std::string annotation = annotations["en"];
             if( annotation.empty() ) {
                 m_current_value = m_key;
             }

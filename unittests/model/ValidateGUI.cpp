@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Container1D, Container, containers1D) {
 
     tinia::model::gui::TextInput* input = new tinia::model::gui::TextInput("key");
 
-    auto container = new Container();
+    Container* container = new Container();
     container->addChild(input);
 
     BOOST_CHECK_NO_THROW(tinia::model::impl::validateGUI(container, model));
@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_CASE(TabLayout) {
 
     tinia::model::gui::TextInput* input = new tinia::model::gui::TextInput("key");
 
-    auto container = new tinia::model::gui::TabLayout();
-    auto tab = new tinia::model::gui::Tab("key");
+    tinia::model::gui::TabLayout* container = new tinia::model::gui::TabLayout();
+    tinia::model::gui::Tab* tab = new tinia::model::gui::Tab("key");
     tab->setChild(input);
     container->addChild(tab);
 
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TabLayout) {
                       tinia::model::KeyNotFoundException);
 
     tinia::model::gui::HorizontalLayout nonTabLayout;
-    auto tab2 = new tinia::model::gui::Tab("key");
+    tinia::model::gui::Tab* tab2 = new tinia::model::gui::Tab("key");
     tab2->setChild(new tinia::model::gui::TextInput("key"));
     nonTabLayout.addChild(tab2);
 
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(Grid) {
 
     tinia::model::gui::TextInput* input = new tinia::model::gui::TextInput("key");
 
-    auto container = new tinia::model::gui::Grid(2,2);
+    tinia::model::gui::Grid* container = new tinia::model::gui::Grid(2,2);
     container->setChild(0, 0, input);
 
     BOOST_CHECK_NO_THROW(tinia::model::impl::validateGUI(container, model));

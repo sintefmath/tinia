@@ -21,9 +21,9 @@
 #include <tinia/tinia.hpp>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
-#include <array>
+#include <boost/array.hpp>
 #include <algorithm>
-#include <tuple>
+
 
 namespace tinia { namespace tutorial5 {
 
@@ -90,11 +90,11 @@ TextureDrawer::TextureDrawer() {
     m_model->addElement("boundingbox", "-2 -2 -2 2 2 2");
 
     /** [layout] */
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
     /** [layout] */
 
     /** [canvas] */
-    auto canvas = new tinia::model::gui::Canvas("myViewer");
+    tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
     canvas->setViewerType( std::string("MouseClickResponder") );
     /** [canvas] */
 
@@ -133,7 +133,7 @@ bool TextureDrawer::initGL () {
 
 /** [stateElementModified] */
 void TextureDrawer::stateElementModified ( tinia::model::StateElement *stateElement ) {
-    auto xy = m_model->getElementValue<std::string>( "click_xy" );    
+    std::string xy = m_model->getElementValue<std::string>( "click_xy" );    
 
     WindowCoord windowCoord( xy );      
     RelativeCoord relativeCoord( windowCoord,  
@@ -146,10 +146,10 @@ void TextureDrawer::stateElementModified ( tinia::model::StateElement *stateElem
 
 
 void TextureDrawer::generateTexture() {
-    std::array<glm::vec4, m_textureSize * m_textureSize> texData;
+    boost::array<glm::vec4, m_textureSize * m_textureSize> texData;
     glm::vec4 defaultColor( 0x88/256., 0xbf/256., 0xdb/256., 1.0 );
 
-    std::fill( std::begin( texData ), std::end( texData ), defaultColor );
+    std::fill( texData.begin(), texData.end(), defaultColor );
 
     glGenTextures ( 1, &m_texName );
     glBindTexture ( GL_TEXTURE_2D, m_texName );    

@@ -25,7 +25,7 @@ class JobFixture : Job {
 public:
    JobFixture() { model = getExposedModel();}
    ~JobFixture() {}
-   std::shared_ptr<tinia::model::ExposedModel> model;
+   boost::shared_ptr<tinia::model::ExposedModel> model;
 };
 }
 
@@ -52,7 +52,7 @@ BOOST_FIXTURE_TEST_CASE(getFullStateTest, JobFixture)
    std::vector<bool> found;
 
    for(int i = 0; i < 9; i++) found.push_back(false);
-   for(auto it = elements.begin(); it!=elements.end(); it++)
+   for(std::vector<tinia::model::StateSchemaElement>::iterator it = elements.begin(); it!=elements.end(); it++)
    {
       std::string key = it->getKey();
       int i = (int)(key[key.size()-1]-'0');

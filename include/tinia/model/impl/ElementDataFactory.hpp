@@ -24,8 +24,11 @@
 
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/TypeToXSDType.hpp"
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
+#endif
 
 namespace tinia {
 namespace model {
@@ -60,13 +63,13 @@ ElementDataFactory::createElement<model::Viewer>( const Viewer& value ) const {
 
     elementData.setXSDType( "xsd:complexType" );
     elementData.setWidgetType( "canvas" );
-    auto& ptree = elementData.getPropertyTree();
-    auto widthED = createElement( value.width );
-    auto heightED = createElement( value.height );
-    auto timestampED = createElement( value.timestamp );
-    auto sceneViewED = createElement( value.sceneView );
-    auto projectionED = createMatrixElement( value.projectionMatrix.data() );
-    auto modelviewED = createMatrixElement( value.modelviewMatrix.data() );
+	ElementData::PropertyTree& ptree = elementData.getPropertyTree();
+    ElementData widthED = createElement( value.width );
+    ElementData heightED = createElement( value.height );
+    ElementData timestampED = createElement( value.timestamp );
+    ElementData sceneViewED = createElement( value.sceneView );
+    ElementData projectionED = createMatrixElement( value.projectionMatrix.data() );
+    ElementData modelviewED = createMatrixElement( value.modelviewMatrix.data() );
 
     ptree[ "width"] =  widthED;
     ptree[ "height"] =  heightED;
@@ -84,7 +87,7 @@ template<>
 inline
 void
 ElementDataFactory::createT<model::Viewer>( const ElementData& elementData, Viewer& t ) const {
-    const auto& ptree = elementData.getPropertyTree();
+    const ElementData::PropertyTree& ptree = elementData.getPropertyTree();
 
     createT( ptree.find("width")->second, t.width );
     createT( ptree.find("height")->second, t.height );
@@ -150,9 +153,9 @@ ElementDataFactory::createMatrix( const ElementData& elementData, float* matrixD
     std::string s( elementData.getStringValue() );
     boost::split( splitted, s, boost::is_any_of(" ") );
 
-    std::transform( splitted.begin(), splitted.end(), matrixData, []( const std::string& s ) {
-              return boost::lexical_cast<float>( s ); }
-    );
+    for(size_t i = 0; i < splitted.size(); ++i) {
+        matrixData[i] = boost::lexical_cast<float>( splitted[i] ); 
+    }
 }
 
 

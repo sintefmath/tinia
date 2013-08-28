@@ -61,7 +61,7 @@ bool RestrictionsJob::init()
 
     m_model->addElementWithRestriction<std::string>("restricted", "one", m_possibleChoices);
 
-    auto layout = new tinia::model::gui::VerticalLayout();
+    tinia::model::gui::VerticalLayout* layout = new tinia::model::gui::VerticalLayout();
 
     for(size_t i = 1u; i < m_possibleChoices.size(); ++i) { // Don't want them to remove everything
         layout->addChild(new tinia::model::gui::CheckBox(m_possibleChoices[i]));

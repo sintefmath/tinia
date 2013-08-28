@@ -19,27 +19,24 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <sstream>
 #include <stdexcept>
-// #include <initializer_list> // This include makes Visual Studio sad.
 #include <iostream>
 #include <algorithm>
-#include <type_traits>
-
-
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
+#include <boost/type_traits.hpp>
 #include <boost/lexical_cast.hpp>
-
 #include <boost/thread.hpp>
-
+#include <boost/property_tree/ptree.hpp>
+#endif
 #include "tinia/model/impl/ElementData.hpp"
 #include "tinia/model/impl/TypeToXSDType.hpp"
 #include "tinia/model/impl/ElementDataFactory.hpp"
 #include "tinia/model/impl/StateListenerHandler.hpp"
 #include "tinia/model/impl/StateSchemaListenerHandler.hpp"
 #include "tinia/model/GUILayout.hpp"
-#include <boost/property_tree/ptree.hpp>
+
 #include "tinia/model/Viewer.hpp"
 #include <tinia/model/exceptions/BoundsExceededException.hpp>
 #include <tinia/model/exceptions/RestrictionException.hpp>
@@ -70,6 +67,7 @@ class ExposedModel {
 public:
    typedef class ExposedModelLock ExposedModelLock;
    ExposedModel();
+   ~ExposedModel();
 
    std::string getElementMaxConstraint(std::string key) const;
    std::string getElementMinConstraint(std::string key) const;
@@ -289,7 +287,7 @@ The job can use this to get an update meant for the client. This version are for
    /** Returning the revision number.
  \deprecated An controller should implement its own revision scheme.
 */
-   inline int getRevisionNumber(void) const { scoped_lock(m_selfMutex); return revisionNumber; }
+   inline int getRevisionNumber(void) const { scoped_lock lock(m_selfMutex); return revisionNumber; }
 
 
    /**
@@ -407,12 +405,12 @@ private:
    void incrementRevisionNumber(impl::ElementData &updatedElement);
 
 
-   void addAnnotationHelper( std::string element, std::unordered_map<std::string, std::string>& );
+   void addAnnotationHelper( std::string element, std::map<std::string, std::string>& );
 
    void addMatrixHelper( std::string key, const float* matrixData );
 
-   std::unordered_map<std::string, impl::ElementData> stateHash;
-//   std::unordered_map<std::string, impl::ElementData> stateHash;
+   std::map<std::string, impl::ElementData> stateHash;
+//   std::map<std::string, impl::ElementData> stateHash;
 
    unsigned int revisionNumber;
 
@@ -444,8 +442,8 @@ private:
    // Locking made easy
    typedef boost::recursive_mutex mutex_type;
    typedef mutex_type::scoped_lock scoped_lock;
-   mutex_type m_selfMutex;
-   mutex_type m_listenerHandlersMutex;
+   mutable mutex_type m_selfMutex;
+   mutable mutex_type m_listenerHandlersMutex;
 
    mutex_type& getExposedModelMutex();
 
@@ -458,8 +456,13 @@ private:
      */
    void makeDefaultGUILayout();
 
+
+
+
    // --- private utilities used during development ---
    // (must be public in order to be used from unit tests...)
+
+
 public:
    void printCurrentState();
 };
@@ -486,7 +489,7 @@ ExposedModel::addElement( std::string key, T value, const std::string annotation
 
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       data = addElementInternal(key, value);
    }
    if( !annotation.empty() ) {
@@ -504,7 +507,7 @@ ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, 
 
    impl::ElementData data;
    { // Lock scope
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       impl::ElementData& elementData = addElementInternal(key, value);
 
       {
@@ -545,7 +548,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
 
     std::set<std::string> restrictionStrings;
 
-    for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
+    for(std::set<std::string>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); ++it)
     {
 
        std::string s = boost::lexical_cast<std::string>( *it );
@@ -556,7 +559,7 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
     impl::ElementData data;
     {
        std::string stringValue = boost::lexical_cast<std::string>(value);
-       scoped_lock(m_selfMutex);
+       scoped_lock lock(m_selfMutex);
        impl::ElementData& elementData = findElementInternal(key);
        elementData.setRestrictionSet( restrictionStrings );
        elementData.setStringValue(stringValue);
@@ -584,7 +587,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
 
    std::set<std::string> restrictionStrings;
 
-   for(auto it=restrictionSet.begin(); it!=restrictionSet.end(); it++)
+   for(typename std::set<T>::iterator it=restrictionSet.begin(); it!=restrictionSet.end(); it++)
    {
 
       std::string s = boost::lexical_cast<std::string>( *it );
@@ -594,7 +597,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
    // The copy given to the listener outside the lock.
    impl::ElementData data;
    {
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
       impl::ElementData& elementData = addElementInternal(key, value);
       elementData.setRestrictionSet( restrictionStrings );
 
@@ -615,7 +618,7 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
   */
 template<bool B>
 struct UpdateElementHelper {
-   UpdateElementHelper( std::unordered_map<std::string, impl::ElementData>& stateHash,
+   UpdateElementHelper( std::map<std::string, impl::ElementData>& stateHash,
                         impl::ElementDataFactory& elementFactory )
       : stateHash( stateHash ),
         elementFactory( elementFactory )
@@ -624,7 +627,7 @@ struct UpdateElementHelper {
    template<class T>
    void operator()( std::string key, impl::ElementData& elementData, const T& value );
 
-   std::unordered_map<std::string, impl::ElementData>& stateHash;
+   std::map<std::string, impl::ElementData>& stateHash;
    impl::ElementDataFactory& elementFactory;
 };
 
@@ -661,7 +664,7 @@ void
 ExposedModel::updateElementHelper( std::string key, impl::ElementData& elementData, const T& value ) {
    // All classes except std::string are assumed to be complexTypes which require specialization
    // in impl::ElementDataFactory for serialization.
-   UpdateElementHelper<std::is_class<T>::value && !std::is_same<std::string, T>::value >
+   UpdateElementHelper<boost::is_class<T>::value && !boost::is_same<std::string, T>::value >
          updater( stateHash, elementFactory );
    updater( key, elementData, value );
 }
@@ -673,7 +676,7 @@ ExposedModel::updateElement( std::string key, T value ) {
    impl::ElementData data;
    std::string stringValueBeforeUpdate;
    {// Lock block
-      scoped_lock(m_selfMutex);
+      scoped_lock lock(m_selfMutex);
 
 
 
@@ -707,12 +710,12 @@ void
 ExposedModel::getElementValue( std::string key, T& t ) {
    // The whole method locks the model. This could be optimized, but leaving it
    // like this for now.
-   scoped_lock(m_selfMutex);
+   scoped_lock lock(m_selfMutex);
 
 
-   auto& elementData = findElementInternal(key);
-   auto myType = impl::TypeToXSDType<T>::getTypename();
-   auto storedType = elementData.getXSDType();
+   impl::ElementData& elementData = findElementInternal(key);
+   std::string myType = impl::TypeToXSDType<T>::getTypename();
+   std::string storedType = elementData.getXSDType();
    if ( storedType !=  myType ) {
        throw TypeException(myType, storedType);
    }
@@ -729,7 +732,7 @@ impl::ElementData& model::ExposedModel::addElementInternal(std::string key,
 
    addElementErrorChecking( key );
 
-   auto elementData = elementFactory.createElement( value );
+   impl::ElementData elementData = elementFactory.createElement( value );
 
    updateStateHash( key, elementData );
 
@@ -742,23 +745,23 @@ template<class InputIterator>
 void
 ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const InputIterator& end ) {
    using std::string;
-   std::unordered_map<std::string, std::string> annotationMap;
+   std::map<std::string, std::string> annotationMap;
 
-   std::for_each( begin, end, [&]( std::string s ) {
-                  auto pos = s.find( ":" );
-         if ( pos == string::npos ) {
-      throw std::invalid_argument( "Trying to set annotation that is not qualified with language code." );
-   }
+   for(InputIterator it = begin; it !=  end; ++it) {
+	   std::string s = *it;
+	   std::string::size_type pos = s.find( ":" );
+       if ( pos == string::npos ) {
+           throw std::invalid_argument( "Trying to set annotation that is not qualified with language code." );
+       }
 
-   string lang( s.begin(), s.begin() + pos );
-   string annotation( s.begin() + pos + 1, s.end() );
-   annotationMap[lang] = annotation;
-}
-);
+       string lang( s.begin(), s.begin() + pos );
+       string annotation( s.begin() + pos + 1, s.end() );
+       annotationMap[lang] = annotation;
+  }
 
 
 
-addAnnotationHelper( key, annotationMap );
+    addAnnotationHelper( key, annotationMap );
 }
 
 template<typename T>
@@ -778,9 +781,9 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     bool emitChange = false;
     bool emitValueChange = false;
     { // Lock block
-        scoped_lock(m_selfMutex);
+        scoped_lock lock(m_selfMutex);
 
-        auto& elementData = findElementInternal(key);
+        impl::ElementData& elementData = findElementInternal(key);
 
         {
             std::stringstream ss;

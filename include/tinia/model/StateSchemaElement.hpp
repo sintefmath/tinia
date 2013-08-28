@@ -19,7 +19,6 @@
 #pragma once
 #include "tinia/model/impl/ElementData.hpp"
 #include <boost/property_tree/ptree.hpp>
-#include <unordered_map>
 #include <string>
 
 namespace tinia {
@@ -64,7 +63,7 @@ public:
    bool emptyAnnotation() const;
 
    /** \return The annotation of the element */
-   const std::unordered_map<std::string, std::string>& getAnnotation() const;
+   const std::map<std::string, std::string>& getAnnotation() const;
 
 
    const std::set<std::string>& getEnumerationSet() const;

@@ -23,7 +23,7 @@ namespace qtcontroller {
 namespace impl {
 
 RadioButton::RadioButton(std::string value, std::string key,
-                         std::shared_ptr<model::ExposedModel> model,
+                         boost::shared_ptr<model::ExposedModel> model,
                          QWidget *parent) :
    QRadioButton(value.c_str(), parent), m_value(value), m_key(key), m_model(model)
 {

@@ -23,7 +23,7 @@ namespace qtcontroller {
 namespace impl {
 
 VisibilityController::VisibilityController( QWidget*                               widget,
-                                            std::shared_ptr<model::ExposedModel>  model,
+                                            boost::shared_ptr<model::ExposedModel>  model,
                                             const std::string&                     key,
                                             const bool                             inverted )
     : QObject( widget ),

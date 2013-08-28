@@ -23,7 +23,7 @@
 #include <tinia/qtcontroller/moc/ServerController.hpp>
 #endif
 #include <QToolBar>
-
+#include <boost/scoped_ptr.hpp>
 
 class QMainWindow;
 class QGLWidget;
@@ -76,8 +76,8 @@ private:
 
     // The order of these two is important, to ensure proper destructor order.
     // App will be deleted after m_main_window.
-    std::unique_ptr<QApplication>          m_app;
-    std::unique_ptr<QMainWindow>           m_main_window;
+    boost::scoped_ptr<QApplication>          m_app;
+    boost::scoped_ptr<QMainWindow>           m_main_window;
 
 #ifdef TINIA_HAVE_LIBXML // This is only for those who have libxml available
     impl::ServerController* m_serverController;
@@ -88,8 +88,8 @@ private:
 
     QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
     jobcontroller::Job*                    m_job;
-    std::unique_ptr<GUIBuilder>            m_builder;
-    std::shared_ptr<model::ExposedModel>   m_model;
+    boost::shared_ptr<GUIBuilder>            m_builder;
+    boost::shared_ptr<model::ExposedModel>   m_model;
 
     // We need to hold the scripts in memory untill we start up QApplication
     std::vector<std::string>                m_scriptsToParse;

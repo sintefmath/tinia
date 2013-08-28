@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <libxml/tree.h>
 #include <libxml/xmlreader.h>
 #include "tinia/model/impl/ElementData.hpp"
@@ -73,7 +72,6 @@ private:
     void buildComplexElementStateXML( xmlNodePtr, const model::StateElement& elementData );
     void buildSimpleElementStateXML( xmlNodePtr, const model::StateElement& elementData );
     void buildSimpleGuiLayout_alpha();
-    void buildSimpleGuiLayout();
     /**
       Recursive function to build the GUI
       */
@@ -160,7 +158,6 @@ private:
     xmlNsPtr xsi;
     xmlNsPtr tns;
 
-    //const std::unordered_map<std::string, model::impl::ElementData> stateHash;
     const unsigned int revisionNumber;
 
 

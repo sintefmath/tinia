@@ -22,7 +22,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 RadioButtons::RadioButtons(std::string key,
-                           std::shared_ptr<model::ExposedModel> model,
+                           boost::shared_ptr<model::ExposedModel> model,
                            QWidget *parent) :
    QGroupBox(parent), m_model(model), m_key(key)
 {
