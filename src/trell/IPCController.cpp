@@ -35,7 +35,25 @@ namespace tinia {
 namespace trell {
 
 namespace {
-static std::list<IPCController*> instances;
+
+static sig_atomic_t exit_flag = 0;
+
+static
+void
+handle_SIGTERM( int )
+{
+    exit_flag = 1;
+    std::cerr << "handle_SIGTERM\n";
+}
+
+static
+void
+handle_SIGALRM( int )
+{
+    std::cerr << "handle_SIGALRM\n";
+}
+
+
 }
 
 
@@ -53,7 +71,7 @@ IPCController::IPCController( bool is_master )
       m_notify( false ),
       m_sem_notify( SEM_FAILED )
 {
-    instances.push_back(this);
+    //instances.push_back(this);
 }
 
 void
@@ -258,35 +276,6 @@ IPCController::shutdown()
     m_cleanup_pid = -1;
 }
 
-namespace {
-static void cleanup_handler( int )
-{
-    for( auto it=instances.begin(); it!=instances.end(); ++it ) {
-        (*it)->failHard();
-    }
-    exit( EXIT_SUCCESS );
-}
-
-static void at_exit()
-{
-    for( auto it=instances.begin(); it!=instances.end(); ++it ) {
-        (*it)->failHard();
-    }
-}
-
-//static void alarm_handler( int sig )
-//{
-//    std::cerr << "alarm handler.\n";
-//}
-
-static void usr1_handler( int sig )
-{
-    std::cerr << "usr1_handler.\n";
-
-//    signal( SIGUSR1, usr1_handler );
-}
-}
-
 
 
 IPCController::~IPCController()
@@ -299,30 +288,41 @@ IPCController::run(int argc, char **argv)
 {
     m_cleanup_pid = getpid();
 
-    // Install signal handlers, trying to maximize the likelyhood of a decent
-    // cleanup
-    if( signal( SIGINT, cleanup_handler ) == SIG_ERR ) {
-        std::cerr << "Failed to set SIGINT handler:" << strerror(errno) << "\n";
+    // --- Install signal handlers ---------------------------------------------
+    struct sigaction act;
+    memset( &act, 0, sizeof(act) );
+    sigemptyset( &act.sa_mask );
+
+    act.sa_handler = handle_SIGTERM;
+    if( sigaction( SIGTERM, &act, NULL ) != 0 ) {
+        std::cerr << "sigaction/SIGTERM failed: " << strerror( errno ) << "\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+    act.sa_handler = handle_SIGALRM;
+    if( sigaction( SIGALRM, &act, NULL ) != 0 ) {
+        std::cerr << "sigaction/SIGALRM failed: " << strerror( errno ) << "\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
     }
 
-    if( atexit( at_exit ) != 0 ) {
+    // --- Unblock signals we want ---------------------------------------------
+    sigset_t mask;
+    sigemptyset( &mask );
+    sigaddset( &mask, SIGTERM );
+    sigaddset( &mask, SIGALRM );
+    if( sigprocmask( SIG_UNBLOCK, &mask, NULL ) != 0 ) {
+        std::cerr << "sigprocmask failed: " << strerror( errno ) << "\n";
+        m_job_state = TRELL_JOBSTATE_FAILED;
+    }
+
+    
+    
+   
+ /*   
+     if( atexit( at_exit ) != 0 ) {
         std::cerr << "Failed to set at exit function:" << strerror(errno) << "\n";
     }
 
-
-/*    struct sigaction sa;
-    sa.sa_handler = alarm_handler;
-    sigemptyset( &sa.sa_mask );
-    sa.sa_flags = 0;
-    if( sigaction( SIGALRM, &sa, NULL ) == -1 ) {
-        std::cerr << "Failed to set alarm handler: " << strerror(errno) << "\n";
-    }
-    */
-    if( sigset( SIGALRM, usr1_handler ) == SIG_ERR ) {
-        std::cerr << "Failed to set alarm handler: " << strerror(errno) << "\n";
-    }
-    std::cerr << "Set alarm handler\n";
-
+*/
 //    kill( getpid(), SIGUSR1 );
 
 
@@ -401,8 +401,6 @@ IPCController::run(int argc, char **argv)
     std::cerr << "  reply semaphore  = " << m_sem_reply_name << "\n";
     std::cerr << "  notify semaphore = " << m_sem_notify_name << "\n";
 
-    timespec last_periodic;
-    clock_gettime( CLOCK_REALTIME, &last_periodic );
 
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
@@ -416,47 +414,8 @@ IPCController::run(int argc, char **argv)
         m_job_state = TRELL_JOBSTATE_RUNNING;
         sendHeartBeat();
 
-        sem_post( m_sem_lock );
-        while( m_job_state == TRELL_JOBSTATE_RUNNING ) {
-
-            timespec timeout;
-            clock_gettime( CLOCK_REALTIME, &timeout );
-
-
-            // Check if it is time for a new periodic run.
-            if( last_periodic.tv_sec+60 < timeout.tv_sec ) {
-                last_periodic = timeout;
-                if(!periodic()) {
-                    m_job_state = TRELL_JOBSTATE_FAILED;
-                    std::cerr << "Periodic failed.\n";
-                }
-            }
-            sendHeartBeat();
-
-            // Then check for messages or timeout within a minute whatever comes first
-            timeout.tv_sec += 5;
-
-            if( sem_timedwait( m_sem_query, &timeout ) == 0 ) {
-                std::cerr << "Got message.\n";
-                msync( m_shmem_ptr, m_shmem_size, MS_SYNC );
-                size_t osize = handle( (trell_message*)m_shmem_ptr, m_shmem_size );
-                msync( m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
-                sem_post( m_sem_reply );
-            }
-
-            if( m_notify ) {
-                // Notify has been invoked while the lock has been locked, we do
-                // the notification for them.
-                m_notify = false;
-                int waiting = 0;
-                if( sem_getvalue( m_sem_notify, &waiting ) == 0 ) {
-                    for(int i=waiting; i<1; i++ ) {
-                        sem_post( m_sem_notify );
-                    }
-                }
-            }
-
-        }
+        mainloop();
+        
         // We exited for some reason.
         if( m_job_state == TRELL_JOBSTATE_FINISHED ) {
             m_job_state = TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY;
@@ -468,6 +427,79 @@ IPCController::run(int argc, char **argv)
     }
     failHard();
     return EXIT_SUCCESS;
+}
+
+void
+IPCController::often()
+{
+    // does nothing.
+}
+
+void
+IPCController::mainloop()
+{
+    // Open sem_lock for business
+    sem_post( m_sem_lock );
+    sendHeartBeat();
+
+    timespec last_periodic;
+    clock_gettime( CLOCK_REALTIME, &last_periodic );
+    while( m_job_state == TRELL_JOBSTATE_RUNNING ) {
+        if( exit_flag != 0 ) {
+            m_job_state = TRELL_JOBSTATE_FAILED;
+            std::cerr << "exit flag set\n";
+        }
+        
+        // invoked for each iteration, to act on that signals have occured.        
+        often();
+        if( m_job_state != TRELL_JOBSTATE_RUNNING ) {
+            break;
+        }
+
+        timespec timeout;
+        clock_gettime( CLOCK_REALTIME, &timeout );
+
+        // Check if it is time for a new periodic run.
+        if( last_periodic.tv_sec+60 < timeout.tv_sec ) {
+            last_periodic = timeout;
+            if(!periodic()) {
+                m_job_state = TRELL_JOBSTATE_FAILED;
+                std::cerr << "Periodic failed.\n";
+            }
+            sendHeartBeat();
+        }
+
+        // Then check for messages or timeout within a minute whatever comes first
+        timeout.tv_sec += 5;
+
+        if( sem_timedwait( m_sem_query, &timeout ) == 0 ) {
+
+            // Got a query message, sync memory into this process
+            msync( m_shmem_ptr, m_shmem_size, MS_SYNC );
+
+            // Act on the message
+            size_t osize = handle( (trell_message*)m_shmem_ptr, m_shmem_size );
+
+            // Sync memory out of this processes and notify about reply.
+            msync( m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
+            sem_post( m_sem_reply );
+        }
+
+        if( m_notify ) {
+            // Notify has been invoked while the lock has been locked, we do
+            // the notification for them.
+            m_notify = false;
+            int waiting = 0;
+            if( sem_getvalue( m_sem_notify, &waiting ) == 0 ) {
+                for(int i=waiting; i<1; i++ ) {
+                    sem_post( m_sem_notify );
+                }
+            }
+        }
+
+    }
+    sendHeartBeat();
+
 }
 
 

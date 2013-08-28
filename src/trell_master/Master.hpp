@@ -101,6 +101,9 @@ protected:
     bool
     periodic();
 
+    void
+    often();
+    
     /** \copydoc MessageBox::cleanup
       *
       * Invokes dumpMasterState.
@@ -170,10 +173,14 @@ protected:
       *
       * \arg id     The server-wide unique id of the job.
       * \arg force  If force is false, a suicidie request is sent to the job. If
-      *             force is true, a SIGTERM is sent to the process.
+      *             force is true, a SIGKILL is sent to the process.
       */
     bool
     killJob( const std::string& id, bool force );
+    
+    /** Make sure that IPC-stuff for the job is cleaned up. */
+    void
+    cleanJobRemains( const std::string& id );
 
     /** Remove a job from the list of managed jobs. */
     bool

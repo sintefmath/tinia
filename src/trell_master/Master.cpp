@@ -31,6 +31,9 @@
 #include <fstream>
 #include <libxml/xmlreader.h>
 #include "Master.hpp"
+#include <sys/mman.h>
+//#include <sys/stat.h>        /* For mode constants */
+//#include <fcntl.h>           /* For O_* constants */
 
 
 namespace tinia {
@@ -50,6 +53,23 @@ static const std::string ret_success = ret_header + "<result>SUCCESS</result>" +
 static const std::string ret_failure = ret_header + "<result>FAILURE</result>" + ret_footer;
 }
 
+namespace {
+
+
+static sig_atomic_t sigchild_flag = 0;
+
+static
+void
+handle_SIGCHLD( int )
+{
+    sigchild_flag = 1;
+    std::cerr << "handle_SIGCHLD\n";
+}
+    
+}
+
+
+
 Master::Master( bool for_real )
     : IPCController( true ),
       m_for_real( for_real )
@@ -61,6 +81,10 @@ Master::Master( bool for_real )
     }
     m_application_root = std::string( app_root );
 
+
+    
+    
+    
     std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
 }
 
@@ -152,6 +176,27 @@ Master::init( )
 {
     if( IPCController::init() ) {
         snarfMasterState();
+
+        // --- Install signal handlers ---------------------------------------------
+        struct sigaction act;
+        memset( &act, 0, sizeof(act) );
+        sigemptyset( &act.sa_mask );
+    
+        act.sa_handler = handle_SIGCHLD;
+        if( sigaction( SIGCHLD, &act, NULL ) != 0 ) {
+            std::cerr << "sigaction/SIGCHLD failed: " << strerror( errno ) << "\n";
+            return false;
+        }
+    
+        // --- Unblock signals we want ---------------------------------------------
+        sigset_t mask;
+        sigemptyset( &mask );
+        sigaddset( &mask, SIGCHLD );
+        if( sigprocmask( SIG_UNBLOCK, &mask, NULL ) != 0 ) {
+            std::cerr << "sigprocmask failed: " << strerror( errno ) << "\n";
+            return false;
+        }
+        
         return true;
     }
     else {
@@ -179,6 +224,36 @@ Master::periodic()
     }
     return ret;
 }
+
+void
+Master::often()
+{
+    while( sigchild_flag != 0 ) {
+        sigchild_flag = 0;
+        
+        std::cerr << "Got SIGCHLD, checking for dead children.\n";
+        pid_t pid;
+        while( (pid = waitpid( -1, NULL, WNOHANG )) > 0 ) {
+            std::cerr << "pid=" << pid << " is dead.\n";
+            bool found_job = false;
+            for( auto it=m_jobs.begin(); (it!=m_jobs.end()) && (!found_job); ++it ) {
+                if( it->second.m_pid == pid ) {
+                    found_job = true;
+                    if( it->second.m_state != TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY ) {
+                        setJobState( it->second.m_id, TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY );
+                        cleanJobRemains( it->second.m_id );
+                    }
+                }
+            }
+            if( !found_job ) {
+                std::cerr << "Got dead child pid=" << pid << " not in records...?\n";
+            }
+        }
+        
+    }
+    
+}
+
 
 void
 Master::cleanup()
@@ -560,6 +635,22 @@ Master::killJob( const std::string& id, bool force )
         }
     }
     return true;
+}
+
+void
+Master::cleanJobRemains( const std::string& id )
+{
+    std::string shmem_name      = "/" + id + "_shmem";
+    std::string sem_lock_name   = "/" + id + "_lock";
+    std::string sem_query_name  = "/" + id + "_query";
+    std::string sem_reply_name  = "/" + id + "_reply";
+    std::string sem_notify_name = "/" + id + "_notify";
+
+    shm_unlink( shmem_name.c_str() );
+    sem_unlink( sem_lock_name.c_str() );
+    sem_unlink( sem_query_name.c_str() );
+    sem_unlink( sem_reply_name.c_str() );
+    sem_unlink( sem_notify_name.c_str() );
 }
 
 

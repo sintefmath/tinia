@@ -155,6 +155,23 @@ protected:
     bool
     periodic();
 
+    /** Hook that is invoked very often.
+     *
+     * Probably only useful for master job.
+     *
+     * Invoked
+     * - Each time a message has been processed.
+     * - The message wait has timed out.
+     * - The message wait has been interrupted by a signal.
+     *
+     */
+    virtual
+    void
+    often();
+    
+    void
+    mainloop();
+    
 
     /** Hook that is invoked just before the job terminates.
       *
