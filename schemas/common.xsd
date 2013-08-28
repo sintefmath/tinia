@@ -12,6 +12,11 @@
     </xsd:restriction>
   </xsd:simpleType>
 
+  <xsd:simpleType name="ApplicationArgument">
+    <xsd:restriction base="xsd:string">
+    </xsd:restriction>
+  </xsd:simpleType>
+
   <xsd:simpleType name="JobId">
     <xsd:restriction base="xsd:string">
     </xsd:restriction>
@@ -119,6 +124,9 @@
     <xsd:sequence>
       <xsd:element name="job" type="JobId"/>
       <xsd:element name="application" type="ApplicationId"/>
+        <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+          <xsd:element name="arg" type="ApplicationArgument"/>
+        </xsd:sequence>
     </xsd:sequence>
   </xsd:complexType>
 

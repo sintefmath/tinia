@@ -24,12 +24,7 @@
 int
 main( int argc, char** argv )
 {
-    if( argc != 4 ) {
-        std::cerr << "arc != 4, exiting.\n";
-        exit( EXIT_FAILURE );
-    }
-
-    tinia::trell::impl::Master m(true, argv[3] );
-    m.run( 3, argv );
+    tinia::trell::impl::Master m(true);
+    m.run( argc, argv );
     exit( EXIT_SUCCESS );
 }

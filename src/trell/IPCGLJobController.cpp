@@ -33,7 +33,7 @@ IPCGLJobController::IPCGLJobController(bool is_master)
 }
 
 bool
-IPCGLJobController::init( const std::string& xml )
+IPCGLJobController::init()
 {
    // Initialize this
    m_openGLJob = static_cast<jobcontroller::OpenGLJob*>(m_job);
@@ -85,7 +85,7 @@ IPCGLJobController::init( const std::string& xml )
     glXMakeCurrent( m_display, m_pbuffer, m_context );
     glewInit();
 
-    bool ipcRetVal = IPCJobController::init(xml);
+    bool ipcRetVal = IPCJobController::init();
     return (ipcRetVal && m_openGLJob->initGL());
 
 }

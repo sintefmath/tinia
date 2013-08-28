@@ -54,9 +54,9 @@ IPCJobController::setJob(jobcontroller::Job *job)
 }
 
 bool
-IPCJobController::init( const std::string& xml )
+IPCJobController::init()
 {
-    bool ipcControllerResponse = IPCController::init( xml );
+    bool ipcControllerResponse = IPCController::init( );
     bool jobResponse = m_job->init( );
     m_xmlHandler = new model::impl::xml::XMLHandler(m_job->getExposedModel());
 

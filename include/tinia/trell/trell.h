@@ -68,8 +68,6 @@ enum TrellMessageType {
 
     /** A heartbeat query. */
     TRELL_MESSAGE_HEARTBEAT,
-    /** A request for the job's arguments. */
-    TRELL_MESSAGE_ARGS,
     /** A suggestion for the job to die. */
     TRELL_MESSAGE_DIE,
 
@@ -154,11 +152,6 @@ typedef struct trell_message
             /** Id of job sending the heartbeat. */
             char                m_job_id[1];
         }                       m_ping_payload;
-        /** Payload for arg messages. */
-        struct {
-            /** Id of job requesting args. */
-            char                m_job_id[1];
-        }                       m_args_payload;
     };
 } trell_message_t;
 
