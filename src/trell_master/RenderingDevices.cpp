@@ -116,9 +116,9 @@ RenderingDevices::xml()
             }
             xml << "      </glx>\n";
             
-            GLint gl_major;
+            GLint gl_major = 0;
             glGetIntegerv( GL_MAJOR_VERSION, &gl_major );
-            GLint gl_minor;
+            GLint gl_minor = 0;
             glGetIntegerv( GL_MINOR_VERSION, &gl_minor );
             xml << "      <opengl major=\"" << gl_major
                 << "\" minor=\"" << gl_minor

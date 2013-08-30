@@ -142,7 +142,9 @@ Master::handle( trell_message* msg, size_t buf_size )
             retval = encodeMasterState();
             break;
         case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
-            retval = m_rendering_devices.xml();
+            retval = ret_header
+                   + m_rendering_devices.xml()
+                   + ret_footer;
             break;
         case ParsedXML::ACTION_LIST_APPLICATIONS:
             m_applications.refresh();
