@@ -229,6 +229,22 @@ wipe( job )
                update );
 }
 
+function
+listRenderingDevices()
+{
+    rpcMaster( '<listRenderingDevices/>',
+               dumpXML );
+}
+
+function
+listApplications( timestamp )
+{
+    rpcMaster( '<listApplications>' +
+               '  <timestamp>'+timestamp+'</timestamp>' +
+               '</listApplications>',
+               dumpXML );
+}
+
 
 function guiAddJob()
 {
@@ -283,7 +299,7 @@ function guiAddJob()
 
 
 </SCRIPT>
-<BODY onload="periodic();">
+<BODY onload="periodic(); listRenderingDevices(); listApplications( 0 );">
 <H1>mod_trell poke</H1>
 
 

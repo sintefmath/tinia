@@ -19,6 +19,8 @@
         <xsd:element name="killJob" type="KillJob"/>
         <xsd:element name="wipeJob" type="WipeJob"/>
         <xsd:element name="addJob" type="AddJob"/>
+        <xsd:element name="listRenderingDevices" type="ListRenderingDevices"/>
+        <xsd:element name="listApplications" type="ListApplications"/>
       </xsd:choice>
     </xsd:complexType>
   </xsd:element>

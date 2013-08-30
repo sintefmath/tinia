@@ -68,23 +68,24 @@ handle_SIGCHLD( int )
     
 }
 
-
-
-Master::Master( bool for_real )
-    : IPCController( true ),
-      m_for_real( for_real )
+const std::string
+Master::getApplicationRoot()
 {
     const char* app_root = getenv( "TINIA_APP_ROOT" );
     if( app_root == NULL ) {
         std::cerr << "TINIA_APP_ROOT env variable not set!" << std::endl;
         exit( EXIT_FAILURE );
     }
-    m_application_root = std::string( app_root );
+    return app_root;
+}
 
 
-    
-    
-    
+Master::Master( bool for_real )
+: IPCController( true ),
+  m_for_real( for_real ),
+  m_applications( getApplicationRoot() )
+{
+    m_application_root = std::string( getApplicationRoot() );
     std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
 }
 
@@ -140,8 +141,22 @@ Master::handle( trell_message* msg, size_t buf_size )
         case ParsedXML::ACTION_GET_JOB_LIST:
             retval = encodeMasterState();
             break;
+        case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
+            retval = ret_success;
+            break;
+        case ParsedXML::ACTION_LIST_APPLICATIONS:
+            m_applications.refresh();
+            if( m_applications.timestamp() <= data.m_timestamp ) {
+                retval = ret_success;
+            }
+            else {
+                retval = ret_header
+                       + m_applications.xml()
+                       + ret_footer;
+            }
+            break;
         }
-
+        
         if( !retval.empty() ) {
 
             size_t l = retval.size() + 1;
@@ -302,10 +317,13 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
             NODE_ADD_JOB,
             NODE_GRANT_ACCESS,
             NODE_REVOKE_ACCESS,
+            NODE_LIST_RENDERING_DEVICES,
+            NODE_LIST_APPLICATIONS,
             // Parameter nodes
             NODE_JOB,
             NODE_APPLICATION,
             NODE_ARG,
+            NODE_TIMESTAMP,
             NODE_FORCE,
             NODE_SESSION
         };
@@ -344,6 +362,17 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                     n = NODE_WIPE_JOB;
                     data.m_action = ParsedXML::ACTION_WIPE_JOB;
                 }
+                else if( xmlStrEqual( name, BAD_CAST "listRenderingDevices" ) ) {
+                    n = NODE_LIST_RENDERING_DEVICES;
+                    data.m_action = ParsedXML::ACTION_LIST_RENDERING_DEVICES;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "listApplications" ) ) {
+                    n = NODE_LIST_APPLICATIONS;
+                    data.m_action = ParsedXML::ACTION_LIST_APPLICATIONS;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "timestamp" ) ) {
+                    n = NODE_TIMESTAMP;
+                }
                 else if( xmlStrEqual( name, BAD_CAST "grantAccess" ) ) {
                     n = NODE_GRANT_ACCESS;
                     data.m_action = ParsedXML::ACTION_NONE;
@@ -381,6 +410,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                         break;
                     case NODE_APPLICATION:
                         data.m_application = reinterpret_cast<const char*>( text );
+                        break;
+                    case NODE_TIMESTAMP:
+                        data.m_timestamp = atoi( reinterpret_cast<const char*>( text ) );
                         break;
                     case NODE_ARG:
                         data.m_args.push_back( reinterpret_cast<const char*>( text ) );

@@ -1,6 +1,10 @@
 SET( TRELL_MASTER_SRC
     "master_main.cpp"
     "Master.cpp"
+    "Application.cpp"
+    "Application.hpp"
+    "Applications.cpp"
+    "Applications.hpp"
 )
 
 ADD_EXECUTABLE( trell_master ${TRELL_MASTER_SRC} )

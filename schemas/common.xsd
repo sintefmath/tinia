@@ -130,6 +130,15 @@
     </xsd:sequence>
   </xsd:complexType>
 
+  <xsd:complexType name="ListRenderingDevices">
+  </xsd:complexType>
+
+  <xsd:complexType name="ListApplications">
+    <xsd:sequence>
+      <xsd:element name="timestamp" type="TimeStamp"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
   <xsd:complexType name="KillJob">
     <xsd:sequence>
       <xsd:element name="job" type="JobId"/>

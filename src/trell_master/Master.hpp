@@ -22,10 +22,13 @@
 #include <string>
 #include <unordered_map>
 #include "tinia/trell/IPCController.hpp"
+#include "Applications.hpp"
 
 namespace tinia {
 namespace trell {
 namespace impl {
+    
+
 /** The master job
   *
   * The job management is offloaded from mod_trell to a specific master job. The
@@ -46,7 +49,10 @@ public:
 protected:
     bool                                    m_for_real;
     std::string                             m_application_root;
+    Applications                            m_applications;
 
+    static const std::string                getApplicationRoot();
+    
     /** The internal represenation of a job. */
     struct Job {
         /** The unique id of the job. */
@@ -75,10 +81,13 @@ protected:
             ACTION_WIPE_JOB,
             ACTION_KILL_JOB,
             ACTION_ADD_JOB,
-            ACTION_GET_JOB_LIST
+            ACTION_GET_JOB_LIST,
+            ACTION_LIST_RENDERING_DEVICES,
+            ACTION_LIST_APPLICATIONS
         }                           m_action;
         std::string                 m_job;
         std::string                 m_application;
+        int                         m_timestamp;
         std::vector<std::string>    m_args;
         bool                        m_force;
         std::string                 m_session;
