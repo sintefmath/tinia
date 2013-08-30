@@ -5,10 +5,12 @@ SET( TRELL_MASTER_SRC
     "Application.hpp"
     "Applications.cpp"
     "Applications.hpp"
+    "RenderingDevices.hpp"
+    "RenderingDevices.cpp"
 )
 
 ADD_EXECUTABLE( trell_master ${TRELL_MASTER_SRC} )
-TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobcontroller  ${LIBXML2_LIBRARIES} model modelxml )
+TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobcontroller  ${LIBXML2_LIBRARIES} ${OPENGL_LIBRARY} model modelxml )
 
 
 INSTALL( TARGETS 

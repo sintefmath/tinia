@@ -142,7 +142,7 @@ Master::handle( trell_message* msg, size_t buf_size )
             retval = encodeMasterState();
             break;
         case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
-            retval = ret_success;
+            retval = m_rendering_devices.xml();
             break;
         case ParsedXML::ACTION_LIST_APPLICATIONS:
             m_applications.refresh();
@@ -300,6 +300,8 @@ Master::setJobState( const std::string& job, TrellJobState state, bool heartbeat
 void
 Master::parseXML( ParsedXML& data, char* buf, size_t len )
 {
+    std::cerr << std::string(  buf, buf + len ) << "\n";
+    
     xmlTextReaderPtr reader = xmlReaderForMemory( buf,
                                                   len,
                                                   "hetcomp.sintef.no/cloudviz",

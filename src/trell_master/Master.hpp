@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include "tinia/trell/IPCController.hpp"
 #include "Applications.hpp"
+#include "RenderingDevices.hpp"
 
 namespace tinia {
 namespace trell {
@@ -50,6 +51,7 @@ protected:
     bool                                    m_for_real;
     std::string                             m_application_root;
     Applications                            m_applications;
+    RenderingDevices                        m_rendering_devices;
 
     static const std::string                getApplicationRoot();
     
