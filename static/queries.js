@@ -5,9 +5,9 @@ function rpcMaster( query_xml, reply_handler )
     req.setRequestHeader( "Content-Type", "text/xml" );
 
     req.onreadystatechange = function() {
-        if( this.readyState == 4 && this.status == 200 ) {
+        if( this.readyState == 4 /* && this.status == 200*/ ) {
 	        reply_handler( this );
-            window.console.log( "rpcMaster: Got: " + this.responseText );
+            //window.console.log( "rpcMaster: Got: " + this.responseText );
         }
     };
     //window.console.log( "rpcMaster: Sending: " + query_xml );
@@ -52,8 +52,11 @@ restartMaster()
     var req = new XMLHttpRequest();
     req.open( "GET", "../mod/rpc.xml?action=restart_master" )
     req.onreadystatechange = function() {
+        window.console.log( "Got reply " );
         if( this.readyState == 4 && this.status == 200 ) {
             window.console.log( "master restarted" );
+            setTimeout( listRenderingDevices, 1000 );
+            setTimeout( listApplications, 1000 );
         }
     };
     req.send();
@@ -66,7 +69,7 @@ function killJob( job, force )
                '  <job>'+job+'</job>'+
                '  <force>'+force+'</force>'+
                '</killJob>',
-               dumpXML );
+               listJobs );
 }
 
 function
@@ -75,7 +78,7 @@ wipe( job )
     rpcMaster( '<wipeJob>'+
                '  <job>'+job+'</job>'+
                '</wipeJob>',
-               update );
+               listJobs );
 }
 
 function
@@ -88,10 +91,14 @@ listRenderingDevices()
 function
 listApplications( timestamp )
 {
+    if( !timestamp ) {
+        timestamp = 0;
+    }
+
     rpcMaster( '<listApplications>' +
                '  <timestamp>'+timestamp+'</timestamp>' +
                '</listApplications>',
-               dumpXML );
+               listApplicationsReplyHandler );
 }
 
 
@@ -143,8 +150,7 @@ function guiAddJob()
     xml = xml
         + '</addJob>\n';
     
-    rpcMaster( xml, update );
+    rpcMaster( xml, listJobs );
+    
 }
-
-
 
