@@ -1,5 +1,5 @@
 PROJECT( tinia )
-CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
 SET( version_number "0.2.5" )
 
 # Set shared for linux:
