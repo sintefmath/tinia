@@ -23,9 +23,247 @@
 #include <unistd.h>
 #include <time.h>
 #include <apr_strings.h>
+#include <stdarg.h>
 
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
+
+// returns negative on error, zero on success, and 1 if more iterations are needed.
+int
+trell_pass_query_xml( void*           data,
+                      size_t*         bytes_written,
+                      unsigned char*  buffer,
+                      size_t          buffer_size )
+{
+    request_rec* r = (request_rec*)data;
+
+    // Create message
+    trell_message_t* msg = (trell_message_t*)buffer;
+    msg->m_type = TRELL_MESSAGE_UPDATE_STATE;
+    msg->m_size = 0u;
+
+    // set up fetching of input
+    apr_bucket_brigade* bb;
+    apr_bucket* b;
+    apr_status_t rv;
+
+    bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
+
+    
+    int keep_going = 1;
+    while(keep_going == 1) {
+        apr_size_t free = buffer_size - TRELL_MESSAGE_UPDATE_STATE_SIZE - 1;
+        rv = ap_get_brigade( r->input_filters,
+                             bb,
+                             AP_MODE_READBYTES,
+                             APR_BLOCK_READ,
+                             free );
+        if( rv != APR_SUCCESS ) {
+            ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "trell@pass_xml_query: ap_get_brigade failed" );
+            return -1;
+        }
+        for( b = APR_BRIGADE_FIRST(bb); b!=APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
+            if( APR_BUCKET_IS_EOS(b) ) {
+                keep_going = 0;
+                break;
+            }
+            else if( APR_BUCKET_IS_METADATA(b) ) {
+                continue;
+            }
+
+            apr_size_t bytes = 0;
+            const char* buf = NULL;
+            rv = apr_bucket_read( b,
+                                  &buf,
+                                  &bytes,
+                                  APR_BLOCK_READ );
+
+            
+            if( rv != APR_SUCCESS ) {
+                ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "trell@pass_xml_query: apr_bucket_read failed" );
+                return -1;
+            }
+            if( free < bytes ) {
+                ap_log_rerror( APLOG_MARK, APLOG_CRIT, rv, r, "trell@pass_xml_query: multi-part message not yet supported." );
+                return -1;
+            }
+            
+            memcpy( msg->m_update_state.m_xml + msg->m_size, buf, bytes );
+            msg->m_size += bytes;
+        }
+    }
+    *bytes_written = msg->m_size + TRELL_MESSAGE_UPDATE_STATE_SIZE;
+    
+    apr_brigade_cleanup( bb );
+    return 0;
+}
+
+// return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
+int
+trell_pass_reply_assert_ok( void* data, unsigned char* buffer, size_t offset, size_t bytes, int more )
+{
+    trell_message_t* msg = (trell_message_t*)buffer;
+    if( msg->m_type == TRELL_MESSAGE_OK ) {
+        return MESSENGER_OK;
+    }
+    else {
+        return -1;
+    }
+}
+
+void
+trell_messenger_log_wrapper( void* data, int level, const char* message, ... )
+{
+    char buf[ 256 ];
+    
+    va_list args;
+    va_start( args, message );
+    apr_vsnprintf( buf, sizeof(buf), message, args );
+    va_end( args );
+    
+    request_rec* r = (request_rec*)data;
+    int ap_level;
+    switch( level ) {
+    case 0: ap_level = APLOG_CRIT; break;
+    case 1: ap_level = APLOG_WARNING; break;
+    default: ap_level = APLOG_NOTICE; break;
+    }
+    ap_log_rerror( APLOG_MARK, ap_level, OK, r, "messenger: %s", buf );
+}
+
+
+// this should end up in messenger.c when it is working.
+messenger_status_t
+messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size ),
+                        void* query_data,
+                        int (*reply)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  ),
+                        void* reply_data,
+                        void (*log)( void* data, int level, const char* message, ... ),
+                        void* log_data,
+                        const char* message_box_id,
+                        int wait /* in seconds. */ )
+{
+    messenger_status_t status = MESSENGER_OK;
+    messenger_t msgr;
+    messenger_status_t mrv;
+
+    log( log_data, 0, "!! %d", __LINE__ );
+    
+    
+    // open connection to messenger
+    mrv = messenger_init( &msgr, message_box_id );
+    if( mrv != MESSENGER_OK ) {
+        log( log_data, 0, "messenger_init: %s", messenger_strerror( mrv ) );
+        status = MESSENGER_ERROR;
+    }
+    else {
+        // create timeout for request
+        struct timespec timeout;
+        clock_gettime( CLOCK_REALTIME, &timeout );
+
+        int do_longpoll;
+        do {
+            do_longpoll = 0;
+        
+            // try to get lock
+            mrv = messenger_lock( &msgr );
+            if( mrv != MESSENGER_OK ) {
+                log( log_data, 0, "messenger_lock: %s", messenger_strerror( mrv ) );
+                status = MESSENGER_ERROR;
+            }
+            else {
+#if 0                
+                // copy message into shmem
+                log( log_data, 0, "!! %d", __LINE__ );
+                int q = query( query_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size );
+                log( log_data, 0, "!! %d", __LINE__ );
+                if( q < 0 ) {
+                    // query func failed.
+                    status = MESSENGER_ERROR;
+                }
+                else if( q > 0 ) {
+                    log( log_data, 0, "Message size exceeds shared memory size, currently unsupported." );
+                    status = MESSENGER_ERROR;
+                }
+                else {
+                    // we have a valid query in shmem
+                    log( log_data, 0, "!! %d", __LINE__ );
+                    mrv = messenger_post( &msgr, msgr.m_shmem_size );
+                    log( log_data, 0, "!! %d", __LINE__ );
+                    if( mrv != MESSENGER_OK ) {
+                        log( log_data, 0, "messenger_post: %s", messenger_strerror( mrv ) );
+                        status = MESSENGER_ERROR;
+                    }
+                    else {
+                        // we should have a valid reply in shmem
+                        log( log_data, 0, "!! %d", __LINE__ );
+                        int r = reply( reply_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size, 0 );
+                        log( log_data, 0, "!! %d", __LINE__ );
+                        if( r < 0 ) {
+                            status = MESSENGER_ERROR;
+                        }
+                        else if( r == 0 ) {
+                            status = MESSENGER_OK;
+                        }
+                        else {
+                            status = MESSENGER_TIMEOUT;
+                            do_longpoll = 1;
+                        }
+                    }
+                }
+#endif                
+                mrv = messenger_unlock( &msgr );
+                if( mrv != MESSENGER_OK ) {
+                    log( log_data, 0, "messenger_unlock: %s", messenger_strerror( mrv ) );
+                    status = MESSENGER_ERROR;
+                }
+                // Note: We can miss an update here, should do unlock-lock in atomic op.
+                
+                if( wait > 0 ) {
+                    struct timespec current;
+                    clock_gettime( CLOCK_REALTIME, &current );
+                    if( current.tv_sec >= timeout.tv_sec ) {
+                        
+                        if( sem_timedwait( msgr.m_notify, &timeout ) == 0 ) {
+                            // we do have an update.
+                            log( log_data, 1, "sem_timedwait: got notified." );
+                        }
+                        else {
+                            switch ( errno ) {
+                            case EINTR: // just interrupted, just check and redo
+                                log( log_data, 1, "sem_timedwait: woken by an interrupt." );
+                                break;
+                            case EINVAL: // invalid semaphore
+                                log( log_data, 0, "sem_timedwait: Invalid sempahore." );
+                                break;
+                            case ETIMEDOUT:
+                                do_longpoll = 0;
+                                status = MESSENGER_TIMEOUT;
+                                break;
+                            default:
+                                log( log_data, 0, "sem_timedwait: Unexpected error %d.", errno );
+                                do_longpoll = 0;
+                                status = MESSENGER_ERROR;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        while( do_longpoll );
+            
+        // close connection to messenger        
+        mrv = messenger_free( &msgr );
+        if( mrv != MESSENGER_OK ) {
+            log( log_data, 0, "messenger_free: %s", messenger_strerror( mrv ) );
+            status = MESSENGER_ERROR;
+        }
+    }
+    return status;
+}
+
+
 
 int
 trell_handle_get_script(trell_sconf_t           *sconf,
@@ -372,11 +610,16 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
     }
 }
 
+
+
+
 int
 trell_handle_update_state( trell_sconf_t* sconf,
                            request_rec* r,
                            trell_dispatch_info_t*  dispatch_info )
 {
+#if 0
+    messenger_status_t mrv;
 
     // check method
     if( r->method_number != M_POST ) {
@@ -404,9 +647,24 @@ trell_handle_update_state( trell_sconf_t* sconf,
         return HTTP_BAD_REQUEST;
     }
 
-    int retval = HTTP_NOT_IMPLEMENTED;
-
-
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: New path enter" );
+    mrv = messenger_do_roundtrip( trell_pass_query_xml, r,
+                                  trell_pass_reply_assert_ok, r,
+                                  trell_messenger_log_wrapper, r,
+                                  dispatch_info->m_jobid,
+                                  0 );
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: New path exit" );
+    switch( mrv ) {
+    case MESSENGER_OK:
+        return HTTP_NO_CONTENT; // everything ok.
+    case MESSENGER_TIMEOUT:
+        return HTTP_REQUEST_TIME_OUT;
+    default:
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+#else
+    int retval = HTTP_INTERNAL_SERVER_ERROR;
+    
     messenger_t msgr;
     messenger_status_t mrv;
 
@@ -529,6 +787,7 @@ trell_handle_update_state( trell_sconf_t* sconf,
     }
 
     return retval;
+#endif
 }
 
 

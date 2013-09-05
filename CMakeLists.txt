@@ -154,6 +154,9 @@ ENDIF()
 
 # Unit tests
 IF( Tinia_BUILD_UNIT_TESTS )
+  IF(UNIX)
+    ADD_SUBDIRECTORY( "unittests/ipc/" )
+  ENDIF(UNIX)
   ADD_SUBDIRECTORY( "unittests/model/" )
   IF(${LIBXML2_FOUND})
     ADD_SUBDIRECTORY( "unittests/modelxml/" )

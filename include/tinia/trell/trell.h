@@ -161,6 +161,7 @@ typedef struct trell_message
 #define TRELL_MESSAGE_GET_RENDERLIST_SIZE       (offsetof(trell_message_t, m_get_renderlist.m_tail ) )
 #define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))
 #define TRELL_MESSAGE_SCRIPT_SIZE               (offsetof(trell_message_t, m_script.m_script ))
+#define TRELL_MESSAGE_UPDATE_STATE_SIZE         (offsetof(trell_message_t, m_update_state.m_xml))
 
 #ifdef __cplusplus
 }
