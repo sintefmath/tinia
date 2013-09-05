@@ -68,6 +68,9 @@ messenger_strerror( messenger_status_t error )
 }
 
 
+
+
+
 static int
 messenger_sem_open( sem_t** sem, const char* format, const char* jobname )
 {
@@ -142,6 +145,33 @@ messenger_shm_open( void** memory, size_t* memory_size, const char* format, cons
     }
     return rv;
 }
+
+messenger_status_t
+messenger_endpoint_create( messenger_endpoint_t* e, const char* id )
+{
+    e->m_shmem_ptr = MAP_FAILED;
+    e->m_shmem_size = 0;
+    e->m_shmem_name = NULL;
+    e->m_sem_lock = SEM_FAILED;
+    e->m_sem_lock_name = NULL;
+    e->m_sem_query = SEM_FAILED;
+    e->m_sem_query_name = NULL;
+    e->m_sem_reply = SEM_FAILED;
+    e->m_sem_reply_name = NULL;
+    e->m_notify = 0;
+    e->m_sem_notify = SEM_FAILED;
+    e->m_sem_notify_name = NULL;
+
+
+    return MESSENGER_OK;
+}
+
+messenger_status_t
+messenger_endpoint_destroy( messenger_endpoint_t* e )
+{
+    return MESSENGER_OK;
+}
+
 
 messenger_status_t
 messenger_init( struct messenger* m, const char* jobname )

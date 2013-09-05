@@ -62,6 +62,48 @@ typedef struct messenger
     sem_t*   m_notify;
 } messenger_t;
 
+typedef struct messenger_endpoint
+{
+    /** Pointer to the shared memory of this message box. */
+    void*           m_shmem_ptr;
+
+    /** The size (in bytes) of the shared memory of this message box. */
+    size_t          m_shmem_size;
+
+    /** The system-wide name of the shared memory of this message box. */
+    const char*     m_shmem_name;
+
+    /** The semaphore that can lock this message box. */
+    sem_t*          m_sem_lock;
+    
+    /** The system-wide name of the semaphore that can lock this message box. */
+    const char*     m_sem_lock_name;
+    /** The semaphore that signals a pending incoming message. */
+
+    sem_t*          m_sem_query;
+
+    /** The system-wide name of the semaphore that signals a pending incoming message. */
+    const char*     m_sem_query_name;
+
+    /** The semaphore that signals a pending reply in response to the incoming message. */
+    sem_t*          m_sem_reply;
+
+    /** The system-wide name of the semaphore that singals a pending reply. */
+    const char*     m_sem_reply_name;
+    
+    /** Flags that a notify has occured. */
+    volatile int    m_notify;
+    
+    /** Used to notify jobs. */
+    sem_t*          m_sem_notify;
+
+    /** The system-wide name of the semaphore that signals a notify. */
+    const char*     m_sem_notify_name;
+    
+}messenger_endpoint_t;
+
+
+
 typedef enum {
     MESSENGER_OK,
     MESSENGER_ERROR,
@@ -73,6 +115,12 @@ typedef enum {
     MESSENGER_TIMEOUT,
     MESSENGER_INTERRUPTED
 } messenger_status_t;
+
+messenger_status_t
+messenger_endpoint_create( messenger_endpoint_t* e, const char* id );
+
+messenger_status_t
+messenger_endpoint_destroy( messenger_endpoint_t* e );
 
 
 const char*
