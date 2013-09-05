@@ -82,7 +82,7 @@ trell_send_png( trell_sconf_t*          sconf,
 
 
     uLong bound = compressBound( (3*width+1)*height );
-    unsigned char* png = apr_palloc( r->pool, bound + 8 + 25 + 12 + 12 );
+    unsigned char* png = apr_palloc( r->pool, bound + 8 + 25 + 12 + 12 + 12 );
     unsigned char* p = png;
 
     // PNG signature, 8 bytes
@@ -146,11 +146,26 @@ trell_send_png( trell_sconf_t*          sconf,
 
     p += bound;                // skip forward
     crc = trell_png_crc( crc_table, p-bound-4, bound+4 );
-    *p++ = ((crc)>>24)&0xffu;    // image width
+    *p++ = ((crc)>>24)&0xffu;    // CRC
     *p++ = ((crc)>>16)&0xffu;
     *p++ = ((crc)>>8)&0xffu;
     *p++ = ((crc)>>0)&0xffu;
 
+    // IEND chunk
+    *p++ = 0;       // zero payload
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 0;
+    *p++ = 'I';     // ID
+    *p++ = 'E';
+    *p++ = 'N';
+    *p++ = 'D';
+    *p++ = 174;     // CRC
+    *p++ = 66;
+    *p++ = 96;
+    *p++ = 130;
+  
+    
     char* datestring = apr_palloc( r->pool, APR_RFC822_DATE_LEN );
     apr_rfc822_date( datestring, apr_time_now() );
     apr_table_setn( r->headers_out, "Last-Modified", datestring );
