@@ -1,6 +1,6 @@
 SET( clock_qt_job_SOURCES "ClockJob.cpp" "main.cpp" )
 SET( clock_job_HEADERS "ClockJob.hpp" "utils.hpp" )
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
   ADD_EXECUTABLE(clock_qt_job
     ${clock_qt_job_SOURCES}
     ${clock_job_HEADERS}
@@ -29,7 +29,7 @@ IF(${Tinia_DESKTOP})
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   SET( clock_cloud_job_SOURCES "ClockJob.cpp" "cloud_main.cpp" )
 
   ADD_EXECUTABLE(clock_cloud_job
