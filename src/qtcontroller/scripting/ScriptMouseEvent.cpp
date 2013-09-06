@@ -34,7 +34,7 @@ int ScriptMouseEvent::button()
     if(b == Qt::LeftButton ) {
         return 0;
     }
-    else if (b == Qt::MiddleButton) {
+    else if (b == Qt::MidButton) {
         return 1;
     }
     else if (b == Qt::RightButton) {

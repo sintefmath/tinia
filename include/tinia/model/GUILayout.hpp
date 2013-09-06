@@ -257,7 +257,7 @@ class Grid : public Element, public Container2D<Element> {
 public:
     Grid( size_t height, size_t width)
         : Element(),
-          Container2D( height, width )
+          Container2D<Element>( height, width )
     {}
 
     virtual const ElementType type() const {return GRID; }

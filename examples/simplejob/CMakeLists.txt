@@ -1,6 +1,6 @@
 SET( test_qt_job_SOURCES "TestJob.cpp" "main.cpp" )
 SET( test_job_HEADERS "TestJob.hpp" "utils.hpp" )
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
   ADD_EXECUTABLE(simple_qt_job
     ${test_qt_job_SOURCES}
     ${test_job_HEADERS}
@@ -29,7 +29,7 @@ IF(${Tinia_DESKTOP})
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   SET( test_cloud_job_SOURCES "TestJob.cpp" "cloud_main.cpp" )
 
   ADD_EXECUTABLE(test_job
