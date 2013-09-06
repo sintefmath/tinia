@@ -104,7 +104,7 @@ listApplications( timestamp )
 
 function guiAddJob()
 {
-    var job, application, args, t, q, xml;
+    var job, application, args, t, q, xml, gldev;
 
     t = document.getElementById( 'jobid' );
     if( t == null ) {
@@ -118,6 +118,8 @@ function guiAddJob()
         return;
     }
     application = t.value;
+
+    
 
     t = document.getElementById( 'jobargs' );
     if( t==null) {
@@ -137,6 +139,11 @@ function guiAddJob()
     xml = '<addJob>\n'
         + '  <job>'+job+'</job>\n'
         + '  <application>'+application+'</application>\n'
+    t = document.getElementById( 'jobgldev' );
+    if( (t != null) && (t.value != 'none') ) {
+        xml = xml
+            + '  <renderingDeviceId>' + t.value + '</renderingDeviceId>\n';
+    }
     for( t in args ) {
         xml = xml
             + '  <arg>'
@@ -147,9 +154,10 @@ function guiAddJob()
                      .replace( />/g, '&gt;' )         // > -> &gt;
             + '</arg>\n';
     }
+
     xml = xml
         + '</addJob>\n';
-    
+ 
     rpcMaster( xml, listJobs );
     
 }

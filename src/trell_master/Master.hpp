@@ -69,6 +69,9 @@ protected:
         time_t                              m_last_ping;
         /** Application argument list (excluding application name). */
         std::vector<std::string>            m_args;
+        
+        /** Rendering devices that job uses (currently should be 0 or 1). */
+        std::vector<std::string>            m_rendering_devices;
     };
     /** The set of managed jobs. */
     std::unordered_map<std::string, Job>    m_jobs;
@@ -90,6 +93,7 @@ protected:
         std::string                 m_job;
         std::string                 m_application;
         int                         m_timestamp;
+        std::vector<std::string>    m_rendering_devices;
         std::vector<std::string>    m_args;
         bool                        m_force;
         std::string                 m_session;
@@ -178,6 +182,7 @@ protected:
     addJob( const std::string& id,
             const std::string& exe,
             const std::vector<std::string>& args,
+            const std::vector<std::string>& rendering_devices,
             const std::string& xml );
 
     /** Kill a job.

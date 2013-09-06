@@ -131,6 +131,7 @@ Master::handle( trell_message* msg, size_t buf_size )
             if( addJob( data.m_job,
                         data.m_application,
                         data.m_args,
+                        data.m_rendering_devices,
                         string( msg->m_xml_payload, msg->m_size ) ) ) {
                 retval = ret_success;
             }
@@ -326,6 +327,7 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
             // Parameter nodes
             NODE_JOB,
             NODE_APPLICATION,
+            NODE_RENDERING_DEVICE_ID,
             NODE_ARG,
             NODE_TIMESTAMP,
             NODE_FORCE,
@@ -394,6 +396,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                 else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
                     n = NODE_ARG;
                 }
+                else if( xmlStrEqual( name, BAD_CAST "renderingDeviceId" ) ) {
+                    n = NODE_RENDERING_DEVICE_ID;
+                }
                 else if( xmlStrEqual( name, BAD_CAST "force")) {
                     n = NODE_FORCE;
                 }
@@ -420,6 +425,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                         break;
                     case NODE_ARG:
                         data.m_args.push_back( reinterpret_cast<const char*>( text ) );
+                        break;
+                    case NODE_RENDERING_DEVICE_ID:
+                        data.m_rendering_devices.push_back( reinterpret_cast<const char*>( text ) );
                         break;
                     case NODE_FORCE:
                         if( xmlStrEqual( text, BAD_CAST "1" ) || xmlStrEqual( text, BAD_CAST "true" ) ) {
@@ -706,6 +714,7 @@ bool
 Master::addJob( const std::string& id,
                 const std::string& exe,
                 const std::vector<std::string>& args,
+                const std::vector<std::string>& rendering_devices,
                 const std::string& xml )
 {
     if( id.empty() || exe.empty() ) {
@@ -741,6 +750,7 @@ Master::addJob( const std::string& id,
     it->second.m_state = TRELL_JOBSTATE_NOT_STARTED;
     it->second.m_last_ping = getTime();
     it->second.m_args = args;
+    it->second.m_rendering_devices = rendering_devices;
     if( m_for_real ) {
         fsync( 1 );
         fsync( 2 );
@@ -773,6 +783,21 @@ Master::addJob( const std::string& id,
             std::vector<char*> env;
             env.push_back( strdup( env_job_id.c_str() ) );
             env.push_back( strdup( env_master_id.c_str() ) );
+
+            if( !it->second.m_rendering_devices.empty() ) {
+                std::string devices;
+                for( std::vector<std::string>::iterator kt = it->second.m_rendering_devices.begin();
+                     kt != it->second.m_rendering_devices.end(); ++kt )
+                {
+                    if( !devices.empty() ) {
+                        devices.append( ";" );
+                    }
+                    devices.append( *kt );
+                }
+                devices = "TINIA_RENDERING_DEVICES=" + devices;
+                env.push_back( strdup( devices.c_str() ) );
+            }
+            
             for( int i=0; environ[i] != NULL; i++ ) {
                 if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
                     env.push_back( strdup( environ[i] ) );

@@ -23,6 +23,10 @@ tr.my:nth-child(odd) {
 td.my {
     border: 1px solid #88aaff;
 }
+td.mo {
+    background-color:#ffaaaa;
+    border: 1px solid #ff6666;
+}
 th.my {
     border: 1px solid #88aaff;
     background-color:#88aaff;

@@ -47,6 +47,7 @@ function TiniaRenderingDevice( id )
     this.m_renderer_string = "";
     this.m_version_string = "";
     this.m_vendor_string = "";
+    this.m_error = "";
     
 }
 TiniaRenderingDevice.prototype =
@@ -60,7 +61,10 @@ setRendererString:  function(a) { this.m_renderer_string=a; return this; },
 versionString:      function()  { return this.m_version_string; },
 setVersionString:   function(a) { this.m_version_string=a; return this; },
 vendorString:       function()  { return this.m_vendor_string; },
-setVendorString:    function(a) { this.m_vendor_string=a; return this; }
+setVendorString:    function(a) { this.m_vendor_string=a; return this; },
+error:              function()  { return this.m_error; },
+setError:           function(a) { this.m_error = a; return this; }
+
 };
 
 // -----------------------------------------------------------------------------
