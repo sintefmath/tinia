@@ -33,8 +33,13 @@ namespace tinia {
 namespace trell {
 namespace impl {
 
-RenderingDevices::RenderingDevices()
-    : m_display_name( ":0.0" )
+static const std::string package = "RenderingDevices";
+
+RenderingDevices::RenderingDevices(void (*logger)( void* data, int level, const char* who, const char* message, ... ),
+                                   void* logger_data )
+    : m_display_name( ":0.0" ),
+      m_logger( logger ),
+      m_logger_data( logger_data )
 {
 }
 
@@ -67,7 +72,10 @@ RenderingDevices::xml()
    
     DIR* dir = opendir( "/tmp/.X11-unix" );
     if( dir == NULL ) {
-        std::cerr << "opendir: " << strerror( errno ) << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, package.c_str(),
+                      "opendir failed: %s.", strerror( errno ) );
+        }
         xml << "    <error>INTERNAL_ERROR</error>\n";
     }
     else {
@@ -104,7 +112,7 @@ RenderingDevices::xml()
                 std::string screen_id = screen_id_ss.str();
                 
                 xml << "    <renderingDevice id=\"" << screen_id << "\">\n";
-                OffscreenGL gl( screen_id );
+                OffscreenGL gl( screen_id, m_logger, m_logger_data );
                 if( !gl.setupContext() || !gl.bindContext() ) {
                     switch ( gl.state() ) {
                     case OffscreenGL::STATE_INSUFFICIENT_GLX:

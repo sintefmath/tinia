@@ -99,6 +99,12 @@ protected:
         std::string                 m_session;
     };
 
+    static void logMessage( void* data,
+                            int level,
+                            const char* who, 
+                            const char* message,
+                            ... );
+    
     /** \copydoc MessageBox::init
       *
       * Invokes snarfMasterState.

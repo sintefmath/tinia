@@ -44,16 +44,20 @@ OffscreenGL::createContextErrorHandler( Display* display, XErrorEvent* error )
 }
 
 
-OffscreenGL::OffscreenGL( const std::string& display_string, int screen_number )
+OffscreenGL::OffscreenGL( const std::string& display_string,
+                          void (*logger)( void* data, int level, const char* who, const char* message, ... ),
+                          void* logger_data )
     : m_state( STATE_UNINITIALIZED ),
       m_display_string( display_string ),
-      m_screen_number( screen_number ),
+      m_logger( logger ),
+      m_logger_data( logger_data ),
+      m_logger_who( "OffscreenGL/" + display_string ),
+      m_screen_number( -1 ),
       m_display( NULL ),
       m_context( NULL ),
       m_req_profile(false),
       m_req_debug( false )
 {
-    
 }
 
 bool
@@ -65,37 +69,42 @@ OffscreenGL::setupContext()
     bool has_glx_arb_create_context_profile = false;
 
     if( m_display_string.empty() ) {
-        const char* env_display = getenv( "DISPLAY" );
-        if( env_display != NULL ) {
-            m_display_string = env_display;
-        }
-        else {
-            m_display_string = ":0.0";
-        }
+        // Be a bit picky about displaying being set.
+        m_state = STATE_FAILED_TO_OPEN_DISPLAY;
+        goto cleanup;
     }
     
     m_display = XOpenDisplay( m_display_string.c_str() );
     if( m_display == NULL ) {
-        std::cerr << __FILE__ << "@" << __LINE__ << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(), "XOpenDisplay failed." );
+        }
         m_state = STATE_FAILED_TO_OPEN_DISPLAY;
         goto cleanup;
     }
     
     if( ScreenCount(m_display) < 1 ) {
-        std::cerr << __FILE__ << "@" << __LINE__ << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(), "ScreenCount(dpy) < 1." );
+        }
         m_state = STATE_NO_SCREENS;
         goto cleanup;
     }
-    if( (m_screen_number < 0) || (m_screen_number >= ScreenCount(m_display) ) ) {
-        m_screen_number = DefaultScreen( m_display );
-    } 
+    m_screen_number = DefaultScreen( m_display );
+    //if( (m_screen_number < 0) || (m_screen_number >= ScreenCount(m_display) ) ) {
+    //    m_screen_number = DefaultScreen( m_display );
+    //} 
     
     // We require at least GLX 1.3
     int glx_major, glx_minor;
     if( (glXQueryVersion( m_display, &glx_major, &glx_minor) != True )
             || (glx_major < 1) || (glx_minor < 3) )
     {
-        std::cerr << __FILE__ << "@" << __LINE__ << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(),
+                      "Insufficient GLX (major=%d, minor=%d).",
+                      glx_major, glx_minor );
+        }
         m_state = STATE_INSUFFICIENT_GLX;
         goto cleanup;
     }
@@ -168,7 +177,10 @@ OffscreenGL::setupContext()
                             m_context = NULL;
                         }
                         else {
-                            std::cerr << "OffscreenGL: glXCreateContextAttribs (k="<<k<<") succeeded.\n";
+                            if( m_logger != NULL ) {
+                                m_logger( m_logger_data, 2, m_logger_who.c_str(),
+                                          "glXCreateContextAttribs with k=%d succeeded.", k );
+                            }
                         }
                     }
                 }
@@ -185,7 +197,10 @@ OffscreenGL::setupContext()
                                              NULL,
                                              (k==0?True:False) );
             if( m_context != NULL ) {
-                std::cerr << "OffscreenGL: glXCreateNewContext (k="<<k<<") succeeded.\n";
+                if( m_logger != NULL ) {
+                    m_logger( m_logger_data, 2, m_logger_who.c_str(),
+                              "glXCreateNewContext with k=%d succeeded.", k );
+                }
             }
         }
         vis = glXGetVisualFromFBConfig( m_display, glx_fb_configs[0] );
@@ -212,7 +227,10 @@ OffscreenGL::setupContext()
             for( int k=0; (k<2)&& (m_context == NULL ); k++ ) {
                 m_context = glXCreateContext( m_display, vis, NULL, k==0?True:False );
                 if( m_context != NULL ) {
-                    std::cerr << "OffscreenGL: glXCreateContext (k="<<k<<") succeeded.\n";
+                    if( m_logger != NULL ) {
+                        m_logger( m_logger_data, 2, m_logger_who.c_str(),
+                                  "glXCreateContext with k=%d succeeded.", k );
+                    }
                 }
             } 
         }
@@ -220,13 +238,17 @@ OffscreenGL::setupContext()
     }
         
     if( m_context == NULL ) {
-        std::cerr << __FILE__ << "@" << __LINE__ << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(), "m_context==NULL." );
+        }
         m_state = STATE_X_ERROR;
         goto cleanup;
     }
     
     if( vis == NULL ) {
-        std::cerr << __FILE__ << "@" << __LINE__ << "\n";
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(), "vis==NULL." );
+        }
         m_state = STATE_X_ERROR;
         goto cleanup;
     }

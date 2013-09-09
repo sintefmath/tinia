@@ -26,13 +26,16 @@ namespace impl {
 class RenderingDevices
 {
 public:
-    RenderingDevices();
+    RenderingDevices( void (*logger)( void* data, int level, const char* who, const char* message, ... ) = NULL,
+                      void* logger_data = NULL);
 
     std::string
     xml();
     
 protected:
     std::string     m_display_name; ///< String used to open display.
+    void          (*m_logger)( void* data, int level, const char* who, const char* message, ... );
+    void*           m_logger_data;
  
     std::list<std::string>
     parseExtensions( const char* string );
