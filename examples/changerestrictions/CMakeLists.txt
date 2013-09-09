@@ -1,6 +1,6 @@
 SET( restrictions_qt_job_SOURCES "RestrictionsJob.cpp" "main.cpp" )
 SET( restrictions_job_HEADERS "RestrictionsJob.hpp" "utils.hpp" )
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
   ADD_EXECUTABLE(restrictions_qt_job
     ${restrictions_qt_job_SOURCES}
     ${restrictions_job_HEADERS}
@@ -29,7 +29,7 @@ IF(${Tinia_DESKTOP})
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   SET( restrictions_cloud_job_SOURCES "RestrictionsJob.cpp" "cloud_main.cpp" )
 
   ADD_EXECUTABLE(restrictions_cloud_job
