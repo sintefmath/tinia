@@ -49,6 +49,7 @@ trell_send_png( trell_sconf_t*          sconf,
                 const char*             payload,
                 const size_t            payload_size )
 {
+    dispatch_info->m_png_entry = apr_time_now();
     int i, j;
 
     // Todo: Move this into init code. Some care must be taken to make sure
@@ -71,6 +72,7 @@ trell_send_png( trell_sconf_t*          sconf,
     // flipping the image.
 
     char* filtered = apr_palloc( r->pool, (3*width+1)*height );
+    dispatch_info->m_png_filter_entry = apr_time_now();
     for( j=0; j<height; j++) {
         filtered[ (3*width+1)*j + 0 ] = 0;
         for(i=0; i<width; i++) {
@@ -79,6 +81,7 @@ trell_send_png( trell_sconf_t*          sconf,
             filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = payload[ 3*width*(height-j-1) + 3*i + 0 ];
         }
     }
+    dispatch_info->m_png_filter_exit = apr_time_now();
 
 
     uLong bound = compressBound( (3*width+1)*height );
@@ -125,7 +128,9 @@ trell_send_png( trell_sconf_t*          sconf,
 
     // IDAT chunk, 12 + payload bytes in total.
 
+    dispatch_info->m_png_compress_entry = apr_time_now();
     int c = compress( (Bytef*)(p+8), &bound, (Bytef*)filtered, (3*width+1)*height );
+    dispatch_info->m_png_compress_exit = apr_time_now();
     if( c == Z_MEM_ERROR ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "Z_MEM_ERROR" );
         return HTTP_INTERNAL_SERVER_ERROR;
@@ -189,6 +194,9 @@ trell_send_png( trell_sconf_t*          sconf,
     APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
 
     apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+    dispatch_info->m_png_exit = apr_time_now();
+
+    
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
         return HTTP_INTERNAL_SERVER_ERROR;

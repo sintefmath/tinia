@@ -73,17 +73,26 @@ private:
         GLuint                                          m_renderbuffer_depth;
         GLsizei                                         m_width;
         GLsizei                                         m_height;
+        GLsizei                                         m_samples;
     };
 
+    std::list<RenderEnvironment*>                       m_environments;
+    
 
     Display*                                            m_display;
     GLXContext                                          m_context;
-
+    GLsizei                                             m_samples;
 
     GLXPbuffer                                          m_pbuffer;
 
     std::unordered_map<std::string, RenderEnvironment>  m_render_environments;
 
+    RenderEnvironment*
+    getRenderEnvironment( GLsizei width, GLsizei height, GLsizei samples );
+    
+    void
+    dumpEnvironmentList();
+    
     bool
     checkFramebufferCompleteness() const;
 
