@@ -7,7 +7,7 @@ FILE(GLOB tutorial_RESOURCES "*.qrc" )
 QT4_ADD_RESOURCES( tutorial_QRC_SOURCES ${tutorial_RESOURCES} )
 
 
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
 ADD_EXECUTABLE(tutorial5_desktop
     ${tutorial_HEADERS}
     ${tutorial_DOC}
@@ -33,7 +33,7 @@ ADD_EXECUTABLE(tutorial5_desktop
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   ADD_EXECUTABLE(tutorial5_web
     ${tutorial_HEADERS}
     ${tutorial_JS_SOURCES}

@@ -9,7 +9,7 @@ FILE(GLOB qtcontroller_SOURCES_TO_BE_MOCED
     "../../include/tinia/qtcontroller/moc/*.h"
     "../../include/tinia/qtcontroller/scripting/*.hpp")
 
-IF(NOT ${LIBXML2_FOUND})
+IF(NOT LIBXML2_FOUND)
     FILE(GLOB_RECURSE serverToRemove "*Server*" "*Server*" "*LongPoll*" "../../include/tinia/qtcontroller/moc/*Server*"
 									"../../include/tinia/qtcontroller/moc/*LongPoll*")
     LIST(REMOVE_ITEM qtcontroller_SOURCES ${serverToRemove})
@@ -30,7 +30,7 @@ QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
     ${qtcontroller_FORMS_HEADERS}
     )
 
-IF(${LIBXML2_FOUND})
+IF(LIBXML2_FOUND)
 target_link_libraries ( qtcontroller
     renderlist
     renderlistgl

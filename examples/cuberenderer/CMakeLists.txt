@@ -1,6 +1,6 @@
 SET( cube_qt_job_SOURCES "CubeJob.cpp" "main.cpp" )
 SET( cube_job_HEADERS "CubeJob.hpp" "utils.hpp" )
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
   ADD_EXECUTABLE(cube_qt_job
     ${cube_qt_job_SOURCES}
     ${cube_job_HEADERS}
@@ -29,7 +29,7 @@ IF(${Tinia_DESKTOP})
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   SET( cube_cloud_job_SOURCES "CubeJob.cpp" "cloud_main.cpp" )
 
   ADD_EXECUTABLE(cube_cloud_job
