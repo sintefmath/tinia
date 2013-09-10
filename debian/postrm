@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 rm -f /etc/apache2/mods-enabled/mod_trell.load
 rm -f /etc/apache2/mods-enabled/mod_trell.conf
 
@@ -6,3 +6,16 @@ rm -f /etc/apache2/mods-available/mod_trell.load
 rm -f /etc/apache2/mods-available/mod_trell.conf
 service apache2 restart
 rm -rf /usr/var/trell
+
+# If trell master is running, kill it
+if [ -f /tmp/trell_master.pid ] 
+then
+    pid=$(cat /tmp/trell_master.pid)
+    # Check if it's really the trell_master pid
+    if [[ $(ps ${pid}) == *"trell_master"* ]]
+    then
+	kill -9 ${pid}
+    fi
+    # We want to delete this file either way
+    rm /tmp/trell_master.pid
+fi
