@@ -31,6 +31,19 @@ namespace trell {
 class IPCGLJobController : public IPCJobController
 {
 public:
+
+    /** Set rendering quality.
+     *
+     * \param[in] quality  A number in the range [0..255], where 255 is the
+     *                     highest quality.
+     *
+     * This is a kludge to let specific jobs enable MSAA, and the API and
+     * behaviour WILL most likely change.
+     *
+     */
+    void
+    setQuality( int quality );
+    
     IPCGLJobController( bool is_master = false );
 
 protected:
@@ -66,7 +79,8 @@ protected:
 
 
 private:
-    jobcontroller::OpenGLJob *m_openGLJob;
+    jobcontroller::OpenGLJob*                           m_openGLJob;
+    int                                                 m_quality;
     struct RenderEnvironment {
         GLuint                                          m_fbo;
         GLuint                                          m_renderbuffer_rgba;

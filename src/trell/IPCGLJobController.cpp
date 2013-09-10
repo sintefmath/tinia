@@ -27,6 +27,7 @@ namespace trell {
 IPCGLJobController::IPCGLJobController(bool is_master)
     : IPCJobController( is_master ),
       m_openGLJob( NULL ),
+      m_quality( 0 ),
       m_display( NULL ),
       m_context( NULL )
 {
@@ -74,6 +75,11 @@ static void debugLogger( GLenum source,
     std::cerr << "] " << message << std::endl;
 }
 
+void
+IPCGLJobController::setQuality( int quality )
+{
+    m_quality = std::max( 0, std::min( 255, quality ) );
+}
 
 bool
 IPCGLJobController::init()
@@ -329,11 +335,14 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         std::cerr << "Size must be at least 1x1 pixels" << std::endl; return false;
     }
     
-    GLsizei samples = std::min( m_samples, (GLsizei)8 );
+    GLsizei samples = std::min( std::max( 0,
+                                          (m_samples*m_quality+127)/255),
+                                m_samples );
     
 
     // --- get render targets --------------------------------------------------    
-    RenderEnvironment* env_render = getRenderEnvironment( width, height, 16 );
+    RenderEnvironment* env_render = getRenderEnvironment( width, height,
+                                                          samples );
     if( env_render == NULL ) {
         std::cerr << "Error at " << __LINE__ << "\n"; return false;
     }
