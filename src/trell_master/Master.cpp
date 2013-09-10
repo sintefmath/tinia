@@ -31,26 +31,36 @@
 #include <fstream>
 #include <libxml/xmlreader.h>
 #include "Master.hpp"
+#include <sys/mman.h>
+#include <cstdarg>
+#include <cstdio>
+//#include <sys/stat.h>        /* For mode constants */
+//#include <fcntl.h>           /* For O_* constants */
 
 namespace {
+static const std::string package = "Master";
     struct parse {
 	enum NodeType {
-	    NODE_UNKNOWN,
-	    // Action nodes
-	    NODE_PING,
-	    NODE_GET_SERVER_LOAD,
-	    NODE_GET_JOB_LIST,
-	    NODE_KILL_JOB,
-	    NODE_WIPE_JOB,
-	    NODE_ADD_JOB,
-	    NODE_GRANT_ACCESS,
-	    NODE_REVOKE_ACCESS,
-	    // Parameter nodes
-	    NODE_JOB,
-	    NODE_APPLICATION,
-	    NODE_ARG,
-	    NODE_FORCE,
-	    NODE_SESSION
+        NODE_UNKNOWN,
+        // Action nodes
+        NODE_PING,
+        NODE_GET_SERVER_LOAD,
+        NODE_GET_JOB_LIST,
+        NODE_KILL_JOB,
+        NODE_WIPE_JOB,
+        NODE_ADD_JOB,
+        NODE_GRANT_ACCESS,
+        NODE_REVOKE_ACCESS,
+        NODE_LIST_RENDERING_DEVICES,
+        NODE_LIST_APPLICATIONS,
+        // Parameter nodes
+        NODE_JOB,
+        NODE_APPLICATION,
+        NODE_RENDERING_DEVICE_ID,
+        NODE_ARG,
+        NODE_TIMESTAMP,
+        NODE_FORCE,
+        NODE_SESSION
 	};
     };
     struct snarf {
@@ -82,18 +92,44 @@ static const std::string ret_success = ret_header + "<result>SUCCESS</result>" +
 static const std::string ret_failure = ret_header + "<result>FAILURE</result>" + ret_footer;
 }
 
-Master::Master( bool for_real )
-    : IPCController( true ),
-      m_for_real( for_real )
+namespace {
+
+
+static sig_atomic_t sigchild_flag = 0;
+
+static
+void
+handle_SIGCHLD( int )
+{
+    sigchild_flag = 1;
+    std::cerr << "handle_SIGCHLD\n";
+}
+    
+}
+
+const std::string
+Master::getApplicationRoot()
 {
     const char* app_root = getenv( "TINIA_APP_ROOT" );
     if( app_root == NULL ) {
         std::cerr << "TINIA_APP_ROOT env variable not set!" << std::endl;
         exit( EXIT_FAILURE );
     }
-    m_application_root = std::string( app_root );
+    return app_root;
+}
 
-    std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
+
+Master::Master( bool for_real )
+: IPCController( true ),
+  m_for_real( for_real ),
+  m_applications( getApplicationRoot() ),
+  m_rendering_devices( m_logger_callback, m_logger_data )
+{
+    m_application_root = std::string( getApplicationRoot() );
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "TINIA_APP_ROOT=%s", m_application_root.c_str() );
+    }
 }
 
 
@@ -138,6 +174,7 @@ Master::handle( trell_message* msg, size_t buf_size )
             if( addJob( data.m_job,
                         data.m_application,
                         data.m_args,
+                        data.m_rendering_devices,
                         string( msg->m_xml_payload, msg->m_size ) ) ) {
                 retval = ret_success;
             }
@@ -148,8 +185,24 @@ Master::handle( trell_message* msg, size_t buf_size )
         case ParsedXML::ACTION_GET_JOB_LIST:
             retval = encodeMasterState();
             break;
+        case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
+            retval = ret_header
+                   + m_rendering_devices.xml()
+                   + ret_footer;
+            break;
+        case ParsedXML::ACTION_LIST_APPLICATIONS:
+            m_applications.refresh();
+            if( m_applications.timestamp() <= data.m_timestamp ) {
+                retval = ret_success;
+            }
+            else {
+                retval = ret_header
+                       + m_applications.xml()
+                       + ret_footer;
+            }
+            break;
         }
-
+        
         if( !retval.empty() ) {
 
             size_t l = retval.size() + 1;
@@ -177,13 +230,32 @@ Master::handle( trell_message* msg, size_t buf_size )
     return osize + TRELL_MSGHDR_SIZE;
 }
 
-
-
 bool
 Master::init( )
 {
     if( IPCController::init() ) {
         snarfMasterState();
+
+        // --- Install signal handlers ---------------------------------------------
+        struct sigaction act;
+        memset( &act, 0, sizeof(act) );
+        sigemptyset( &act.sa_mask );
+    
+        act.sa_handler = handle_SIGCHLD;
+        if( sigaction( SIGCHLD, &act, NULL ) != 0 ) {
+            std::cerr << "sigaction/SIGCHLD failed: " << strerror( errno ) << "\n";
+            return false;
+        }
+    
+        // --- Unblock signals we want ---------------------------------------------
+        sigset_t mask;
+        sigemptyset( &mask );
+        sigaddset( &mask, SIGCHLD );
+        if( sigprocmask( SIG_UNBLOCK, &mask, NULL ) != 0 ) {
+            std::cerr << "sigprocmask failed: " << strerror( errno ) << "\n";
+            return false;
+        }
+        
         return true;
     }
     else {
@@ -211,6 +283,36 @@ Master::periodic()
     }
     return ret;
 }
+
+void
+Master::often()
+{
+    while( sigchild_flag != 0 ) {
+        sigchild_flag = 0;
+        
+        std::cerr << "Got SIGCHLD, checking for dead children.\n";
+        pid_t pid;
+        while( (pid = waitpid( -1, NULL, WNOHANG )) > 0 ) {
+            std::cerr << "pid=" << pid << " is dead.\n";
+            bool found_job = false;
+            for( auto it=m_jobs.begin(); (it!=m_jobs.end()) && (!found_job); ++it ) {
+                if( it->second.m_pid == pid ) {
+                    found_job = true;
+                    if( it->second.m_state != TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY ) {
+                        setJobState( it->second.m_id, TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY );
+                        cleanJobRemains( it->second.m_id );
+                    }
+                }
+            }
+            if( !found_job ) {
+                std::cerr << "Got dead child pid=" << pid << " not in records...?\n";
+            }
+        }
+        
+    }
+    
+}
+
 
 void
 Master::cleanup()
@@ -242,14 +344,14 @@ Master::setJobState( const std::string& job, TrellJobState state, bool heartbeat
 void
 Master::parseXML( ParsedXML& data, char* buf, size_t len )
 {
+    std::cerr << std::string(  buf, buf + len ) << "\n";
+    
     xmlTextReaderPtr reader = xmlReaderForMemory( buf,
                                                   len,
                                                   "hetcomp.sintef.no/cloudviz",
                                                   NULL,
                                                   XML_PARSE_NOBLANKS );
     if( reader != NULL ) {
-        
-
         vector<parse::NodeType> stack;
         for( int r=xmlTextReaderRead(reader); r==1; r=xmlTextReaderRead(reader)) {
             int type = xmlTextReaderNodeType( reader );
@@ -284,6 +386,17 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                     n = parse::NODE_WIPE_JOB;
                     data.m_action = ParsedXML::ACTION_WIPE_JOB;
                 }
+                else if( xmlStrEqual( name, BAD_CAST "listRenderingDevices" ) ) {
+                    n = parse::NODE_LIST_RENDERING_DEVICES;
+                    data.m_action = ParsedXML::ACTION_LIST_RENDERING_DEVICES;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "listApplications" ) ) {
+                    n = parse::NODE_LIST_APPLICATIONS;
+                    data.m_action = ParsedXML::ACTION_LIST_APPLICATIONS;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "timestamp" ) ) {
+                    n = parse::NODE_TIMESTAMP;
+                }
                 else if( xmlStrEqual( name, BAD_CAST "grantAccess" ) ) {
                     n = parse::NODE_GRANT_ACCESS;
                     data.m_action = ParsedXML::ACTION_NONE;
@@ -300,6 +413,9 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                 }
                 else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
                     n = parse::NODE_ARG;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "renderingDeviceId" ) ) {
+                    n = parse::NODE_RENDERING_DEVICE_ID;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "force")) {
                     n = parse::NODE_FORCE;
@@ -322,8 +438,14 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                     case parse::NODE_APPLICATION:
                         data.m_application = reinterpret_cast<const char*>( text );
                         break;
+                    case parse::NODE_TIMESTAMP:
+                        data.m_timestamp = atoi( reinterpret_cast<const char*>( text ) );
+                        break;
                     case parse::NODE_ARG:
                         data.m_args.push_back( reinterpret_cast<const char*>( text ) );
+                        break;
+                    case parse::NODE_RENDERING_DEVICE_ID:
+                        data.m_rendering_devices.push_back( reinterpret_cast<const char*>( text ) );
                         break;
                     case parse::NODE_FORCE:
                         if( xmlStrEqual( text, BAD_CAST "1" ) || xmlStrEqual( text, BAD_CAST "true" ) ) {
@@ -569,6 +691,22 @@ Master::killJob( const std::string& id, bool force )
     return true;
 }
 
+void
+Master::cleanJobRemains( const std::string& id )
+{
+    std::string shmem_name      = "/" + id + "_shmem";
+    std::string sem_lock_name   = "/" + id + "_lock";
+    std::string sem_query_name  = "/" + id + "_query";
+    std::string sem_reply_name  = "/" + id + "_reply";
+    std::string sem_notify_name = "/" + id + "_notify";
+
+    shm_unlink( shmem_name.c_str() );
+    sem_unlink( sem_lock_name.c_str() );
+    sem_unlink( sem_query_name.c_str() );
+    sem_unlink( sem_reply_name.c_str() );
+    sem_unlink( sem_notify_name.c_str() );
+}
+
 
 const std::string
 Master::stderrPath( const std::string job ) const
@@ -586,6 +724,7 @@ bool
 Master::addJob( const std::string& id,
                 const std::string& exe,
                 const std::vector<std::string>& args,
+                const std::vector<std::string>& rendering_devices,
                 const std::string& xml )
 {
     if( id.empty() || exe.empty() ) {
@@ -621,6 +760,7 @@ Master::addJob( const std::string& id,
     it->second.m_state = TRELL_JOBSTATE_NOT_STARTED;
     it->second.m_last_ping = getTime();
     it->second.m_args = args;
+    it->second.m_rendering_devices = rendering_devices;
     if( m_for_real ) {
         fsync( 1 );
         fsync( 2 );
@@ -653,6 +793,21 @@ Master::addJob( const std::string& id,
             std::vector<char*> env;
             env.push_back( strdup( env_job_id.c_str() ) );
             env.push_back( strdup( env_master_id.c_str() ) );
+
+            if( !it->second.m_rendering_devices.empty() ) {
+                std::string devices;
+                for( std::vector<std::string>::iterator kt = it->second.m_rendering_devices.begin();
+                     kt != it->second.m_rendering_devices.end(); ++kt )
+                {
+                    if( !devices.empty() ) {
+                        devices.append( ";" );
+                    }
+                    devices.append( *kt );
+                }
+                devices = "TINIA_RENDERING_DEVICES=" + devices;
+                env.push_back( strdup( devices.c_str() ) );
+            }
+            
             for( int i=0; environ[i] != NULL; i++ ) {
                 if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
                     env.push_back( strdup( environ[i] ) );

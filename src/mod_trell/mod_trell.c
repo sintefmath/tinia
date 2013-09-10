@@ -76,6 +76,7 @@ static int trell_handler_body(request_rec *r)
                        "mod_trell: decode_path_info failed to decode request='%s'", r->path_info );
         return code;
     }
+    dispatch_info.m_entry = apr_time_now();
 
 
 #if 0
@@ -144,7 +145,18 @@ static int trell_handler_body(request_rec *r)
                     return rv;
                 }
             }
-            return trell_handle_get_snapshot( sconf, r, &dispatch_info );
+            int rv = trell_handle_get_snapshot( sconf, r, &dispatch_info );
+            dispatch_info.m_exit = apr_time_now();
+            
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 
+                           "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
+                           apr_time_as_msec(dispatch_info.m_exit-dispatch_info.m_entry ),
+                           apr_time_as_msec(dispatch_info.m_png_exit-dispatch_info.m_png_entry),
+                           apr_time_as_msec(dispatch_info.m_png_filter_exit-dispatch_info.m_png_filter_entry),
+                           apr_time_as_msec(dispatch_info.m_png_compress_exit-dispatch_info.m_png_compress_entry)
+                           );
+            
+            return rv;
             break;
         case TRELL_REQUEST_GET_RENDERLIST:
             // Check if a model update is piggy-backed on request.

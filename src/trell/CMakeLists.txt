@@ -2,6 +2,7 @@ SET( LIB_TRELL_SRC
     "IPCGLJobController.cpp"
     "IPCController.cpp"
     "IPCJobController.cpp"
+    "OffscreenGL.cpp"
     "messenger.c"
 )
 

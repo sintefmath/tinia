@@ -24,7 +24,7 @@
 #include <libxml/xmlschemas.h>
 #include "tinia/trell/messenger.h"
 #include "tinia/trell/trell.h"
-
+#include "apr_time.h"
 
 
 /** Trell configuration structure.
@@ -96,6 +96,14 @@ typedef struct mod_trell_dispatch_info
     char                 m_requestname[TRELL_REQUESTNAME_MAXLENGTH];
     char                 m_key[TRELL_KEYID_MAXLENGTH];
     char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
+    apr_time_t           m_entry;
+    apr_time_t           m_exit;
+    apr_time_t           m_png_entry;
+    apr_time_t           m_png_exit;
+    apr_time_t           m_png_filter_entry;
+    apr_time_t           m_png_filter_exit;
+    apr_time_t           m_png_compress_entry;
+    apr_time_t           m_png_compress_exit;
 } trell_dispatch_info_t;
 
 int

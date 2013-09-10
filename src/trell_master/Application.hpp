@@ -1,4 +1,4 @@
-/* Copyright STIFTELSEN SINTEF 2012
+/* Copyright STIFTELSEN SINTEF 2013
  * 
  * This file is part of the Tinia Framework.
  * 
@@ -15,34 +15,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #pragma once
 #include <string>
 
 namespace tinia {
-namespace jobcontroller {
-class Controller
+namespace trell {
+namespace impl {
+
+class Application
 {
 public:
-    Controller();
+    Application( const std::string& app_bin,
+                 const std::string& app_path );
     
-    virtual void addScript(const std::string& script) = 0;
+    const std::string&
+    appBinary() const { return m_app_bin; }
+    
+    bool
+    refresh();
 
-    virtual
-    void
-    finish() = 0;
-
-    virtual
-    void
-    fail() = 0;
-
-    virtual int run(int argc, char** argv) = 0;
+    const std::string
+    xml() const;
     
 protected:
-    void  (*m_logger_callback)( void* logger_data, int level, const char* who, const char* msg, ... );
-    void*   m_logger_data;
-    
+    std::string m_app_bin;
+    std::string m_app_path;
+
 };
 
-}
-}
+} // of namespace impl
+} // of namespace trell
+} // of namespace tinia
