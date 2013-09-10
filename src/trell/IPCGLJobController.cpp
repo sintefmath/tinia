@@ -41,7 +41,7 @@ GLDebugLogWrapper( GLenum source,
                    const GLchar* message,
                    void* data )
 {
-
+#ifdef GLEW_khr_DEBUG // make sure the glew version is new enough
     const char* source_str = "???";
     switch( source ) {
     case GL_DEBUG_SOURCE_API:             source_str = "api"; break;
@@ -79,6 +79,7 @@ GLDebugLogWrapper( GLenum source,
                           source_str,
                           type_str,
                           message );
+#endif
 }
 
 
@@ -181,6 +182,7 @@ IPCGLJobController::init()
     }
     glGetIntegerv( GL_MAX_INTEGER_SAMPLES, &m_max_samples );
 
+#ifdef GLEW_khr_debug // Make sure we have a new enough glew version
     if( debug ) {
         if( glewIsSupported( "GL_KHR_debug" ) ) {
             GLDebugLogWrapperData* data = new GLDebugLogWrapperData;
@@ -205,6 +207,7 @@ IPCGLJobController::init()
             }
         }
     }
+#endif
     
     bool ipcRetVal = IPCJobController::init();
     return (ipcRetVal && m_openGLJob->initGL());
