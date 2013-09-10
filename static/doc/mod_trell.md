@@ -70,7 +70,7 @@ text files
 
 The most common error message is something similar to "Failed to open display
 ':0.0'". This typically stems from strict X restrictions. You can amend this
-by running the command `xhost +` in a terminal window in your X session, or
+by running the command `xhost + local:` in a terminal window in your X session, or
 by changing the user your Apache httpd server is run through.
 
 Stopping jobs

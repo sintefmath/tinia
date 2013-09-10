@@ -15,34 +15,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #pragma once
 #include <string>
+#include <list>
 
 namespace tinia {
-namespace jobcontroller {
-class Controller
+namespace trell {
+namespace impl {
+
+class RenderingDevices
 {
 public:
-    Controller();
-    
-    virtual void addScript(const std::string& script) = 0;
+    RenderingDevices( void (*logger)( void* data, int level, const char* who, const char* message, ... ) = NULL,
+                      void* logger_data = NULL);
 
-    virtual
-    void
-    finish() = 0;
-
-    virtual
-    void
-    fail() = 0;
-
-    virtual int run(int argc, char** argv) = 0;
+    std::string
+    xml();
     
 protected:
-    void  (*m_logger_callback)( void* logger_data, int level, const char* who, const char* msg, ... );
-    void*   m_logger_data;
-    
+    std::string     m_display_name; ///< String used to open display.
+    void          (*m_logger)( void* data, int level, const char* who, const char* message, ... );
+    void*           m_logger_data;
+ 
+    std::list<std::string>
+    parseExtensions( const char* string );
 };
 
-}
-}
+} // of namespace impl
+} // of namespace trell
+} // of namespace tinia

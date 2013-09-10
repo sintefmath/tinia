@@ -1,0 +1,35 @@
+table.mi {
+    background-color:#ccddff;
+    border: 1px solid #88aaff;
+};
+
+table.my {
+    width:100%;
+    border-collapse:collapse;
+    background-color:#4488ff;
+    border: 1px solid #88aaff;
+}
+tr.my {
+    background-color:#ccddff;
+}
+/*
+tr.my:nth-child(even) {
+    background-color:#ccddff;
+}
+tr.my:nth-child(odd) {
+    background-color:#aaccff;
+}
+*/
+td.my {
+    border: 1px solid #88aaff;
+}
+td.mo {
+    background-color:#ffaaaa;
+    border: 1px solid #ff6666;
+}
+th.my {
+    border: 1px solid #88aaff;
+    background-color:#88aaff;
+    color:white;
+    text-align:left;
+}

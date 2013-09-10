@@ -18,11 +18,9 @@
 
 #pragma once
 #include <GL/glew.h>
-#include <GL/glx.h>
-#include <GL/gl.h>
-#include <GL/glxext.h>
 #include <unordered_map>
 #include "tinia/jobcontroller/OpenGLJob.hpp"
+#include "tinia/trell/OffscreenGL.hpp"
 #include "IPCJobController.hpp"
 
 namespace tinia {
@@ -31,6 +29,19 @@ namespace trell {
 class IPCGLJobController : public IPCJobController
 {
 public:
+
+    /** Set rendering quality.
+     *
+     * \param[in] quality  A number in the range [0..255], where 255 is the
+     *                     highest quality.
+     *
+     * This is a kludge to let specific jobs enable MSAA, and the API and
+     * behaviour WILL most likely change.
+     *
+     */
+    void
+    setQuality( int quality );
+    
     IPCGLJobController( bool is_master = false );
 
 protected:
@@ -66,24 +77,31 @@ protected:
 
 
 private:
-    jobcontroller::OpenGLJob *m_openGLJob;
+    jobcontroller::OpenGLJob*                           m_openGLJob;
+    impl::OffscreenGL                                   m_context;
+    int                                                 m_quality;
     struct RenderEnvironment {
         GLuint                                          m_fbo;
         GLuint                                          m_renderbuffer_rgba;
         GLuint                                          m_renderbuffer_depth;
         GLsizei                                         m_width;
         GLsizei                                         m_height;
+        GLsizei                                         m_samples;
     };
 
+    std::list<RenderEnvironment*>                       m_environments;
 
-    Display*                                            m_display;
-    GLXContext                                          m_context;
+    GLsizei                                             m_max_samples;
 
-
-    GLXPbuffer                                          m_pbuffer;
 
     std::unordered_map<std::string, RenderEnvironment>  m_render_environments;
 
+    RenderEnvironment*
+    getRenderEnvironment( GLsizei width, GLsizei height, GLsizei samples );
+    
+    void
+    dumpEnvironmentList();
+    
     bool
     checkFramebufferCompleteness() const;
 

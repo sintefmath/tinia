@@ -22,10 +22,14 @@
 #include <string>
 #include <unordered_map>
 #include "tinia/trell/IPCController.hpp"
+#include "Applications.hpp"
+#include "RenderingDevices.hpp"
 
 namespace tinia {
 namespace trell {
 namespace impl {
+    
+
 /** The master job
   *
   * The job management is offloaded from mod_trell to a specific master job. The
@@ -46,7 +50,11 @@ public:
 protected:
     bool                                    m_for_real;
     std::string                             m_application_root;
+    Applications                            m_applications;
+    RenderingDevices                        m_rendering_devices;
 
+    static const std::string                getApplicationRoot();
+    
     /** The internal represenation of a job. */
     struct Job {
         /** The unique id of the job. */
@@ -61,6 +69,9 @@ protected:
         time_t                              m_last_ping;
         /** Application argument list (excluding application name). */
         std::vector<std::string>            m_args;
+        
+        /** Rendering devices that job uses (currently should be 0 or 1). */
+        std::vector<std::string>            m_rendering_devices;
     };
     /** The set of managed jobs. */
     std::unordered_map<std::string, Job>    m_jobs;
@@ -75,15 +86,19 @@ protected:
             ACTION_WIPE_JOB,
             ACTION_KILL_JOB,
             ACTION_ADD_JOB,
-            ACTION_GET_JOB_LIST
+            ACTION_GET_JOB_LIST,
+            ACTION_LIST_RENDERING_DEVICES,
+            ACTION_LIST_APPLICATIONS
         }                           m_action;
         std::string                 m_job;
         std::string                 m_application;
+        int                         m_timestamp;
+        std::vector<std::string>    m_rendering_devices;
         std::vector<std::string>    m_args;
         bool                        m_force;
         std::string                 m_session;
     };
-
+    
     /** \copydoc MessageBox::init
       *
       * Invokes snarfMasterState.
@@ -101,6 +116,9 @@ protected:
     bool
     periodic();
 
+    void
+    often();
+    
     /** \copydoc MessageBox::cleanup
       *
       * Invokes dumpMasterState.
@@ -164,16 +182,21 @@ protected:
     addJob( const std::string& id,
             const std::string& exe,
             const std::vector<std::string>& args,
+            const std::vector<std::string>& rendering_devices,
             const std::string& xml );
 
     /** Kill a job.
       *
       * \arg id     The server-wide unique id of the job.
       * \arg force  If force is false, a suicidie request is sent to the job. If
-      *             force is true, a SIGTERM is sent to the process.
+      *             force is true, a SIGKILL is sent to the process.
       */
     bool
     killJob( const std::string& id, bool force );
+    
+    /** Make sure that IPC-stuff for the job is cleaned up. */
+    void
+    cleanJobRemains( const std::string& id );
 
     /** Remove a job from the list of managed jobs. */
     bool

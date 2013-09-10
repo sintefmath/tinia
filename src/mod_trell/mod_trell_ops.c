@@ -79,29 +79,45 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
     proc.out = NULL;
     proc.err = NULL;
     
+    
     // This is slightly shaky as well, since we're not necessarily the parent
     // process, and if the child isn't waited upon, we have a defunct/zombie.
     
-    rv = apr_proc_kill( &proc, SIGINT );
+    rv = apr_proc_kill( &proc, SIGTERM );
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: %s@%d", __FILE__, __LINE__ );
         return rv;
     }
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Sent pid=%d SIGINT", proc.pid );
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Sent pid=%d SIGTERM", proc.pid );
+    apr_sleep( 1000 ); // Slight wait to let process hopefully terminate.
     for(i=0; i<3; i++ ) {
+        // Check if child is dead. However, it is not safe to assume that the
+        // master is child of current process.
         int exitcode;
         apr_exit_why_e why=0;
         rv = apr_proc_wait( &proc, &exitcode, &why, APR_NOWAIT );
         if( rv == APR_CHILD_DONE ) {
-            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: SIGINT why=%d", why );
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: SIGTERM why=%d", why );
             return APR_SUCCESS;
         }
+        
+        // Wait failed, check to see if the messenger still lives... If not,
+        // we assume it's dead.
+        struct messenger msgr;
+        messenger_status_t status = messenger_init( &msgr, svr_conf->m_master_id );
+        if( status != MESSENGER_OK ) {
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
+            return APR_SUCCESS;
+        }
+        messenger_free( &msgr );
+        
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Child not done, sleeping it=%d", i );
         apr_sleep( 1000000 );
     }
     
 
     rv = apr_proc_kill( &proc, SIGKILL );
+    apr_sleep( 1000 ); // Slight wait to let process hopefully terminate.
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, "mod_trell: %s@%d", __FILE__, __LINE__ );
         return rv;
@@ -116,9 +132,14 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
             return APR_SUCCESS;
         }
 
-        if( rv != APR_CHILD_NOTDONE ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "mod_trell: child neither done nor notdone." );
+        struct messenger msgr;
+        messenger_status_t status = messenger_init( &msgr, svr_conf->m_master_id );
+        if( status != MESSENGER_OK ) {
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
+            return APR_SUCCESS;
         }
+        messenger_free( &msgr );
+ 
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: Child not done, sleeping it=%d", i );
         apr_sleep( 1000000 );
     }
