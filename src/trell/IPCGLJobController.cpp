@@ -16,9 +16,74 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
+#include <cstdlib>      // getenv
+#include <sstream>
 #include <tinia/renderlist/XMLWriter.hpp>
 #include "tinia/trell/IPCGLJobController.hpp"
+
+namespace {
+
+static const std::string package = "IPCGLJobController";
+
+struct GLDebugLogWrapperData
+{
+    void  (*m_logger_callback)( void* logger_data, int level, const char* who, const char* msg, ... );
+    void*   m_logger_data;
+};
+
+static
+void
+GLDebugLogWrapper( GLenum source,
+                   GLenum type,
+                   GLuint id,
+                   GLenum severity,
+                   GLsizei length,
+                   const GLchar* message,
+                   void* data )
+{
+
+    const char* source_str = "???";
+    switch( source ) {
+    case GL_DEBUG_SOURCE_API:             source_str = "api"; break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   source_str = "wsy"; break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER: source_str = "cmp"; break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:     source_str = "3py"; break;
+    case GL_DEBUG_SOURCE_APPLICATION:     source_str = "app"; break;
+    case GL_DEBUG_SOURCE_OTHER:           source_str = "oth"; break;
+    default: break;
+    }
+
+    const char* type_str = "???";
+    switch( type ) {
+    case GL_DEBUG_TYPE_ERROR:               type_str = "error"; break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: type_str = "deprecated"; break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  type_str = "undef"; break;
+    case GL_DEBUG_TYPE_PORTABILITY:         type_str = "portability"; break;
+    case GL_DEBUG_TYPE_PERFORMANCE:         type_str = "performance"; break;
+    case GL_DEBUG_TYPE_OTHER:               type_str = "other"; break;
+    default: break;
+    }
+
+    int level = 2;
+    switch( severity ) {
+    case GL_DEBUG_SEVERITY_HIGH:   level = 0; break;
+    case GL_DEBUG_SEVERITY_MEDIUM: level = 1; break;
+    default: break;
+    }
+
+    GLDebugLogWrapperData* d = reinterpret_cast<GLDebugLogWrapperData*>( data );
+    d->m_logger_callback( d->m_logger_data,
+                          level,
+                          "OpenGL",
+                          "src=%s;type=%s: %s",
+                          source_str,
+                          type_str,
+                          message );
+}
+
+
+} // of anonymous namespace
+
 
 namespace tinia {
 namespace trell {
@@ -27,52 +92,9 @@ namespace trell {
 IPCGLJobController::IPCGLJobController(bool is_master)
     : IPCJobController( is_master ),
       m_openGLJob( NULL ),
-      m_quality( 0 ),
-      m_display( NULL ),
-      m_context( NULL )
+      m_context( m_logger_callback, m_logger_data ),
+      m_quality( 0 )
 {
-}
-
-
-static void debugLogger( GLenum source,
-                                  GLenum type,
-                                  GLuint id,
-                                  GLenum severity,
-                                  GLsizei length,
-                                  const GLchar* message,
-                                  void* data )
-{
-    std::cerr << "OpenGL debug [src=";
-    switch( source ) {
-    case GL_DEBUG_SOURCE_API:               std::cerr << "api"; break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     std::cerr << "wsy"; break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER:   std::cerr << "cmp"; break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY:       std::cerr << "3py"; break;
-    case GL_DEBUG_SOURCE_APPLICATION:       std::cerr << "app"; break;
-    case GL_DEBUG_SOURCE_OTHER:             std::cerr << "oth"; break;
-    default:                                std::cerr << "???"; break;
-    }
-
-    std::cerr << ", type=";
-    switch( type ) {
-    case GL_DEBUG_TYPE_ERROR:               std::cerr << "error"; break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cerr <<  "deprecated"; break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cerr <<  "undef"; break;
-    case GL_DEBUG_TYPE_PORTABILITY:         std::cerr <<  "portability"; break;
-    case GL_DEBUG_TYPE_PERFORMANCE:         std::cerr <<  "performance"; break;
-    case GL_DEBUG_TYPE_OTHER:               std::cerr <<  "other"; break;
-    default:                                std::cerr << "???"; break;
-    }
-
-    std::cerr << ", severity=";
-    switch( severity ) {
-    case GL_DEBUG_SEVERITY_HIGH:            std::cerr <<  "high"; break;
-    case GL_DEBUG_SEVERITY_MEDIUM:          std::cerr <<  "medium"; break;
-    case GL_DEBUG_SEVERITY_LOW:             std::cerr <<  "low"; break;
-    default:                                std::cerr << "???"; break;
-    }
-
-    std::cerr << "] " << message << std::endl;
 }
 
 void
@@ -84,82 +106,105 @@ IPCGLJobController::setQuality( int quality )
 bool
 IPCGLJobController::init()
 {
-   // Initialize this
-   m_openGLJob = static_cast<jobcontroller::OpenGLJob*>(m_job);
-    // FIXME: This is the mapping to which GPU the thread will work against, so
-    // using something more clever than a static string is appropriate.
-    static std::string display = ":0.0";
+    // Initialize this
+    m_openGLJob = static_cast<jobcontroller::OpenGLJob*>(m_job);
 
-    m_display = XOpenDisplay( display.c_str() );
-    if( m_display == NULL ) {
-        std::cerr << "Failed to open display '" << display << "'." << std::endl;
-        return false;
-    }
-
-    int framebufffer_attribs[] = {
-        GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-        None
-    };
-    int framebuffer_configs_N;
-    GLXFBConfig* framebuffer_configs = glXChooseFBConfig( m_display,
-                                                          DefaultScreen( m_display),
-                                                          framebufffer_attribs,
-                                                          &framebuffer_configs_N );
-    if( (framebuffer_configs == NULL) || (framebuffer_configs_N == 0 ) ) {
-        std::cerr << "Failed to find suitable framebuffer configs." << std::endl;
-        return false;
-    }
-
-    int pbuffer_attribs[] = {
-        GLX_PBUFFER_WIDTH, 500,
-        GLX_PBUFFER_HEIGHT, 500,
-        GLX_LARGEST_PBUFFER, GL_FALSE,
-        GLX_PRESERVED_CONTENTS, GL_TRUE,
-        None
-    };
-    m_pbuffer = glXCreatePbuffer( m_display,
-                                  framebuffer_configs[0],
-                                  pbuffer_attribs );
-    // FIXME: How to check for errors? Aren't these sent as events?
-    m_context = glXCreateNewContext( m_display,
-                                     framebuffer_configs[0],
-                                     GLX_RGBA_TYPE,
-                                     NULL,
-                                     GL_TRUE );
-    if( m_context == NULL ) {
-        std::cerr << "Failed to create context." << std::endl;
-        XFree( framebuffer_configs );
-        return false;
-    }
-    glXMakeCurrent( m_display, m_pbuffer, m_context );
-    glewInit();
-    
-    
-    GLint major, minor;
-    glGetIntegerv( GL_MAJOR_VERSION, &major );
-    glGetIntegerv( GL_MINOR_VERSION, &minor );
-    std::cerr << "OpenGL " << major << "." << minor << "\n";
-
-    glGetIntegerv( GL_MAX_INTEGER_SAMPLES, &m_samples );
-    std::cerr << "Max samples = " << m_samples << "\n";
-
+    // How should we let the job enable debugging? Or specific GL versions?
     bool debug = true;
+
+    
+    // --- set up OpenGL context ------------------------------------------------
+    // The display to use is passed from the master job via an env-var.
+    std::string displays;
+    {
+        const char* t = getenv( "TINIA_RENDERING_DEVICES" );
+        if( t == NULL ) {
+            if( m_logger_callback != NULL ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "TINIA_RENDERING_DEVICES environment variable not set." );
+            }
+            return false;
+        }
+        displays = std::string( t );
+    }
+    // The display string can contain a ;-separated list of rendering devices,
+    // however, we currently only support one, the first one in the list.
+    std::string display = displays.substr( 0, displays.find(';') );
+    if( display.empty() ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Unable to determine first display in '%s'",
+                               displays.c_str() );
+        }
+        return false;
+    }
+    if( debug ) {
+        m_context.requestDebug();
+    }
+    
+    // Try to setup context.
+    if( !m_context.setupContext( display ) ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to create OpenGL context on '%s'.",
+                               display.c_str() );
+        }
+        return false;
+    }
+    if( !m_context.bindContext() ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to bind OpenGL context on '%s'.",
+                               display.c_str() );
+        }
+        return false;
+    }
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "Created OpenGL context on '%s'", display.c_str() );
+    }
+    
+    // --- OpenGL context created, init glew etc. ------------------------------
+    glewInit();
+
+    if( m_logger_callback != NULL ) {
+        GLint major, minor;
+        glGetIntegerv( GL_MAJOR_VERSION, &major );
+        glGetIntegerv( GL_MINOR_VERSION, &minor );
+        
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "OpenGL %d.%d (%s, %s, %s).",
+                           major, minor,
+                           glGetString( GL_RENDERER ),
+                           glGetString( GL_VERSION ),
+                           glGetString( GL_VENDOR ) );
+    }
+    glGetIntegerv( GL_MAX_INTEGER_SAMPLES, &m_max_samples );
+
     if( debug ) {
         if( glewIsSupported( "GL_KHR_debug" ) ) {
+            GLDebugLogWrapperData* data = new GLDebugLogWrapperData;
+            data->m_logger_callback = m_logger_callback;
+            data->m_logger_data = m_logger_data;
+            
             glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
-            glDebugMessageCallback( debugLogger, NULL );
+            glDebugMessageCallback( GLDebugLogWrapper, data );
             glDebugMessageControl( GL_DONT_CARE,
                                    GL_DONT_CARE,
                                    GL_DEBUG_SEVERITY_NOTIFICATION,
                                    0, NULL, GL_TRUE );
-            std::cerr << "Enabled OpenGL debugging.\n";
+            if( m_logger_callback != NULL ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Enabled OpenGL debugging." );
+            }
         }
         else {
-            std::cerr << "OpenGL debugging not supported.\n";
+            if( m_logger_callback != NULL ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "GL_KHR_debug not supported." );
+            }
         }
     }
-    
-        
     
     bool ipcRetVal = IPCJobController::init();
     return (ipcRetVal && m_openGLJob->initGL());
@@ -180,7 +225,11 @@ IPCGLJobController::onGetRenderlist( size_t&             result_size,
         client_revision = boost::lexical_cast<unsigned int>( timestamp );
     }
     catch( boost::bad_lexical_cast& e ) {
-        std::cerr << "Failed to parse revision number '" << client_revision << "'.\n";
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to parse timestamp '%s'.",
+                               timestamp.c_str() );
+        }
     }
     if( m_openGLJob == NULL ) {
         return false;
@@ -200,7 +249,11 @@ IPCGLJobController::onGetRenderlist( size_t&             result_size,
         return true;
     }
     else {
-        std::cerr << "Insufficent buffer size for renderlist.\n";
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Insufficient buffer size for render list.",
+                               timestamp.c_str() );
+        }
         return false;
     }
 }
@@ -209,16 +262,22 @@ IPCGLJobController::onGetRenderlist( size_t&             result_size,
 void
 IPCGLJobController::dumpEnvironmentList()
 {
-    for( auto it = m_environments.begin(); it!=m_environments.end(); ++it ) {
-        std::cerr << "["
-                  << (*it)->m_width
-                  << "x"
-                  << (*it)->m_height
-                  << "x"
-                  << (*it)->m_samples
-                  << "] ";
+    if( m_logger_callback != NULL ) {
+        std::stringstream o;
+        
+        for( auto it = m_environments.begin(); it!=m_environments.end(); ++it ) {
+            o << "["
+              << (*it)->m_width
+              << "x"
+              << (*it)->m_height
+              << "x"
+              << (*it)->m_samples
+              << "] ";
+        }
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "environments: %s",
+                           o.str().c_str() );
     }
-    std::cerr << "\n";
 }
 
 
@@ -265,10 +324,6 @@ IPCGLJobController::getRenderEnvironment( GLsizei width, GLsizei height, GLsizei
         delete m_environments.back();
         m_environments.pop_back();
     }
-    if( !checkForGLError() ) {
-        std::cerr << __LINE__ << "\n";
-    }
-    
 
     RenderEnvironment* e = new RenderEnvironment;
     
@@ -295,8 +350,11 @@ IPCGLJobController::getRenderEnvironment( GLsizei width, GLsizei height, GLsizei
     glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, e->m_renderbuffer_depth );
 
     if(!checkFramebufferCompleteness() ) {
-        std::cerr << "Failed to create framebuffer ["
-                  << w2 << "x" << h2 << "x" << samples << "]\n";
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to create FBO [%dx%dx%d]",
+                               w2, h2, samples );
+        }
         glBindFramebuffer( GL_FRAMEBUFFER, 0 );
         glDeleteFramebuffers( 1, &e->m_fbo );
         glDeleteRenderbuffers( 1, &e->m_renderbuffer_rgba );
@@ -309,8 +367,11 @@ IPCGLJobController::getRenderEnvironment( GLsizei width, GLsizei height, GLsizei
         e->m_width = w2;
         e->m_height = h2;
         e->m_samples = samples;
-        std::cerr << "Created framebuffer ["
-                  << w2 << "x" << h2 << "x" << samples << "]\n";
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Created FBO [%dx%dx%d]",
+                               w2, h2, samples );
+        }
         m_environments.push_front( e );
         dumpEnvironmentList();
         return e;
@@ -327,36 +388,69 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                  const std::string&  session,
                                  const std::string&  key )
 {
-    glXMakeCurrent( m_display, m_pbuffer, m_context );
-    if( key.empty() ) {
-        std::cerr << "No key given." << std::endl; return false;
+    // bind context
+    if( !m_context.bindContext() ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to bind OpenGL context." );
+        }
+        return false;
     }
+    // check if we have a key (and we should check if this corrensponds to a viewer)
+    if( key.empty() ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "No key given." );
+        }
+        return false;
+    }
+    // sane size
     if( width < 1 || height < 1 ) {
-        std::cerr << "Size must be at least 1x1 pixels" << std::endl; return false;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Size must be at least 1x1 pixels." );
+        }
+        return false;
     }
     
     GLsizei samples = std::min( std::max( 0,
-                                          (m_samples*m_quality+127)/255),
-                                m_samples );
+                                          (m_max_samples*m_quality+127)/255),
+                                m_max_samples );
     
 
     // --- get render targets --------------------------------------------------    
     RenderEnvironment* env_render = getRenderEnvironment( width, height,
                                                           samples );
     if( env_render == NULL ) {
-        std::cerr << "Error at " << __LINE__ << "\n"; return false;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Failed to get rendering environment" );
+        }
+        return false;
     }
     RenderEnvironment* env_copy = env_render;
     if( env_render->m_samples > 1 ) {
         env_copy = getRenderEnvironment( width, height, 1 );
         if( env_copy == NULL ) {
-            std::cerr << "Error at " << __LINE__ << "\n"; return false;
+            if( m_logger_callback != NULL ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Failed to get de-msaa environment" );
+            }
+            return false;
         }
     }
 
     // --- render --------------------------------------------------------------
     glBindFramebuffer( GL_FRAMEBUFFER, env_render->m_fbo );
     glViewport( 0, 0, width, height );
+
+    if( !checkForGLError() ) {
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Got OpenGL error before Job's rendering code." );
+        }
+        return false;
+    }
 
     if( env_render->m_samples > 1 ) {
         glEnable( GL_MULTISAMPLE );
@@ -367,11 +461,17 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     }
     
     if( res == false ) {
-        std::cerr << "Rendering failed." << std::endl; return false;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Job's rendering code failed" );
+        }
     }
-
     if( !checkForGLError() ) {
-        std::cerr << "OpenGL error during rendering." << std::endl; return false;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Got OpenGL error in Job's rendering code." );
+        }
+        return false;
     }
 
     // --- if multisample, blit to non-multisample before reading --------------
@@ -392,7 +492,10 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
         break;
     default:
-        std::cerr << "Unsupported pixel format." << std::endl;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Unsupported pixel format." );
+        }
         return false;
     }
 
@@ -403,36 +506,55 @@ void
 IPCGLJobController::cleanup()
 {
     IPCJobController::cleanup();
-
-    if( m_context != NULL ) {
-        glXDestroyContext( m_display, m_context );
-    }
-    if( m_display != NULL ) {
-        XCloseDisplay( m_display );
-    }
 }
 
-#define FOO(a) case a: std::cerr << (#a) << std::endl; break
+
 
 bool
 IPCGLJobController::checkFramebufferCompleteness() const
 {
     GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
-    switch( status ) {
-    case GL_FRAMEBUFFER_COMPLETE:
+    if( status == GL_FRAMEBUFFER_COMPLETE ) {
         return true;
-        break;
-        FOO( GL_FRAMEBUFFER_UNDEFINED );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER );
-        FOO( GL_FRAMEBUFFER_UNSUPPORTED );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE );
-        FOO( GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS );
-    default:
-        std::cerr << "unrecognized FBO error " << std::hex << status << std::endl;
-        break;
+    }
+    if( m_logger_callback != NULL ) {
+        const char* error = NULL;
+        switch( status ) {
+        case GL_FRAMEBUFFER_UNDEFINED:
+            error = "GL_FRAMEBUFFER_UNDEFINED";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            error = "GL_FRAMEBUFFER_UNSUPPORTED";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+            error = "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS";
+            break;
+        default:
+            break;
+        }
+        if( error != NULL ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Incomplete framebuffer: %s.", error );
+        }
+        else {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Incomplete framebuffer: %x", status );
+        }
     }
     return false;
 }
@@ -445,22 +567,41 @@ IPCGLJobController::checkForGLError() const
         return true;
     }
     while( status != GL_NO_ERROR ) {
-        switch( status ) {
-        FOO( GL_INVALID_ENUM );
-        FOO( GL_INVALID_VALUE );
-        FOO( GL_INVALID_OPERATION );
-        FOO( GL_INVALID_FRAMEBUFFER_OPERATION );
-        FOO( GL_OUT_OF_MEMORY );
-        default:
-            std::cerr << "unrecognized GL error " << std::hex << status << std::endl;
-            break;
+        if( m_logger_callback != NULL ) {
+            const char* error = NULL;
+            switch( status ) {
+            case GL_INVALID_ENUM:
+                error = "GL_INVALID_ENUM";
+                break;
+            case GL_INVALID_VALUE:
+                error = "GL_INVALID_VALUE";
+                break;
+            case GL_INVALID_OPERATION:
+                error = "GL_INVALID_OPERATION";
+                break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                error = "GL_INVALID_FRAMEBUFFER_OPERATION";
+                break;
+            case GL_OUT_OF_MEMORY:
+                error = "GL_OUT_OF_MEMORY";
+                break;
+            default:
+                break;
+            }
+            if( error != NULL ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "OpenGL error: %s.", error );
+                
+            }
+            else {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "OpenGL error: %x", status );
+            }
+            status = glGetError();
         }
-        status = glGetError();
     }
     return false;
-
 }
-#undef FOO
 
 } // of namespace trell
 } // of namespace tinia

@@ -18,11 +18,9 @@
 
 #pragma once
 #include <GL/glew.h>
-#include <GL/glx.h>
-#include <GL/gl.h>
-#include <GL/glxext.h>
 #include <unordered_map>
 #include "tinia/jobcontroller/OpenGLJob.hpp"
+#include "tinia/trell/OffscreenGL.hpp"
 #include "IPCJobController.hpp"
 
 namespace tinia {
@@ -80,6 +78,7 @@ protected:
 
 private:
     jobcontroller::OpenGLJob*                           m_openGLJob;
+    impl::OffscreenGL                                   m_context;
     int                                                 m_quality;
     struct RenderEnvironment {
         GLuint                                          m_fbo;
@@ -91,13 +90,9 @@ private:
     };
 
     std::list<RenderEnvironment*>                       m_environments;
-    
 
-    Display*                                            m_display;
-    GLXContext                                          m_context;
-    GLsizei                                             m_samples;
+    GLsizei                                             m_max_samples;
 
-    GLXPbuffer                                          m_pbuffer;
 
     std::unordered_map<std::string, RenderEnvironment>  m_render_environments;
 

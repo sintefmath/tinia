@@ -38,6 +38,7 @@
 //#include <fcntl.h>           /* For O_* constants */
 
 namespace {
+static const std::string package = "Master";
     struct parse {
 	enum NodeType {
         NODE_UNKNOWN,
@@ -122,10 +123,13 @@ Master::Master( bool for_real )
 : IPCController( true ),
   m_for_real( for_real ),
   m_applications( getApplicationRoot() ),
-  m_rendering_devices( Master::logMessage, this )
+  m_rendering_devices( m_logger_callback, m_logger_data )
 {
     m_application_root = std::string( getApplicationRoot() );
-    std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "TINIA_APP_ROOT=%s", m_application_root.c_str() );
+    }
 }
 
 
@@ -224,26 +228,6 @@ Master::handle( trell_message* msg, size_t buf_size )
     msg->m_type = return_type;
     msg->m_size = osize;
     return osize + TRELL_MSGHDR_SIZE;
-}
-
-
-void
-Master::logMessage( void* data, int level, const char* who, const char* message, ... )
-{
-    char buf[ 256 ];
-    va_list args;
-    va_start( args, message );
-    vsnprintf( buf, sizeof(buf), message, args );
-    va_end( args );
-    switch( level ) {
-    case 0: std::cerr << "[E] "; break;
-    case 1: std::cerr << "[W] "; break;
-    default:  std::cerr << "[I] "; break;
-    }
-    if( who != NULL ) {
-        std::cerr << '[' << who << "] ";
-    }
-    std::cerr << buf << std::endl;
 }
 
 bool

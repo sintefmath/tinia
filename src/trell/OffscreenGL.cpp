@@ -44,14 +44,12 @@ OffscreenGL::createContextErrorHandler( Display* display, XErrorEvent* error )
 }
 
 
-OffscreenGL::OffscreenGL( const std::string& display_string,
-                          void (*logger)( void* data, int level, const char* who, const char* message, ... ),
+OffscreenGL::OffscreenGL( void (*logger)( void* data, int level, const char* who, const char* message, ... ),
                           void* logger_data )
     : m_state( STATE_UNINITIALIZED ),
-      m_display_string( display_string ),
       m_logger( logger ),
       m_logger_data( logger_data ),
-      m_logger_who( "OffscreenGL/" + display_string ),
+      m_logger_who( "OffscreenGL" ),
       m_screen_number( -1 ),
       m_display( NULL ),
       m_context( NULL ),
@@ -60,9 +58,26 @@ OffscreenGL::OffscreenGL( const std::string& display_string,
 {
 }
 
-bool
-OffscreenGL::setupContext()
+void
+OffscreenGL::requestDebug()
 {
+    m_req_debug = true;
+}
+
+bool
+OffscreenGL::setupContext( const std::string& display_string )
+{
+    if( m_state != STATE_UNINITIALIZED ) {
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, m_logger_who.c_str(),
+                      "setupContext has already been invoked." );
+        }
+        return m_state >= STATE_INITIALIZED;
+    }
+    
+    m_display_string = display_string;
+    m_logger_who = "OffscreenGL|" + m_display_string;
+    
     XVisualInfo* vis = NULL;
     GLXFBConfig* glx_fb_configs = NULL;
     const char* glx_extensions = NULL;
@@ -285,7 +300,7 @@ cleanup:
     if( glx_fb_configs != NULL ) {
         XFree( glx_fb_configs );
     }
-    return m_state == STATE_INITIALIZED;
+    return m_state >= STATE_INITIALIZED;
 }
 
 OffscreenGL::~OffscreenGL()

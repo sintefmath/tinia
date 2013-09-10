@@ -112,8 +112,8 @@ RenderingDevices::xml()
                 std::string screen_id = screen_id_ss.str();
                 
                 xml << "    <renderingDevice id=\"" << screen_id << "\">\n";
-                OffscreenGL gl( screen_id, m_logger, m_logger_data );
-                if( !gl.setupContext() || !gl.bindContext() ) {
+                OffscreenGL gl( m_logger, m_logger_data );
+                if( !gl.setupContext( screen_id ) || !gl.bindContext() ) {
                     switch ( gl.state() ) {
                     case OffscreenGL::STATE_INSUFFICIENT_GLX:
                         xml << "    <error>INSUFFICIENT_GLX</error>\n";

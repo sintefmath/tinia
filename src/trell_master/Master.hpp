@@ -98,12 +98,6 @@ protected:
         bool                        m_force;
         std::string                 m_session;
     };
-
-    static void logMessage( void* data,
-                            int level,
-                            const char* who, 
-                            const char* message,
-                            ... );
     
     /** \copydoc MessageBox::init
       *
