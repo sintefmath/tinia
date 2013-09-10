@@ -98,23 +98,32 @@ listRenderingDevicesReplyHandler( req )
     if( doc == null ) {
         return;
     }
-
-    var error = doc.getElementsByTagName( 'error' );
-    if( error && error.length > 0 ) {
-        tinia_poke.setRenderingDevicesError( error.item(0).textContent );
-        updateRenderingDevicesList();
-        return;
-    }
+    
+ 
 
     var devices = doc.getElementsByTagName( 'renderingDevice' );
+    if( devices.length == 0 ) {
+        var error = doc.getElementsByTagName( 'error' );
+        if( error && error.length > 0 ) {
+            tinia_poke.setRenderingDevicesError( error.item(0).textContent );
+            updateRenderingDevicesList();
+            return;
+        }
+    }
+    
     for( var k = 0; k < devices.length; k++ ) {
         var device, nodelist;
         var device = devices.item( k );
-        var device_id = device.getAttribute( 'number' );        
+        var device_id = device.getAttribute( 'id' );        
 
         var dev = new TiniaRenderingDevice( device_id );
         tinia_poke.addRenderingDevice( dev );
 
+        var error = doc.getElementsByTagName( 'error' );
+        if( error && error.length > 0 ) {
+            dev.setError( error.item(0).textContent );
+            continue;
+        }
 
         var opengl = device.getElementsByTagName( 'opengl' );
         if( opengl.length > 0 ) {

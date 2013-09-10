@@ -24,7 +24,8 @@ namespace jobcontroller {
 class Controller
 {
 public:
-
+    Controller();
+    
     virtual void addScript(const std::string& script) = 0;
 
     virtual
@@ -36,9 +37,11 @@ public:
     fail() = 0;
 
     virtual int run(int argc, char** argv) = 0;
-
+    
 protected:
-
+    void  (*m_logger_callback)( void* logger_data, int level, const char* who, const char* msg, ... );
+    void*   m_logger_data;
+    
 };
 
 }

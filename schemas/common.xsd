@@ -31,6 +31,11 @@
     <xsd:restriction base="xsd:string">
     </xsd:restriction>
   </xsd:simpleType>
+  
+  <xsd:simpleType name="RenderingDeviceId">
+    <xsd:restriction base="xsd:string">
+    </xsd:restriction>
+  </xsd:simpleType>
 
   <xsd:simpleType name="Result">
     <xsd:restriction base="xsd:string">
@@ -124,6 +129,9 @@
     <xsd:sequence>
       <xsd:element name="job" type="JobId"/>
       <xsd:element name="application" type="ApplicationId"/>
+        <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+          <xsd:element name="renderingDeviceId" type="RenderingDeviceId"/>
+        </xsd:sequence>
         <xsd:sequence minOccurs="0" maxOccurs="unbounded">
           <xsd:element name="arg" type="ApplicationArgument"/>
         </xsd:sequence>

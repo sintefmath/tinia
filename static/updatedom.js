@@ -95,6 +95,11 @@ function updateRenderingDevicesList()
     cell.innerHTML = "Vendor";
     row.appendChild( cell );
     
+    var select = document.getElementById( 'jobgldev' );
+    while( select.childNodes.length ) {
+        select.removeChild( select.childNodes[0] );
+    }
+
     for( var i=0; i<count; i++ ) {
         var device = tinia_poke.renderingDevice(i);
         
@@ -105,23 +110,47 @@ function updateRenderingDevicesList()
         cell.setAttribute( 'class', 'my' );
         cell.innerHTML = device.id();
         row.appendChild( cell );
-        cell = document.createElement( "td" );
-        cell.setAttribute( 'class', 'my' );
-        cell.innerHTML = device.majorVersion()+'.'+device.minorVersion();
-        row.appendChild( cell );
-        cell = document.createElement( "td" );
-        cell.setAttribute( 'class', 'my' );
-        cell.innerHTML = device.rendererString();
-        row.appendChild( cell );
-        cell = document.createElement( "td" );
-        cell.setAttribute( 'class', 'my' );
-        cell.innerHTML = device.versionString();
-        row.appendChild( cell );
-        cell = document.createElement( "td" );
-        cell.setAttribute( 'class', 'my' );
-        cell.innerHTML = device.vendorString();
-        row.appendChild( cell );
+
+        if( device.error() ) {
+            cell = document.createElement( "td" );
+            cell.setAttribute( 'class', 'mo' );
+            cell.setAttribute( 'colspan', 4 );
+            cell.innerHTML = '<I>Unavailable ('+device.error()+')</I>';
+            row.appendChild( cell );
+        }
+        else {
+            var option = document.createElement( 'option' );
+            option.innerHTML = device.rendererString() + ' ('+device.id()+')';
+            option.setAttribute( 'value', device.id() );
+            select.appendChild( option );
+            
+        
+            cell = document.createElement( "td" );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = device.majorVersion()+'.'+device.minorVersion();
+            row.appendChild( cell );
+            cell = document.createElement( "td" );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = device.rendererString();
+            row.appendChild( cell );
+            cell = document.createElement( "td" );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = device.versionString();
+            row.appendChild( cell );
+            cell = document.createElement( "td" );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = device.vendorString();
+            row.appendChild( cell );
+        }
     }
+
+    if( select.childNodes.length == 0 ) {
+        var option = document.createElement( 'option' );
+        option.innerHTML = "None";
+        option.setAttribute( 'value', 'none' );
+        select.appendChild( option );
+    }
+
 }
 
 

@@ -25,6 +25,7 @@
 #include <X11/Xutil.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <dirent.h>
 #include "RenderingDevices.hpp"
 #include "tinia/trell/OffscreenGL.hpp"
 
@@ -32,8 +33,13 @@ namespace tinia {
 namespace trell {
 namespace impl {
 
-RenderingDevices::RenderingDevices()
-    : m_display_name( ":0.0" )
+static const std::string package = "RenderingDevices";
+
+RenderingDevices::RenderingDevices(void (*logger)( void* data, int level, const char* who, const char* message, ... ),
+                                   void* logger_data )
+    : m_display_name( ":0.0" ),
+      m_logger( logger ),
+      m_logger_data( logger_data )
 {
 }
 
@@ -60,90 +66,118 @@ RenderingDevices::parseExtensions( const char* string )
 std::string
 RenderingDevices::xml()
 {
-    std::stringstream xml;
-    xml << "  <renderingDevices display=\"" << m_display_name << "\">\n";
-    
-    int screen_count = 0;
 
-    Display* display = XOpenDisplay( m_display_name.c_str() );
-    if( display == NULL ) {
-        xml << "    <error>FAILED_TO_OPEN_DISPLAY</error>\n";
+    std::stringstream xml;
+    xml << "  <renderingDevices>\n";
+   
+    DIR* dir = opendir( "/tmp/.X11-unix" );
+    if( dir == NULL ) {
+        if( m_logger != NULL ) {
+            m_logger( m_logger_data, 0, package.c_str(),
+                      "opendir failed: %s.", strerror( errno ) );
+        }
+        xml << "    <error>INTERNAL_ERROR</error>\n";
     }
     else {
-        screen_count = ScreenCount( display );
-        XCloseDisplay( display );
-        if( screen_count < 1 ) {
-            xml << "    <error>NO_SCREENS</error>\n";
-        }
-    }
-    
-    for(int screen=0; screen<screen_count; screen++) {
-        xml << "    <renderingDevice number=\"" << screen << "\">\n";
-        OffscreenGL gl( m_display_name, screen );
-        if( !gl.setupContext() || !gl.bindContext() ) {
-            switch ( gl.state() ) {
-            case OffscreenGL::STATE_INSUFFICIENT_GLX:
-                xml << "    <error>INSUFFICIENT_GLX</error>\n";
-                break;
-            case OffscreenGL::STATE_X_ERROR:
-                xml << "    <error>X_ERROR</error>\n";
-                break;
-            default:
-                xml << "    <error>INTERNAL_ERROR</error>\n";
-                break;
+        struct dirent* entry = NULL;
+        while( (entry = readdir( dir )) != NULL ) {
+            if( entry->d_name[0] != 'X' ) {
+                continue;
             }
-        }
-        else {
+            std::string display_id = ":" + std::string( entry->d_name ).substr(1);
+    
+    
+            
+            Display* display = XOpenDisplay( display_id.c_str() );
+            if( display == NULL ) {
+                xml << "    <renderingDevice id=\"" << display_id << "\">\n";
+                xml << "      <error>FAILED_TO_OPEN_DISPLAY</error>\n";
+                xml << "    </renderingDevice>\n";
+                continue;
+            }
 
-            int glx_major = 0;
-            int glx_minor = 0;
-            glXQueryVersion( gl.display(), &glx_major, &glx_minor );
-            xml << "      <glx major=\"" << glx_major
-                << "\" minor=\"" << glx_minor
-                << "\" direct=\"" << (glXIsDirect(gl.display(), gl.context())==True?'1':'0')
-                << "\">\n";
-            xml << "        <client>\n";
-            xml << "          <vendor>" << glXGetClientString( gl.display(), GLX_VENDOR ) << "</vendor>\n";
-            xml << "          <version>" << glXGetClientString( gl.display(), GLX_VERSION ) << "</version>\n";
-            xml << "        </client>\n";
-            xml << "        <server>\n";
-            xml << "          <vendor>" << glXQueryServerString( gl.display(), screen, GLX_VENDOR ) << "</vendor>\n";
-            xml << "          <version>" << glXQueryServerString( gl.display(), screen, GLX_VERSION ) << "</version>\n";
-            xml << "        </server>\n";
-            std::list<std::string> glx_extensions = parseExtensions( glXQueryExtensionsString( gl.display(), screen ) );
-            for( std::list<std::string>::iterator it=glx_extensions.begin(); it!=glx_extensions.end(); ++it ) {
-                //xml << "        <extension>" << *it << "</extension>\n";
+            int screen_count = ScreenCount( display );
+            XCloseDisplay( display );
+            
+            if( screen_count < 1 ) {
+                xml << "    <renderingDevice id=\"" << display_id << "\">\n";
+                xml << "      <error>NO_SCREENS</error>\n";
+                xml << "    </renderingDevice>\n";
+                continue;
             }
-            xml << "      </glx>\n";
-            
-            GLint gl_major = 0;
-            glGetIntegerv( GL_MAJOR_VERSION, &gl_major );
-            GLint gl_minor = 0;
-            glGetIntegerv( GL_MINOR_VERSION, &gl_minor );
-            xml << "      <opengl major=\"" << gl_major
-                << "\" minor=\"" << gl_minor
-                << "\">\n";
-            xml << "        <vendor>" << (const char*)glGetString( GL_VENDOR ) << "</vendor>\n";
-            xml << "        <version>" << (const char*)glGetString( GL_VERSION ) << "</version>\n";
-            xml << "        <renderer>" << (const char*)glGetString( GL_RENDERER) << "</renderer>\n";
-            
-            if( gl_major >= 2 ) {
-                xml << "        <glsl><version>"
-                    << (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION )
-                    << "</version></glsl>\n";
+
+            for(int screen=0; screen<screen_count; screen++) {
+                std::stringstream screen_id_ss;
+                screen_id_ss << display_id << '.' << screen;
+                std::string screen_id = screen_id_ss.str();
                 
+                xml << "    <renderingDevice id=\"" << screen_id << "\">\n";
+                OffscreenGL gl( m_logger, m_logger_data );
+                if( !gl.setupContext( screen_id ) || !gl.bindContext() ) {
+                    switch ( gl.state() ) {
+                    case OffscreenGL::STATE_INSUFFICIENT_GLX:
+                        xml << "    <error>INSUFFICIENT_GLX</error>\n";
+                        break;
+                    case OffscreenGL::STATE_X_ERROR:
+                        xml << "    <error>X_ERROR</error>\n";
+                        break;
+                    default:
+                        xml << "    <error>INTERNAL_ERROR</error>\n";
+                        break;
+                    }
+                }
+                else {
+                    
+                    int glx_major = 0;
+                    int glx_minor = 0;
+                    glXQueryVersion( gl.display(), &glx_major, &glx_minor );
+                    xml << "      <glx major=\"" << glx_major
+                        << "\" minor=\"" << glx_minor
+                        << "\" direct=\"" << (glXIsDirect(gl.display(), gl.context())==True?'1':'0')
+                        << "\">\n";
+                    xml << "        <client>\n";
+                    xml << "          <vendor>" << glXGetClientString( gl.display(), GLX_VENDOR ) << "</vendor>\n";
+                    xml << "          <version>" << glXGetClientString( gl.display(), GLX_VERSION ) << "</version>\n";
+                    xml << "        </client>\n";
+                    xml << "        <server>\n";
+                    xml << "          <vendor>" << glXQueryServerString( gl.display(), screen, GLX_VENDOR ) << "</vendor>\n";
+                    xml << "          <version>" << glXQueryServerString( gl.display(), screen, GLX_VERSION ) << "</version>\n";
+                    xml << "        </server>\n";
+                    std::list<std::string> glx_extensions = parseExtensions( glXQueryExtensionsString( gl.display(), screen ) );
+                    for( std::list<std::string>::iterator it=glx_extensions.begin(); it!=glx_extensions.end(); ++it ) {
+                        //xml << "        <extension>" << *it << "</extension>\n";
+                    }
+                    xml << "      </glx>\n";
+                    
+                    GLint gl_major = 0;
+                    glGetIntegerv( GL_MAJOR_VERSION, &gl_major );
+                    GLint gl_minor = 0;
+                    glGetIntegerv( GL_MINOR_VERSION, &gl_minor );
+                    xml << "      <opengl major=\"" << gl_major
+                        << "\" minor=\"" << gl_minor
+                        << "\">\n";
+                    xml << "        <vendor>" << (const char*)glGetString( GL_VENDOR ) << "</vendor>\n";
+                    xml << "        <version>" << (const char*)glGetString( GL_VERSION ) << "</version>\n";
+                    xml << "        <renderer>" << (const char*)glGetString( GL_RENDERER) << "</renderer>\n";
+                    
+                    if( gl_major >= 2 ) {
+                        xml << "        <glsl><version>"
+                            << (const char*)glGetString( GL_SHADING_LANGUAGE_VERSION )
+                            << "</version></glsl>\n";
+                        
+                    }
+                    std::list<std::string> gl_extensions = parseExtensions( (const char*)glGetString( GL_EXTENSIONS ) );
+                    for( std::list<std::string>::iterator it=gl_extensions.begin(); it!=gl_extensions.end(); ++it ) {
+                        //xml << "        <extension>" << *it << "</extension>\n";
+                    }
+                    xml << "      </opengl>\n";
+                }
+                xml << "    </renderingDevice>\n";
             }
-            std::list<std::string> gl_extensions = parseExtensions( (const char*)glGetString( GL_EXTENSIONS ) );
-            for( std::list<std::string>::iterator it=gl_extensions.begin(); it!=gl_extensions.end(); ++it ) {
-                //xml << "        <extension>" << *it << "</extension>\n";
-            }
-            xml << "      </opengl>\n";
         }
-        xml << "    </renderingDevice>\n";
+        closedir( dir );
     }
-    
     xml << "  </renderingDevices>\n";
-    
     return xml.str();
 }
 

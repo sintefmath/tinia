@@ -38,7 +38,8 @@ public:
         STATE_CONTEXT_BOUND
     };
     
-    OffscreenGL( const std::string& display_string = "", int screen_number = -1 );
+    OffscreenGL( void (*logger)( void* data, int level, const char* who, const char* message, ... ) = NULL,
+                 void* logger_data = NULL );
 
     ~OffscreenGL();
 
@@ -49,7 +50,7 @@ public:
     requestDebug();
     
     bool
-    setupContext();
+    setupContext( const std::string& display_string );
     
     bool
     bindContext();
@@ -72,6 +73,10 @@ public:
 protected:
     ObjectState m_state;
     std::string m_display_string;
+    void      (*m_logger)( void* data, int level, const char* who, const char* message, ... );
+    void*       m_logger_data;
+    std::string m_logger_who;
+    
     int         m_screen_number;
     Display*    m_display;
     GLXContext  m_context;

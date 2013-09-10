@@ -32,10 +32,49 @@
 #include <libxml/xmlreader.h>
 #include "Master.hpp"
 #include <sys/mman.h>
+#include <cstdarg>
+#include <cstdio>
 //#include <sys/stat.h>        /* For mode constants */
 //#include <fcntl.h>           /* For O_* constants */
 
-
+namespace {
+static const std::string package = "Master";
+    struct parse {
+	enum NodeType {
+        NODE_UNKNOWN,
+        // Action nodes
+        NODE_PING,
+        NODE_GET_SERVER_LOAD,
+        NODE_GET_JOB_LIST,
+        NODE_KILL_JOB,
+        NODE_WIPE_JOB,
+        NODE_ADD_JOB,
+        NODE_GRANT_ACCESS,
+        NODE_REVOKE_ACCESS,
+        NODE_LIST_RENDERING_DEVICES,
+        NODE_LIST_APPLICATIONS,
+        // Parameter nodes
+        NODE_JOB,
+        NODE_APPLICATION,
+        NODE_RENDERING_DEVICE_ID,
+        NODE_ARG,
+        NODE_TIMESTAMP,
+        NODE_FORCE,
+        NODE_SESSION
+	};
+    };
+    struct snarf {
+	enum NodeType {
+	    NODE_UNKNOWN,
+	    NODE_JOBINFO,
+	    NODE_JOB,
+	    NODE_PID,
+	    NODE_APPLICATION,
+	    NODE_ARG,
+	    NODE_STATE
+	};
+    };
+}
 namespace tinia {
 namespace trell {
 namespace impl {
@@ -83,10 +122,14 @@ Master::getApplicationRoot()
 Master::Master( bool for_real )
 : IPCController( true ),
   m_for_real( for_real ),
-  m_applications( getApplicationRoot() )
+  m_applications( getApplicationRoot() ),
+  m_rendering_devices( m_logger_callback, m_logger_data )
 {
     m_application_root = std::string( getApplicationRoot() );
-    std::cerr << "TINIA_APP_ROOT=" << m_application_root << std::endl;
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "TINIA_APP_ROOT=%s", m_application_root.c_str() );
+    }
 }
 
 
@@ -131,6 +174,7 @@ Master::handle( trell_message* msg, size_t buf_size )
             if( addJob( data.m_job,
                         data.m_application,
                         data.m_args,
+                        data.m_rendering_devices,
                         string( msg->m_xml_payload, msg->m_size ) ) ) {
                 retval = ret_success;
             }
@@ -185,8 +229,6 @@ Master::handle( trell_message* msg, size_t buf_size )
     msg->m_size = osize;
     return osize + TRELL_MSGHDR_SIZE;
 }
-
-
 
 bool
 Master::init( )
@@ -310,29 +352,7 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                                                   NULL,
                                                   XML_PARSE_NOBLANKS );
     if( reader != NULL ) {
-        enum NodeType {
-            NODE_UNKNOWN,
-            // Action nodes
-            NODE_PING,
-            NODE_GET_SERVER_LOAD,
-            NODE_GET_JOB_LIST,
-            NODE_KILL_JOB,
-            NODE_WIPE_JOB,
-            NODE_ADD_JOB,
-            NODE_GRANT_ACCESS,
-            NODE_REVOKE_ACCESS,
-            NODE_LIST_RENDERING_DEVICES,
-            NODE_LIST_APPLICATIONS,
-            // Parameter nodes
-            NODE_JOB,
-            NODE_APPLICATION,
-            NODE_ARG,
-            NODE_TIMESTAMP,
-            NODE_FORCE,
-            NODE_SESSION
-        };
-
-        vector<NodeType> stack;
+        vector<parse::NodeType> stack;
         for( int r=xmlTextReaderRead(reader); r==1; r=xmlTextReaderRead(reader)) {
             int type = xmlTextReaderNodeType( reader );
             // Begin element
@@ -341,64 +361,67 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                 if( name == NULL ) {
                     name = xmlStrdup( BAD_CAST "--" );
                 }
-                NodeType n = NODE_UNKNOWN;
+		parse::NodeType n = parse::NODE_UNKNOWN;
                 if( xmlStrEqual( name, BAD_CAST "ping" ) ) {
-                    n = NODE_PING;
+                    n = parse::NODE_PING;
                     data.m_action = ParsedXML::ACTION_PING;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "getServerLoad" ) ) {
-                    n = NODE_GET_SERVER_LOAD;
+                    n = parse::NODE_GET_SERVER_LOAD;
                     data.m_action = ParsedXML::ACTION_GET_SERVER_LOAD;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "getJobList" ) ) {
-                    n = NODE_GET_JOB_LIST;
+                    n = parse::NODE_GET_JOB_LIST;
                     data.m_action = ParsedXML::ACTION_GET_JOB_LIST;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "killJob" ) ) {
-                    n = NODE_KILL_JOB;
+                    n = parse::NODE_KILL_JOB;
                     data.m_action = ParsedXML::ACTION_KILL_JOB;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "addJob" ) ) {
-                    n = NODE_ADD_JOB;
+                    n = parse::NODE_ADD_JOB;
                     data.m_action = ParsedXML::ACTION_ADD_JOB;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "wipeJob" ) ) {
-                    n = NODE_WIPE_JOB;
+                    n = parse::NODE_WIPE_JOB;
                     data.m_action = ParsedXML::ACTION_WIPE_JOB;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "listRenderingDevices" ) ) {
-                    n = NODE_LIST_RENDERING_DEVICES;
+                    n = parse::NODE_LIST_RENDERING_DEVICES;
                     data.m_action = ParsedXML::ACTION_LIST_RENDERING_DEVICES;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "listApplications" ) ) {
-                    n = NODE_LIST_APPLICATIONS;
+                    n = parse::NODE_LIST_APPLICATIONS;
                     data.m_action = ParsedXML::ACTION_LIST_APPLICATIONS;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "timestamp" ) ) {
-                    n = NODE_TIMESTAMP;
+                    n = parse::NODE_TIMESTAMP;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "grantAccess" ) ) {
-                    n = NODE_GRANT_ACCESS;
+                    n = parse::NODE_GRANT_ACCESS;
                     data.m_action = ParsedXML::ACTION_NONE;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "revokeAccess" ) ) {
-                    n = NODE_GRANT_ACCESS;
+                    n = parse::NODE_GRANT_ACCESS;
                     data.m_action = ParsedXML::ACTION_NONE;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "job" ) ) {
-                    n = NODE_JOB;
+                    n = parse::NODE_JOB;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "application")) {
-                    n = NODE_APPLICATION;
+                    n = parse::NODE_APPLICATION;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
-                    n = NODE_ARG;
+                    n = parse::NODE_ARG;
+                }
+                else if( xmlStrEqual( name, BAD_CAST "renderingDeviceId" ) ) {
+                    n = parse::NODE_RENDERING_DEVICE_ID;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "force")) {
-                    n = NODE_FORCE;
+                    n = parse::NODE_FORCE;
                 }
                 else if( xmlStrEqual( name, BAD_CAST "session")) {
-                    n = NODE_SESSION;
+                    n = parse::NODE_SESSION;
                 }
                 if( !xmlTextReaderIsEmptyElement( reader ) ) {
                     stack.push_back( n );
@@ -409,19 +432,22 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                 xmlChar* text = xmlTextReaderValue( reader );
                 if( text != NULL ) {
                     switch( stack.back() ) {
-                    case NODE_JOB:
+                    case parse::NODE_JOB:
                         data.m_job = reinterpret_cast<const char*>( text );
                         break;
-                    case NODE_APPLICATION:
+                    case parse::NODE_APPLICATION:
                         data.m_application = reinterpret_cast<const char*>( text );
                         break;
-                    case NODE_TIMESTAMP:
+                    case parse::NODE_TIMESTAMP:
                         data.m_timestamp = atoi( reinterpret_cast<const char*>( text ) );
                         break;
-                    case NODE_ARG:
+                    case parse::NODE_ARG:
                         data.m_args.push_back( reinterpret_cast<const char*>( text ) );
                         break;
-                    case NODE_FORCE:
+                    case parse::NODE_RENDERING_DEVICE_ID:
+                        data.m_rendering_devices.push_back( reinterpret_cast<const char*>( text ) );
+                        break;
+                    case parse::NODE_FORCE:
                         if( xmlStrEqual( text, BAD_CAST "1" ) || xmlStrEqual( text, BAD_CAST "true" ) ) {
                             data.m_force = true;
                         }
@@ -429,7 +455,7 @@ Master::parseXML( ParsedXML& data, char* buf, size_t len )
                             data.m_force = false;
                         }
                         break;
-                    case NODE_SESSION:
+                    case parse::NODE_SESSION:
                         data.m_session = reinterpret_cast<const char*>( text );
                         break;
                     default:
@@ -487,16 +513,8 @@ Master::snarfMasterState()
 {
     xmlTextReaderPtr reader = xmlReaderForFile( "/tmp/trell_master_state", NULL, XML_PARSE_NOBLANKS );
     if( reader != NULL ) {
-        enum NodeType {
-            NODE_UNKNOWN,
-            NODE_JOBINFO,
-            NODE_JOB,
-            NODE_PID,
-            NODE_APPLICATION,
-            NODE_ARG,
-            NODE_STATE
-        };
-        std::vector<NodeType> stack;
+
+        std::vector<snarf::NodeType> stack;
 
         Job job;
         unsigned int fields = 0u;
@@ -505,28 +523,28 @@ Master::snarfMasterState()
 
             int type = xmlTextReaderNodeType( reader );
             if( type == 1 ) {
-                NodeType type = NODE_UNKNOWN;
+		snarf::NodeType type = snarf::NODE_UNKNOWN;
                 xmlChar* name = xmlTextReaderLocalName( reader );
                 if( name != NULL ) {
                     if( xmlStrEqual( name, BAD_CAST "jobInfo" ) ) {
-                        type = NODE_JOBINFO;
+                        type = snarf::NODE_JOBINFO;
                         job = Job();
                         fields = 0u;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "job" ) ) {
-                        type = NODE_JOB;
+                        type = snarf::NODE_JOB;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "pid" ) ) {
-                        type = NODE_PID;
+                        type = snarf::NODE_PID;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "application" ) ) {
-                        type = NODE_APPLICATION;
+                        type = snarf::NODE_APPLICATION;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "arg" ) ) {
-                        type = NODE_ARG;
+                        type = snarf::NODE_ARG;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "state" ) ) {
-                        type = NODE_STATE;
+                        type = snarf::NODE_STATE;
                     }
                     else if( xmlStrEqual( name, BAD_CAST "allowed" ) ) {
                         // TODO
@@ -540,22 +558,22 @@ Master::snarfMasterState()
                 if( text != NULL ) {
                     switch( stack.back() ) {
                     break;
-                    case NODE_JOB:
+                    case snarf::NODE_JOB:
                         job.m_id = reinterpret_cast<const char*>( text );
                         fields |= (1<<stack.back());
                         break;
-                    case NODE_PID:
+                    case snarf::NODE_PID:
                         job.m_pid = atoi( reinterpret_cast<const char*>( text ) );
                         fields |= (1<<stack.back());
                         break;
-                    case NODE_APPLICATION:
+                    case snarf::NODE_APPLICATION:
                         job.m_executable = reinterpret_cast<const char*>( text );
                         fields |= (1<<stack.back());
                         break;
-                    case NODE_ARG:
+                    case snarf::NODE_ARG:
                         job.m_args.push_back( reinterpret_cast<const char*>( text ) );
                         break;
-                    case NODE_STATE:
+                    case snarf::NODE_STATE:
                         if( xmlStrEqual( text, BAD_CAST "NOT_STARTED" ) ) {
                             job.m_state = TRELL_JOBSTATE_NOT_STARTED;
                             fields |= (1<<stack.back());
@@ -591,11 +609,11 @@ Master::snarfMasterState()
                 }
             }
             else if( type == 15 ) {
-                if( stack.back() == NODE_JOBINFO ) {
-                    unsigned int all = (1<<NODE_JOB) |
-                                       (1<<NODE_PID) |
-                                       (1<<NODE_APPLICATION) |
-                                       (1<<NODE_STATE);
+                if( stack.back() == snarf::NODE_JOBINFO ) {
+                    unsigned int all = (1<<snarf::NODE_JOB) |
+			               (1<<snarf::NODE_PID) |
+			               (1<<snarf::NODE_APPLICATION) |
+			               (1<<snarf::NODE_STATE);
                     if( fields == all ) {
                         auto it = m_jobs.find( job.m_id );
                         if( it != m_jobs.end() ) {
@@ -706,6 +724,7 @@ bool
 Master::addJob( const std::string& id,
                 const std::string& exe,
                 const std::vector<std::string>& args,
+                const std::vector<std::string>& rendering_devices,
                 const std::string& xml )
 {
     if( id.empty() || exe.empty() ) {
@@ -741,6 +760,7 @@ Master::addJob( const std::string& id,
     it->second.m_state = TRELL_JOBSTATE_NOT_STARTED;
     it->second.m_last_ping = getTime();
     it->second.m_args = args;
+    it->second.m_rendering_devices = rendering_devices;
     if( m_for_real ) {
         fsync( 1 );
         fsync( 2 );
@@ -773,6 +793,21 @@ Master::addJob( const std::string& id,
             std::vector<char*> env;
             env.push_back( strdup( env_job_id.c_str() ) );
             env.push_back( strdup( env_master_id.c_str() ) );
+
+            if( !it->second.m_rendering_devices.empty() ) {
+                std::string devices;
+                for( std::vector<std::string>::iterator kt = it->second.m_rendering_devices.begin();
+                     kt != it->second.m_rendering_devices.end(); ++kt )
+                {
+                    if( !devices.empty() ) {
+                        devices.append( ";" );
+                    }
+                    devices.append( *kt );
+                }
+                devices = "TINIA_RENDERING_DEVICES=" + devices;
+                env.push_back( strdup( devices.c_str() ) );
+            }
+            
             for( int i=0; environ[i] != NULL; i++ ) {
                 if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
                     env.push_back( strdup( environ[i] ) );

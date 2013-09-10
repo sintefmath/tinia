@@ -4,7 +4,7 @@ FILE( GLOB fpsviewer_JS_SOURCES "*.js" )
 FILE(GLOB fpsviewer_RESOURCES "*.qrc" )
 QT4_ADD_RESOURCES( fpsviewer_QRC_SOURCES ${fpsviewer_RESOURCES} )
 
-IF(${Tinia_DESKTOP})
+IF(Tinia_DESKTOP)
 
 ADD_EXECUTABLE(fpsviewer_desktop
     ${fpsviewer_HEADERS}
@@ -27,7 +27,7 @@ ADD_EXECUTABLE(fpsviewer_desktop
 ENDIF()
 
 
-IF(${Tinia_SERVER})
+IF(Tinia_SERVER)
   ADD_EXECUTABLE(fpsviewer_web
     ${tutorial_HEADERS}
     fpsviewer_web.cpp
