@@ -132,6 +132,7 @@ trell_messenger_log_wrapper( void* data, int level, const char* message, ... )
 }
 
 
+// -----------------------------------------------------------------------------
 // this should end up in messenger.c when it is working.
 messenger_status_t
 messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size ),
@@ -147,38 +148,35 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
     messenger_t msgr;
     messenger_status_t mrv;
 
-    log( log_data, 0, "!! %d", __LINE__ );
-    
-    
-    // open connection to messenger
+    // --- open connection to messenger ----------------------------------------
     mrv = messenger_init( &msgr, message_box_id );
     if( mrv != MESSENGER_OK ) {
         log( log_data, 0, "messenger_init: %s", messenger_strerror( mrv ) );
         status = MESSENGER_ERROR;
     }
     else {
-        // create timeout for request
+        // --- create timeout for request --------------------------------------
         struct timespec timeout;
         clock_gettime( CLOCK_REALTIME, &timeout );
+        timeout.tv_sec += wait;
 
+        // --- begin query loop (which may be broken after 1 iteration) --------
         int do_longpoll;
         do {
-            do_longpoll = 0;
+
+            do_longpoll = 0;    // will be set to 1 if we will longpoll
         
-            // try to get lock
+            // --- try to lock messenger  --------------------------------------
             mrv = messenger_lock( &msgr );
-            if( mrv != MESSENGER_OK ) {
+            if( mrv != MESSENGER_OK ) {     // we failed... output error and give up.
                 log( log_data, 0, "messenger_lock: %s", messenger_strerror( mrv ) );
                 status = MESSENGER_ERROR;
             }
             else {
-#if 0                
-                // copy message into shmem
-                log( log_data, 0, "!! %d", __LINE__ );
-                int q = query( query_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size );
-                log( log_data, 0, "!! %d", __LINE__ );
+                // --- create query in shmem (read request contents) -----------
+                size_t bytes_written = 0;
+                int q = query( query_data, &bytes_written, msgr.m_shmem_ptr, msgr.m_shmem_size );
                 if( q < 0 ) {
-                    // query func failed.
                     status = MESSENGER_ERROR;
                 }
                 else if( q > 0 ) {
@@ -186,19 +184,15 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
                     status = MESSENGER_ERROR;
                 }
                 else {
-                    // we have a valid query in shmem
-                    log( log_data, 0, "!! %d", __LINE__ );
+                    // --- notify that we have a new message, wait for reply ---
                     mrv = messenger_post( &msgr, msgr.m_shmem_size );
-                    log( log_data, 0, "!! %d", __LINE__ );
                     if( mrv != MESSENGER_OK ) {
                         log( log_data, 0, "messenger_post: %s", messenger_strerror( mrv ) );
                         status = MESSENGER_ERROR;
                     }
                     else {
-                        // we should have a valid reply in shmem
-                        log( log_data, 0, "!! %d", __LINE__ );
+                        // --- process reply (write request contents) ----------
                         int r = reply( reply_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size, 0 );
-                        log( log_data, 0, "!! %d", __LINE__ );
                         if( r < 0 ) {
                             status = MESSENGER_ERROR;
                         }
@@ -207,47 +201,63 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
                         }
                         else {
                             status = MESSENGER_TIMEOUT;
-                            do_longpoll = 1;
+                            do_longpoll = wait > 0 ? 1 : 0;
                         }
                     }
                 }
-#endif                
+                // --- free messenger and let others use it --------------------
                 mrv = messenger_unlock( &msgr );
                 if( mrv != MESSENGER_OK ) {
                     log( log_data, 0, "messenger_unlock: %s", messenger_strerror( mrv ) );
                     status = MESSENGER_ERROR;
                 }
-                // Note: We can miss an update here, should do unlock-lock in atomic op.
+
+                // -------------------------------------------------------------
+                // NOTE:
+                // We can miss an update here, should do unlock-lock in atomic
+                // operations, but it seems impossible with the currently used
+                // semaphores. semop might be a solution.
+                // -------------------------------------------------------------
+
+                // --- should we wait (i.e. longpoll?) -------------------------
+                if( !do_longpoll ) {
+                    break;
+                }
                 
-                if( wait > 0 ) {
-                    struct timespec current;
-                    clock_gettime( CLOCK_REALTIME, &current );
-                    if( current.tv_sec >= timeout.tv_sec ) {
-                        
-                        if( sem_timedwait( msgr.m_notify, &timeout ) == 0 ) {
-                            // we do have an update.
-                            log( log_data, 1, "sem_timedwait: got notified." );
-                        }
-                        else {
-                            switch ( errno ) {
-                            case EINTR: // just interrupted, just check and redo
-                                log( log_data, 1, "sem_timedwait: woken by an interrupt." );
-                                break;
-                            case EINVAL: // invalid semaphore
-                                log( log_data, 0, "sem_timedwait: Invalid sempahore." );
-                                break;
-                            case ETIMEDOUT:
-                                do_longpoll = 0;
-                                status = MESSENGER_TIMEOUT;
-                                break;
-                            default:
-                                log( log_data, 0, "sem_timedwait: Unexpected error %d.", errno );
-                                do_longpoll = 0;
-                                status = MESSENGER_ERROR;
-                                break;
-                            }
-                        }
+                // --- check if we already have waited more than timeout -------
+                struct timespec current;
+                clock_gettime( CLOCK_REALTIME, &current );
+                if( (current.tv_sec > timeout.tv_sec )
+                        || ( (current.tv_sec == timeout.tv_sec )
+                             && (current.tv_nsec > timeout.tv_nsec) ) )
+                {
+                    break;
+                }
+                
+                // --- try to wait for a notification --------------------------
+                if( sem_timedwait( msgr.m_notify, &timeout ) < 0 ) {
+                    switch ( errno ) {
+                    case EINTR: // just interrupted, just check and redo
+                        log( log_data, 1, "sem_timedwait: woken by an interrupt." );
+                        break;
+                    case EINVAL: // invalid semaphore, give up
+                        log( log_data, 0, "sem_timedwait: Invalid sempahore." );
+                        do_longpoll = 0;
+                        break;
+                    case ETIMEDOUT:
+                        status = MESSENGER_TIMEOUT;
+                        do_longpoll = 0;
+                        break;
+                    default:
+                        log( log_data, 0, "sem_timedwait: Unexpected error %d.", errno );
+                        status = MESSENGER_ERROR;
+                        do_longpoll = 0;
+                        break;
                     }
+                }
+                else {
+                    // we do have an update.
+                    log( log_data, 1, "sem_timedwait: got notified." );
                 }
             }
         }
@@ -492,6 +502,8 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                                 trell_dispatch_info_t*  dispatch_info )
 {
 
+    // TODO: use messenger_do_roundtrip!
+    
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r,
                    "mod_trell: has revision = %d", dispatch_info->m_revision );
 
@@ -611,14 +623,12 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
 }
 
 
-
-
+// -----------------------------------------------------------------------------
 int
 trell_handle_update_state( trell_sconf_t* sconf,
                            request_rec* r,
                            trell_dispatch_info_t*  dispatch_info )
 {
-#if 0
     messenger_status_t mrv;
 
     // check method
@@ -662,138 +672,10 @@ trell_handle_update_state( trell_sconf_t* sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#else
-    int retval = HTTP_INTERNAL_SERVER_ERROR;
-    
-    messenger_t msgr;
-    messenger_status_t mrv;
-
-
-    // open connection to messenger
-    mrv = messenger_init( &msgr, dispatch_info->m_jobid );
-    if( mrv != MESSENGER_OK ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_init('%s') failed: %s",
-                       dispatch_info->m_jobid, messenger_strerror( mrv ) );
-        retval = HTTP_NOT_FOUND;
-    }
-    else {
-        // try to get a lock
-        mrv = messenger_lock( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_lock('%s') failed: %s",
-                           dispatch_info->m_jobid, messenger_strerror( mrv ) );
-            retval = HTTP_INTERNAL_SERVER_ERROR;
-        }
-        else {
-
-            // Create message
-            trell_message_t* msg = msgr.m_shmem_ptr;
-            msg->m_type = TRELL_MESSAGE_UPDATE_STATE;
-            msg->m_size = 0u;
-
-            // copy input request into shmem
-
-            // set up fetching of input
-            apr_bucket_brigade* bb;
-            apr_bucket* b;
-            apr_status_t rv;
-
-            bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
-
-            int keep_going = 1;
-            while(keep_going == 1) {
-                apr_size_t free = msgr.m_shmem_size - msg->m_size - TRELL_MSGHDR_SIZE - 1;
-                rv = ap_get_brigade( r->input_filters,
-                                     bb,
-                                     AP_MODE_READBYTES,
-                                     APR_BLOCK_READ,
-                                     free );
-                if( rv != APR_SUCCESS ) {
-                    retval = HTTP_INTERNAL_SERVER_ERROR;
-                    break;
-                }
-                for( b = APR_BRIGADE_FIRST(bb); b!=APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
-                    if( APR_BUCKET_IS_EOS(b) ) {
-                        keep_going = 0;
-                        break;
-                    }
-                    else if( APR_BUCKET_IS_METADATA(b) ) {
-                        continue;
-                    }
-
-                    apr_size_t bytes = 0;
-                    const char* buf = NULL;
-                    rv = apr_bucket_read( b,
-                                          &buf,
-                                          &bytes,
-                                          APR_BLOCK_READ );
-                    if( rv != APR_SUCCESS ) {
-                        keep_going = 0;
-                        retval = HTTP_INTERNAL_SERVER_ERROR;
-                        break;
-                    }
-                    if( free < bytes ) {
-                        keep_going = 0;
-                        retval = HTTP_INSUFFICIENT_STORAGE;
-                        break;
-                    }
-
-                      memcpy( msg->m_update_state.m_xml + msg->m_size, buf, bytes );
-                    msg->m_size += bytes;
-                }
-            }
-            apr_brigade_cleanup( bb );
-
-            // post query
-            mrv = messenger_post( &msgr, TRELL_MESSAGE_UPDATE_STATE );
-
-            // failed to post query
-            if( mrv != MESSENGER_OK ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                               "mod_trell: messenger_post('%s') failed: %s",
-                               dispatch_info->m_jobid, messenger_strerror( mrv ) );
-                retval = HTTP_INTERNAL_SERVER_ERROR;
-            }
-
-            // we got an update
-            else if( msg->m_type == TRELL_MESSAGE_OK ) {
-                retval = HTTP_NO_CONTENT;
-            }
-            else {
-                retval = HTTP_INTERNAL_SERVER_ERROR;
-            }
-
-
-            // release lock
-            mrv = messenger_unlock( &msgr );
-            if( mrv != MESSENGER_OK ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                               "mod_trell: messenger_unlock('%s') failed: %s",
-                               dispatch_info->m_jobid, messenger_strerror( mrv ) );
-                retval = HTTP_INTERNAL_SERVER_ERROR;
-            }
-        }
-
-        mrv = messenger_free( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_free('%s') failed: %s",
-                           dispatch_info->m_jobid,
-                           messenger_strerror( mrv ) );
-            retval = HTTP_INTERNAL_SERVER_ERROR;
-        }
-    }
-
-    return retval;
-#endif
 }
 
 
-
-
-
+// -----------------------------------------------------------------------------
 int
 trell_job_rpc_handle( trell_sconf_t* sconf,
                       request_rec*r,
