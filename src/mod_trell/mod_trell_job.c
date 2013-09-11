@@ -179,6 +179,10 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
                       const char* job )
 {
 
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "rpc %s.", r->path_info );
+    ap_add_input_filter( "tinia_validate_xml", NULL, r, r->connection );
+
+    
     apr_array_header_t* brigades = apr_array_make( r->pool, 10, sizeof(apr_bucket_brigade*) );
     if( strcmp( job, sconf->m_master_id ) ) {
 

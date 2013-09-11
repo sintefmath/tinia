@@ -21,6 +21,7 @@
 
 #include <httpd.h>
 #include <apr_hash.h>
+#include <util_filter.h>
 #include <libxml/xmlschemas.h>
 #include "tinia/ipc/messenger.h"
 #include "tinia/trell/trell.h"
@@ -107,6 +108,17 @@ typedef struct mod_trell_dispatch_info
     apr_time_t           m_png_compress_entry;
     apr_time_t           m_png_compress_exit;
 } trell_dispatch_info_t;
+
+
+apr_status_t
+tinia_validate_xml_in_filter( ap_filter_t *f,
+                              apr_bucket_brigade *bb,
+                              ap_input_mode_t mode,
+                              apr_read_type_e block,
+                              apr_off_t readbytes);
+
+apr_status_t
+tinia_validate_xml_out_filter( ap_filter_t *f, apr_bucket_brigade *bb );
 
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info,

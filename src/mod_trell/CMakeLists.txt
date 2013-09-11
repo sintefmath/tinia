@@ -1,5 +1,6 @@
 SET( MOD_TRELL_SRC
     "mod_trell.c"
+    "filter_validate_xml.c"
     "mod_trell_ops.c"
     "mod_trell_job.c"
     "mod_trell_util.c"
