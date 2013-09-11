@@ -14,7 +14,14 @@ then
     # Check if it's really the trell_master pid
     if [[ $(ps ${pid}) == *"trell_master"* ]]
     then
-	kill -9 ${pid}
+	kill -SIGTERM ${pid}
+	echo "Trying to kill trell_master, waiting 3 seconds"
+	sleep 3s
+	if [[ $(ps ${pid}) == *"trell_master"* ]]
+	then
+	    echo "WARNING: trell_master did not die from SIGTERM, doing kill -9"
+	    kill -9 ${pid}
+	fi
     fi
     # We want to delete this file either way
     rm /tmp/trell_master.pid
