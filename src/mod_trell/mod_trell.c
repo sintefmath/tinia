@@ -317,6 +317,21 @@ trell_child_init(apr_pool_t *p, server_rec *s)
         xmlSetGenericErrorFunc( orig_error_cb, orig_error_func );
     }
 
+    // create CRC table (used by png encoder)
+    svr_conf->m_crc_table = apr_palloc( s->process->pool, sizeof(unsigned int)*256 );
+    unsigned int j, i;
+    for( j=0; j<256; j++) {
+        unsigned int c = j;
+        for( i=0; i<8; i++) {
+            if( c & 0x1 ) {
+                c = 0xedb88320ul ^ (c>>1);
+            }
+            else {
+                c = c>>1;
+            }
+        }
+        svr_conf->m_crc_table[j] = c;
+    }
 }
 
 
