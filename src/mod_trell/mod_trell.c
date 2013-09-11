@@ -94,6 +94,7 @@ static int trell_handler_body(request_rec *r)
                    dispatch_info.m_height );
 #endif
 
+    
     switch( dispatch_info.m_component ) {
 
     case TRELL_COMPONENT_OPS:
@@ -426,6 +427,14 @@ static const command_rec mod_trell_commands[] = {
 static void
 mod_trell_register_hooks (apr_pool_t *p)
 {
+    ap_register_input_filter( "tinia_validate_xml",
+                              tinia_validate_xml_in_filter,
+                              NULL, // ap_init_filter_func
+                              AP_FTYPE_RESOURCE );
+    ap_register_output_filter( "tinia_validate_xml",
+                               tinia_validate_xml_out_filter,
+                               NULL, // ap_init_filter_func
+                               AP_FTYPE_RESOURCE );
     ap_hook_handler(trell_handler, NULL, NULL, APR_HOOK_LAST );
 //    ap_hook_pre_config( trell_pre_config, NULL, NULL, APR_HOOK_LAST );
 //    ap_hook_post_config( trell_post_config, NULL, NULL, APR_HOOK_LAST );
