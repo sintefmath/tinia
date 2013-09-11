@@ -60,6 +60,8 @@ typedef struct messenger
     sem_t*   m_query;
     sem_t*   m_reply;
     sem_t*   m_notify;
+    void   (*m_logger_func)( void *data, int level, const char* who, const char* msg, ... );
+    void*    m_logger_data;    
 } messenger_t;
 
 typedef struct messenger_endpoint
@@ -123,6 +125,16 @@ messenger_status_t
 messenger_endpoint_destroy( messenger_endpoint_t* e );
 
 
+messenger_status_t
+messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size ),
+                        void* query_data,
+                        int (*reply)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  ),
+                        void* reply_data,
+                        void (*log)( void* data, int level, const char* who, const char* message, ... ),
+                        void* log_data,
+                        const char* message_box_id,
+                        int wait /* in seconds. */ );
+
 const char*
 messenger_strerror( messenger_status_t error );
 
@@ -142,7 +154,10 @@ messenger_strerror( messenger_status_t error );
   * \returns 1 on success, 0 on failure.
   */
 messenger_status_t
-messenger_init( struct messenger* m, const char* message_box_id );
+messenger_init( struct messenger* m,
+                const char* message_box_id,
+                void   (*logger_func)( void *data, int level, const char* who, const char* msg, ... ),
+                void*    logger_data );
 
 /** Releases resources associated with an initialized messenger.
   *

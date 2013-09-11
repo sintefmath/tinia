@@ -104,7 +104,9 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
         // Wait failed, check to see if the messenger still lives... If not,
         // we assume it's dead.
         struct messenger msgr;
-        messenger_status_t status = messenger_init( &msgr, svr_conf->m_master_id );
+        messenger_status_t status = messenger_init( &msgr, svr_conf->m_master_id,
+                                                    trell_messenger_log_wrapper,
+                                                    r );
         if( status != MESSENGER_OK ) {
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
             return APR_SUCCESS;
@@ -133,7 +135,10 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
         }
 
         struct messenger msgr;
-        messenger_status_t status = messenger_init( &msgr, svr_conf->m_master_id );
+        messenger_status_t status = messenger_init( &msgr,
+                                                    svr_conf->m_master_id,
+                                                    trell_messenger_log_wrapper,
+                                                    r );
         if( status != MESSENGER_OK ) {
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
             return APR_SUCCESS;

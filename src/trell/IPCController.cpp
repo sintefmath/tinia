@@ -384,7 +384,10 @@ IPCController::run(int argc, char **argv)
 
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED && !m_is_master ) {
-        messenger_status_t mrv = messenger_init( &m_master_mbox, m_master_id.c_str() );
+        messenger_status_t mrv = messenger_init( &m_master_mbox,
+                                                  m_master_id.c_str(),
+                                                  m_logger_callback,
+                                                  m_logger_data );
         if( mrv != MESSENGER_OK ) {
             std::cerr << "Failed to connect to master: " << messenger_strerror( mrv ) << "\n";
             m_job_state = TRELL_JOBSTATE_FAILED;
@@ -512,7 +515,10 @@ IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessage
 
     messenger m;
     messenger_status_t mrv;
-    mrv = messenger_init( &m, message_box_id.c_str() );
+    mrv = messenger_init( &m,
+                          message_box_id.c_str(),
+                          m_logger_callback,
+                          m_logger_data );
     if( mrv != MESSENGER_OK ) {
         std::cerr << __func__ << ": messenger_init("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
     }
