@@ -24,6 +24,9 @@ tinia_validate_xml_in_filter( ap_filter_t *f,
     }
     f->ctx = 0xDEADBEEF;
     
+    // this one is invoked multiple times for a request, if ctx is null, it is
+    // the first invocation.
+    
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, f->r, "tinia_validate_xml_in_filter invoked %s.",
                    f->r->path_info );
 
