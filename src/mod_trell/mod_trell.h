@@ -56,6 +56,8 @@ typedef struct mod_trell_svr_conf
     xmlSchemaPtr  m_rpc_job_schema;
     /** Schema that validates XML RPC replies */
     xmlSchemaPtr  m_rpc_reply_schema;
+    /** 256-entry CRC table used by PNG encoder. */
+    unsigned int* m_crc_table;
 } trell_sconf_t;
 
 enum TrellComponent {
@@ -124,6 +126,71 @@ trell_handle_get_model_update( trell_sconf_t*          sconf,
                                 request_rec*            r,
                                 trell_dispatch_info_t*  dispatch_info );
 
+typedef struct {
+    trell_sconf_t*          m_sconf;
+    request_rec*            m_r;
+    trell_dispatch_info_t*  m_dispatch_info;
+} trell_callback_data_t;
+
+/******************************************************************************/
+int
+trell_pass_query_get_snapshot( void*           data,
+                               size_t*         bytes_written,
+                               unsigned char*  buffer,
+                               size_t          buffer_size );
+
+int
+trell_pass_query_get_renderlist( void*           data,
+                                 size_t*         bytes_written,
+                                 unsigned char*  buffer,
+                                 size_t          buffer_size );
+
+int
+trell_pass_query_get_exposedmodel( void*           data,
+                                   size_t*         bytes_written,
+                                   unsigned char*  buffer,
+                                   size_t          buffer_size );
+
+int
+trell_pass_query_get_scripts( void*           data,
+                              size_t*         bytes_written,
+                              unsigned char*  buffer,
+                              size_t          buffer_size );
+
+int
+trell_pass_query_update_state_xml( void*           data,
+                                   size_t*         bytes_written,
+                                   unsigned char*  buffer,
+                                   size_t          buffer_size );
+
+/******************************************************************************/
+// return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
+int
+trell_pass_reply_assert_ok( void* data, unsigned char* buffer, size_t offset, size_t bytes, int more );
+
+int
+trell_pass_reply_xml_longpoll( void* data,
+                               unsigned char* buffer,
+                               size_t offset,
+                               size_t bytes,
+                               int more );
+
+int
+trell_pass_reply_png( void* data,
+                      unsigned char* buffer,
+                      size_t offset,
+                      size_t bytes,
+                      int more );
+
+int
+trell_pass_reply_javascript( void* data,
+                             unsigned char* buffer,
+                             size_t offset,
+                             size_t bytes,
+                             int more );
+/******************************************************************************/
+
+
 /** Gets the user defined scripts */
 int
 trell_handle_get_script( trell_sconf_t*          sconf,
@@ -164,19 +231,8 @@ trell_send_script(  trell_sconf_t*   sconf,
                     const char*      payload,
                     const size_t     payload_size );
 
-int
-trell_send_xml( trell_sconf_t*   sconf,
-                request_rec*     r,
-                const char*      payload,
-                const size_t     payload_size );
 
-int
-trell_send_xml_success( trell_sconf_t*  sconf,
-                        request_rec*    r );
 
-int
-trell_send_xml_failure( trell_sconf_t*  sconf,
-                        request_rec*    r );
 
 int
 trell_send_png( trell_sconf_t*          sconf,
@@ -193,16 +249,6 @@ trell_send_reply_static_file( trell_sconf_t* sconf,
                        trell_dispatch_info_t* dinfo );
 
 
-
-/** Send the XML contents of a locked messenger back to the HTTP client.
-  *
-  * \param r     The request structure of the request.
-  * \param msgr  A locked messenger containing the reply to encode. The
-  *              The messenger will not be unlocked.
-  * \returns     The return value for the handler.
-  */
-int
-trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr );
 
 
 

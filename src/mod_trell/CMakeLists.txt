@@ -3,13 +3,15 @@ SET( MOD_TRELL_SRC
     "mod_trell_ops.c"
     "mod_trell_job.c"
     "mod_trell_util.c"
-    "mod_trell_reply.c"
-    "mod_trell_send_png.c"
     "mod_trell_send_bmp.c"
     "mod_trell_send_xml.c"
     "mod_trell_send_file.c"
     "mod_trell_url_decode.c"
-#    "../trell/messenger.c"
+    "pass_query.c"
+    "pass_reply.c"
+    "pass_reply_png.c"
+    "pass_reply_xml.c"
+    "pass_reply_javascript.c"
 )
 
 ADD_LIBRARY( mod_trell ${MOD_TRELL_SRC} )

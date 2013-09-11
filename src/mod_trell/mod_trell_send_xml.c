@@ -21,14 +21,22 @@
 #include <http_protocol.h>
 #include "mod_trell.h"
 
-
 int
-trell_send_txt_success( trell_sconf_t* sconf, request_rec* r )
+trell_send_xml_success( trell_sconf_t* sconf, request_rec*r )
 {
-    static const char* txt = "OK";
-    ap_set_content_type( r, "text/plain");
-    ap_set_content_length( r, strlen( txt ) );
-    if( ap_rputs( txt, r ) < 0 ) {
+    static const char* xml = "<?xml version=\"1.0\"><success/>";
+
+    ap_set_content_type( r, "application/xml" );
+    ap_set_content_length( r, strlen( xml ) );
+
+
+    apr_bucket_brigade* bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( xml, strlen(xml), bb->bucket_alloc ) );
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
+
+    apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
     else {
@@ -36,16 +44,9 @@ trell_send_txt_success( trell_sconf_t* sconf, request_rec* r )
     }
 }
 
-int
-trell_send_xml_success( trell_sconf_t*    sconf, request_rec*r )
-{
-    static const char* xml = "<?xml version=\"1.0\"><success/>";
-    return trell_send_xml( sconf, r, xml, strlen(xml) );
-}
-
 
 int
-trell_send_xml_failure( trell_sconf_t*    sconf, request_rec*r )
+trell_send_xml_failure( trell_sconf_t* sconf, request_rec*r )
 {
     static const char* xml = "<?xml version=\"1.0\"><failure/>";
 
@@ -108,9 +109,9 @@ trell_send_script( trell_sconf_t*   sconf,
 
 int
 trell_send_xml( trell_sconf_t*   sconf,
-                       request_rec*     r,
-                       const char*      payload,
-                       const size_t     payload_size )
+                request_rec*     r,
+                const char*      payload,
+                const size_t     payload_size )
 {
     size_t size = payload_size;
     if( size > 0 && payload[size-1] == '\0' ) {
@@ -144,33 +145,34 @@ trell_send_xml( trell_sconf_t*   sconf,
     }
 }
 
+
 int
 trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr )
 {
     struct trell_message* msg = msgr->m_shmem_ptr;
     enum TrellMessageType message_type = msg->m_type;
-
+    
     int retval = OK;
     if( message_type == TRELL_MESSAGE_XML ) {
         if( msg->m_size > 0 ) {
-
+            
             if( retval == OK ) {
                 apr_bucket_brigade* bb;
                 apr_bucket* b;
                 char* datestring = apr_palloc( r->pool, APR_RFC822_DATE_LEN );
                 apr_rfc822_date( datestring, apr_time_now() );
-
+                
                 ap_set_content_type( r, "text/xml" );
                 ap_set_content_length( r, msg->m_size-1 ); // msg->m_size includes null terminator
                 apr_table_setn( r->headers_out, "Last-Modified", datestring );
                 apr_table_setn( r->headers_out, "Cache-Control", "no-cache" );
-
+                
                 bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
                 b = apr_bucket_transient_create( msg->m_xml_payload, msg->m_size-1, bb->bucket_alloc );
-
+                
                 APR_BRIGADE_INSERT_TAIL( bb, b );
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
-
+                
                 apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
                 if( rv != APR_SUCCESS ) {
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
@@ -186,7 +188,7 @@ trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* ms
         return retval;
     }
     else {
-
+        
     }
     return HTTP_INTERNAL_SERVER_ERROR;
 }

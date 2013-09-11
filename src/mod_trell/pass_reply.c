@@ -15,4 +15,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <httpd.h>
+#include <http_log.h>
+#include <http_protocol.h>
+#include <util_filter.h>
+#include <unistd.h>
+#include <time.h>
+#include <apr_strings.h>
+#include <stdarg.h>
+
+
+#include "tinia/trell/trell.h"
+#include "mod_trell.h"
+
+// return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
+int
+trell_pass_reply_assert_ok( void* data,
+                            unsigned char* buffer,
+                            size_t offset,
+                            size_t bytes,
+                            int more )
+{
+    //trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+    trell_message_t* msg = (trell_message_t*)buffer;
+    if( msg->m_type == TRELL_MESSAGE_OK ) {
+        return MESSENGER_OK;
+    }
+    else {
+        return -1;
+    }
+}
 
