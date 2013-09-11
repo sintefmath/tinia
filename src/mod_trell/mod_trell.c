@@ -195,6 +195,28 @@ static int trell_handler(request_rec *r)
 }
 
 
+void
+trell_messenger_log_wrapper( void* data, int level, const char* who, const char* message, ... )
+{
+    char buf[ 256 ];
+    
+    va_list args;
+    va_start( args, message );
+    apr_vsnprintf( buf, sizeof(buf), message, args );
+    va_end( args );
+    
+    request_rec* r = (request_rec*)data;
+    int ap_level;
+    switch( level ) {
+    case 0: ap_level = APLOG_CRIT; break;
+    case 1: ap_level = APLOG_WARNING; break;
+    default: ap_level = APLOG_NOTICE; break;
+    }
+    ap_log_rerror( APLOG_MARK, ap_level, OK, r, "%s: %s", who, buf );
+    
+}
+
+
 static
 xmlSchemaPtr
 trell_child_init_parse_schema( const char* path, const char* file, apr_pool_t* process_pool )

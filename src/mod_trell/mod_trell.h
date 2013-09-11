@@ -222,6 +222,9 @@ trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r );
 int
 trell_ops_do_restart_master( trell_sconf_t* sconf, request_rec*r );
 
+void
+trell_messenger_log_wrapper( void* data, int level, const char* who, const char* message, ... );
+
 
 /** Handle an RPC request that is directed to a job (i.e. passed over IPC).
   *

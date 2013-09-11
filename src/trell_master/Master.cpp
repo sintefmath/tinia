@@ -826,7 +826,10 @@ Master::addJob( const std::string& id,
             messenger m;
             messenger_status_t mrv;
 
-            mrv = messenger_init( &m, getMasterID().c_str() );
+            mrv = messenger_init( &m,
+                                  getMasterID().c_str(),
+                                  m_logger_callback,
+                                  m_logger_data );
             if( mrv != MESSENGER_OK ) {
                 std::cerr << __func__ << ": messenger_init(" << getMasterID() << ") failed: " << messenger_strerror( mrv ) << "\n";
             }

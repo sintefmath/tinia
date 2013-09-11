@@ -30,6 +30,7 @@
 
 #define PREFIX "mod_trell: @messenger: "
 
+static const char* package = "ipc.messenger";
 
 const char*
 messenger_strerror( messenger_status_t error )
@@ -173,8 +174,21 @@ messenger_endpoint_destroy( messenger_endpoint_t* e )
 
 
 messenger_status_t
-messenger_init( struct messenger* m, const char* jobname )
+messenger_init( struct messenger* m,
+                const char* jobname,
+                void   (*logger_func)( void *data, int level, const char* who, const char* msg, ... ),
+                void*    logger_data )
 {
+    m->m_has_lock = 0;
+    m->m_shmem_ptr = MAP_FAILED;
+    m->m_shmem_size = 0u;
+    m->m_lock = SEM_FAILED;
+    m->m_query = SEM_FAILED;
+    m->m_reply = SEM_FAILED;
+    m->m_notify = SEM_FAILED;
+    m->m_logger_func = logger_func;
+    m->m_logger_data = logger_data;
+
     if( jobname == NULL ) {
         return MESSENGER_INVALID_MBOX;
     }
@@ -189,13 +203,6 @@ messenger_init( struct messenger* m, const char* jobname )
             return MESSENGER_INVALID_MBOX;
         }
     }
-    m->m_has_lock = 0;
-    m->m_shmem_ptr = MAP_FAILED;
-    m->m_shmem_size = 0u;
-    m->m_lock = SEM_FAILED;
-    m->m_query = SEM_FAILED;
-    m->m_reply = SEM_FAILED;
-    m->m_notify = SEM_FAILED;
     if( ( messenger_shm_open( &m->m_shmem_ptr, &m->m_shmem_size, "/%s_shmem", jobname ) != 0 ) ||
         ( messenger_sem_open( &m->m_lock, "/%s_lock", jobname ) != 0 ) ||
         ( messenger_sem_open( &m->m_query, "/%s_query", jobname ) != 0 ) ||
@@ -207,6 +214,151 @@ messenger_init( struct messenger* m, const char* jobname )
     }
     return MESSENGER_OK;
 }
+
+
+// -----------------------------------------------------------------------------
+// this should end up in messenger.c when it is working.
+messenger_status_t
+messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size ),
+                        void* query_data,
+                        int (*reply)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  ),
+                        void* reply_data,
+                        void (*log)( void* data, int level, const char* who, const char* message, ... ),
+                        void* log_data,
+                        const char* message_box_id,
+                        int wait /* in seconds. */ )
+{
+    messenger_status_t status = MESSENGER_OK;
+    messenger_t msgr;
+    messenger_status_t mrv;
+
+    // --- open connection to messenger ----------------------------------------
+    mrv = messenger_init( &msgr, message_box_id,
+                          log,
+                          log_data );
+    if( mrv != MESSENGER_OK ) {
+        msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_init: %s", messenger_strerror( mrv ) );
+        status = MESSENGER_ERROR;
+    }
+    else {
+        // --- create timeout for request --------------------------------------
+        struct timespec timeout;
+        clock_gettime( CLOCK_REALTIME, &timeout );
+        timeout.tv_sec += wait;
+
+        // --- begin query loop (which may be broken after 1 iteration) --------
+        int do_longpoll;
+        do {
+
+            do_longpoll = 0;    // will be set to 1 if we will longpoll
+        
+            // --- try to lock messenger  --------------------------------------
+            mrv = messenger_lock( &msgr );
+            if( mrv != MESSENGER_OK ) {     // we failed... output error and give up.
+                msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_lock: %s", messenger_strerror( mrv ) );
+                status = MESSENGER_ERROR;
+            }
+            else {
+                // --- create query in shmem (read request contents) -----------
+                size_t bytes_written = 0;
+                int q = query( query_data, &bytes_written, msgr.m_shmem_ptr, msgr.m_shmem_size );
+                if( q < 0 ) {
+                    status = MESSENGER_ERROR;
+                }
+                else if( q > 0 ) {
+                    msgr.m_logger_func( msgr.m_logger_data, 0, package, "Message size exceeds shared memory size, currently unsupported." );
+                    status = MESSENGER_ERROR;
+                }
+                else {
+                    // --- notify that we have a new message, wait for reply ---
+                    mrv = messenger_post( &msgr, msgr.m_shmem_size );
+                    if( mrv != MESSENGER_OK ) {
+                        msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_post: %s", messenger_strerror( mrv ) );
+                        status = MESSENGER_ERROR;
+                    }
+                    else {
+                        // --- process reply (write request contents) ----------
+                        int r = reply( reply_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size, 0 );
+                        if( r < 0 ) {
+                            status = MESSENGER_ERROR;
+                        }
+                        else if( r == 0 ) {
+                            status = MESSENGER_OK;
+                        }
+                        else {
+                            status = MESSENGER_TIMEOUT;
+                            do_longpoll = wait > 0 ? 1 : 0;
+                        }
+                    }
+                }
+                // --- free messenger and let others use it --------------------
+                mrv = messenger_unlock( &msgr );
+                if( mrv != MESSENGER_OK ) {
+                    msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_unlock: %s", messenger_strerror( mrv ) );
+                    status = MESSENGER_ERROR;
+                }
+
+                // -------------------------------------------------------------
+                // NOTE:
+                // We can miss an update here, should do unlock-lock in atomic
+                // operations, but it seems impossible with the currently used
+                // semaphores. semop might be a solution.
+                // -------------------------------------------------------------
+
+                // --- should we wait (i.e. longpoll?) -------------------------
+                if( !do_longpoll ) {
+                    break;
+                }
+                
+                // --- check if we already have waited more than timeout -------
+                struct timespec current;
+                clock_gettime( CLOCK_REALTIME, &current );
+                if( (current.tv_sec > timeout.tv_sec )
+                        || ( (current.tv_sec == timeout.tv_sec )
+                             && (current.tv_nsec > timeout.tv_nsec) ) )
+                {
+                    break;
+                }
+                
+                // --- try to wait for a notification --------------------------
+                if( sem_timedwait( msgr.m_notify, &timeout ) < 0 ) {
+                    switch ( errno ) {
+                    case EINTR: // just interrupted, just check and redo
+                        msgr.m_logger_func( msgr.m_logger_data, 1, package, "sem_timedwait: woken by an interrupt." );
+                        break;
+                    case EINVAL: // invalid semaphore, give up
+                        msgr.m_logger_func( msgr.m_logger_data, 0, package, "sem_timedwait: Invalid sempahore." );
+                        do_longpoll = 0;
+                        break;
+                    case ETIMEDOUT:
+                        status = MESSENGER_TIMEOUT;
+                        do_longpoll = 0;
+                        break;
+                    default:
+                        msgr.m_logger_func( msgr.m_logger_data, 0, package, "sem_timedwait: Unexpected error %d.", errno );
+                        status = MESSENGER_ERROR;
+                        do_longpoll = 0;
+                        break;
+                    }
+                }
+                else {
+                    // we do have an update.
+                    msgr.m_logger_func( msgr.m_logger_data, 1, package, "sem_timedwait: got notified." );
+                }
+            }
+        }
+        while( do_longpoll );
+            
+        // close connection to messenger        
+        mrv = messenger_free( &msgr );
+        if( mrv != MESSENGER_OK ) {
+            msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_free: %s", messenger_strerror( mrv ) );
+            status = MESSENGER_ERROR;
+        }
+    }
+    return status;
+}
+
 
 messenger_status_t
 messenger_free( struct messenger* m )
