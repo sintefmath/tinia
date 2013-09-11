@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 #include <csignal>                      // sigaction
-#include "tinia/trell/messenger.h"
+#include "tinia/ipc/messenger.h"
 
 namespace {
 

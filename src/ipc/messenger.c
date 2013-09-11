@@ -26,8 +26,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdio.h>
-#include "tinia/trell/messenger.h"
-
+#include "tinia/ipc/messenger.h"
 
 #define PREFIX "mod_trell: @messenger: "
 

@@ -22,7 +22,7 @@
 #include <httpd.h>
 #include <apr_hash.h>
 #include <libxml/xmlschemas.h>
-#include "tinia/trell/messenger.h"
+#include "tinia/ipc/messenger.h"
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
 
