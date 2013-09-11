@@ -3,14 +3,14 @@ SET( LIB_TRELL_SRC
     "IPCController.cpp"
     "IPCJobController.cpp"
     "OffscreenGL.cpp"
-    "messenger.c"
+#    "messenger.c"
 )
 
 FILE( GLOB LIB_TRELL_HEADERS "../../include/tinia/trell/*.hpp" "../../include/tinia/trell/*.h" )
   
 
 ADD_LIBRARY( trell ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
-TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobcontroller)
+TARGET_LINK_LIBRARIES( trell tiniaipc ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobcontroller)
 
 INSTALL( TARGETS trell
   LIBRARY DESTINATION lib

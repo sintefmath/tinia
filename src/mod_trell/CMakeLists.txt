@@ -9,11 +9,11 @@ SET( MOD_TRELL_SRC
     "mod_trell_send_xml.c"
     "mod_trell_send_file.c"
     "mod_trell_url_decode.c"
-    "../trell/messenger.c"
+#    "../trell/messenger.c"
 )
 
 ADD_LIBRARY( mod_trell ${MOD_TRELL_SRC} )
-TARGET_LINK_LIBRARIES( mod_trell ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
+TARGET_LINK_LIBRARIES( mod_trell tiniaipc ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
 
 INSTALL( TARGETS mod_trell
   LIBRARY DESTINATION var/trell/module

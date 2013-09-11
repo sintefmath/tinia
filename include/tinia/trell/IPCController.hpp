@@ -20,7 +20,7 @@
 
 #include <string>
 #include <semaphore.h>
-#include "messenger.h"
+#include "tinia/ipc/messenger.h"
 #include "trell.h"
 #include "tinia/jobcontroller/Controller.hpp"
 #include "tinia/model/StateListener.hpp"

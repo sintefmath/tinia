@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "tinia/trell/IPCController.hpp"
-#include "tinia/trell/messenger.h"
+#include "tinia/ipc/messenger.h"
 
 namespace tinia {
 namespace trell {
