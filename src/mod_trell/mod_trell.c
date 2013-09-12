@@ -42,6 +42,13 @@
 module AP_MODULE_DECLARE_DATA trell_module;
 
 
+const module* tinia_get_module()
+{
+    return &trell_module;
+}
+
+
+//trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
 
 

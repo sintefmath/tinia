@@ -21,6 +21,8 @@
 #include <http_log.h>
 #include <http_protocol.h>
 
+#include <apr_base64.h>
+
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
@@ -50,7 +52,7 @@ trell_pass_reply_png( void* data,
 
     trell_message_t* msg = (trell_message_t*)buffer;
     if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
-        enum TrellPixelFormat format = msg->m_image.m_pixel_format;
+        //enum TrellPixelFormat format = msg->m_image.m_pixel_format;
         int width = msg->m_image.m_width;
         int height = msg->m_image.m_height;
         char* payload = msg->m_image.m_data;
