@@ -52,6 +52,9 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     static const char* job_prefix    = "/job/";
 
 
+    
+    
+
     // determine which component that should handle the request
     if( strncmp( p, mod_prefix, strlen(mod_prefix) ) == 0 ) {
         p += strlen(mod_prefix);

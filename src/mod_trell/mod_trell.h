@@ -172,6 +172,11 @@ trell_pass_query_get_exposedmodel( void*           data,
                                    size_t*         bytes_written,
                                    unsigned char*  buffer,
                                    size_t          buffer_size );
+int
+trell_pass_query_xml(  void*           data,
+                       size_t*         bytes_written,
+                       unsigned char*  buffer,
+                       size_t          buffer_size );
 
 int
 trell_pass_query_get_scripts( void*           data,
@@ -311,8 +316,11 @@ trell_messenger_log_wrapper( void* data, int level, const char* who, const char*
   * \returns      The return value for the operation.
   */
 int
-trell_job_rpc_handle( trell_sconf_t* sconf, request_rec*r, xmlSchemaPtr schema, const char* job );
-
+trell_job_rpc_handle( trell_sconf_t* sconf,
+                      request_rec*r,
+                      xmlSchemaPtr schema,
+                      const char* job,
+                      trell_dispatch_info_t*  dispatch_info );
 
 apr_hash_t*
 trell_parse_args_uniq_key( request_rec* r, char* args );

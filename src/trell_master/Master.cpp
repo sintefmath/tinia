@@ -205,7 +205,7 @@ Master::handle( trell_message* msg, size_t buf_size )
         
         if( !retval.empty() ) {
 
-            size_t l = retval.size() + 1;
+            size_t l = retval.size();
             if( TRELL_MSGHDR_SIZE + l < buf_size ) {
                 return_type = TRELL_MESSAGE_XML;
                 osize = l;

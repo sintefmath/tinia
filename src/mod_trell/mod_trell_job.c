@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <apr_strings.h>
+#include <apr_buckets.h>
 #include <stdarg.h>
 
 #include "tinia/trell/trell.h"
@@ -170,127 +171,60 @@ trell_handle_update_state( trell_sconf_t* sconf,
     }
 }
 
-
 // -----------------------------------------------------------------------------
 int
 trell_job_rpc_handle( trell_sconf_t* sconf,
                       request_rec*r,
                       xmlSchemaPtr schema,
-                      const char* job )
+                      const char* job,
+                      trell_dispatch_info_t*  dispatch_info )
 {
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "rpc %s.", r->path_info );
-
     // set up request config
     req_cfg_t* req_cfg = apr_palloc( r->pool, sizeof(*req_cfg) );
     req_cfg->m_schema = schema;
     ap_set_module_config( r->request_config, tinia_get_module(), req_cfg );
     // add validation filter
     ap_add_input_filter( "tinia_validate_xml", NULL, r, r->connection );
-
     
-    apr_array_header_t* brigades = apr_array_make( r->pool, 10, sizeof(apr_bucket_brigade*) );
-#if 0
-    if( strcmp( job, sconf->m_master_id ) ) {
-
-        int ret = trell_parse_xml( sconf, r, brigades, schema );
-        if( ret != OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: Failure to get XML content" );
-            return ret;
-        }
+    if( r->method_number != M_POST ) {  // should be checked earlier
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: method != POST" );
+        return HTTP_METHOD_NOT_ALLOWED;
     }
-    else {
-
-        int ret = trell_parse_xml( sconf, r, brigades, schema );
-        if( ret != OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: Failure to get XML content" );
-            return ret;
-        }
+    // check if content type is correct
+    const char* content_type = apr_table_get( r->headers_in, "Content-Type" );
+    if( content_type == NULL ) {
+        ap_log_rerror(  APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: No content type" );
+        return HTTP_BAD_REQUEST;
     }
-#endif
 
-    struct messenger msgr;
-    messenger_status_t mrv;
-
-    mrv = messenger_init( &msgr, job, trell_messenger_log_wrapper, r );
-    if( mrv != MESSENGER_OK ) {
+    // In case we get Content-Type: text/xml; encoding=foo.
+    char* semicolon = strchr( content_type, ';' );
+    if( semicolon != NULL ) {
+        // Chop line at semicolon.
+        *semicolon = '\0';
+    }
+    if( ! ( ( strcasecmp( "application/xml", content_type) == 0 ) ||
+            ( strcasecmp( "text/xml", content_type ) == 0 ) ) )
+    {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_init('%s') failed: %s",  job, messenger_strerror( mrv ) );
-        return HTTP_NOT_FOUND;
+                       "mod_trell: Unsupported content-type '%s'", content_type );
+        return HTTP_BAD_REQUEST;
     }
 
-    mrv = messenger_lock( &msgr );
-    if( mrv != MESSENGER_OK ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_lock('%s') failed: %s",  job, messenger_strerror( mrv ) );
 
-        mrv = messenger_free( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_free('%s') failed: %s",
-                           job,
-                           messenger_strerror( mrv ) );
-        }
+    trell_callback_data_t cbd = { sconf, r, dispatch_info };
+    switch( messenger_do_roundtrip( trell_pass_query_xml, &cbd,
+                                    trell_pass_reply_xml_longpoll, &cbd,
+                                    trell_messenger_log_wrapper, r,
+                                    job,
+                                    0 ) )
+    {
+    case MESSENGER_OK:
+        return HTTP_NO_CONTENT; // everything ok.
+    case MESSENGER_TIMEOUT:
+        return HTTP_REQUEST_TIME_OUT;
+    default:
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: boo.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-
-    struct trell_message* msg = msgr.m_shmem_ptr;
-
-    size_t size = trell_flatten_brigades_into_mem( sconf, r,
-                                                   msg->m_xml_payload,
-                                                   msgr.m_shmem_size - TRELL_MSGHDR_SIZE,
-                                                   brigades );
-    if( size == 0 ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: Failed to flatten brigades" );
-        mrv = messenger_unlock( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_unlock('%s') failed: %s",  job, messenger_strerror( mrv ) );
-        }
-        mrv = messenger_free( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_free('%s') failed: %s",  job, messenger_strerror( mrv ) );
-         }
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-
-    // --- post message ---
-    msg->m_type = TRELL_MESSAGE_XML;
-    msg->m_size = size;
-
-    mrv = messenger_post( &msgr, size + TRELL_MSGHDR_SIZE );
-
-    if( mrv != MESSENGER_OK ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_post('%s') failed: %s",  job, messenger_strerror( mrv ) );
-        mrv = messenger_unlock( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_unlock('%s') failed: %s",  job, messenger_strerror( mrv ) );
-        }
-        mrv = messenger_free( &msgr );
-        if( mrv != MESSENGER_OK ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                           "mod_trell: messenger_free('%s') failed: %s",  job, messenger_strerror( mrv ) );
-         }
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    // --- send reply to client ---
-    int retcode = trell_send_reply_xml( sconf, r, &msgr );
-    mrv = messenger_unlock( &msgr );
-    if( mrv != MESSENGER_OK ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_unlock('%s') failed: %s",  job, messenger_strerror( mrv ) );
-    }
-    mrv = messenger_free( &msgr );
-    if( mrv != MESSENGER_OK ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: messenger_free('%s') failed: %s",  job, messenger_strerror( mrv ) );
-    }
-    return retcode;
 }
