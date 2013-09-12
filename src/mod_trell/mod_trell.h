@@ -20,12 +20,15 @@
 #define MOD_TRELL_H
 
 #include <httpd.h>
+#include <http_config.h>
 #include <apr_hash.h>
 #include <util_filter.h>
 #include <libxml/xmlschemas.h>
 #include "tinia/ipc/messenger.h"
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
+
+
 
 
 /** Trell configuration structure.
@@ -83,6 +86,13 @@ enum TrellModAction {
     TRELL_MOD_ACTION_NONE,
     TRELL_MOD_ACTION_RESTART_MASTER
 };
+
+const module* tinia_get_module();
+
+typedef struct {
+    xmlSchemaPtr    m_schema;
+} req_cfg_t;
+
 
 typedef struct mod_trell_dispatch_info
 {
@@ -202,6 +212,15 @@ trell_pass_reply_javascript( void* data,
                              int more );
 /******************************************************************************/
 
+
+int
+trell_send_xml_success( trell_sconf_t* sconf, request_rec*r );
+
+int
+trell_send_xml_failure( trell_sconf_t* sconf, request_rec*r );
+
+int
+trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr );
 
 /** Gets the user defined scripts */
 int

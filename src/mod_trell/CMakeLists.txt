@@ -17,6 +17,8 @@ SET( MOD_TRELL_SRC
 
 ADD_LIBRARY( mod_trell ${MOD_TRELL_SRC} )
 TARGET_LINK_LIBRARIES( mod_trell tiniaipc ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
+ADD_DEFINITIONS( -Wall )
+
 
 INSTALL( TARGETS mod_trell
   LIBRARY DESTINATION var/trell/module

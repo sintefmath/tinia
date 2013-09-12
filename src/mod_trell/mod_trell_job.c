@@ -178,12 +178,18 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
                       xmlSchemaPtr schema,
                       const char* job )
 {
-
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "rpc %s.", r->path_info );
+
+    // set up request config
+    req_cfg_t* req_cfg = apr_palloc( r->pool, sizeof(*req_cfg) );
+    req_cfg->m_schema = schema;
+    ap_set_module_config( r->request_config, tinia_get_module(), req_cfg );
+    // add validation filter
     ap_add_input_filter( "tinia_validate_xml", NULL, r, r->connection );
 
     
     apr_array_header_t* brigades = apr_array_make( r->pool, 10, sizeof(apr_bucket_brigade*) );
+#if 0
     if( strcmp( job, sconf->m_master_id ) ) {
 
         int ret = trell_parse_xml( sconf, r, brigades, schema );
@@ -202,7 +208,7 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
             return ret;
         }
     }
-
+#endif
 
     struct messenger msgr;
     messenger_status_t mrv;

@@ -149,6 +149,7 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
         apr_sleep( 1000000 );
     }
     ap_log_rerror( APLOG_MARK, APLOG_CRIT, OK, r, "mod_trell: Failed to kill master job." );
+    return APR_EGENERAL;
 }
 
 /** Record the master job pid into a file on disc. */
