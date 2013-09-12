@@ -263,6 +263,7 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
                 size_t bytes_written = 0;
                 int q = query( query_data, &bytes_written, msgr.m_shmem_ptr, msgr.m_shmem_size );
                 if( q < 0 ) {
+                    msgr.m_logger_func( msgr.m_logger_data, 0, package, "query callback failed." );
                     status = MESSENGER_ERROR;
                 }
                 else if( q > 0 ) {
@@ -280,6 +281,7 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
                         // --- process reply (write request contents) ----------
                         int r = reply( reply_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size, 0 );
                         if( r < 0 ) {
+                            msgr.m_logger_func( msgr.m_logger_data, 0, package, "reply callback failed." );
                             status = MESSENGER_ERROR;
                         }
                         else if( r == 0 ) {

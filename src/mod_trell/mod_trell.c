@@ -22,6 +22,7 @@
 #include <http_main.h>
 #include <util_script.h>
 #include <ap_config.h>
+#include <apr_lib.h>
 #include <apr_strings.h>
 #include <http_log.h>
 
@@ -47,9 +48,121 @@ const module* tinia_get_module()
     return &trell_module;
 }
 
+static int
+tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
+{
+    if( src == NULL ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is an empty string.",
+                       r->handler, what );
+        return -1;
+    }
+    int i;
+    for(i=0; (src[i]!='\0') && (i<maxlen); i++) {
+        if( !( apr_isalnum(src[i]) || (src[i]=='_' ) ) ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s contains illegal char '%c'.",
+                           r->handler, what, dst[i] );
+            dst[0] = '\0';
+            return -1;
+        }
+        dst[i] = src[i];
+    }
+    if( dst[i] != '\0' ) {
+        dst[0] = '\0';
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is too long.",
+                       r->handler, what );
+        return -1;
+    }
+    return 0;
+}
 
 //trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
+// path is /component[/jobid/sessionid]/action?args
+//
+// action is one of:
+// - rpc.xml
+// - getExposedModelUpdate.xml
+// - updateState.xml
+// - snapshot.png
+// - snapshot.txt
+// - getRenderList.xml
+// - getScript.js
+// args is some of
+// - revision=ddddd
+// - width=dddd
+// - height=dddd
+// 
+
+/** Dechipher r->path_info to determine what to do. */
+static int
+tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
+{
+    
+    char* debug1 = "";
+    char* debug2 = "";
+    char* debug3 = "";
+    
+    // --- set up tokenizer for r->path_info
+    if( r->path_info == NULL ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: No path.", r->handler );
+        return HTTP_BAD_REQUEST;
+    }
+    char* path_info = apr_pstrdup( r->pool, r->path_info );
+    char* state;
+    char* tok = apr_strtok( path_info, "/", &state );
+
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path: %s", r->handler, path_info );
+    
+    // --- get component -------------------------------------------------------
+    if( tok == NULL ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: No component.", r->handler );
+        return HTTP_BAD_REQUEST;
+    }
+    else if( apr_strnatcmp( tok, "job" ) == 0) {
+        debug1 = "job";
+        
+        dispatch_info->m_component = TRELL_COMPONENT_JOB;
+
+        // if job, then next token is the job id
+        tok = apr_strtok( path_info, "/", &state );
+        if( tinia_check_and_copy( dispatch_info->m_jobid, tok, TRELL_JOBID_MAXLENGTH, r, "jobid" ) != 0 ) {
+            return HTTP_BAD_REQUEST;
+        }
+        debug2 = apr_pstrdup( r->pool, tok );
+        
+        // followed by the session id
+        tok = apr_strtok( path_info, "/", &state );
+        if( tinia_check_and_copy( dispatch_info->m_sessionid, tok, TRELL_SESSIONID_MAXLENGTH, r, "jobid"  ) != 0 ) {
+            return HTTP_BAD_REQUEST;
+        }
+//        debug3 = apr_pstrdup( r->pool, tok );
+    }
+    else if( apr_strnatcmp( tok, "master" ) == 0 ) {
+        debug1 = "master";
+        dispatch_info->m_component = TRELL_COMPONENT_MASTER;
+    }
+    else if( apr_strnatcmp( tok, "mod" ) == 0 ) {
+        debug1 = "mod";
+        dispatch_info->m_component = TRELL_COMPONENT_OPS;
+    }
+    else {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: Unrecognized component '%s'.",
+                       r->handler, tok );
+        return HTTP_BAD_REQUEST;
+    }
+
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path={ '%s', '%s', '%s' }.",
+                   r->handler, debug1, debug2, debug3  );
+    
+    // --- get action ----------------------------------------------------------
+
+//    rok = apr_strtok()
+
+
+
+    
+    return APR_SUCCESS;    
+}
 
 
 
@@ -59,8 +172,6 @@ static int trell_handler_body(request_rec *r)
     if (!r->handler || strcmp(r->handler, "trell") ) {
         return DECLINED;
     }
-
-    // And we require a path
     if( r->path_info == NULL ) {
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, HTTP_NOT_FOUND, r,
                        "mod_trell: Path missing" );
@@ -76,14 +187,17 @@ static int trell_handler_body(request_rec *r)
     }
 
     int code;
-    trell_dispatch_info_t dispatch_info;
-    code = trell_decode_path_info( &dispatch_info, r );
+    trell_dispatch_info_t* dispatch_info = apr_pcalloc( r->pool, sizeof(*dispatch_info) );
+
+    code = tinia_parse_path( dispatch_info, r );
+    
+    code = trell_decode_path_info( dispatch_info, r );
     if( code != OK ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                        "mod_trell: decode_path_info failed to decode request='%s'", r->path_info );
         return code;
     }
-    dispatch_info.m_entry = apr_time_now();
+    dispatch_info->m_entry = apr_time_now();
 
 
 #if 0
@@ -102,12 +216,12 @@ static int trell_handler_body(request_rec *r)
 #endif
 
     
-    switch( dispatch_info.m_component ) {
+    switch( dispatch_info->m_component ) {
 
     case TRELL_COMPONENT_OPS:
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_RPC_XML:
-            switch( dispatch_info.m_mod_action ) {
+            switch( dispatch_info->m_mod_action ) {
             case TRELL_MOD_ACTION_RESTART_MASTER:
                 return trell_ops_do_restart_master( sconf, r );
                 break;
@@ -121,11 +235,12 @@ static int trell_handler_body(request_rec *r)
         break;
 
     case TRELL_COMPONENT_MASTER:
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_RPC_XML:
             return trell_job_rpc_handle( sconf, r,
                                          sconf->m_rpc_master_schema,
-                                         sconf->m_master_id );
+                                         sconf->m_master_id,
+                                         dispatch_info );
         default:
             break;
         }
@@ -134,34 +249,34 @@ static int trell_handler_body(request_rec *r)
 
     case TRELL_COMPONENT_JOB:
 
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_STATIC_FILE:
-            return trell_send_reply_static_file( sconf, r, &dispatch_info );
+            return trell_send_reply_static_file( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_POLICY_UPDATE_XML:
-            return trell_handle_get_model_update( sconf, r, &dispatch_info );
+            return trell_handle_get_model_update( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_STATE_UPDATE_XML:
-            return trell_handle_update_state( sconf, r, &dispatch_info );
+            return trell_handle_update_state( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_PNG:
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
-                int rv = trell_handle_update_state( sconf, r, &dispatch_info );
+                int rv = trell_handle_update_state( sconf, r, dispatch_info );
                 if( rv != HTTP_NO_CONTENT ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
             }
-            int rv = trell_handle_get_snapshot( sconf, r, &dispatch_info );
-            dispatch_info.m_exit = apr_time_now();
+            int rv = trell_handle_get_snapshot( sconf, r, dispatch_info );
+            dispatch_info->m_exit = apr_time_now();
             
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 
                            "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
-                           apr_time_as_msec(dispatch_info.m_exit-dispatch_info.m_entry ),
-                           apr_time_as_msec(dispatch_info.m_png_exit-dispatch_info.m_png_entry),
-                           apr_time_as_msec(dispatch_info.m_png_filter_exit-dispatch_info.m_png_filter_entry),
-                           apr_time_as_msec(dispatch_info.m_png_compress_exit-dispatch_info.m_png_compress_entry)
+                           apr_time_as_msec(dispatch_info->m_exit-dispatch_info->m_entry ),
+                           apr_time_as_msec(dispatch_info->m_png_exit-dispatch_info->m_png_entry),
+                           apr_time_as_msec(dispatch_info->m_png_filter_exit-dispatch_info->m_png_filter_entry),
+                           apr_time_as_msec(dispatch_info->m_png_compress_exit-dispatch_info->m_png_compress_entry)
                            );
             
             return rv;
@@ -169,16 +284,16 @@ static int trell_handler_body(request_rec *r)
         case TRELL_REQUEST_GET_RENDERLIST:
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
-                int rv = trell_handle_update_state( sconf, r, &dispatch_info );
+                int rv = trell_handle_update_state( sconf, r, dispatch_info );
                 if( rv != HTTP_NO_CONTENT ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
             }
-            return trell_handle_get_renderlist( sconf, r, &dispatch_info );
+            return trell_handle_get_renderlist( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_GET_SCRIPT:
-            return trell_handle_get_script( sconf, r, &dispatch_info);
+            return trell_handle_get_script( sconf, r, dispatch_info);
 
         default:
             break;

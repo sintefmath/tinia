@@ -174,3 +174,67 @@ trell_pass_query_update_state_xml( void*           data,
     apr_brigade_cleanup( bb );
     return 0;
 }
+
+int
+trell_pass_query_xml(  void*           data,
+                       size_t*         bytes_written,
+                       unsigned char*  buffer,
+                       size_t          buffer_size )
+{
+/*    typedef struct {
+        trell_sconf_t*          m_sconf;
+        request_rec*            m_r;
+        trell_dispatch_info_t*  m_dispatch_info;
+    } trell_callback_data_t;    
+  */  
+
+    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+
+    // Create message
+    trell_message_t* msg = (trell_message_t*)buffer;
+    msg->m_type = TRELL_MESSAGE_XML;
+    msg->m_size = 0;//TRELL_MSGHDR_SIZE;
+
+    apr_bucket_brigade* bb;
+    apr_status_t rv;
+
+    bb = apr_brigade_create( cbd->m_r->pool, cbd->m_r->connection->bucket_alloc );
+        
+    int keep_going = 1;
+    do {
+        apr_size_t free = buffer_size - msg->m_size;
+        rv = ap_get_brigade( cbd->m_r->input_filters,
+                             bb,
+                             AP_MODE_READBYTES,
+                             APR_BLOCK_READ,
+                             free );
+        if( rv != APR_SUCCESS ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
+                           "%s.pass_query_xml: ap_get_brigade failed.", cbd->m_r->handler );
+            return -1;
+        }
+        if( APR_BRIGADE_EMPTY( bb ) ) {
+            keep_going = 0;
+        }
+        else {
+            apr_bucket* e = APR_BRIGADE_FIRST( bb );
+            while( e != APR_BRIGADE_SENTINEL( bb ) ) {
+                if( APR_BUCKET_IS_EOS( e ) ) { // is test necessary?
+                    keep_going = 0;
+                }
+                e = APR_BUCKET_NEXT( e );
+            }
+            apr_size_t len = free;
+            rv = apr_brigade_flatten( bb, (char*)buffer + msg->m_size + TRELL_MSGHDR_SIZE, &len );
+            if( rv != APR_SUCCESS ) {
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
+                               "%s.pass_query_xml: apr_brigade_flatten failed.", cbd->m_r->handler );
+                return -1;
+            }
+            msg->m_size += len;
+        }
+    }
+    while( keep_going );
+    *bytes_written = msg->m_size + TRELL_MSGHDR_SIZE;
+    return 0;
+}
