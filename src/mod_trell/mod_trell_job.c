@@ -38,7 +38,7 @@ trell_handle_get_script( trell_sconf_t           *sconf,
                          trell_dispatch_info_t   *dispatch_info)
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_get_scripts, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_get_scripts, &cbd,
                                     trell_pass_reply_javascript, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     dispatch_info->m_jobid,
@@ -59,7 +59,7 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              trell_dispatch_info_t*  dispatch_info )
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_get_renderlist, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_get_renderlist, &cbd,
                                     trell_pass_reply_xml_longpoll, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     dispatch_info->m_jobid,
@@ -85,7 +85,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
         return HTTP_INSUFFICIENT_STORAGE;
     }
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_get_snapshot, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_get_snapshot, &cbd,
                                     trell_pass_reply_png, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     dispatch_info->m_jobid,
@@ -107,7 +107,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                                 trell_dispatch_info_t*  dispatch_info )
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_get_exposedmodel, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_get_exposedmodel, &cbd,
                                     trell_pass_reply_xml_longpoll, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     dispatch_info->m_jobid,
@@ -156,7 +156,7 @@ trell_handle_update_state( trell_sconf_t* sconf,
 
 
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_update_state_xml, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_update_state_xml, &cbd,
                                     trell_pass_reply_assert_ok, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     dispatch_info->m_jobid,
@@ -213,7 +213,7 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
 
 
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip( trell_pass_query_xml, &cbd,
+    switch( messenger_do_roundtrip_cb( trell_pass_query_xml, &cbd,
                                     trell_pass_reply_xml_longpoll, &cbd,
                                     trell_messenger_log_wrapper, r,
                                     job,
