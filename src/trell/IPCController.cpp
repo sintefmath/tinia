@@ -35,6 +35,7 @@ namespace tinia {
 namespace trell {
 
 namespace {
+static const std::string package = "IPCController";
 
 static sig_atomic_t exit_flag = 0;
 
@@ -506,52 +507,114 @@ IPCController::mainloop()
 }
 
 
+// --- send small message callbacks and invoker --------------------------------
+
+struct send_small_message_data {
+    TrellMessageType    m_query;
+    TrellMessageType    m_reply;
+};
+
+static
+int
+send_small_message_producer( void*           data,
+                             size_t*         bytes_written,
+                             unsigned char*  buffer,
+                             size_t          buffer_size )
+{
+    send_small_message_data* pd = reinterpret_cast<send_small_message_data*>( data );
+    trell_message* msg = reinterpret_cast<trell_message*>( buffer );
+    msg->m_type = pd->m_query;
+    msg->m_size = 0;
+    *bytes_written = TRELL_MSGHDR_SIZE;
+    return 0;
+}
+
+static
+int
+send_small_message_consumer(  void* data,
+                          unsigned char* buffer,
+                          size_t offset,
+                          size_t bytes,
+                          int more )
+{
+    send_small_message_data* pd = reinterpret_cast<send_small_message_data*>( data );
+    trell_message_t* msg = (trell_message_t*)buffer;
+    pd->m_reply = msg->m_type;
+    return 0;
+}
+
 
 
 TrellMessageType
 IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessageType query )
 {
-    TrellMessageType r = TRELL_MESSAGE_ERROR;
+    send_small_message_data pd = { query, TRELL_MESSAGE_ERROR };
+    switch( messenger_do_roundtrip( send_small_message_producer, &pd,
+                                    send_small_message_consumer, &pd,
+                                    m_logger_callback, m_logger_data,
+                                    message_box_id.c_str(),
+                                    0 ) )
+    {
+    case MESSENGER_OK:
+        m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent small message to '%s'.",
+                           message_box_id.c_str() );
+        return pd.m_reply;
+    default:
+        m_logger_callback( m_logger_data, 0, package.c_str(), "Failed to send small message to '%s'.",
+                           message_box_id.c_str());
+        return TRELL_MESSAGE_ERROR;
+    }
+}
 
-    messenger m;
-    messenger_status_t mrv;
-    mrv = messenger_init( &m,
-                          message_box_id.c_str(),
-                          m_logger_callback,
-                          m_logger_data );
-    if( mrv != MESSENGER_OK ) {
-        std::cerr << __func__ << ": messenger_init("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
+
+// --- send heartbeat callbacks and invoker ------------------------------------
+struct send_heartbeat_data {
+    TrellJobState   m_state;    // to producer
+    std::string&    m_jobid;    // to producer
+    int             m_die;      // from consumer
+};
+
+static
+int
+send_heartbeat_producer( void*           data,
+                         size_t*         bytes_written,
+                         unsigned char*  buffer,
+                         size_t          buffer_size )
+{
+    send_heartbeat_data* pd = reinterpret_cast<send_heartbeat_data*>( data );
+    trell_message* msg = reinterpret_cast<trell_message*>( buffer );
+    
+    msg->m_type = TRELL_MESSAGE_HEARTBEAT;
+    msg->m_size = offsetof(trell_message_t, m_ping_payload.m_tail ) - TRELL_MSGHDR_SIZE;
+    msg->m_ping_payload.m_state = pd->m_state;
+    strncpy( msg->m_ping_payload.m_job_id, pd->m_jobid.c_str(), TRELL_JOBID_MAXLENGTH );
+    msg->m_ping_payload.m_job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
+
+    *bytes_written = offsetof(trell_message_t, m_ping_payload.m_tail );
+    return 0;
+}
+
+static
+int
+send_heartbeat_consumer(  void* data,
+                          unsigned char* buffer,
+                          size_t offset,
+                          size_t bytes,
+                          int more )
+{
+    send_heartbeat_data* pd = reinterpret_cast<send_heartbeat_data*>( data );
+    trell_message_t* msg = (trell_message_t*)buffer;
+    if( msg->m_type == TRELL_MESSAGE_OK ) {
+        pd->m_die = 0;
+        return 0;
+    }
+    else if( msg->m_type == TRELL_MESSAGE_DIE ) {
+        pd->m_die = 1;
+        return 0;
     }
     else {
-
-        mrv = messenger_lock( &m );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << __func__ << ": messenger_lock("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
-        }
-        else {
-            trell_message* msg = reinterpret_cast<trell_message*>( m.m_shmem_ptr );
-            msg->m_type = query;
-            msg->m_size = 0u;
-
-            mrv = messenger_post( &m, TRELL_MSGHDR_SIZE );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_post("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
-            }
-            else {
-                r = (TrellMessageType)msg->m_type;
-            }
-
-            mrv = messenger_unlock( &m );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_unlock("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
-            }
-        }
-        mrv = messenger_free( &m );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << __func__ << ": messenger_free("<<message_box_id<<"): " << messenger_strerror( mrv ) << "\n";
-        }
-    }
-    return r;
+        return -1;
+    }    
 }
 
 bool
@@ -560,67 +623,22 @@ IPCController::sendHeartBeat()
     if( m_is_master ) {
         return true; // Don't send heartbeats to oneself.
     }
-    messenger_status_t mrv;
-
-    mrv = messenger_lock( &m_master_mbox );
-    if( mrv != MESSENGER_OK ) {
-        std::cerr << __func__ << ": messenger_lock(master): " << messenger_strerror( mrv ) << "\n";
+    
+    send_heartbeat_data pd = { m_job_state, m_id, 0 };
+    switch( messenger_do_roundtrip( send_heartbeat_producer, &pd,
+                                    send_heartbeat_consumer, &pd,
+                                    m_logger_callback, m_logger_data,
+                                    m_master_id.c_str(),
+                                    0 ) )
+    {
+    case MESSENGER_OK:
+        m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent heartbeat." );
+        return true;
+    default:
+        m_logger_callback( m_logger_data, 0, package.c_str(), "Failed to send heartbeat." );
         return false;
     }
-
-
-    // Send ping message
-    size_t msg_size =(m_id.length()+1u) + offsetof( trell_message, m_ping_payload.m_job_id );
-    if( m_master_mbox.m_shmem_size <=  msg_size ) {
-        std::cerr << "Insufficient size of shared memory.\n";
-        mrv = messenger_unlock( &m_master_mbox );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << __func__ << ": messenger_unlock(master): " << messenger_strerror( mrv ) << "\n";
-        }
-        return false;
-    }
-
-    trell_message* msg = reinterpret_cast<trell_message*>( m_master_mbox.m_shmem_ptr );
-
-    msg->m_type = TRELL_MESSAGE_HEARTBEAT;
-    msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-    msg->m_ping_payload.m_state = m_job_state;
-    int i = 0, idSize = m_id.size();
-    const char* idString = m_id.c_str();
-    for( i; i < idSize ; ++i){
-      msg->m_ping_payload.m_job_id[i] = idString[i];
-    }
-    msg->m_ping_payload.m_job_id[i] = '\0';
-
-    bool retval = true;
-
-    mrv = messenger_post( &m_master_mbox, msg_size );
-    if( mrv != MESSENGER_OK ) {
-        std::cerr << __func__ << ": messenger_post(master): " << messenger_strerror( mrv ) << "\n";
-        retval = false;
-    }
-    else {
-        switch( msg->m_type ) {
-        case TRELL_MESSAGE_OK:
-            break;
-        case TRELL_MESSAGE_DIE:
-            m_job_state = TRELL_JOBSTATE_FAILED;
-            break;
-        default:
-            std::cerr << __func__ << ": unexpected message: " << msg->m_type << "\n";
-        }
-    }
-
-    mrv = messenger_unlock( &m_master_mbox );
-    if( mrv != MESSENGER_OK ) {
-        std::cerr << __func__ << ": messenger_unlock(master): " << messenger_strerror( mrv ) << "\n";
-        retval = false;
-    }
-    return retval;
 }
-
-
-
 
 bool
 IPCController::periodic()

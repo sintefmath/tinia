@@ -150,7 +150,8 @@ typedef struct trell_message
             /** State of job sending the heartbeat. */
             enum TrellJobState  m_state;
             /** Id of job sending the heartbeat. */
-            char                m_job_id[1];
+            char                m_job_id[ TRELL_JOBID_MAXLENGTH+1 ];
+            char                m_tail;
         }                       m_ping_payload;
     };
 } trell_message_t;
