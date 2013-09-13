@@ -63,14 +63,7 @@ IPCController::IPCController( bool is_master )
     : m_ipc_pid( getpid() ),
       m_cleanup_pid( -1 ),
       m_is_master( is_master ),
-      m_job_state( TRELL_JOBSTATE_NOT_STARTED ),
-      m_shmem_ptr( MAP_FAILED ),
-      m_shmem_size( 100*1024*1024 ),
-      m_sem_lock( SEM_FAILED ),
-      m_sem_query( SEM_FAILED ),
-      m_sem_reply( SEM_FAILED ),
-      m_notify( false ),
-      m_sem_notify( SEM_FAILED )
+      m_job_state( TRELL_JOBSTATE_NOT_STARTED )
 {
     //instances.push_back(this);
 }
@@ -99,6 +92,7 @@ IPCController::failHard()
 void
 IPCController::notify()
 {
+    
     // This function is called by the job thread. My initial plan was to set a
     // notify flag and raise a signal, which in theory, would interrupt the
     // sem_timedwait run by the IPC thread. The IPC thread would then be able to
@@ -106,18 +100,18 @@ IPCController::notify()
     //
 
     int value;
-    if( sem_trywait( m_sem_lock ) == 0 ) {
-        if( sem_getvalue( m_sem_notify, &value ) == 0 ) {
+    if( sem_trywait( m_msgbox.m_sem_lock ) == 0 ) {
+        if( sem_getvalue( m_msgbox.m_sem_notify, &value ) == 0 ) {
             for( int i=value; i<1; i++) {
-                sem_post( m_sem_notify );
+                sem_post( m_msgbox.m_sem_notify );
             }
         }
-        sem_post( m_sem_lock );
+        sem_post( m_msgbox.m_sem_lock );
     }
     else {
         // we didn't get the lock, we let the IPC thread do the notification
         // when it is finished with the request
-        m_notify = true;
+        m_msgbox.m_notify = true;
     }
 }
 
@@ -267,11 +261,7 @@ IPCController::shutdown()
         }
     }
 
-    deleteSharedMemory( &m_shmem_ptr, &m_shmem_size, m_shmem_name );
-    deleteSemaphore( &m_sem_lock, m_sem_lock_name );
-    deleteSemaphore( &m_sem_query, m_sem_query_name );
-    deleteSemaphore( &m_sem_reply, m_sem_reply_name );
-    deleteSemaphore( &m_sem_notify, m_sem_notify_name );
+    messenger_server_destroy( &m_msgbox );
 
     std::cerr << "Done.\n";
     m_cleanup_pid = -1;
@@ -366,19 +356,9 @@ IPCController::run(int argc, char **argv)
         m_master_id = std::string( tinia_master_id );
     }
 
-    m_shmem_name      = "/" + m_id + "_shmem";
-    m_sem_lock_name   = "/" + m_id + "_lock";
-    m_sem_query_name  = "/" + m_id + "_query";
-    m_sem_reply_name  = "/" + m_id + "_reply";
-    m_sem_notify_name = "/" + m_id + "_notify";
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        if( !createSharedMemory( &m_shmem_ptr, &m_shmem_size, m_shmem_name, m_shmem_size ) ||
-            !createSemaphore( &m_sem_lock, m_sem_lock_name ) ||
-            !createSemaphore( &m_sem_query, m_sem_query_name ) ||
-            !createSemaphore( &m_sem_reply, m_sem_reply_name ) ||
-            !createSemaphore( &m_sem_notify, m_sem_notify_name ) )
-        {
+        if( messenger_server_create( &m_msgbox, m_id.c_str(), m_logger_callback, m_logger_data ) != MESSENGER_OK ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
         }
     }
@@ -396,14 +376,7 @@ IPCController::run(int argc, char **argv)
     }
     std::cerr << "Finished running setup code:\n";
     std::cerr << "  id               = " << m_id << "\n";
-    std::cerr << "  pid              = " << getpid() << "\n";
     std::cerr << "  master id        = " << m_master_id << "\n";
-    std::cerr << "  shared mem       = " << m_shmem_name << "\n";
-    std::cerr << "  shared mem size  = " << m_shmem_size << " bytes\n";
-    std::cerr << "  lock semaphore   = " << m_sem_lock_name << "\n";
-    std::cerr << "  query semaphore  = " << m_sem_query_name << "\n";
-    std::cerr << "  reply semaphore  = " << m_sem_reply_name << "\n";
-    std::cerr << "  notify semaphore = " << m_sem_notify_name << "\n";
 
 
 
@@ -443,7 +416,7 @@ void
 IPCController::mainloop()
 {
     // Open sem_lock for business
-    sem_post( m_sem_lock );
+    sem_post( m_msgbox.m_sem_lock );
     sendHeartBeat();
 
     timespec last_periodic;
@@ -476,27 +449,27 @@ IPCController::mainloop()
         // Then check for messages or timeout within a minute whatever comes first
         timeout.tv_sec += 5;
 
-        if( sem_timedwait( m_sem_query, &timeout ) == 0 ) {
+        if( sem_timedwait( m_msgbox.m_sem_query, &timeout ) == 0 ) {
 
             // Got a query message, sync memory into this process
-            msync( m_shmem_ptr, m_shmem_size, MS_SYNC );
+            msync( m_msgbox.m_shmem_ptr, m_msgbox.m_shmem_size, MS_SYNC );
 
             // Act on the message
-            size_t osize = handle( (trell_message*)m_shmem_ptr, m_shmem_size );
+            size_t osize = handle( (trell_message*)m_msgbox.m_shmem_ptr, m_msgbox.m_shmem_size );
 
             // Sync memory out of this processes and notify about reply.
-            msync( m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
-            sem_post( m_sem_reply );
+            msync( m_msgbox.m_shmem_ptr, osize + TRELL_MSGHDR_SIZE, MS_SYNC | MS_INVALIDATE );
+            sem_post( m_msgbox.m_sem_reply );
         }
 
-        if( m_notify ) {
+        if( m_msgbox.m_notify ) {
             // Notify has been invoked while the lock has been locked, we do
             // the notification for them.
-            m_notify = false;
+            m_msgbox.m_notify = false;
             int waiting = 0;
-            if( sem_getvalue( m_sem_notify, &waiting ) == 0 ) {
+            if( sem_getvalue( m_msgbox.m_sem_notify, &waiting ) == 0 ) {
                 for(int i=waiting; i<1; i++ ) {
-                    sem_post( m_sem_notify );
+                    sem_post( m_msgbox.m_sem_notify );
                 }
             }
         }

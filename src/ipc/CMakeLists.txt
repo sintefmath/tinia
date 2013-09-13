@@ -1,5 +1,6 @@
 SET( LIB_IPC_SRC
-    "messenger.c"
+    "messenger_client.c"
+    "messenger_server.c"
 )
 
 FILE( GLOB LIB_IPC_HEADERS "../../include/tinia/ipc/*.h" )
