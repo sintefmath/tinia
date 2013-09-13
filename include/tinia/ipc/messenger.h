@@ -51,6 +51,11 @@ extern "C" {
   * }
   * \endcode
   */
+
+typedef int (*messenger_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
+typedef int (*messenger_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
+typedef void (*messenger_logger_t)( void* data, int level, const char* who, const char* message, ... );
+
 typedef struct messenger
 {
     int      m_has_lock;
@@ -60,12 +65,15 @@ typedef struct messenger
     sem_t*   m_query;
     sem_t*   m_reply;
     sem_t*   m_notify;
-    void   (*m_logger_func)( void *data, int level, const char* who, const char* msg, ... );
+    messenger_logger_t   m_logger_func;
     void*    m_logger_data;    
 } messenger_t;
 
-typedef struct messenger_endpoint
+typedef struct messenger_server
 {
+    messenger_logger_t  m_log_func;
+    void*               m_log_data;    
+    
     /** Pointer to the shared memory of this message box. */
     void*           m_shmem_ptr;
 
@@ -102,12 +110,13 @@ typedef struct messenger_endpoint
     /** The system-wide name of the semaphore that signals a notify. */
     const char*     m_sem_notify_name;
     
-}messenger_endpoint_t;
+    
+    
+    char            m_name[256];    // fixed size to avoid malloc/free
+
+}messenger_server_t;
 
 
-typedef int (*messenger_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
-typedef int (*messenger_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
-typedef void (*messenger_logger_t)( void* data, int level, const char* who, const char* message, ... );
 
 typedef enum {
     MESSENGER_OK,
@@ -123,10 +132,13 @@ typedef enum {
 } messenger_status_t;
 
 messenger_status_t
-messenger_endpoint_create( messenger_endpoint_t* e, const char* id );
+messenger_server_create( messenger_server_t* e,
+                         const char*         id,
+                         messenger_logger_t log_func,
+                         void*               log_data );
 
 messenger_status_t
-messenger_endpoint_destroy( messenger_endpoint_t* e );
+messenger_server_destroy( messenger_server_t* e );
 
 
 messenger_status_t

@@ -148,7 +148,7 @@ messenger_shm_open( void** memory, size_t* memory_size, const char* format, cons
 }
 
 messenger_status_t
-messenger_endpoint_create( messenger_endpoint_t* e, const char* id )
+messenger_endpoint_create( messenger_server_t* e, const char* id )
 {
     e->m_shmem_ptr = MAP_FAILED;
     e->m_shmem_size = 0;
@@ -168,7 +168,7 @@ messenger_endpoint_create( messenger_endpoint_t* e, const char* id )
 }
 
 messenger_status_t
-messenger_endpoint_destroy( messenger_endpoint_t* e )
+messenger_endpoint_destroy( messenger_server_t* e )
 {
     return MESSENGER_OK;
 }

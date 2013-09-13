@@ -231,6 +231,8 @@ private:
     /** The pid of the process that should invoke the cleanup functions (to
       * avoid clashes when fork succeds, but execl fails. */
     int             m_cleanup_pid;
+
+    messenger_server_t  m_msgbox;
     /** The id of this message box. */
     std::string     m_id;
     /** True of this job is the master job. */
@@ -239,29 +241,6 @@ private:
     std::string     m_master_id;
     /** The current state of this job/messagebox */
     TrellJobState   m_job_state;
-    /** Pointer to the shared memory of this message box. */
-    void*           m_shmem_ptr;
-    /** The size (in bytes) of the shared memory of this message box. */
-    size_t          m_shmem_size;
-    /** The system-wide name of the shared memory of this message box. */
-    std::string     m_shmem_name;
-    /** The semaphore that can lock this message box. */
-    sem_t*          m_sem_lock;
-    /** The system-wide name of the semaphore that can lock this message box. */
-    std::string     m_sem_lock_name;
-    /** The semaphore that signals a pending incoming message. */
-    sem_t*          m_sem_query;
-    /** The system-wide name of the semaphore that signals a pending incoming message. */
-    std::string     m_sem_query_name;
-
-    /** The semaphore that signals a pending reply in response to the incoming message. */
-    sem_t*          m_sem_reply;
-    /** The system-wide name of the semaphore that singals a pending reply. */
-    std::string     m_sem_reply_name;
-
-    volatile bool   m_notify;
-    sem_t*          m_sem_notify;
-    std::string     m_sem_notify_name;
 
     /** A messenger to the master job's message box. */
     messenger       m_master_mbox;

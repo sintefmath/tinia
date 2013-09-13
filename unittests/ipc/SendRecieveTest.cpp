@@ -52,17 +52,18 @@ public:
     void
     operator()()
     {
+/*
         std::cerr << "Enter\n";
-        BOOST_CHECK( messenger_endpoint_create( &m_endpoint, "unittest" ) == MESSENGER_OK );
+        BOOST_CHECK( messenger_server_create( &m_endpoint, "unittest" ) == MESSENGER_OK );
         
         do {
             sleep( 1 );
         } while( do_run );
-        BOOST_CHECK( messenger_endpoint_destroy( &m_endpoint ) == MESSENGER_OK );
-        std::cerr << "Exit\n";
+        BOOST_CHECK( messenger_server_destroy( &m_endpoint ) == MESSENGER_OK );
+        std::cerr << "Exit\n";*/
     }
 protected:
-    messenger_endpoint_t    m_endpoint;
+    messenger_server_t    m_endpoint;
     
 };
 
