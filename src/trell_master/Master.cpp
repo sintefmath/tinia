@@ -147,26 +147,40 @@ Master::handle( trell_message* msg, size_t buf_size )
         string retval;
         switch( data.m_action ) {
         case ParsedXML::ACTION_NONE:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: no action." );
             break;
         case ParsedXML::ACTION_PING:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: ping." );
             retval = ret_pong;
             break;
         case ParsedXML::ACTION_GET_SERVER_LOAD:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: getLoad." );
             retval = getLoad();
             break;
         case ParsedXML::ACTION_WIPE_JOB:
             if( wipeJob( data.m_job ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: wipeJob(%s): success.", data.m_job.c_str() );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: wipeJob(%s): failure.", data.m_job.c_str() );
                 retval = ret_failure;
             }
             break;
         case ParsedXML::ACTION_KILL_JOB:
             if( killJob( data.m_job, data.m_force ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: killJob(%s, force=%d): success.", data.m_job.c_str(), data.m_force );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: killJob(%s, force=%d): failure.", data.m_job.c_str(), data.m_force );
                 retval = ret_failure;
             }
             break;
@@ -176,16 +190,24 @@ Master::handle( trell_message* msg, size_t buf_size )
                         data.m_args,
                         data.m_rendering_devices,
                         string( msg->m_xml_payload, msg->m_size ) ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: addJob(%s): success.", data.m_job.c_str() );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: addJob(%s): failure.", data.m_job.c_str() );
                 retval = ret_failure;
             }
             break;
         case ParsedXML::ACTION_GET_JOB_LIST:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: getJobList." );
             retval = encodeMasterState();
             break;
         case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: listRenderingDevices." );
             retval = ret_header
                    + m_rendering_devices.xml()
                    + ret_footer;
@@ -194,8 +216,12 @@ Master::handle( trell_message* msg, size_t buf_size )
             m_applications.refresh();
             if( m_applications.timestamp() <= data.m_timestamp ) {
                 retval = ret_success;
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: listApplications: no changes." );
             }
             else {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: listApplications: list have changed." );
                 retval = ret_header
                        + m_applications.xml()
                        + ret_footer;
@@ -212,16 +238,27 @@ Master::handle( trell_message* msg, size_t buf_size )
                 strcpy( msg->m_xml_payload, retval.c_str() );
             }
             else {
-                std::cerr << "Shmem buffer too small.\n";
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Shmem buffer too small." );
             }
         }
 
     }
     else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "Received heartbeat from %s, state=%d.",
+                           msg->m_ping_payload.m_job_id,
+                           msg->m_ping_payload.m_state );
+
         std::string job = msg->m_ping_payload.m_job_id;
         setJobState( job, msg->m_ping_payload.m_state, true );
         return_type = TRELL_MESSAGE_OK;
         osize = 0u;
+    }
+    else {
+        m_logger_callback( m_logger_data, 0, package.c_str(),
+                           "Received unknown message: type=%d, size=%d.",
+                           msg->m_type, msg->m_size );
     }
 
 
@@ -344,7 +381,7 @@ Master::setJobState( const std::string& job, TrellJobState state, bool heartbeat
 void
 Master::parseXML( ParsedXML& data, char* buf, size_t len )
 {
-    std::cerr << std::string(  buf, buf + len ) << "\n";
+    //std::cerr << std::string(  buf, buf + len ) << "\n";
     
     xmlTextReaderPtr reader = xmlReaderForMemory( buf,
                                                   len,

@@ -28,6 +28,10 @@
 
 namespace tinia {
 namespace trell {
+namespace {
+    static const std::string package = "IPCJobController";
+} // of anonymous namespace
+
 
 
 IPCJobController::IPCJobController( bool is_master )
@@ -148,7 +152,8 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
     switch( msg->m_type ) {
 
     case TRELL_MESSAGE_DIE:
-        std::cerr << "Received suggestion to commit suicide.\n";
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "Received suggestion to commit suicide." );
         fail();
         msg->m_type = TRELL_MESSAGE_OK;
         msg->m_size = 0u;
@@ -164,10 +169,14 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
                                session,
                                revision ) )
         {
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for policy, returning updates." );
             msg->m_type = TRELL_MESSAGE_XML;
             retsize = TRELL_MSGHDR_SIZE + msg->m_size;
         }
         else {
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for policy, no updates available." );
             msg->m_type = TRELL_MESSAGE_OK;
             retsize = TRELL_MSGHDR_SIZE;
         }
@@ -186,21 +195,29 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
                 if( onGetSnapshot( msg->m_image.m_data,
                                    format, w, h, session, key ) )
                 {
+                    m_logger_callback( m_logger_data, 2, package.c_str(),
+                                       "Queried for snapshot, ok." );
                     msg->m_type = TRELL_MESSAGE_IMAGE;
                 }
                 else {
+                    m_logger_callback( m_logger_data, 0, package.c_str(),
+                                       "Queried for snapshot, rendering error." );
                     msg->m_type = TRELL_MESSAGE_ERROR;
                     msg->m_size = 0;
                     retsize = TRELL_MSGHDR_SIZE;
                 }
             }
             else {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Queried for snapshot, buffer too small." );
                 msg->m_type = TRELL_MESSAGE_ERROR;
                 msg->m_size = 0;
                 retsize = TRELL_MSGHDR_SIZE;
             }
         }
         else {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for snapshot, unknown pixel format." );
             msg->m_type = TRELL_MESSAGE_ERROR;
             msg->m_size = 0;
             retsize = TRELL_MSGHDR_SIZE;
@@ -220,8 +237,12 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
         {
             msg->m_type = TRELL_MESSAGE_XML;
             retsize = TRELL_MESSAGE_XML_SIZE + msg->m_size;
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for renderlist, ok." );
         }
         else {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for renderlist, error occured." );
             msg->m_type = TRELL_MESSAGE_ERROR;
             retsize = TRELL_MSGHDR_SIZE;
         }
@@ -251,6 +272,9 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
         break;
 
     default:
+        m_logger_callback( m_logger_data, 0, package.c_str(),
+                           "Received unknown message: type=%d, size=%d.",
+                           msg->m_type, msg->m_size );
         msg->m_type = TRELL_MESSAGE_ERROR;
         msg->m_size = 0u;
         retsize = TRELL_MSGHDR_SIZE;
