@@ -89,6 +89,20 @@ enum TrellMessageType {
     TRELL_MESSAGE_GET_SCRIPTS
 };
 
+typedef struct tinia_msg
+{
+    enum TrellMessageType   type;    
+    size_t                  size; // for compatibility, will be removed
+} tinia_msg_t;
+
+typedef struct tinia_msg_heartbeat
+{
+    tinia_msg_t         msg;
+    enum TrellJobState  state;
+    char                job_id[ TRELL_JOBID_MAXLENGTH+1 ];
+} tinia_msg_heartbeat_t;
+
+
 typedef struct trell_message
 {
     /** The type of the message. */

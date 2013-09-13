@@ -137,6 +137,7 @@ size_t
 Master::handle( trell_message* msg, size_t buf_size )
 {
     TrellMessageType return_type = TRELL_MESSAGE_ERROR;
+    
     size_t osize = 0;
 
     if( msg->m_type == TRELL_MESSAGE_XML ) {
@@ -245,23 +246,27 @@ Master::handle( trell_message* msg, size_t buf_size )
 
     }
     else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
+        tinia_msg_heartbeat_t* q = reinterpret_cast<tinia_msg_heartbeat_t*>(msg);
+
         m_logger_callback( m_logger_data, 2, package.c_str(),
                            "Received heartbeat from %s, state=%d.",
-                           msg->m_ping_payload.m_job_id,
-                           msg->m_ping_payload.m_state );
+                           q->job_id, q->state );
 
-        std::string job = msg->m_ping_payload.m_job_id;
-        setJobState( job, msg->m_ping_payload.m_state, true );
+        std::string job = q->job_id;
+        setJobState( job, q->state, true );
+
+        tinia_msg_t* r = reinterpret_cast<tinia_msg_t*>(msg);
+        r->type = TRELL_MESSAGE_OK;
+        r->size = 0;
+
         return_type = TRELL_MESSAGE_OK;
-        osize = 0u;
+        osize = 0;
     }
     else {
         m_logger_callback( m_logger_data, 0, package.c_str(),
                            "Received unknown message: type=%d, size=%d.",
                            msg->m_type, msg->m_size );
     }
-
-
     msg->m_type = return_type;
     msg->m_size = osize;
     return osize + TRELL_MSGHDR_SIZE;

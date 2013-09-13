@@ -118,7 +118,8 @@ typedef enum {
     MESSENGER_INVALID_MBOX,
     MESSENGER_OPEN_FAILED,
     MESSENGER_TIMEOUT,
-    MESSENGER_INTERRUPTED
+    MESSENGER_INTERRUPTED,
+    MESSENGER_INSUFFICIENT_MEMORY
 } messenger_status_t;
 
 messenger_status_t
@@ -129,11 +130,20 @@ messenger_endpoint_destroy( messenger_endpoint_t* e );
 
 
 messenger_status_t
-messenger_do_roundtrip( messenger_producer_t query, void* query_data,
-                        messenger_consumer_t reply, void* reply_data,
+messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
+                           messenger_consumer_t reply, void* reply_data,
+                           messenger_logger_t log, void* log_data,
+                           const char* message_box_id,
+                           int wait /* in seconds. */ );
+
+messenger_status_t
+messenger_do_roundtrip( const void* query, size_t query_size,
+                        void* reply, size_t* reply_written, size_t reply_size,
                         messenger_logger_t log, void* log_data,
                         const char* message_box_id,
-                        int wait /* in seconds. */ );
+                        int wait );
+
+
 
 const char*
 messenger_strerror( messenger_status_t error );

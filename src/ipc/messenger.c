@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>       // memcpy
 #include "tinia/ipc/messenger.h"
 
 #define PREFIX "mod_trell: @messenger: "
@@ -219,14 +220,11 @@ messenger_init( struct messenger* m,
 // -----------------------------------------------------------------------------
 // this should end up in messenger.c when it is working.
 messenger_status_t
-messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size ),
-                        void* query_data,
-                        int (*reply)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  ),
-                        void* reply_data,
-                        void (*log)( void* data, int level, const char* who, const char* message, ... ),
-                        void* log_data,
-                        const char* message_box_id,
-                        int wait /* in seconds. */ )
+messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
+                           messenger_consumer_t reply, void* reply_data,
+                           messenger_logger_t log, void* log_data,
+                           const char* message_box_id,
+                           int wait /* in seconds. */ )
 {
     messenger_status_t status = MESSENGER_OK;
     messenger_t msgr;
@@ -360,6 +358,89 @@ messenger_do_roundtrip( int (*query)( void* data, size_t* bytes_written, unsigne
     }
     return status;
 }
+
+// --- do roundtrip no-callback convenience func -------------------------------
+typedef struct messenger_do_roundtrip_data {
+    const char*         m_query;            // Query buffer.
+    size_t              m_query_sent;       // Number of bytes read from query buffer.
+    size_t              m_query_size;       // Size of query buffer.
+    char*               m_reply;            // Reply buffer.
+    size_t              m_reply_received;   // Number of bytes written to reply buffer.
+    size_t              m_reply_size;       // Size of reply buffer.
+    messenger_status_t  m_status;
+} messenger_do_roundtrip_data_t;
+
+static
+int
+messenger_do_roundtrip_producer( void*           data,
+                                 size_t*         bytes_written,
+                                 unsigned char*  buffer,
+                                 size_t          buffer_size )
+{
+    int retval = 0;
+    messenger_do_roundtrip_data_t * pd = (messenger_do_roundtrip_data_t*)data;
+    size_t size = pd->m_query_size-pd->m_query_sent;
+    if( buffer_size < size ) {
+        size = buffer_size;
+        retval = 1; // we need more invocations
+    }
+    memcpy( buffer, pd->m_query + pd->m_query_sent, size );
+    pd->m_query_sent += size;
+    *bytes_written = size;
+    return retval;
+}
+
+static
+int
+messenger_do_roundtrip_consumer(  void* data,
+                                  unsigned char* buffer,
+                                  size_t offset,
+                                  size_t bytes,
+                                  int more )
+{
+    int retval = 0;
+    messenger_do_roundtrip_data_t * pd = (messenger_do_roundtrip_data_t*)data;
+    size_t size = pd->m_reply_size-pd->m_reply_received;
+    if( bytes <= size ) {
+        size = bytes;
+    }
+    else {
+        // reply buffer is too small! Currently bytes is size of shared mem
+        //pd->m_status = MESSENGER_INSUFFICIENT_MEMORY;
+        //retval = -1;
+    }
+    memcpy( pd->m_reply + pd->m_reply_received, buffer, size );
+    pd->m_reply_received += size;
+    return 0;
+}
+
+messenger_status_t
+messenger_do_roundtrip( const void *query, size_t query_size,
+                        void *reply, size_t* reply_written, size_t reply_size,
+                        messenger_logger_t log, void* log_data,
+                        const char* message_box_id,
+                        int wait )
+{
+    messenger_do_roundtrip_data_t data = {
+        query, 0, query_size,
+        reply, 0, reply_size,
+        MESSENGER_OK
+    };
+    messenger_status_t rv = messenger_do_roundtrip_cb( messenger_do_roundtrip_producer, &data,
+                                                       messenger_do_roundtrip_consumer, &data,
+                                                       log, log_data,
+                                                       message_box_id,
+                                                       wait );
+    *reply_written = data.m_reply_received;
+    if( data.m_status == MESSENGER_INSUFFICIENT_MEMORY ) {
+        log( log_data, 1, package, "do_roundtrip: Insufficient size of query buffer." );
+        return MESSENGER_INSUFFICIENT_MEMORY;
+    }
+    else {
+        return rv;
+    }
+}
+
 
 
 messenger_status_t
