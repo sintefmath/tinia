@@ -861,54 +861,38 @@ Master::addJob( const std::string& id,
             execvpe( it->second.m_executable.c_str(),
                      reinterpret_cast<char* const*>( arg.data() ),
                      reinterpret_cast<char* const*>( env.data() ) );
-            std::cerr << "Failed to exec: " << strerror(errno) << "\n";
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "'%s' failed to exec.", it->second.m_id.c_str() );
 
-            // Notify master that things went wrong
-
-            messenger m;
-            messenger_status_t mrv;
-
-            mrv = messenger_init( &m,
-                                  getMasterID().c_str(),
-                                  m_logger_callback,
-                                  m_logger_data );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_init(" << getMasterID() << ") failed: " << messenger_strerror( mrv ) << "\n";
+            // --- notify master that things went wrong ------------------------
+            tinia_msg_heartbeat_t query;
+            query.msg.type = TRELL_MESSAGE_HEARTBEAT;
+            query.state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
+            strncpy( query.job_id, it->second.m_id.c_str(), TRELL_JOBID_MAXLENGTH );
+            query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
+            
+            tinia_msg_t reply;
+            size_t reply_actual;
+        
+            messenger_status_t rv = messenger_do_roundtrip( &query, sizeof(query),
+                                                            &reply, &reply_actual, sizeof(reply),
+                                                            m_logger_callback, m_logger_data,
+                                                            getMasterID().c_str(),
+                                                            0 );
+        
+            if( (rv == MESSENGER_OK) && (reply_actual == sizeof(reply)) && (reply.type == TRELL_MESSAGE_OK ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Notified master that '%s' is about to terminate.",
+                                   it->second.m_id.c_str() );
             }
             else {
-                mrv = messenger_lock( &m );
-
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_lock(" << getMasterID() << ") failed: " << messenger_strerror( mrv ) << "\n";
-                }
-                else {
-                    size_t msg_size = (it->second.m_id.length()+1) + offsetof( trell_message, m_ping_payload.m_job_id );
-                    if( msg_size < m.m_shmem_size ) {
-                        trell_message* msg = reinterpret_cast<trell_message*>( m.m_shmem_ptr );
-                        msg->m_type = TRELL_MESSAGE_HEARTBEAT;
-                        msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-                        msg->m_ping_payload.m_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
-                        strcpy( msg->m_ping_payload.m_job_id, it->second.m_id.c_str() );
-
-                        mrv = messenger_post( &m, msg_size );
-                        if( mrv != MESSENGER_OK ) {
-                            std::cerr << __func__ << ": messenger_post("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                        }
-                        else {
-                            std::cerr << "Notified master.\n";
-                        }
-                    }
-                    mrv = messenger_unlock( &m );
-                    if( mrv != MESSENGER_OK ) {
-                        std::cerr << __func__ << ": messenger_unlock("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                    }
-                }
-                messenger_status_t mrv = messenger_free( &m );
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_free("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                }
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Tried to notify master that '%s' is about terminate, but failed to send message.",
+                                   it->second.m_id.c_str() );
             }
-            std::cerr << "Exiting.\n";
+
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "'%s' exits.", it->second.m_id.c_str() );
             exit( EXIT_FAILURE );
         }
         else {

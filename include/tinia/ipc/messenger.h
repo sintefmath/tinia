@@ -185,8 +185,8 @@ messenger_free( struct messenger* m );
   *       access the message box.
   *
   */
-messenger_status_t
-messenger_lock( struct messenger* m );
+//messenger_status_t
+//messenger_lock( struct messenger* m );
 
 //messenger_status_t
 //messenger_wait_for_notification( struct messenger* m, int wait_seconds );
@@ -197,15 +197,15 @@ messenger_lock( struct messenger* m );
   * \param m  An initialized and locked messenger.
   * \param size  The full size of the message, in bytes.
   */
-messenger_status_t
-messenger_post( struct messenger*m, size_t size );
+//messenger_status_t
+//messenger_post( struct messenger*m, size_t size );
 
 /** Release the exclusive lock on a message box.
   *
   * \param m An initialized and locked messenger, that may have sent a message.
   */
-messenger_status_t
-messenger_unlock( struct messenger* m );
+//messenger_status_t
+//messenger_unlock( struct messenger* m );
 
 
 
