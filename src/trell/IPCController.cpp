@@ -37,6 +37,7 @@ namespace trell {
 namespace {
 static const std::string package = "IPCController";
 
+#if 0
 static sig_atomic_t exit_flag = 0;
 
 static
@@ -55,6 +56,7 @@ handle_SIGALRM( int )
 }
 
 
+#endif
 }
 
 
@@ -62,6 +64,7 @@ handle_SIGALRM( int )
 IPCController::IPCController( bool is_master )
     : m_ipc_pid( getpid() ),
       m_cleanup_pid( -1 ),
+      m_msgbox( NULL ),
       m_is_master( is_master ),
       m_job_state( TRELL_JOBSTATE_NOT_STARTED )
 {
@@ -72,14 +75,14 @@ void
 IPCController::finish()
 {
     m_job_state = TRELL_JOBSTATE_FINISHED;
-    kill( getpid(), SIGCONT );
+    messenger_server_break_mainloop( m_msgbox );
 }
 
 void
 IPCController::fail()
 {
     m_job_state = TRELL_JOBSTATE_FAILED;
-    kill( getpid(), SIGCONT );
+    messenger_server_break_mainloop( m_msgbox );
 }
 
 void
@@ -98,7 +101,8 @@ IPCController::notify()
     // sem_timedwait run by the IPC thread. The IPC thread would then be able to
     // notify. However, it doesn't seem like sem_timewait is interrupted.
     //
-
+    messenger_server_notify( m_msgbox );
+#if 0    
     int value;
     if( sem_trywait( m_msgbox.m_sem_lock ) == 0 ) {
         if( sem_getvalue( m_msgbox.m_sem_notify, &value ) == 0 ) {
@@ -113,6 +117,7 @@ IPCController::notify()
         // when it is finished with the request
         m_msgbox.m_notify = true;
     }
+#endif
 }
 
 void IPCController::addScript(const std::string &script)
@@ -263,7 +268,7 @@ IPCController::shutdown()
         }
     }
 
-    messenger_server_destroy( &m_msgbox );
+    messenger_server_destroy( m_msgbox );
 
     std::cerr << "Done.\n";
     m_cleanup_pid = -1;
@@ -276,11 +281,78 @@ IPCController::~IPCController()
     std::cerr << __PRETTY_FUNCTION__ << "\n";
 }
 
+
+messenger_status_t
+IPCController::message_consumer( void*                     data,
+                  const char*               buffer,
+                  const size_t              buffer_bytes_,
+                  const int                 first,
+                  const int                 more ) 
+{
+    IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
+    if( first ) {
+        ctx->m_buffer_offset = 0;
+    }
+    
+    trell_message* msg = (trell_message*)buffer;
+    size_t buffer_bytes = msg->m_size + TRELL_MSGHDR_SIZE;
+    
+    if( ctx->m_buffer_size <= ctx->m_buffer_offset + buffer_bytes ) {
+        return MESSENGER_ERROR;
+    }
+    memcpy( ctx->m_buffer + ctx->m_buffer_offset, buffer, buffer_bytes );
+    ctx->m_buffer_offset += buffer_bytes;
+    
+    if( !more ) {
+        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<trell_message_t*>( ctx->m_buffer ),
+                                                              ctx->m_buffer_size );
+    }
+    return MESSENGER_OK;
+}
+
+messenger_status_t
+IPCController::message_producer( void*         data,
+                  int*          more,
+                  char*         buffer,
+                  size_t*       buffer_bytes,
+                  const size_t  buffer_size,
+                  const int     first )
+{
+    IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
+    if( first ) {
+        ctx->m_buffer_offset = 0;
+    }
+    size_t bytes = ctx->m_output_bytes - ctx->m_buffer_offset;
+    if( buffer_size < bytes ) {
+        bytes = buffer_size;
+    }
+    memcpy( buffer, ctx->m_buffer + ctx->m_buffer_offset, bytes );
+    ctx->m_buffer_offset += bytes;
+    *buffer_bytes = bytes;
+    *more = ctx->m_buffer_offset < ctx->m_output_bytes ? 1 : 0;
+    return MESSENGER_OK;
+}
+
+messenger_status_t
+IPCController::handle_periodic( void* data, int seconds )
+{
+    IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
+    if( ctx->m_ipc_controller->periodic() ) {
+        return MESSENGER_OK;
+    }
+    else {
+        return MESSENGER_ERROR;
+    }
+}
+
+
 int
 IPCController::run(int argc, char **argv)
 {
     m_cleanup_pid = getpid();
+#if 0
 
+    
     // --- Install signal handlers ---------------------------------------------
     struct sigaction act;
     memset( &act, 0, sizeof(act) );
@@ -307,18 +379,7 @@ IPCController::run(int argc, char **argv)
         m_job_state = TRELL_JOBSTATE_FAILED;
     }
 
-    
-    
-   
- /*   
-     if( atexit( at_exit ) != 0 ) {
-        std::cerr << "Failed to set at exit function:" << strerror(errno) << "\n";
-    }
-
-*/
-//    kill( getpid(), SIGUSR1 );
-
-
+#endif
     for( int i=0; environ[i] != NULL; i++ ) {
         std::cerr << "ENV " << i <<": " << environ[i] << std::endl;
     }
@@ -360,7 +421,8 @@ IPCController::run(int argc, char **argv)
 
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        if( messenger_server_create( &m_msgbox, m_id.c_str(), m_logger_callback, m_logger_data ) != MESSENGER_OK ) {
+        m_msgbox = new messenger_server_t;
+        if( messenger_server_create( m_msgbox, m_id.c_str(), m_logger_callback, m_logger_data ) != MESSENGER_OK ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
         }
     }
@@ -393,7 +455,26 @@ IPCController::run(int argc, char **argv)
         m_job_state = TRELL_JOBSTATE_RUNNING;
         sendHeartBeat();
 
-        mainloop();
+
+        Context ctx;
+        ctx.m_ipc_controller = this;
+        ctx.m_buffer_size = 1000*1024*1024;
+        ctx.m_buffer = new char[ctx.m_buffer_size];
+    
+        if( messenger_server_mainloop( m_msgbox,
+                                       message_consumer, &ctx,
+                                       message_producer, &ctx,
+                                       handle_periodic, &ctx ) == MESSENGER_OK )
+        {
+            m_job_state = TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY;
+        }
+        else {
+            m_job_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
+        }
+         
+        delete ctx.m_buffer;        
+#if 0        
+//        mainloop();
         
         // We exited for some reason.
         if( m_job_state == TRELL_JOBSTATE_FINISHED ) {
@@ -402,6 +483,7 @@ IPCController::run(int argc, char **argv)
         else {
             m_job_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
         }
+#endif
         sendHeartBeat();
     }
     failHard();
@@ -414,9 +496,15 @@ IPCController::often()
     // does nothing.
 }
 
+
+
+
+
+
 void
 IPCController::mainloop()
 {
+#if 0
     // Open sem_lock for business
     sem_post( m_msgbox.m_sem_lock );
     sendHeartBeat();
@@ -478,8 +566,11 @@ IPCController::mainloop()
 
     }
     sendHeartBeat();
-
+#endif
 }
+
+
+
 
 
 TrellMessageType
@@ -548,6 +639,7 @@ IPCController::sendHeartBeat()
 bool
 IPCController::periodic()
 {
+    sendHeartBeat();
     return true;
 }
 
