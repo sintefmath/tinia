@@ -609,6 +609,7 @@ IPCController::sendHeartBeat()
 
     tinia_msg_heartbeat_t query;
     query.msg.type = TRELL_MESSAGE_HEARTBEAT;
+    query.msg.size = sizeof(query)-TRELL_MSGHDR_SIZE;
     query.state = m_job_state;
     strncpy( query.job_id, m_id.c_str(), TRELL_JOBID_MAXLENGTH );
     query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';

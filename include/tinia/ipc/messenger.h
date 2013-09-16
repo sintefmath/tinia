@@ -65,6 +65,13 @@ typedef enum {
     MESSENGER_INSUFFICIENT_MEMORY
 } messenger_status_t;
 
+struct messenger_header {
+    size_t  m_size;
+    int     m_more;
+    int     m_error;
+} __attribute__((aligned(16)));
+typedef struct messenger_header messenger_header_t;
+
 typedef int (*messenger_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
 typedef int (*messenger_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
 typedef void (*messenger_logger_t)( void* data, int level, const char* who, const char* message, ... );

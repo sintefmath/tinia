@@ -261,9 +261,21 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                 log( log_data, 0, package, "sem_timedwait(lock): %s", strerror(errno) );
             }
             else {
+                if( sem_trywait( msgr.m_reply ) == 0 ) {
+                    msgr.m_logger_func( msgr.m_logger_data, 1, package, "Pulled an old up from the reply semaphore.\n" );
+                }
+
+                volatile messenger_header_t* header = msgr.m_shmem_ptr;
+                
                 // --- create query in shmem (read request contents) -----------
                 size_t bytes_written = 0;
-                int q = query( query_data, &bytes_written, msgr.m_shmem_ptr, msgr.m_shmem_size );
+                int q = query(  query_data,
+                               &bytes_written,
+                                msgr.m_shmem_ptr + sizeof(messenger_header_t),
+                                msgr.m_shmem_size - sizeof(messenger_header_t) );
+                header->m_size = bytes_written;
+                header->m_more = 0;
+                header->m_error = 0;
                 if( q < 0 ) {
                     msgr.m_logger_func( msgr.m_logger_data, 0, package, "query callback failed." );
                     status = MESSENGER_ERROR;
@@ -273,13 +285,13 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                     status = MESSENGER_ERROR;
                 }
                 else {
-                    if( sem_trywait( msgr.m_reply ) == 0 ) {
-                        msgr.m_logger_func( msgr.m_logger_data, 1, package, "Pulled an old up from the reply semaphore.\n" );
-                    }
                     
                     // --- sync memory TO other process ------------------------
                     // sync memory FIXME: size
-                    if( msync( msgr.m_shmem_ptr, msgr.m_shmem_size, MS_SYNC | MS_INVALIDATE ) != 0 ) {
+                    if( msync( msgr.m_shmem_ptr,
+                               header->m_size + sizeof(messenger_header_t),
+                               MS_SYNC | MS_INVALIDATE ) != 0 )
+                    {
                         status = MESSENGER_ERROR; 
                         log( log_data, 0, package, "msync(send): %s", strerror(errno) );
                     }
@@ -298,21 +310,36 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                         timeout.tv_sec += 1;
                         
                         // --- wait for other process to finish processing -----
-                        if( sem_timedwait( msgr.m_reply, &timeout ) != 0 ) {
-                            switch( errno ) {
-                            case EINTR:
-                            case ETIMEDOUT: status = MESSENGER_TIMEOUT; break;
-                            default:        status = MESSENGER_ERROR; break;
+                        int redo;
+                        do {
+                            redo = 0;
+                            if( sem_timedwait( msgr.m_reply, &timeout ) != 0 ) {
+                                if( errno == EINTR ) {
+                                    redo = 1;   // we might get interrupted, just hang in there...
+                                }
+                                else {
+                                    log( log_data, 0, package, "sem_timedwait(reply): %s", strerror(errno) );
+                                    status = MESSENGER_ERROR;
+                                }
                             }
-                            log( log_data, 0, package, "sem_timedwait(reply): %s", strerror(errno) );
+                        } while( redo );
+                       
+                        if( status == MESSENGER_OK ) {
+                            if( msync( msgr.m_shmem_ptr,
+                                       msgr.m_shmem_size,
+                                       MS_SYNC ) != 0 )
+                            {
+                                log( log_data, 0, package, "msync(recv): %s", strerror(errno) );
+                                status = MESSENGER_ERROR;
+                            }
                         }
-                        else if( msync( msgr.m_shmem_ptr, msgr.m_shmem_size, MS_SYNC ) != 0 ) {
-                            status = MESSENGER_ERROR; 
-                            log( log_data, 0, package, "msync(recv): %s", strerror(errno) );
-                        }
-                        else {
+
+                        if( status == MESSENGER_OK ) {
                             // --- process reply (write request contents) ----------
-                            int r = reply( reply_data, msgr.m_shmem_ptr, 0, msgr.m_shmem_size, 0 );
+                            int r = reply( reply_data,
+                                           msgr.m_shmem_ptr + sizeof(messenger_header_t),
+                                           0,
+                                           msgr.m_shmem_size - sizeof(messenger_header_t), 0 );
                             if( r < 0 ) {
                                 msgr.m_logger_func( msgr.m_logger_data, 0, package, "reply callback failed." );
                                 status = MESSENGER_ERROR;
