@@ -52,9 +52,26 @@ extern "C" {
   * \endcode
   */
 
+typedef enum {
+    MESSENGER_OK,
+    MESSENGER_ERROR,
+    MESSENGER_NULL,
+    MESSENGER_SHMEM_LOCKED,
+    MESSENGER_INVARIANT_BROKEN,
+    MESSENGER_INVALID_MBOX,
+    MESSENGER_OPEN_FAILED,
+    MESSENGER_TIMEOUT,
+    MESSENGER_INTERRUPTED,
+    MESSENGER_INSUFFICIENT_MEMORY
+} messenger_status_t;
+
 typedef int (*messenger_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
 typedef int (*messenger_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
 typedef void (*messenger_logger_t)( void* data, int level, const char* who, const char* message, ... );
+
+typedef messenger_status_t (*messenger_server_consumer_t)(void* data, const char* buffer, const size_t buffer_bytes, const int first, const int more );
+typedef messenger_status_t (*messenger_server_producer_t)(void* data, int* more, char* buffer, size_t* buffer_bytes, const size_t buffer_size, const int first);
+typedef messenger_status_t (*messenger_periodic_t)( void* data, int seconds );
 
 typedef struct messenger
 {
@@ -104,32 +121,22 @@ typedef struct messenger_server
     /** Flags that a notify has occured. */
     volatile int    m_notify;
     
+    volatile int    m_end;
+    
     /** Used to notify jobs. */
     sem_t*          m_sem_notify;
 
     /** The system-wide name of the semaphore that signals a notify. */
     const char*     m_sem_notify_name;
     
-    
-    
     char            m_name[256];    // fixed size to avoid malloc/free
+    
+    
 
 }messenger_server_t;
 
 
 
-typedef enum {
-    MESSENGER_OK,
-    MESSENGER_ERROR,
-    MESSENGER_NULL,
-    MESSENGER_SHMEM_LOCKED,
-    MESSENGER_INVARIANT_BROKEN,
-    MESSENGER_INVALID_MBOX,
-    MESSENGER_OPEN_FAILED,
-    MESSENGER_TIMEOUT,
-    MESSENGER_INTERRUPTED,
-    MESSENGER_INSUFFICIENT_MEMORY
-} messenger_status_t;
 
 messenger_status_t
 messenger_server_create( messenger_server_t* e,
@@ -139,6 +146,21 @@ messenger_server_create( messenger_server_t* e,
 
 messenger_status_t
 messenger_server_destroy( messenger_server_t* e );
+
+messenger_status_t
+messenger_server_mainloop( messenger_server_t*          s,
+                           messenger_server_consumer_t  consumer,
+                           void*                        consumer_data,
+                           messenger_server_producer_t  producer,
+                           void*                        producer_data,
+                           messenger_periodic_t         periodic,
+                           void*                        periodic_data );
+
+messenger_status_t
+messenger_server_break_mainloop( messenger_server_t* s );
+
+messenger_status_t
+messenger_server_notify( messenger_server_t* s );
 
 
 messenger_status_t

@@ -232,7 +232,7 @@ private:
       * avoid clashes when fork succeds, but execl fails. */
     int             m_cleanup_pid;
 
-    messenger_server_t  m_msgbox;
+    messenger_server_t*  m_msgbox;
     /** The id of this message box. */
     std::string     m_id;
     /** True of this job is the master job. */
@@ -265,6 +265,39 @@ private:
     void
     shutdown();
 
+
+    struct Context
+    {
+        IPCController*  m_ipc_controller;
+        char*           m_buffer;
+        size_t          m_buffer_offset;
+        size_t          m_output_bytes;
+        size_t          m_buffer_size;
+    };
+    
+    static
+    messenger_status_t
+    message_consumer( void*                     data,
+                      const char*               buffer,
+                      const size_t              buffer_bytes,
+                      const int                 first,
+                      const int                 more ) ;
+
+    static
+    messenger_status_t
+    message_producer( void*         data,
+                      int*          more,
+                      char*         buffer,
+                      size_t*       buffer_bytes,
+                      const size_t  buffer_size,
+                      const int     first );
+
+    static
+    messenger_status_t
+    handle_periodic( void* data, int seconds );
+    
+    
+    
 };
 
 
