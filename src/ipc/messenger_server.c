@@ -20,6 +20,22 @@ do { \
 #define LOG_WARN( s, where, ... )  LOG_WRAP( s, 1, where, __VA_ARGS__ )
 #define LOG_INFO( s, where, ... )  LOG_WRAP( s, 2, where, __VA_ARGS__ )
 
+// when this one is nonzero, we have recieved a SIGTERM
+static sig_atomic_t exit_flag = 0;
+
+static
+void
+messenger_handler_SIGTERM( int foo) {
+    exit_flag = 1;
+}
+
+static
+void
+messenger_handler_SIGALRM( int foo ) {
+    // do nothing.
+}
+
+
 static
 messenger_status_t
 messenger_semaphore_delete( messenger_server_t*  s,
@@ -225,6 +241,34 @@ messenger_server_create( messenger_server_t* s,
         messenger_server_destroy( s );
         return MESSENGER_ERROR;
     }
+
+    // --- install signal handlers ---------------------------------------------
+    struct sigaction act;
+    memset( &act, 0, sizeof(act) );
+    sigemptyset( &act.sa_mask );
+    act.sa_handler = messenger_handler_SIGTERM;
+    if( sigaction( SIGTERM, &act, NULL ) != 0 ) {
+        LOG_ERROR( s, where, "sigaction( SIGTERM ) failed: %s", strerror(errno) );
+        return MESSENGER_ERROR;
+    }
+
+    memset( &act, 0, sizeof(act) );
+    sigemptyset( &act.sa_mask );
+    act.sa_handler = messenger_handler_SIGALRM;
+    if( sigaction( SIGALRM, &act, NULL ) != 0 ) {
+        LOG_ERROR( s, where, "sigaction( SIGALRM ) failed: %s", strerror(errno) );
+        return MESSENGER_ERROR;
+    }
+    
+    // --- unblock signals that we want ----------------------------------------
+    sigset_t mask;
+    sigemptyset( &mask );
+    sigaddset( &mask, SIGTERM );
+    sigaddset( &mask, SIGALRM );
+    if( sigprocmask( SIG_UNBLOCK, &mask, NULL ) != 0 ) { // pthread_sigprocmask?
+        LOG_ERROR( s, where, "sigprocmask( unblock ) failed: %s", strerror(errno) );
+        return MESSENGER_ERROR;
+    }
 }
 
 messenger_status_t
@@ -267,20 +311,6 @@ messenger_server_destroy( messenger_server_t* s )
 }
 
 
-// when this one is nonzero, we have recieved a SIGTERM
-static sig_atomic_t exit_flag = 0;
-
-static
-void
-messenger_handler_SIGTERM( int foo) {
-    exit_flag = 1;
-}
-
-static
-void
-messenger_handler_SIGALRM( int foo ) {
-    // do nothing.
-}
 
 
 messenger_status_t
@@ -322,7 +352,8 @@ messenger_server_notified( messenger_server_t* s )
                 rv = MESSENGER_ERROR;
             }
             else {
-                for(;  waiting_clients < 1; waiting_clients++ ) {
+                LOG_INFO( s, where, "waiting clients=%d", waiting_clients );
+                for(;  waiting_clients < 1; waiting_clients++ ) {   // note: was < 1 for some reason before..?
                     if( sem_post( s->m_sem_notify ) != 0 ) {
                         LOG_ERROR( s, where, "sem_post(notify) failed: %s", strerror(errno) );
                         rv = MESSENGER_ERROR;
@@ -362,116 +393,81 @@ messenger_server_mainloop( messenger_server_t*          s,
     messenger_status_t rv = MESSENGER_OK;
     static const char* where = "ipc.messenger.server.mainloop";
     
-    // --- install signal handlers ---------------------------------------------
-    struct sigaction act, old_SIGTERM;
-    memset( &act, 0, sizeof(act) );
-    sigemptyset( &act.sa_mask );
-    act.sa_handler = messenger_handler_SIGTERM;
-    if( sigaction( SIGTERM, &act, &old_SIGTERM ) != 0 ) {
-        LOG_ERROR( s, where, "sigaction( SIGTERM ) failed: %s", strerror(errno) );
-        rv = MESSENGER_ERROR;
-    }
-    else {
-        struct sigaction act, old_SIGALRM;
-        memset( &act, 0, sizeof(act) );
-        sigemptyset( &act.sa_mask );
-        act.sa_handler = messenger_handler_SIGALRM;
-        if( sigaction( SIGALRM, &act, &old_SIGALRM ) != 0 ) {
-            LOG_ERROR( s, where, "sigaction( SIGALRM ) failed: %s", strerror(errno) );
-            rv = MESSENGER_ERROR;
-        }
-        else {
-            // --- unblock signals that we want --------------------------------
-            sigset_t mask, old_sigset;
-            sigemptyset( &mask );
-            sigaddset( &mask, SIGTERM );
-            sigaddset( &mask, SIGALRM );
-            if( sigprocmask( SIG_UNBLOCK, &mask, &old_sigset ) != 0 ) { // pthread_sigprocmask?
-                LOG_ERROR( s, where, "sigprocmask( unblock ) failed: %s", strerror(errno) );
-                rv = MESSENGER_ERROR;
+    sem_post( s->m_sem_lock );  // open lock for business
+    
+    
+    struct timespec next_periodic;
+    clock_gettime( CLOCK_REALTIME, &next_periodic );
+    next_periodic.tv_sec += 60;     // invoke periodic once a minute
+    
+    s->m_end = 0;
+    periodic( periodic_data, 0 );
+    while( (rv==MESSENGER_OK) && (exit_flag==0) && (s->m_end==0) ) {
+        
+        // --- wait for incoming message ---------------------------
+        if( sem_timedwait( s->m_sem_query, &next_periodic ) != 0 ) {
+            if( (errno == EINTR) || (errno == ETIMEDOUT) ) {
+                // not an error, we just got notified or timed out
             }
             else {
-                sem_post( s->m_sem_lock );  // open lock for business
-
-                
-                struct timespec next_periodic;
-                clock_gettime( CLOCK_REALTIME, &next_periodic );
-                next_periodic.tv_sec += 60;     // invoke periodic once a minute
-
-                s->m_end = 0;
-                periodic( periodic_data, 0 );
-                while( (rv==MESSENGER_OK) && (exit_flag==0) && (s->m_end==0) ) {
-                    
-                    // --- wait for incomint message ---------------------------
-                    if( sem_timedwait( s->m_sem_query, &next_periodic ) != 0 ) {
-                        if( (errno == EINTR) || (errno == ETIMEDOUT) ) {
-                            // not an error, we just got notified or timed out
-                        }
-                        else {
-                            LOG_ERROR( s, where, "sem_timedwait(query) failed: %s", strerror(errno) );
-                            rv = MESSENGER_ERROR;
-                            break;  // break immediately out of loop.
-                        }
-                    }
-                    else {
-                        // --- got incoming message ----------------------------
-                        if( msync( s->m_shmem_ptr, s->m_shmem_size, MS_SYNC ) != 0 ) {
-                            LOG_ERROR( s, where, "msync(in) failed." );
-                        }
-                        else {
-                            // query process and reply
-                            
-                            consumer( consumer_data, s->m_shmem_ptr, s->m_shmem_size, 1, 0 );
-                            
-                            int more = 0;
-                            size_t bytes = 0;
-                            producer( producer_data, &more, s->m_shmem_ptr, &bytes, s->m_shmem_size, 1 );
-
-                            msync( s->m_shmem_ptr, bytes, MS_SYNC | MS_INVALIDATE );
-                            sem_post( s->m_sem_reply );
-                        }
-                    }
-
-                    // We have been notified...
-                    if( s->m_notify ) {
-                        rv = messenger_server_notified( s );
-                    }
-
-                    struct timespec now;
-                    if( clock_gettime( CLOCK_REALTIME, &now ) != 0 ) {
-                        LOG_ERROR( s, where, "clock_gettime(now) failed: %s", strerror(errno) );
-                        rv = MESSENGER_ERROR;
-                        break;  // break immediately out of loop.
-                    }
-                    else {
-                        if( (now.tv_sec < next_periodic.tv_sec)
-                                || ((now.tv_sec == next_periodic.tv_sec) && (now.tv_nsec < next_periodic.tv_nsec)))
-                        {
-                            LOG_INFO( s, where, "time for a new periodic invocation." );
-
-                            periodic( periodic_data, 0 );
-                            
-                            next_periodic = now;
-                            next_periodic.tv_sec += 60;
-                        }
-                    }
-                }
-                
-                if( sigprocmask( SIG_SETMASK, &old_sigset, NULL ) != 0 ) { // pthread_sigprocmask?
-                    LOG_ERROR( s, where, "sigprocmask( set ) restore failed: %s", strerror(errno) );
-                    rv = MESSENGER_ERROR;
-                }
-            }
-            if( sigaction( SIGALRM, &old_SIGALRM, NULL ) != 0 ) {
-                LOG_ERROR( s, where, "sigaction( SIGALRM ) restore failed: %s", strerror(errno) );
+                LOG_ERROR( s, where, "sem_timedwait(query) failed: %s", strerror(errno) );
                 rv = MESSENGER_ERROR;
+                break;  // break immediately out of loop.
             }
         }
-        if( sigaction( SIGTERM, &old_SIGTERM, NULL ) != 0 ) {
-            LOG_ERROR( s, where, "sigaction( SIGTERM ) restore failed: %s", strerror(errno) );
+        else {
+            // --- got incoming message ----------------------------
+            if( msync( s->m_shmem_ptr, s->m_shmem_size, MS_SYNC ) != 0 ) {
+                LOG_ERROR( s, where, "msync(in) failed." );
+            }
+            else {
+                // query process and reply
+                volatile messenger_header_t* header = s->m_shmem_ptr;
+                
+                consumer( consumer_data,
+                          s->m_shmem_ptr + sizeof(messenger_header_t),
+                          header->m_size, 1, 0 );
+                
+                int more = 0;
+                size_t bytes = 0;
+                producer( producer_data,
+                         &more,
+                          s->m_shmem_ptr + sizeof(messenger_header_t),
+                         &bytes,
+                          s->m_shmem_size - sizeof(messenger_header_t), 1 );
+                header->m_size = bytes;
+                header->m_more = 0;
+                
+                msync( s->m_shmem_ptr, s->m_shmem_size, MS_SYNC | MS_INVALIDATE );
+                sem_post( s->m_sem_reply );
+            }
+        }
+        
+        // We have been notified...
+        if( s->m_notify ) {
+            messenger_server_notified( s );
+            s->m_notify = 0;
+        }
+        
+        struct timespec now;
+        if( clock_gettime( CLOCK_REALTIME, &now ) != 0 ) {
+            LOG_ERROR( s, where, "clock_gettime(now) failed: %s", strerror(errno) );
             rv = MESSENGER_ERROR;
+            break;  // break immediately out of loop.
+        }
+        else {
+            if( (next_periodic.tv_sec < now.tv_sec)
+                    || ((next_periodic.tv_sec == now.tv_sec) && (next_periodic.tv_nsec < now.tv_nsec)))
+            {
+                LOG_INFO( s, where, "time for a new periodic invocation." );
+                
+                periodic( periodic_data, 0 );
+                
+                next_periodic = now;
+                next_periodic.tv_sec += 60;
+            }
         }
     }
-    
+
     return rv;
 }
