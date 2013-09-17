@@ -1,10 +1,11 @@
 SET( Tinia_FIND_DESKTOP FALSE )
 SET( Tinia_FIND_SERVER FALSE)
-IF( NOT "${Tinia_FIND_COMPONENTS}" STREQUAL "" )
+
+IF( NOT Tinia_FIND_COMPONENTS OR NOT "${Tinia_FIND_COMPONENTS}" STREQUAL "" )
   FOREACH(component ${Tinia_FIND_COMPONENTS})
-    IF( ${component} STREQUAL "Desktop" )
+    IF( component STREQUAL "Desktop" )
       SET( Tinia_FIND_DESKTOP TRUE )
-    ELSEIF(${component} STREQUAL "Server" )
+    ELSEIF(component STREQUAL "Server" )
       SET( Tinia_FIND_SERVER TRUE )
     ELSE()
       MESSAGE( "Unknown component ${component}" )
@@ -23,7 +24,7 @@ set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
 FIND_PACKAGE( Boost 1.46 COMPONENTS filesystem unit_test_framework prg_exec_monitor thread date_time system )
 
-IF(${Tinia_FIND_DESKTOP})
+IF(Tinia_FIND_DESKTOP)
   FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript QtNetwork REQUIRED)
   INCLUDE(${QT_USE_FILE})
   SET(QT_USE_QTOPENGL TRUE)
@@ -39,7 +40,7 @@ FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 FIND_PACKAGE( LibXml2 )
 
-IF(${Tinia_FIND_SERVER})
+IF(Tinia_FIND_SERVER)
   FIND_PATH( APACHE_INCLUDE_DIR httpd.h
     HINTS "/usr/include/apache2" "/usr/include/httpd/"
   )
@@ -135,7 +136,7 @@ FIND_LIBRARY( tinia_jobcontroller_LIBRARY jobcontroller
   )
 
 
-IF( ${Tinia_FIND_DESKTOP} )
+IF( Tinia_FIND_DESKTOP )
 	
   FIND_LIBRARY( tinia_javascript_LIBRARY tinia_javascript
     "/usr/local/lib/"
@@ -180,7 +181,7 @@ FIND_LIBRARY( tinia_modelxml_LIBRARY modelxml
     "$ENV{PROGRAMFILES(x86)}/SINTEF/tinia/lib"
     )
 
-IF( ${Tinia_FIND_SERVER} )
+IF( Tinia_FIND_SERVER )
 
   FIND_LIBRARY( tinia_trell_LIBRARY trell
     "/usr/local/lib/"
@@ -198,8 +199,8 @@ IF( ${Tinia_FIND_SERVER} )
   
 ENDIF()
 
-IF( ${Tinia_FIND_DESKTOP} )
-  IF(NOT ${Tinia_FIND_SERVER})
+IF( Tinia_FIND_DESKTOP )
+  IF(NOT Tinia_FIND_SERVER)
     find_package_handle_standard_args(Tinia  DEFAULT_MSG
                                   tinia_jobcontroller_LIBRARY
                                   tinia_qtcontroller_LIBRARY
@@ -220,7 +221,7 @@ IF( ${Tinia_FIND_DESKTOP} )
                                   tinia_trell_LIBRARY
                                   tinia_modelxml_LIBRARY)
   ENDIF()
-ELSEIF(${Tinia_FIND_SERVER})
+ELSEIF(Tinia_FIND_SERVER)
 
   find_package_handle_standard_args(Tinia  DEFAULT_MSG
                                   tinia_jobcontroller_LIBRARY
@@ -249,7 +250,7 @@ SET(TINIA_LIBRARIES
   ${tinia_RenderListGL_LIBRARY}
 )
 
-IF(${Tinia_FIND_DESKTOP} )
+IF(Tinia_FIND_DESKTOP )
   SET(TINIA_LIBRARIES
     ${TINIA_LIBRARIES}
     ${QT_LIBRARIES}
@@ -268,7 +269,7 @@ IF(${Tinia_FIND_DESKTOP} )
     )
 ENDIF()
 
-IF(${Tinia_FIND_SERVER})
+IF(Tinia_FIND_SERVER)
   SET(TINIA_LIBRARIES
     ${TINIA_LIBRARIES}
  #   ${tinia_modelxml_LIBRARY}
