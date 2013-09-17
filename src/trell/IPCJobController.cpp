@@ -281,19 +281,21 @@ IPCJobController::handle( trell_message* msg, size_t msg_size, size_t buf_size )
 
     case TRELL_MESSAGE_UPDATE_STATE:
     {
-        volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+        tinia_msg_update_exposed_model_t* query = (tinia_msg_update_exposed_model_t*)msg;
+        session = query->session_id;
 
-        session = "undefined";
-        if( onUpdateState( (char*)msg + sizeof(tinia_msg_t),
-                           msg_size - sizeof(tinia_msg_t),
+        if( onUpdateState( (char*)msg + sizeof(*query),
+                           msg_size - sizeof(*query),
                            session ) )
         {
+            volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
             reply->type = TRELL_MESSAGE_OK;
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Update state, ok (msg_size=%d).", msg_size );
             return sizeof(*reply);
         }
         else {
+            volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
             reply->type = TRELL_MESSAGE_ERROR;
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Update state, failure." );

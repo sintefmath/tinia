@@ -120,10 +120,18 @@ typedef struct {
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
 } tinia_msg_get_snapshot_t;
 
+/** Message struct for TRELL_MESSAGE_UPDATE_STATE. */
 typedef struct {
+    tinia_msg_t             msg;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+} tinia_msg_update_exposed_model_t;
+
+/** Message struct for TRELL_MESSAGE_GET_POLICY_UPDATE. */
+typedef struct {
+    tinia_msg_t             msg;
     unsigned int            revision;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
-} tinia_msg_get_policy_update_t;
+} tinia_msg_get_exposed_model_t;
 
 /** Message struct for TRELL_MESSAGE_IMAGE. */
 typedef struct {
