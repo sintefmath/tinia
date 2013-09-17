@@ -40,22 +40,22 @@ trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
 }
 
 
-int
+tinia_ipc_msg_status_t
 trell_pass_reply_png( void* data,
-                      unsigned char* buffer,
-                      size_t offset,
-                      size_t bytes,
-                      int more )
+                      const char *buffer,
+                      const size_t buffer_bytes,
+                      const int first,
+                      const int more )
 {
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
     request_rec* r = cbd->m_r;
 
     trell_message_t* msg = (trell_message_t*)buffer;
     if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
-        //enum TrellPixelFormat format = msg->m_image.m_pixel_format;
-        int width = msg->m_image.m_width;
-        int height = msg->m_image.m_height;
-        char* payload = msg->m_image.m_data;
+        tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
+        int width = m->width;
+        int height = m->height;
+        char* payload = (char*)buffer + sizeof(*m);
 
         cbd->m_dispatch_info->m_png_entry = apr_time_now();
         int i, j;
@@ -192,12 +192,13 @@ trell_pass_reply_png( void* data,
     
         if( rv != APR_SUCCESS ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "ap_pass_brigade failed." );
-            return -1;
+            return MESSENGER_ERROR;
         }
-        return 0;   // success
+        return MESSENGER_OK;   // success
     }
     else {
-        return -1;  // error
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->m_type );
+        return MESSENGER_ERROR;  // error
     }
 }
     

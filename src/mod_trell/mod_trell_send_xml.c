@@ -145,7 +145,7 @@ trell_send_xml( trell_sconf_t*   sconf,
     }
 }
 
-
+#if 0
 int
 trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr )
 {
@@ -192,3 +192,4 @@ trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* ms
     }
     return HTTP_INTERNAL_SERVER_ERROR;
 }
+#endif

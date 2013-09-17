@@ -155,6 +155,24 @@ typedef struct {
 } trell_callback_data_t;
 
 /******************************************************************************/
+
+typedef struct
+{
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    unsigned char*          message;
+    size_t                  message_offset;
+    size_t                  message_size;
+    int                     pass_post;
+} trell_pass_query_msg_post_data_t;
+
+int
+trell_pass_query_msg_post( void*           data,
+                                size_t*         bytes_written,
+                                unsigned char*  buffer,
+                                size_t          buffer_size );
+
 int
 trell_pass_query_get_snapshot( void*           data,
                                size_t*         bytes_written,
@@ -192,29 +210,43 @@ trell_pass_query_update_state_xml( void*           data,
 
 /******************************************************************************/
 // return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
-int
-trell_pass_reply_assert_ok( void* data, unsigned char* buffer, size_t offset, size_t bytes, int more );
 
-int
-trell_pass_reply_xml_longpoll( void* data,
-                               unsigned char* buffer,
-                               size_t offset,
-                               size_t bytes,
-                               int more );
+typedef struct {
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    int                     longpolling;
+    apr_bucket_brigade*     brigade;
+} tinia_pass_reply_data_t;
 
-int
+
+/** Callback that passes data from ipc.msg.client to apache.
+ *
+ * Handles:
+ * - MESSENGER_OK
+ * - MESSENGER_ERROR
+ * - MESSENGER_XML
+ * - TRELL_MESSAGE_SCRIPT
+ *
+ */
+tinia_ipc_msg_status_t
+trell_pass_reply( void* data,
+                  const char* buffer,
+                  const size_t buffer_bytes,
+                  const int first,
+                  const int more );
+
+/** Callback that passes data from ipc.msg.client to apache.
+ * Handles:
+ * - TRELL_MESSAGE_IMAGE
+ */
+tinia_ipc_msg_status_t
 trell_pass_reply_png( void* data,
-                      unsigned char* buffer,
-                      size_t offset,
-                      size_t bytes,
-                      int more );
+                      const char* buffer,
+                      const size_t buffer_bytes,
+                      const int first,
+                      const int more );
 
-int
-trell_pass_reply_javascript( void* data,
-                             unsigned char* buffer,
-                             size_t offset,
-                             size_t bytes,
-                             int more );
 /******************************************************************************/
 
 
@@ -225,7 +257,7 @@ int
 trell_send_xml_failure( trell_sconf_t* sconf, request_rec*r );
 
 int
-trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr );
+trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, tinia_ipc_msg_client_t* msgr );
 
 /** Gets the user defined scripts */
 int
@@ -251,10 +283,6 @@ trell_handle_update_state( trell_sconf_t*          sconf,
                            request_rec*            r,
                            trell_dispatch_info_t*  dispatch_info );
 
-int
-trell_handle_get_snapshot( trell_sconf_t*          sconf,
-                           request_rec*            r,
-                           trell_dispatch_info_t*  dispatch_info );
 
 int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,

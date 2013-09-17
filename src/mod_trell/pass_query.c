@@ -27,25 +27,6 @@
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
-int
-trell_pass_query_get_snapshot( void*           data,
-                               size_t*         bytes_written,
-                               unsigned char*  buffer,
-                               size_t          buffer_size )
-{
-    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
-
-    msg->m_type = TRELL_MESSAGE_GET_SNAPSHOT;
-    msg->m_get_snapshot.m_pixel_format = TRELL_PIXEL_FORMAT_BGR8;
-    msg->m_get_snapshot.m_width = cbd->m_dispatch_info->m_width;
-    msg->m_get_snapshot.m_height = cbd->m_dispatch_info->m_height;
-    memcpy( msg->m_get_snapshot.m_session_id, cbd->m_dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
-    memcpy( msg->m_get_snapshot.m_key, cbd->m_dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
-
-    *bytes_written = TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE;
-    return 0;
-}
 
 int
 trell_pass_query_get_renderlist( void*           data,
@@ -174,6 +155,79 @@ trell_pass_query_update_state_xml( void*           data,
     apr_brigade_cleanup( bb );
     return 0;
 }
+
+
+int
+trell_pass_query_msg_post( void*           data,
+                           size_t*         bytes_written,
+                           unsigned char*  buffer,
+                           size_t          buffer_size )
+{
+    trell_pass_query_msg_post_data_t* cbd = (trell_pass_query_msg_post_data_t*)data;
+ 
+    // --- copy message part (if anything left) into buffer --------------------
+    
+    *bytes_written = 0;
+    int more = 0;       // are we finished, or do we have more data to send?
+    
+    // bytes of message left
+    size_t bytes = cbd->message_size - cbd->message_offset; 
+    if( bytes > 0 ) {
+        // we haven't finished writing the message
+        
+        if( buffer_size < bytes ) {
+            bytes = buffer_size; // clamp to buffer size
+            more = 1;
+        }
+        memcpy( buffer,
+                cbd->message + cbd->message_offset,
+                bytes );
+        cbd->message_offset += bytes;
+        *bytes_written += bytes;
+    }
+    
+    // --- copy data from HTTP POST if requested and any data present ----------
+
+    if( cbd->pass_post ) {
+        more = 1;                               // always more until we see EOF
+        bytes = buffer_size - *bytes_written;   // bytes left in buffer
+
+        apr_bucket_brigade* bb = apr_brigade_create( cbd->r->pool,
+                                                     cbd->r->connection->bucket_alloc );
+        
+        apr_status_t rv = ap_get_brigade( cbd->r->input_filters,
+                                          bb,
+                                          AP_MODE_READBYTES,
+                                          APR_BLOCK_READ,
+                                          bytes );
+        if( rv != APR_SUCCESS ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
+                           "%s.pass_query_msg_post: ap_get_brigade failed.",
+                           cbd->r->handler );
+            return -1;
+        }
+        
+        // run through buckets and check for EOF
+        apr_bucket* e;
+        for( e=APR_BRIGADE_FIRST(bb); e!=APR_BRIGADE_SENTINEL(bb); e=APR_BUCKET_NEXT(e) ) {
+            if( APR_BUCKET_IS_EOS(e) ) {
+                more = 0;   // last iteration!
+            }
+        }
+        
+        // flatten buckets into buffer
+        apr_size_t wrote = bytes;
+        rv = apr_brigade_flatten( bb, buffer + *bytes_written, &wrote );
+        if( rv != APR_SUCCESS ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
+                           "%s.pass_query_msg_post: apr_brigade_flatten failed.", cbd->r->handler );
+            return -1;
+        }
+        *bytes_written += wrote;
+    }
+    return more;
+}
+
 
 int
 trell_pass_query_xml(  void*           data,

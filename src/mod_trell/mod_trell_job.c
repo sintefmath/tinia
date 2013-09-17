@@ -38,11 +38,19 @@ trell_handle_get_script( trell_sconf_t           *sconf,
                          trell_dispatch_info_t   *dispatch_info)
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_get_scripts, &cbd,
-                                    trell_pass_reply_javascript, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    dispatch_info->m_jobid,
-                                    0 ) ) // no longpoll
+    
+    tinia_pass_reply_data_t rd;
+    rd.sconf = sconf;
+    rd.r = r;
+    rd.dispatch_info = dispatch_info;
+    rd.longpolling = 0;
+    rd.brigade = NULL;
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_get_scripts, &cbd,
+                                              trell_pass_reply, &rd,
+                                              trell_messenger_log_wrapper, r,
+                                              dispatch_info->m_jobid,
+                                              0 ) ) // no longpoll
     {
     case MESSENGER_OK:
         return OK; // everything ok.
@@ -59,11 +67,20 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              trell_dispatch_info_t*  dispatch_info )
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_get_renderlist, &cbd,
-                                    trell_pass_reply_xml_longpoll, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    dispatch_info->m_jobid,
-                                    0 ) ) // no longpoll
+    
+    tinia_pass_reply_data_t rd;
+    rd.sconf = sconf;
+    rd.r = r;
+    rd.dispatch_info = dispatch_info;
+    rd.longpolling = 0;
+    rd.brigade = NULL;
+    
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_get_renderlist, &cbd,
+                                              trell_pass_reply, &rd,
+                                              trell_messenger_log_wrapper, r,
+                                              dispatch_info->m_jobid,
+                                              0 ) ) // no longpoll
     {
     case MESSENGER_OK:
         return OK; // everything ok.
@@ -84,12 +101,35 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     {
         return HTTP_INSUFFICIENT_STORAGE;
     }
+
+    // create data for pass_query_msg_post
+    trell_pass_query_msg_post_data_t qd;
+    qd.sconf          = sconf;
+    qd.r              = r;
+    qd.dispatch_info  = dispatch_info;
+    qd.message        = apr_palloc( r->pool, sizeof(tinia_msg_get_snapshot_t) );
+    qd.message_offset = 0;
+    qd.message_size   = sizeof(tinia_msg_get_snapshot_t);
+    qd.pass_post      = 0;
+
+    // create message
+    tinia_msg_get_snapshot_t* qm = (tinia_msg_get_snapshot_t*)qd.message;
+    qm->msg.type     = TRELL_MESSAGE_GET_SNAPSHOT;
+    qm->pixel_format = TRELL_PIXEL_FORMAT_BGR8;
+    qm->width        = dispatch_info->m_width;
+    qm->height       = dispatch_info->m_height;
+    memcpy( qm->session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
+    qm->session_id[TRELL_SESSIONID_MAXLENGTH] = '\0';
+    memcpy( qm->key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
+    qm->key[ TRELL_KEYID_MAXLENGTH ] = '\0';
+    
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_get_snapshot, &cbd,
-                                    trell_pass_reply_png, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    dispatch_info->m_jobid,
-                                    0 ) ) // no longpoll
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_msg_post, &qd,
+                                              trell_pass_reply_png, &cbd,
+                                              trell_messenger_log_wrapper, r,
+                                              dispatch_info->m_jobid,
+                                              0 ) ) // no longpoll
     {
     case MESSENGER_OK:
         return OK; // everything ok.
@@ -107,11 +147,19 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                                 trell_dispatch_info_t*  dispatch_info )
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_get_exposedmodel, &cbd,
-                                    trell_pass_reply_xml_longpoll, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    dispatch_info->m_jobid,
-                                    30 ) ) // longpoll for up to 30 secs
+
+    tinia_pass_reply_data_t rd;
+    rd.sconf = sconf;
+    rd.r = r;
+    rd.dispatch_info = dispatch_info;
+    rd.longpolling = 1;
+    rd.brigade = NULL;
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_get_exposedmodel, &cbd,
+                                              trell_pass_reply, &rd,
+                                              trell_messenger_log_wrapper, r,
+                                              dispatch_info->m_jobid,
+                                              30 ) ) // longpoll for up to 30 secs
     {
     case MESSENGER_OK:
         return OK; // everything ok.
@@ -156,11 +204,19 @@ trell_handle_update_state( trell_sconf_t* sconf,
 
 
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_update_state_xml, &cbd,
-                                    trell_pass_reply_assert_ok, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    dispatch_info->m_jobid,
-                                    0 ) )
+
+    tinia_pass_reply_data_t rd;
+    rd.sconf = sconf;
+    rd.r = r;
+    rd.dispatch_info = dispatch_info;
+    rd.longpolling = 0;
+    rd.brigade = NULL;
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_update_state_xml, &cbd,
+                                              trell_pass_reply, &rd,
+                                              trell_messenger_log_wrapper, r,
+                                              dispatch_info->m_jobid,
+                                              0 ) )
     {
     case MESSENGER_OK:
         return HTTP_NO_CONTENT; // everything ok.
@@ -213,11 +269,19 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
 
 
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-    switch( messenger_do_roundtrip_cb( trell_pass_query_xml, &cbd,
-                                    trell_pass_reply_xml_longpoll, &cbd,
-                                    trell_messenger_log_wrapper, r,
-                                    job,
-                                    0 ) )
+
+    tinia_pass_reply_data_t rd;
+    rd.sconf = sconf;
+    rd.r = r;
+    rd.dispatch_info = dispatch_info;
+    rd.longpolling = 0;
+    rd.brigade = NULL;
+    
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_xml, &cbd,
+                                              trell_pass_reply, &rd,
+                                              trell_messenger_log_wrapper, r,
+                                              job,
+                                              0 ) )
     {
     case MESSENGER_OK:
         return HTTP_NO_CONTENT; // everything ok.

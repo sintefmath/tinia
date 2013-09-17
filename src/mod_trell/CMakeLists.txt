@@ -11,8 +11,6 @@ SET( MOD_TRELL_SRC
     "pass_query.c"
     "pass_reply.c"
     "pass_reply_png.c"
-    "pass_reply_xml.c"
-    "pass_reply_javascript.c"
 )
 
 ADD_LIBRARY( mod_tinia_trell ${MOD_TRELL_SRC} )

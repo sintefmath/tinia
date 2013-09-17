@@ -155,23 +155,6 @@ protected:
     bool
     periodic();
 
-    /** Hook that is invoked very often.
-     *
-     * Probably only useful for master job.
-     *
-     * Invoked
-     * - Each time a message has been processed.
-     * - The message wait has timed out.
-     * - The message wait has been interrupted by a signal.
-     *
-     */
-    virtual
-    void
-    often();
-    
-    void
-    mainloop();
-    
 
     /** Hook that is invoked just before the job terminates.
       *
@@ -208,7 +191,7 @@ protected:
       */
     virtual
     size_t
-    handle( trell_message* msg, size_t buf_size ) = 0;
+    handle( trell_message* msg, size_t msg_size, size_t buf_size ) = 0;
 
     /** Convenience function to send a message without payload to a message box.
       *
@@ -243,19 +226,8 @@ private:
     TrellJobState   m_job_state;
 
     /** A messenger to the master job's message box. */
-    messenger       m_master_mbox;
+    tinia_ipc_msg_client_t*    m_master_mbox;
 
-    static bool
-    createSharedMemory( void** memory, size_t* memory_size, const std::string& name, const size_t size );
-
-    static void
-    deleteSharedMemory( void** memory, size_t* memory_size, const std::string& name );
-
-    static bool
-    createSemaphore( sem_t** semaphore, const std::string& name );
-
-    static void
-    deleteSemaphore( sem_t** semaphore, const std::string& name );
 
     /** Sends a heartbeat message to the master job. */
     bool
@@ -276,7 +248,7 @@ private:
     };
     
     static
-    messenger_status_t
+    tinia_ipc_msg_status_t
     message_consumer( void*                     data,
                       const char*               buffer,
                       const size_t              buffer_bytes,
@@ -284,7 +256,7 @@ private:
                       const int                 more ) ;
 
     static
-    messenger_status_t
+    tinia_ipc_msg_status_t
     message_producer( void*         data,
                       int*          more,
                       char*         buffer,
@@ -293,7 +265,7 @@ private:
                       const int     first );
 
     static
-    messenger_status_t
+    tinia_ipc_msg_status_t
     handle_periodic( void* data, int seconds );
     
     

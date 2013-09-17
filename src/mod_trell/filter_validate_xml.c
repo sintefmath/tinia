@@ -124,8 +124,8 @@ tinia_validate_xml_helper( ap_filter_t *f,
                                        "%s: Failed to validate XML: %s", f->frec->name, f->r->path_info );
                     }
                     else {
-                        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, f->r,
-                                       "%s: valid input xml: %s", f->frec->name, f->r->path_info );
+                        //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, f->r,
+                        //               "%s: valid input xml: %s", f->frec->name, f->r->path_info );
                         rv = APR_SUCCESS; // xml is parsed and validated!
                     }
                 }

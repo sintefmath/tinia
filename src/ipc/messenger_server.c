@@ -8,17 +8,11 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>        /* For mode constants */
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/messenger_internal.h>
 
-#define LOG_WRAP( s, level, where, ... ) \
-do { \
-    if( s->m_log_func != NULL ) { \
-        s->m_log_func( s->m_log_data, level, where, __VA_ARGS__ ); \
-    } \
-} while( 0 )
-#define LOG_ERROR( s, where, ... ) LOG_WRAP( s, 0, where, __VA_ARGS__ )
-#define LOG_WARN( s, where, ... )  LOG_WRAP( s, 1, where, __VA_ARGS__ )
-#define LOG_INFO( s, where, ... )  LOG_WRAP( s, 2, where, __VA_ARGS__ )
+
+const size_t messenger_server_t_sizeof = sizeof( messenger_server_t );
+
 
 // when this one is nonzero, we have recieved a SIGTERM
 static sig_atomic_t exit_flag = 0;
@@ -37,13 +31,13 @@ messenger_handler_SIGALRM( int foo ) {
 
 
 static
-messenger_status_t
+tinia_ipc_msg_status_t
 messenger_semaphore_delete( messenger_server_t*  s,
                             sem_t**              semaphore,
                             const char*          name )
 {
     static const char* where = "ipc.messenger.semaphore.delete";
-    messenger_status_t rv = MESSENGER_OK;
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
 
     // --- close semaphore -----------------------------------------------------
     if( *semaphore != SEM_FAILED ) {
@@ -68,7 +62,7 @@ messenger_semaphore_delete( messenger_server_t*  s,
 }
 
 static
-messenger_status_t
+tinia_ipc_msg_status_t
 messenger_semaphore_create( messenger_server_t*  s,
                             sem_t**              semaphore,
                             const char*          name )
@@ -92,12 +86,12 @@ messenger_semaphore_create( messenger_server_t*  s,
 }
 
 static
-messenger_status_t
+tinia_ipc_msg_status_t
 messenger_shmem_delete( messenger_server_t* s,
                         const char*   name )
 {
     static const char* where = "ipc.messenger.shmem.delete";
-    messenger_status_t rv = MESSENGER_OK;
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
 
     // --- remove mapping of shared mem into this process space ----------------    
     if( s->m_shmem_ptr != MAP_FAILED ) {
@@ -124,7 +118,7 @@ messenger_shmem_delete( messenger_server_t* s,
 }
 
 static
-messenger_status_t
+tinia_ipc_msg_status_t
 messenger_shmem_create( messenger_server_t* s,
                         const char*   name,
                         const size_t  minimum_size )
@@ -174,8 +168,12 @@ messenger_shmem_create( messenger_server_t* s,
         messenger_shmem_delete( s, name );
         return MESSENGER_ERROR;
     }
-
     close( fd );
+
+    s->m_header_ptr = (tinia_ipc_msg_header_t*)s->m_shmem_ptr;
+    s->m_body_ptr   = ((char*)s->m_shmem_ptr + sizeof(tinia_ipc_msg_header_t));
+    s->m_body_size  = s->m_shmem_size - sizeof(tinia_ipc_msg_header_t);
+    
     LOG_INFO( s, where, "Created shared memory '%s' of size %d bytes.", name, s->m_shmem_size );
     return MESSENGER_OK;
 }
@@ -183,17 +181,17 @@ messenger_shmem_create( messenger_server_t* s,
 
 
 
-messenger_status_t
-messenger_server_create( messenger_server_t* s,
+tinia_ipc_msg_status_t
+ipc_msg_server_init( messenger_server_t* s,
                          const char*         id,
-                         messenger_logger_t  log_func,
+                         tinia_ipc_msg_logger_t  log_func,
                          void*               log_data )
 {
     char buffer[ 256+32 ];
     const char* where = "ipc.messenger.server.create";
     
-    s->m_log_func = log_func;
-    s->m_log_data = log_data;
+    s->m_log_f = log_func;
+    s->m_log_d = log_data;
     s->m_shmem_ptr = MAP_FAILED;
     s->m_shmem_size = 0;
     s->m_sem_lock = SEM_FAILED;
@@ -210,35 +208,35 @@ messenger_server_create( messenger_server_t* s,
     // --- create shared memory ------------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_shmem", s->m_name );    // name
     if( messenger_shmem_create( s, buffer, 100*1024*1024 ) != MESSENGER_OK ) {
-        messenger_server_destroy( s );
+        ipc_msg_server_release( s );
         return MESSENGER_ERROR;
     }
 
     // --- create lock semaphore -----------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_lock", s->m_name );    // name
     if( messenger_semaphore_create( s, &s->m_sem_lock, buffer ) != MESSENGER_OK ) {
-        messenger_server_destroy( s );
+        ipc_msg_server_release( s );
         return MESSENGER_ERROR;
     }
 
     // --- create query semaphore ----------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_query", s->m_name );    // name
     if( messenger_semaphore_create( s, &s->m_sem_query, buffer ) != MESSENGER_OK ) {
-        messenger_server_destroy( s );
+        ipc_msg_server_release( s );
         return MESSENGER_ERROR;
     }
 
     // --- create reply semaphore ----------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_reply", s->m_name );    // name
     if( messenger_semaphore_create( s, &s->m_sem_reply, buffer ) != MESSENGER_OK ) {
-        messenger_server_destroy( s );
+        ipc_msg_server_release( s );
         return MESSENGER_ERROR;
     }
 
     // --- create notify semaphore ---------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_notify", s->m_name );    // name
     if( messenger_semaphore_create( s, &s->m_sem_notify, buffer ) != MESSENGER_OK ) {
-        messenger_server_destroy( s );
+        ipc_msg_server_release( s );
         return MESSENGER_ERROR;
     }
 
@@ -271,11 +269,11 @@ messenger_server_create( messenger_server_t* s,
     }
 }
 
-messenger_status_t
-messenger_server_destroy( messenger_server_t* s )
+tinia_ipc_msg_status_t
+ipc_msg_server_release( messenger_server_t* s )
 {
     char buffer[ 256+32 ];
-    messenger_status_t rv = MESSENGER_OK;
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
 
     // --- delete shared memory ------------------------------------------------
     snprintf( buffer, sizeof(buffer), "/%s_shmem", s->m_name );    // name
@@ -313,8 +311,8 @@ messenger_server_destroy( messenger_server_t* s )
 
 
 
-messenger_status_t
-messenger_server_notify( messenger_server_t* s ) 
+tinia_ipc_msg_status_t
+ipc_msg_server_notify( messenger_server_t* s ) 
 {
     // set flag that there is something to notify
     s->m_notify = 1;
@@ -323,56 +321,40 @@ messenger_server_notify( messenger_server_t* s )
 }
 
 static
-messenger_status_t
+tinia_ipc_msg_status_t
 messenger_server_notified( messenger_server_t* s )
 {
-    messenger_status_t rv = MESSENGER_OK;
-    static const char* where = "ipc.messenger.server.notified";
-    struct timespec timeout;
-    clock_gettime( CLOCK_REALTIME, &timeout );
-    timeout.tv_sec += 1;    // 1 second timeout
+    if( s->m_notify == 0 ) {
+        return MESSENGER_OK;
+    }
     
-    int retry;
-    do {
-        retry = 0;
-        if( sem_timedwait( s->m_sem_lock, &timeout ) != 0 ) {
-            if( errno == EINTR ) {
-                retry = 1;
-                // just interrupted by a signal, not really an error
-            }
-            else {
-                LOG_ERROR( s, where, "sem_timedwait(lock) failed: %s", strerror(errno) );
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
+    static const char* where = "ipc.messenger.server.notified";
+    // cannot lock here: sometimes, a notification arrives when a client has
+    // taken the lock, but not yet posted on query, when server is in this spot.
+    
+    s->m_notify = 0;
+    int waiting_clients = 0;
+    if( sem_getvalue( s->m_sem_notify, &waiting_clients ) != 0 ) {
+        LOG_ERROR( s, where, "sem_getvalue(notify) failed: %s", strerror(errno) );
+        rv = MESSENGER_ERROR;
+    }
+    if( waiting_clients < 1 ) {
+        LOG_INFO( s, where, "waiting clients=%d", waiting_clients );    
+        // why 1 and not 0? Because Linux never returns < 0?
+        for(;  waiting_clients < 1; waiting_clients++ ) {   // note: was < 1 for some reason before..?
+            if( sem_post( s->m_sem_notify ) != 0 ) {
+                LOG_ERROR( s, where, "sem_post(notify) failed: %s", strerror(errno) );
                 rv = MESSENGER_ERROR;
-            }
-        }
-        else {
-            int waiting_clients = 0;
-            if( sem_getvalue( s->m_sem_notify, &waiting_clients ) != 0 ) {
-                LOG_ERROR( s, where, "sem_getvalue(notify) failed: %s", strerror(errno) );
-                rv = MESSENGER_ERROR;
-            }
-            else {
-                LOG_INFO( s, where, "waiting clients=%d", waiting_clients );
-                for(;  waiting_clients < 1; waiting_clients++ ) {   // note: was < 1 for some reason before..?
-                    if( sem_post( s->m_sem_notify ) != 0 ) {
-                        LOG_ERROR( s, where, "sem_post(notify) failed: %s", strerror(errno) );
-                        rv = MESSENGER_ERROR;
-                        break;
-                    }
-                }
-            }
-            if( sem_post( s->m_sem_lock ) != 0 ) {
-                LOG_ERROR( s, where, "sem_post(lock) failed: %s", strerror(errno) );
-                rv = MESSENGER_ERROR;
+                break;
             }
         }
     }
-    while( retry );
     return rv;
 }
 
-messenger_status_t
-messenger_server_break_mainloop( messenger_server_t* s )
+tinia_ipc_msg_status_t
+ipc_msg_server_break( messenger_server_t* s )
 {
     s->m_end = 1;
     // break if mainloop is in waitstate
@@ -381,8 +363,8 @@ messenger_server_break_mainloop( messenger_server_t* s )
 }
 
 
-messenger_status_t
-messenger_server_mainloop( messenger_server_t*          s,
+tinia_ipc_msg_status_t
+ipc_msg_server_mainloop( messenger_server_t*          s,
                            messenger_server_consumer_t  consumer,
                            void*                        consumer_data,
                            messenger_server_producer_t  producer,
@@ -390,7 +372,7 @@ messenger_server_mainloop( messenger_server_t*          s,
                            messenger_periodic_t         periodic,
                            void*                        periodic_data )
 {
-    messenger_status_t rv = MESSENGER_OK;
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
     static const char* where = "ipc.messenger.server.mainloop";
     
     sem_post( s->m_sem_lock );  // open lock for business
@@ -404,6 +386,7 @@ messenger_server_mainloop( messenger_server_t*          s,
     periodic( periodic_data, 0 );
     while( (rv==MESSENGER_OK) && (exit_flag==0) && (s->m_end==0) ) {
         
+        messenger_server_notified( s );
         // --- wait for incoming message ---------------------------
         if( sem_timedwait( s->m_sem_query, &next_periodic ) != 0 ) {
             if( (errno == EINTR) || (errno == ETIMEDOUT) ) {
@@ -422,32 +405,28 @@ messenger_server_mainloop( messenger_server_t*          s,
             }
             else {
                 // query process and reply
-                volatile messenger_header_t* header = s->m_shmem_ptr;
-                
+               
                 consumer( consumer_data,
-                          s->m_shmem_ptr + sizeof(messenger_header_t),
-                          header->m_size, 1, 0 );
+                          s->m_body_ptr,
+                          s->m_header_ptr->m_size, 1, 0 );
                 
                 int more = 0;
                 size_t bytes = 0;
                 producer( producer_data,
                          &more,
-                          s->m_shmem_ptr + sizeof(messenger_header_t),
+                          s->m_body_ptr,
                          &bytes,
-                          s->m_shmem_size - sizeof(messenger_header_t), 1 );
-                header->m_size = bytes;
-                header->m_more = 0;
-                
+                          s->m_body_size, 1 );
+                s->m_header_ptr->m_size = bytes;
+                s->m_header_ptr->m_more = 0;
+                //LOG_INFO( s, where, "bytes = %d", s->m_header_ptr->m_size );
                 msync( s->m_shmem_ptr, s->m_shmem_size, MS_SYNC | MS_INVALIDATE );
                 sem_post( s->m_sem_reply );
             }
         }
         
         // We have been notified...
-        if( s->m_notify ) {
-            messenger_server_notified( s );
-            s->m_notify = 0;
-        }
+        messenger_server_notified( s );
         
         struct timespec now;
         if( clock_gettime( CLOCK_REALTIME, &now ) != 0 ) {
@@ -459,7 +438,7 @@ messenger_server_mainloop( messenger_server_t*          s,
             if( (next_periodic.tv_sec < now.tv_sec)
                     || ((next_periodic.tv_sec == now.tv_sec) && (next_periodic.tv_nsec < now.tv_nsec)))
             {
-                LOG_INFO( s, where, "time for a new periodic invocation." );
+                //LOG_INFO( s, where, "time for a new periodic invocation." );
                 
                 periodic( periodic_data, 0 );
                 

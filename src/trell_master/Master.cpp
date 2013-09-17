@@ -134,13 +134,19 @@ Master::Master( bool for_real )
 
 
 size_t
-Master::handle( trell_message* msg, size_t buf_size )
+Master::handle( trell_message* msg, size_t msg_size, size_t buf_size )
 {
+    const std::string func = package + ".handle";
+    
+    m_logger_callback( m_logger_data, 2, func.c_str(), "Got message %d", msg->m_type );
+
     TrellMessageType return_type = TRELL_MESSAGE_ERROR;
     
     size_t osize = 0;
 
     if( msg->m_type == TRELL_MESSAGE_XML ) {
+//        tinia_msg_t* query = (tinia_msg_t*)msg;
+        
         ParsedXML data;
         data.m_action = ParsedXML::ACTION_NONE;
         parseXML( data, msg->m_xml_payload, msg->m_size );
@@ -231,19 +237,27 @@ Master::handle( trell_message* msg, size_t buf_size )
         }
         
         if( !retval.empty() ) {
-
-            size_t l = retval.size();
-            if( TRELL_MSGHDR_SIZE + l < buf_size ) {
-                return_type = TRELL_MESSAGE_XML;
-                osize = l;
-                strcpy( msg->m_xml_payload, retval.c_str() );
-            }
-            else {
+            volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+            if( buf_size  <= sizeof(*reply) + retval.size() ) {
                 m_logger_callback( m_logger_data, 0, package.c_str(),
                                    "Shmem buffer too small." );
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(*reply);
+            }
+            else {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Replied with %d bytes of XML.", retval.size() );
+                memcpy( (char*)msg + sizeof(*reply),
+                        retval.data(),
+                        retval.size() );
+                reply->type = TRELL_MESSAGE_XML;
+                return retval.size() + sizeof(*reply);
             }
         }
 
+        msg->m_type = return_type;
+        msg->m_size = osize;
+        return osize + TRELL_MSGHDR_SIZE;
     }
     else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
         tinia_msg_heartbeat_t* q = reinterpret_cast<tinia_msg_heartbeat_t*>(msg);
@@ -257,19 +271,16 @@ Master::handle( trell_message* msg, size_t buf_size )
 
         tinia_msg_t* r = reinterpret_cast<tinia_msg_t*>(msg);
         r->type = TRELL_MESSAGE_OK;
-        r->size = 0;
-
-        return_type = TRELL_MESSAGE_OK;
-        osize = 0;
+        return sizeof(*r);
     }
     else {
         m_logger_callback( m_logger_data, 0, package.c_str(),
                            "Received unknown message: type=%d, size=%d.",
                            msg->m_type, msg->m_size );
+        tinia_msg_t* r = reinterpret_cast<tinia_msg_t*>(msg);
+        r->type = TRELL_MESSAGE_ERROR;
+        return sizeof(*r);
     }
-    msg->m_type = return_type;
-    msg->m_size = osize;
-    return osize + TRELL_MSGHDR_SIZE;
 }
 
 bool
@@ -874,7 +885,7 @@ Master::addJob( const std::string& id,
             tinia_msg_t reply;
             size_t reply_actual;
         
-            messenger_status_t rv = messenger_do_roundtrip( &query, sizeof(query),
+            tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &query, sizeof(query),
                                                             &reply, &reply_actual, sizeof(reply),
                                                             m_logger_callback, m_logger_data,
                                                             getMasterID().c_str(),
