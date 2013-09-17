@@ -147,7 +147,25 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
                                 trell_dispatch_info_t*  dispatch_info )
 {
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
-
+#if 0
+    // create query message
+    tinia_msg_get_model_update_t* qm = apr_palloc( r->pool, sizeof(*qm) );
+    qm->type = TRELL_MESSAGE_GET_POLICY_UPDATE;
+    
+    
+    
+    // create data for pass_query_msg_post
+    trell_pass_query_msg_post_data_t qd;
+    qd.sconf          = sconf;
+    qd.r              = r;
+    qd.dispatch_info  = dispatch_info;
+    qd.message        = qm;
+    qd.message_offset = 0;
+    qd.message_size   = sizeof(*qm);
+    qd.pass_post      = 1;
+    
+#endif
+    
     tinia_pass_reply_data_t rd;
     rd.sconf = sconf;
     rd.r = r;
@@ -203,8 +221,10 @@ trell_handle_update_state( trell_sconf_t* sconf,
     }
 
     // create query message
-    tinia_msg_t* qm = apr_palloc( r->pool, sizeof(*qm) );
-    qm->type = TRELL_MESSAGE_UPDATE_STATE;
+    tinia_msg_update_exposed_model_t* qm = apr_palloc( r->pool, sizeof(*qm) );
+    qm->msg.type = TRELL_MESSAGE_UPDATE_STATE;
+    memcpy( qm->session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
+    qm->session_id[TRELL_SESSIONID_MAXLENGTH] = '\0';
     
     // create data for pass_query_msg_post
     trell_pass_query_msg_post_data_t qd;
