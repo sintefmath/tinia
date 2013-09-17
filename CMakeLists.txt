@@ -74,7 +74,7 @@ ENDIF()
 set(BOOST_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
+FIND_PACKAGE( Boost REQUIRED COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
 
 ##### QT #####
 IF(Tinia_DESKTOP)
