@@ -24,7 +24,7 @@
 #include "mod_trell.h"
 
 int
-trell_send_reply_bmp( request_rec* r, struct messenger* msgr )
+trell_send_reply_bmp( request_rec* r, tinia_ipc_msg_client_t* msgr )
 {
     return HTTP_INTERNAL_SERVER_ERROR;
 /*

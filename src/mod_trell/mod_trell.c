@@ -111,7 +111,7 @@ tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
     char* state;
     char* tok = apr_strtok( path_info, "/", &state );
 
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path: %s", r->handler, path_info );
+    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path: %s", r->handler, path_info );
     
     // --- get component -------------------------------------------------------
     if( tok == NULL ) {
@@ -151,8 +151,8 @@ tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
         return HTTP_BAD_REQUEST;
     }
 
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path={ '%s', '%s', '%s' }.",
-                   r->handler, debug1, debug2, debug3  );
+    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path={ '%s', '%s', '%s' }.",
+    //               r->handler, debug1, debug2, debug3  );
     
     // --- get action ----------------------------------------------------------
 

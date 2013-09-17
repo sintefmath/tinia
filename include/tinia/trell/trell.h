@@ -89,12 +89,20 @@ enum TrellMessageType {
     TRELL_MESSAGE_GET_SCRIPTS
 };
 
+/** Base message struct.
+ *
+ * Container for:
+ * - TRELL_MESSAGE_OK
+ * - TRELL_MESSAGE_ERROR
+ * - TRELL_MESSAGE_SCRIPT
+ * - TRELL_MESSAGE_XML
+ */
 typedef struct tinia_msg
 {
     enum TrellMessageType   type;    
-    size_t                  size; // for compatibility, will be removed
 } tinia_msg_t;
 
+/** Message struct for TRELL_MESSAGE_HEARTBEAT. */
 typedef struct tinia_msg_heartbeat
 {
     tinia_msg_t         msg;
@@ -102,6 +110,28 @@ typedef struct tinia_msg_heartbeat
     char                job_id[ TRELL_JOBID_MAXLENGTH+1 ];
 } tinia_msg_heartbeat_t;
 
+/** Message struct for TRELL_MESSAGE_HEARTBEAT. */
+typedef struct {
+    tinia_msg_t             msg;
+    enum TrellPixelFormat   pixel_format;
+    unsigned int            width;
+    unsigned int            height;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+    char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+} tinia_msg_get_snapshot_t;
+
+typedef struct {
+    unsigned int            revision;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+} tinia_msg_get_policy_update_t;
+
+/** Message struct for TRELL_MESSAGE_IMAGE. */
+typedef struct {
+    tinia_msg_t             msg;
+    enum TrellPixelFormat   pixel_format;
+    unsigned int            width;
+    unsigned int            height;
+} tinia_msg_image_t;
 
 typedef struct trell_message
 {
@@ -110,41 +140,21 @@ typedef struct trell_message
     /** The size of the payload. */
     size_t                      m_size;
     union {
-
+#if 1
         struct {
             unsigned int            m_revision;
             char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
             char                    m_tail;
         }                       m_get_model_update_payload;
-
+#endif
+#if 0
         struct {
             char                    m_xml[1];
         }                       m_xml;
-
-        struct {
-            char m_script[1];
-        } m_script;
-
+#endif
         struct {
             char                    m_xml[1];
         }                       m_update_state;
-
-        struct {
-            enum TrellPixelFormat   m_pixel_format;
-            unsigned int            m_width;
-            unsigned int            m_height;
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_key[ TRELL_KEYID_MAXLENGTH ];
-            char                    m_tail;
-        }                       m_get_snapshot;
-
-        struct {
-            enum TrellPixelFormat   m_pixel_format;
-            unsigned int            m_width;
-            unsigned int            m_height;
-            char                    m_tail;
-            char                    m_data[1];
-        }                       m_image;
 
         struct {
             char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];

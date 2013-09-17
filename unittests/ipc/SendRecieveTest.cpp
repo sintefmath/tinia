@@ -63,7 +63,7 @@ public:
         std::cerr << "Exit\n";*/
     }
 protected:
-    messenger_server_t    m_endpoint;
+    messenger_server_t*    m_endpoint;
     
 };
 

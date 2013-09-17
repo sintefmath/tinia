@@ -168,7 +168,7 @@ protected:
       *
       */
     size_t
-    handle( trell_message* msg, size_t buf_size );
+    handle( trell_message* msg, size_t msg_size, size_t buf_size );
 };
 
 

@@ -27,14 +27,17 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>       // memcpy
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/messenger_internal.h>
 
 #define PREFIX "mod_trell: @messenger: "
 
 static const char* package = "ipc.messenger";
 
+const size_t tinia_ipc_msg_client_t_sizeof = sizeof(tinia_ipc_msg_client_t);
+
+
 const char*
-messenger_strerror( messenger_status_t error )
+messenger_strerror( tinia_ipc_msg_status_t error )
 {
     switch( error ) {
     case MESSENGER_OK:
@@ -89,10 +92,10 @@ messenger_sem_open( sem_t** sem, const char* format, const char* jobname )
     return 0;
 }
 
-static messenger_status_t
+static tinia_ipc_msg_status_t
 messenger_shm_open( void** memory, size_t* memory_size, const char* format, const char* jobname )
 {
-    messenger_status_t rv = MESSENGER_ERROR;
+    tinia_ipc_msg_status_t rv = MESSENGER_ERROR;
 
     char buffer[ 256 ];
     if( snprintf( buffer, sizeof(buffer), format, jobname ) >= sizeof(buffer) ) {
@@ -147,6 +150,7 @@ messenger_shm_open( void** memory, size_t* memory_size, const char* format, cons
     return rv;
 }
 
+#if 0
 messenger_status_t
 messenger_endpoint_create( messenger_server_t* e, const char* id )
 {
@@ -172,12 +176,12 @@ messenger_endpoint_destroy( messenger_server_t* e )
 {
     return MESSENGER_OK;
 }
+#endif
 
-
-messenger_status_t
-messenger_init( struct messenger* m,
+tinia_ipc_msg_status_t
+tinia_ipc_msg_client_init( tinia_ipc_msg_client_t* m,
                 const char* jobname,
-                void   (*logger_func)( void *data, int level, const char* who, const char* msg, ... ),
+                tinia_ipc_msg_logger_t logger_func,
                 void*    logger_data )
 {
     m->m_has_lock = 0;
@@ -187,8 +191,8 @@ messenger_init( struct messenger* m,
     m->m_query = SEM_FAILED;
     m->m_reply = SEM_FAILED;
     m->m_notify = SEM_FAILED;
-    m->m_logger_func = logger_func;
-    m->m_logger_data = logger_data;
+    m->m_log_f = logger_func;
+    m->m_log_d = logger_data;
 
     if( jobname == NULL ) {
         return MESSENGER_INVALID_MBOX;
@@ -210,9 +214,12 @@ messenger_init( struct messenger* m,
         ( messenger_sem_open( &m->m_reply, "%s_reply", jobname ) != 0 ) ||
         ( messenger_sem_open( &m->m_notify, "%s_notify", jobname ) != 0 ) )
     {
-        messenger_free( m );
+        tinia_ipc_msg_client_release( m );
         return MESSENGER_INVALID_MBOX;
     }
+    m->m_header_ptr = (tinia_ipc_msg_header_t*)m->m_shmem_ptr;
+    m->m_body_ptr   = ((char*)m->m_shmem_ptr + sizeof(tinia_ipc_msg_header_t));
+    m->m_body_size  = m->m_shmem_size - sizeof(tinia_ipc_msg_header_t);
     return MESSENGER_OK;
 }
 
@@ -220,23 +227,23 @@ messenger_init( struct messenger* m,
 
 // -----------------------------------------------------------------------------
 // this should end up in messenger.c when it is working.
-messenger_status_t
-messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
-                           messenger_consumer_t reply, void* reply_data,
-                           messenger_logger_t log, void* log_data,
+tinia_ipc_msg_status_t
+tinia_ipc_msg_client_sendrecv_cb(messenger_producer_t query, void* query_data,
+                           messenger_server_consumer_t reply, void* reply_data,
+                           tinia_ipc_msg_logger_t log, void* log_data,
                            const char* message_box_id,
                            int wait /* in seconds. */ )
 {
-    messenger_status_t status = MESSENGER_OK;
-    messenger_t msgr;
-    messenger_status_t mrv;
+    tinia_ipc_msg_status_t status = MESSENGER_OK;
+    tinia_ipc_msg_client_t msgr;
+    tinia_ipc_msg_status_t mrv;
 
     // --- open connection to messenger ----------------------------------------
-    mrv = messenger_init( &msgr, message_box_id,
+    mrv = tinia_ipc_msg_client_init( &msgr, message_box_id,
                           log,
                           log_data );
     if( mrv != MESSENGER_OK ) {
-        msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_init: %s", messenger_strerror( mrv ) );
+        msgr.m_log_f( msgr.m_log_d, 0, package, "messenger_init: %s", messenger_strerror( mrv ) );
         status = MESSENGER_ERROR;
     }
     else {
@@ -262,26 +269,25 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
             }
             else {
                 if( sem_trywait( msgr.m_reply ) == 0 ) {
-                    msgr.m_logger_func( msgr.m_logger_data, 1, package, "Pulled an old up from the reply semaphore.\n" );
+                    msgr.m_log_f( msgr.m_log_d, 1, package, "Pulled an old up from the reply semaphore.\n" );
                 }
 
-                volatile messenger_header_t* header = msgr.m_shmem_ptr;
                 
                 // --- create query in shmem (read request contents) -----------
                 size_t bytes_written = 0;
                 int q = query(  query_data,
                                &bytes_written,
-                                msgr.m_shmem_ptr + sizeof(messenger_header_t),
-                                msgr.m_shmem_size - sizeof(messenger_header_t) );
-                header->m_size = bytes_written;
-                header->m_more = 0;
-                header->m_error = 0;
+                                msgr.m_body_ptr,
+                                msgr.m_body_size );
+                msgr.m_header_ptr->m_size = bytes_written;
+                msgr.m_header_ptr->m_more = 0;
+
                 if( q < 0 ) {
-                    msgr.m_logger_func( msgr.m_logger_data, 0, package, "query callback failed." );
+                    msgr.m_log_f( msgr.m_log_d, 0, package, "query callback failed." );
                     status = MESSENGER_ERROR;
                 }
                 else if( q > 0 ) {
-                    msgr.m_logger_func( msgr.m_logger_data, 0, package, "Message size exceeds shared memory size, currently unsupported." );
+                    msgr.m_log_f( msgr.m_log_d, 0, package, "Message size exceeds shared memory size, currently unsupported." );
                     status = MESSENGER_ERROR;
                 }
                 else {
@@ -289,7 +295,7 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                     // --- sync memory TO other process ------------------------
                     // sync memory FIXME: size
                     if( msync( msgr.m_shmem_ptr,
-                               header->m_size + sizeof(messenger_header_t),
+                               msgr.m_header_ptr->m_size + sizeof(tinia_ipc_msg_header_t),
                                MS_SYNC | MS_INVALIDATE ) != 0 )
                     {
                         status = MESSENGER_ERROR; 
@@ -336,20 +342,17 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
 
                         if( status == MESSENGER_OK ) {
                             // --- process reply (write request contents) ----------
-                            int r = reply( reply_data,
-                                           msgr.m_shmem_ptr + sizeof(messenger_header_t),
-                                           0,
-                                           msgr.m_shmem_size - sizeof(messenger_header_t), 0 );
-                            if( r < 0 ) {
-                                msgr.m_logger_func( msgr.m_logger_data, 0, package, "reply callback failed." );
-                                status = MESSENGER_ERROR;
-                            }
-                            else if( r == 0 ) {
-                                status = MESSENGER_OK;
-                            }
-                            else {
-                                status = MESSENGER_TIMEOUT;
+                            
+                            status = reply( reply_data,
+                                            msgr.m_body_ptr,
+                                            msgr.m_header_ptr->m_size,
+                                            1,   // first
+                                            0 ); // more
+                            if( status == MESSENGER_TIMEOUT ) {
                                 do_longpoll = wait > 0 ? 1 : 0;
+                            }
+                            else if( status != MESSENGER_OK ) {
+                                msgr.m_log_f( msgr.m_log_d, 0, package, "reply callback failed." );
                             }
                         }
                     }
@@ -383,13 +386,14 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                 }
                 
                 // --- try to wait for a notification --------------------------
+                msgr.m_log_f( msgr.m_log_d, 1, package, "Trying to longpoll... (pid=%d)", (int)getpid() );
                 if( sem_timedwait( msgr.m_notify, &timeout ) < 0 ) {
                     switch ( errno ) {
                     case EINTR: // just interrupted, just check and redo
-                        msgr.m_logger_func( msgr.m_logger_data, 1, package, "sem_timedwait: woken by an interrupt." );
+                        msgr.m_log_f( msgr.m_log_d, 1, package, "sem_timedwait: woken by an interrupt." );
                         break;
                     case EINVAL: // invalid semaphore, give up
-                        msgr.m_logger_func( msgr.m_logger_data, 0, package, "sem_timedwait: Invalid sempahore." );
+                        msgr.m_log_f( msgr.m_log_d, 0, package, "sem_timedwait: Invalid sempahore." );
                         do_longpoll = 0;
                         break;
                     case ETIMEDOUT:
@@ -397,7 +401,7 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                         do_longpoll = 0;
                         break;
                     default:
-                        msgr.m_logger_func( msgr.m_logger_data, 0, package, "sem_timedwait: Unexpected error %d.", errno );
+                        msgr.m_log_f( msgr.m_log_d, 0, package, "sem_timedwait: Unexpected error %d.", errno );
                         status = MESSENGER_ERROR;
                         do_longpoll = 0;
                         break;
@@ -405,16 +409,18 @@ messenger_do_roundtrip_cb( messenger_producer_t query, void* query_data,
                 }
                 else {
                     // we do have an update.
-                    msgr.m_logger_func( msgr.m_logger_data, 1, package, "sem_timedwait: got notified." );
+                    msgr.m_log_f( msgr.m_log_d, 1, package, "sem_timedwait: got notified." );
                 }
+                msgr.m_log_f( msgr.m_log_d, 1, package, "... longpoll returned (pid=%d)", (int)getpid() );
+
             }
         }
         while( do_longpoll );
             
         // close connection to messenger        
-        mrv = messenger_free( &msgr );
+        mrv = tinia_ipc_msg_client_release( &msgr );
         if( mrv != MESSENGER_OK ) {
-            msgr.m_logger_func( msgr.m_logger_data, 0, package, "messenger_free: %s", messenger_strerror( mrv ) );
+            msgr.m_log_f( msgr.m_log_d, 0, package, "messenger_free: %s", messenger_strerror( mrv ) );
             status = MESSENGER_ERROR;
         }
     }
@@ -429,7 +435,7 @@ typedef struct messenger_do_roundtrip_data {
     char*               m_reply;            // Reply buffer.
     size_t              m_reply_received;   // Number of bytes written to reply buffer.
     size_t              m_reply_size;       // Size of reply buffer.
-    messenger_status_t  m_status;
+    tinia_ipc_msg_status_t  m_status;
 } messenger_do_roundtrip_data_t;
 
 static
@@ -453,18 +459,18 @@ messenger_do_roundtrip_producer( void*           data,
 }
 
 static
-int
-messenger_do_roundtrip_consumer(  void* data,
-                                  unsigned char* buffer,
-                                  size_t offset,
-                                  size_t bytes,
-                                  int more )
+tinia_ipc_msg_status_t
+messenger_do_roundtrip_consumer( void* data,
+                                 const char* buffer,
+                                 const size_t buffer_bytes,
+                                 const int first,
+                                 const int more )
 {
     int retval = 0;
     messenger_do_roundtrip_data_t * pd = (messenger_do_roundtrip_data_t*)data;
     size_t size = pd->m_reply_size-pd->m_reply_received;
-    if( bytes <= size ) {
-        size = bytes;
+    if( buffer_bytes <= size ) {
+        size = buffer_bytes;
     }
     else {
         // reply buffer is too small! Currently bytes is size of shared mem
@@ -476,10 +482,10 @@ messenger_do_roundtrip_consumer(  void* data,
     return 0;
 }
 
-messenger_status_t
-messenger_do_roundtrip( const void *query, size_t query_size,
+tinia_ipc_msg_status_t
+tinia_ipc_msg_client_sendrecv( const void *query, size_t query_size,
                         void *reply, size_t* reply_written, size_t reply_size,
-                        messenger_logger_t log, void* log_data,
+                        tinia_ipc_msg_logger_t log, void* log_data,
                         const char* message_box_id,
                         int wait )
 {
@@ -488,7 +494,7 @@ messenger_do_roundtrip( const void *query, size_t query_size,
         reply, 0, reply_size,
         MESSENGER_OK
     };
-    messenger_status_t rv = messenger_do_roundtrip_cb( messenger_do_roundtrip_producer, &data,
+    tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv_cb( messenger_do_roundtrip_producer, &data,
                                                        messenger_do_roundtrip_consumer, &data,
                                                        log, log_data,
                                                        message_box_id,
@@ -505,173 +511,31 @@ messenger_do_roundtrip( const void *query, size_t query_size,
 
 
 
-messenger_status_t
-messenger_free( struct messenger* m )
+tinia_ipc_msg_status_t
+tinia_ipc_msg_client_release(tinia_ipc_msg_client_t* client )
 {
-    if( m == NULL ) {
+    if( client == NULL ) {
         return MESSENGER_NULL;
     }
-    messenger_status_t rv = MESSENGER_OK;
-    if( m->m_has_lock != 0 ) {
+    tinia_ipc_msg_status_t rv = MESSENGER_OK;
+    if( client->m_has_lock != 0 ) {
         rv = MESSENGER_INVARIANT_BROKEN;
     }
-    if( m->m_shmem_ptr != MAP_FAILED ) {
-        munmap( m->m_shmem_ptr, m->m_shmem_size );
-        m->m_shmem_ptr = MAP_FAILED;
+    if( client->m_shmem_ptr != MAP_FAILED ) {
+        munmap( client->m_shmem_ptr, client->m_shmem_size );
+        client->m_shmem_ptr = MAP_FAILED;
     }
-    if( m->m_lock != SEM_FAILED ) {
-        sem_close( m->m_lock );
-        m->m_lock = SEM_FAILED;
+    if( client->m_lock != SEM_FAILED ) {
+        sem_close( client->m_lock );
+        client->m_lock = SEM_FAILED;
     }
-    if( m->m_query != SEM_FAILED ) {
-        sem_close( m->m_query );
-        m->m_query = SEM_FAILED;
+    if( client->m_query != SEM_FAILED ) {
+        sem_close( client->m_query );
+        client->m_query = SEM_FAILED;
     }
-    if( m->m_reply != SEM_FAILED ) {
-        sem_close( m->m_reply );
-        m->m_reply = SEM_FAILED;
+    if( client->m_reply != SEM_FAILED ) {
+        sem_close( client->m_reply );
+        client->m_reply = SEM_FAILED;
     }
     return rv;
 }
-
-
-messenger_status_t
-messenger_wait_for_notification( struct messenger* m, int wait_seconds )
-{
-
-    struct timespec timeout;
-    clock_gettime( CLOCK_REALTIME, &timeout );
-    timeout.tv_sec += wait_seconds;
-
-    while(1) {
-        if( sem_timedwait( m->m_notify, &timeout ) == 0 ) {
-            // got notification
-            return MESSENGER_OK;
-        }
-        else {
-            switch( errno ) {
-            case EINTR:
-                // Interrupted, just continue sleeping.
-                break;
-            case EINVAL:
-                // Invalid sempahore
-                return MESSENGER_INVALID_MBOX;
-                break;
-            case ETIMEDOUT:
-                // Timed out
-                return MESSENGER_TIMEOUT;
-                break;
-            default:
-                // Shouldn't happen
-                return MESSENGER_INVARIANT_BROKEN;
-                break;
-            }
-       }
-    }
-    // Never reached
-    return MESSENGER_ERROR;
-}
-#if 0
-
-
-messenger_status_t
-messenger_lock( struct messenger* m )
-{
-    if( m->m_has_lock != 0 ) {
-        return MESSENGER_INVARIANT_BROKEN;
-    }
-    if( m->m_shmem_ptr == MAP_FAILED ) {
-        return MESSENGER_INVALID_MBOX;
-    }
-
-    struct timespec timeout;
-    clock_gettime( CLOCK_REALTIME, &timeout );
-    timeout.tv_sec += 5;
-    if( sem_timedwait( m->m_lock, &timeout ) != 0 ) {
-        return MESSENGER_TIMEOUT;
-    }
-    // Got lock
-    m->m_has_lock = 1;
-    return MESSENGER_OK;
-}
-
-
-messenger_status_t
-messenger_post( struct messenger*m, size_t size )
-{
-    if( sem_trywait( m->m_reply ) == 0 ) {
-        fprintf( stderr, PREFIX "Pulled an old up from the reply semaphore.\n" );
-    }
-
-    if( msync( m->m_shmem_ptr, size, MS_SYNC | MS_INVALIDATE ) != 0 ) {
-        switch( errno ) {
-        case EBUSY:
-            return MESSENGER_SHMEM_LOCKED;
-            break;
-        case EINVAL:
-        case ENOMEM:
-            return MESSENGER_ERROR;
-            break;
-        }
-    }
-
-    if( sem_post( m->m_query ) != 0 ) {
-        switch( errno ) {
-        case EINVAL:
-            return MESSENGER_INVALID_MBOX;
-            break;
-        case EOVERFLOW:
-            return MESSENGER_INVARIANT_BROKEN;
-            break;
-        default:
-            return MESSENGER_ERROR;
-            break;
-        }
-    }
-
-    struct timespec timeout;
-    clock_gettime( CLOCK_REALTIME, &timeout );
-    timeout.tv_sec += 5;
-
-    if( sem_timedwait( m->m_reply, &timeout ) != 0 ) {
-        switch( errno ) {
-        case EINTR:
-            return MESSENGER_INTERRUPTED;
-            break;
-        case EINVAL:
-            return MESSENGER_INVALID_MBOX;
-            break;
-        case ETIMEDOUT:
-            return MESSENGER_TIMEOUT;
-            break;
-        default:
-            return MESSENGER_ERROR;
-            break;
-        }
-    }
-
-    if( msync( m->m_shmem_ptr, m->m_shmem_size, MS_SYNC ) != 0 ) {
-        switch( errno ) {
-        case EBUSY:
-        case EINVAL:
-        case ENOMEM:
-            return MESSENGER_ERROR;
-            break;
-        }
-    }
-    return MESSENGER_OK;
-}
-messenger_status_t
-messenger_unlock( struct messenger* m )
-{
-    if( m->m_has_lock == 0 ) {
-        return MESSENGER_INVARIANT_BROKEN;
-    }
-    if( sem_post( m->m_lock ) != 0 ) {
-        return MESSENGER_ERROR;
-    }
-    m->m_has_lock = 0;
-    return MESSENGER_OK;
-}
-
-#endif
