@@ -87,6 +87,8 @@ trell_pass_query_get_exposedmodel( void*           data,
     return 0;
 }
 
+
+#if 0
 int
 trell_pass_query_update_state_xml( void*           data,
                                    size_t*         bytes_written,
@@ -96,10 +98,11 @@ trell_pass_query_update_state_xml( void*           data,
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
 
     // Create message
-    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->m_type = TRELL_MESSAGE_UPDATE_STATE;
-    msg->m_size = 0u;
+    tinia_msg_t* msg = (tinia_msg_t*)buffer;
+    msg->type = TRELL_MESSAGE_UPDATE_STATE;
 
+    *bytes_written = sizeof(*msg);
+    
     // set up fetching of input
     apr_bucket_brigade* bb;
     apr_bucket* b;
@@ -108,9 +111,10 @@ trell_pass_query_update_state_xml( void*           data,
     bb = apr_brigade_create( cbd->m_r->pool, cbd->m_r->connection->bucket_alloc );
 
     
+    // this code is funky (in a bad sense):
     int keep_going = 1;
     while(keep_going == 1) {
-        apr_size_t free = buffer_size - TRELL_MESSAGE_UPDATE_STATE_SIZE - 1;
+        apr_size_t free = buffer_size - sizeof(*msg);
         rv = ap_get_brigade( cbd->m_r->input_filters,
                              bb,
                              AP_MODE_READBYTES,
@@ -146,16 +150,15 @@ trell_pass_query_update_state_xml( void*           data,
                 return -1;
             }
             
-            memcpy( msg->m_update_state.m_xml + msg->m_size, buf, bytes );
-            msg->m_size += bytes;
+            memcpy( (char*)msg + *bytes_written, buf, bytes );
+            *bytes_written += bytes;
         }
     }
-    *bytes_written = msg->m_size + TRELL_MESSAGE_UPDATE_STATE_SIZE;
     
     apr_brigade_cleanup( bb );
     return 0;
 }
-
+#endif
 
 int
 trell_pass_query_msg_post( void*           data,

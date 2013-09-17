@@ -235,7 +235,7 @@ IPCJobController::handle( trell_message* msg, size_t msg_size, size_t buf_size )
                                    "Queried for snapshot, rendering error." );
             }
             else {
-                m_logger_callback( m_logger_data, 0, package.c_str(),
+                m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok." );
                 volatile tinia_msg_image_t* r = (tinia_msg_image_t*)msg;
                 r->msg.type = TRELL_MESSAGE_IMAGE;
@@ -280,15 +280,26 @@ IPCJobController::handle( trell_message* msg, size_t msg_size, size_t buf_size )
         break;
 
     case TRELL_MESSAGE_UPDATE_STATE:
+    {
+        volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+
         session = "undefined";
-        if( onUpdateState( msg->m_xml_payload, msg->m_size, session ) ) {
-            msg->m_type = TRELL_MESSAGE_OK;
-            retsize = TRELL_MSGHDR_SIZE;
+        if( onUpdateState( (char*)msg + sizeof(tinia_msg_t),
+                           msg_size - sizeof(tinia_msg_t),
+                           session ) )
+        {
+            reply->type = TRELL_MESSAGE_OK;
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Update state, ok (msg_size=%d).", msg_size );
+            return sizeof(*reply);
         }
         else {
-            msg->m_type = TRELL_MESSAGE_ERROR;
-            retsize = TRELL_MSGHDR_SIZE;
+            reply->type = TRELL_MESSAGE_ERROR;
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Update state, failure." );
+            return sizeof(*reply);
         }
+    }
         break;
 
     case TRELL_MESSAGE_GET_SCRIPTS:

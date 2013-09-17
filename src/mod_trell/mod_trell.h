@@ -161,7 +161,7 @@ typedef struct
     trell_sconf_t*          sconf;
     request_rec*            r;
     trell_dispatch_info_t*  dispatch_info;
-    unsigned char*          message;
+    void*                   message;
     size_t                  message_offset;
     size_t                  message_size;
     int                     pass_post;
@@ -202,11 +202,11 @@ trell_pass_query_get_scripts( void*           data,
                               unsigned char*  buffer,
                               size_t          buffer_size );
 
-int
-trell_pass_query_update_state_xml( void*           data,
-                                   size_t*         bytes_written,
-                                   unsigned char*  buffer,
-                                   size_t          buffer_size );
+//int
+//trell_pass_query_update_state_xml( void*           data,
+//                                   size_t*         bytes_written,
+//                                   unsigned char*  buffer,
+//                                   size_t          buffer_size );
 
 /******************************************************************************/
 // return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
