@@ -202,9 +202,21 @@ trell_handle_update_state( trell_sconf_t* sconf,
         return HTTP_BAD_REQUEST;
     }
 
+    // create query message
+    tinia_msg_t* qm = apr_palloc( r->pool, sizeof(*qm) );
+    qm->type = TRELL_MESSAGE_UPDATE_STATE;
+    
+    // create data for pass_query_msg_post
+    trell_pass_query_msg_post_data_t qd;
+    qd.sconf          = sconf;
+    qd.r              = r;
+    qd.dispatch_info  = dispatch_info;
+    qd.message        = qm;
+    qd.message_offset = 0;
+    qd.message_size   = sizeof(*qm);
+    qd.pass_post      = 1;
 
-    trell_callback_data_t cbd = { sconf, r, dispatch_info };
-
+    // create data for trell_pass_reply
     tinia_pass_reply_data_t rd;
     rd.sconf = sconf;
     rd.r = r;
@@ -212,7 +224,7 @@ trell_handle_update_state( trell_sconf_t* sconf,
     rd.longpolling = 0;
     rd.brigade = NULL;
     
-    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_update_state_xml, &cbd,
+    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_msg_post, &qd,
                                               trell_pass_reply, &rd,
                                               trell_messenger_log_wrapper, r,
                                               dispatch_info->m_jobid,
