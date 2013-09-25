@@ -8,7 +8,9 @@ ${LIBXML2_LIBRARIES} model)
 
 
 install( TARGETS
-	 modelxml LIBRARY 
+         modelxml
+        EXPORT TiniaTargets
+    LIBRARY
      DESTINATION lib/ 
 	 ARCHIVE DESTINATION lib/
      COMPONENT modelxml)

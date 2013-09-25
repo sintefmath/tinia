@@ -1,0 +1,17 @@
+# - Config file for the Tinia package
+# It defines the following variables
+#  TINIA_INCLUDE_DIRS - include directories for Tinia
+#  TINIA_LIBRARIES    - libraries to link against
+
+# Compute paths
+get_filename_component(TINIA_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(TINIA_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+
+# Our library dependencies (contains definitions for IMPORTED targets)
+#if(NOT TARGET  AND NOT FooBar_BINARY_DIR)
+  include("${TINIA_CMAKE_DIR}/TiniaTargets.cmake")
+#endif()
+
+
+set(TINIA_LIBRARIES @TINIA_LIBRARIES_FOR_CONFIG@)
+

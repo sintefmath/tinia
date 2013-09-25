@@ -16,7 +16,9 @@ TARGET_LINK_LIBRARIES( renderlist )
     COMPONENT renderlist_dev)
 
   install( TARGETS  
-    renderlist LIBRARY
+    renderlist
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT renderlist)

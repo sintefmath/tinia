@@ -20,7 +20,8 @@ IF(Tinia_DESKTOP)
     )
 
     INSTALL( TARGETS clock_qt_job
-        RUNTIME DESTINATION bin
+            EXPORT TiniaTargets
+    RUNTIME DESTINATION bin
         COMPONENT clock_qt_job
     )
                 
@@ -54,7 +55,9 @@ IF(Tinia_SERVER)
 
     
   INSTALL(TARGETS
-    clock_cloud_job RUNTIME
+    clock_cloud_job
+    EXPORT TiniaTargets
+    RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )
