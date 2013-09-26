@@ -235,8 +235,13 @@ configure_file(TiniaConfig.cmake.in
 # First we need relative path for include
 file(RELATIVE_PATH REL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_CMAKE_DIR}"
    "${CMAKE_INSTALL_PREFIX}/include")
-
 set(CONF_INCLUDE_DIRS "\${TINIA_CMAKE_DIR}/${REL_INCLUDE_DIR}" ${TINIA_EXTERNAL_INCLUDE_DIRS})
+
+# And the relative path for apps:
+file(RELATIVE_PATH REL_APPS_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_CMAKE_DIR}"
+   "${CMAKE_INSTALL_PREFIX}/var/trell/apps")
+set(CONF_APPS_DIR "\${TINIA_CMAKE_DIR}/${REL_APPS_DIR}")
+
 configure_file(TiniaConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TiniaConfig.cmake" @ONLY)
 
