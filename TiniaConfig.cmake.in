@@ -1,3 +1,30 @@
+#Test to see if we will find components
+IF( Tinia_FIND_COMPONENTS )
+  FOREACH(component ${Tinia_FIND_COMPONENTS})
+    IF( component STREQUAL "Desktop" )
+        IF(NOT @Tinia_DESKTOP@)
+            SET(Tinia_Desktop_FOUND 0)
+                IF(Tinia_FIND_REQUIRED_Desktop)
+                MESSAGE(FATAL_ERROR "Tinia desktop not available.")
+            ENDIF()
+        ELSE()
+            SET(Tinia_Desktop_FOUND 1)
+        ENDIF()
+    ENDIF()
+
+    IF( component STREQUAL "Server" )
+        IF(NOT @Tinia_SERVER@)
+            SET(Tinia_SERVER_FOUND 0)
+            IF(Tinia_FIND_REQUIRED_Server)
+                MESSAGE(FATAL_ERROR "Tinia server not available.")
+            ENDIF()
+        ELSE()
+            SET(Tinia_SERVER_FOUND 1)
+        ENDIF()
+    ENDIF()
+  ENDFOREACH()
+ENDIF()
+
 # - Config file for the Tinia package
 # It defines the following variables
 #  TINIA_INCLUDE_DIRS - include directories for Tinia

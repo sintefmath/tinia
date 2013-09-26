@@ -243,6 +243,7 @@ configure_file(TiniaConfig.cmake.in
 configure_file(TiniaConfigVersion.cmake.in
   "${PROJECT_BINARY_DIR}/TiniaConfigVersion.cmake" @ONLY)
 
+
 # We need to install the config files
 install(FILES
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TiniaConfig.cmake"
