@@ -1,6 +1,7 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
 SET( version_number "0.2.5" )
+SET(TINIA_VERSION ${version_number})
 
 # Set shared for linux:
 IF(NOT WIN32)
