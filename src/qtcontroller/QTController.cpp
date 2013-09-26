@@ -21,6 +21,10 @@
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
 #include <tinia/qtcontroller/scripting/utils.hpp>
+#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#ifdef TINIA_HAVE_LIBXML
+#include <tinia/qtcontroller/moc/ServerController.hpp>
+#endif
 #include <QApplication>
 #include <QLayout>
 #include <QLabel>
@@ -85,8 +89,9 @@ void QTController::addScript(const std::string &script)
     m_scriptsToParse.push_back(script);
 }
 
-#ifdef TINIA_HAVE_LIBXML
+
 void QTController::setupServerController() {
+    #ifdef TINIA_HAVE_LIBXML
     // Construct server controller
     m_serverController = new impl::ServerController(m_job, m_main_window.get());
 
@@ -98,8 +103,9 @@ void QTController::setupServerController() {
 
 
     m_main_window->addToolBar(m_toolBar);
+    #endif
 }
-#endif
+
 
 int QTController::run(int argc, char **argv)
 {
@@ -113,9 +119,7 @@ int QTController::run(int argc, char **argv)
     m_app.reset(  new QApplication( argc, argv ) );
 
     m_main_window.reset( new QMainWindow() );
-#ifdef TINIA_HAVE_LIBXML
     setupServerController();
-#endif
 
     // Now we may init the script.
     tiniaInitResources();

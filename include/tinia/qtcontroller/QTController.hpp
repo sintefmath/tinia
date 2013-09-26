@@ -17,17 +17,19 @@
  */
 #pragma once
 #include <memory>
+#include <vector>
 #include "tinia/jobcontroller/Controller.hpp"
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
-#ifdef TINIA_HAVE_LIBXML
-#include <tinia/qtcontroller/moc/ServerController.hpp>
-#endif
-#include <QToolBar>
+
+
+
 #include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 class QMainWindow;
 class QGLWidget;
 class QApplication;
+class QToolBar;
+
 namespace tinia {
 namespace model {
     class ExposedModel;
@@ -38,6 +40,9 @@ namespace jobcontroller {
 } // of namespace jobcontroller
 
 namespace qtcontroller {
+    namespace impl {
+        class ServerController;
+    }
     class GUIBuilder;
 
 class QTController : public jobcontroller::Controller
@@ -79,12 +84,12 @@ private:
     boost::scoped_ptr<QApplication>          m_app;
     boost::scoped_ptr<QMainWindow>           m_main_window;
 
-#ifdef TINIA_HAVE_LIBXML // This is only for those who have libxml available
-    impl::ServerController* m_serverController;
+
+    impl::ServerController* m_serverController; // Lifetime managed by qt parent-child machinery.
     QToolBar* m_toolBar; // Lifetime managed by qt parent-child machinery.
 
     void setupServerController();
-#endif
+
 
     QGLWidget*                             m_root_context; // Lifetime managed by qt parent-child machinery.
     jobcontroller::Job*                    m_job;
