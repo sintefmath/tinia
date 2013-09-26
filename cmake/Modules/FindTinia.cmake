@@ -1,6 +1,6 @@
 SET( Tinia_FIND_DESKTOP FALSE )
 SET( Tinia_FIND_SERVER FALSE)
-
+MESSAGE("WARNING FindTinia.cmake is deprecated. Please use the config files")
 IF( NOT Tinia_FIND_COMPONENTS OR NOT "${Tinia_FIND_COMPONENTS}" STREQUAL "" )
   FOREACH(component ${Tinia_FIND_COMPONENTS})
     IF( component STREQUAL "Desktop" )
