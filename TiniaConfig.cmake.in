@@ -3,7 +3,7 @@ IF( Tinia_FIND_COMPONENTS )
   FOREACH(component ${Tinia_FIND_COMPONENTS})
     IF( component STREQUAL "Desktop" )
 	# Complicated if-test to fix CMAKE 2.6
-        IF(@Tinia_DESKTOP@ OR "@Tinia_DESKTOP@" STREQUAL "ON")
+        IF("@Tinia_DESKTOP@" STREQUAL "ON")
 	    SET(Tinia_Desktop_FOUND 1)
         ELSE()
             SET(Tinia_Desktop_FOUND 0)
@@ -15,7 +15,7 @@ IF( Tinia_FIND_COMPONENTS )
 
     IF( component STREQUAL "Server" )
     	# Complicated if-test to fix CMAKE 2.6
-        IF(@Tinia_SERVER@ OR "@Tinia_SERVER@" STREQUAL "ON")
+        IF("@Tinia_SERVER@" STREQUAL "ON")
 	    SET(Tinia_Server_FOUND 1)
         ELSE()
             SET(Tinia_Server_FOUND 0)
