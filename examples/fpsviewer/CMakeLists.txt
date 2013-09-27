@@ -51,7 +51,9 @@ IF(Tinia_SERVER)
 
 
   INSTALL(TARGETS
-    fpsviewer_web RUNTIME
+    fpsviewer_web
+    EXPORT TiniaTargets
+    RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )

@@ -16,7 +16,9 @@ TARGET_LINK_LIBRARIES( jobcontroller ${Boost_LIBRARIES} model )
     COMPONENT jobcontroller_dev)
 
   install( TARGETS  
-    jobcontroller LIBRARY 
+    jobcontroller
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT jobcontroller)

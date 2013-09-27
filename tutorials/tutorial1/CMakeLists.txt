@@ -47,7 +47,9 @@ IF(Tinia_SERVER)
 
 
   INSTALL(TARGETS
-    tutorial1_web RUNTIME
+    tutorial1_web
+    EXPORT TiniaTargets
+    RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )

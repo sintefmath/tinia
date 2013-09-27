@@ -74,7 +74,9 @@ ENDIF()
     DESTINATION include/tinia/qtcontroller/moc  COMPONENT qtcontroller_dev)
 
   install( TARGETS 
-    qtcontroller LIBRARY 
+    qtcontroller
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT qtcontroller)
