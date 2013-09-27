@@ -16,8 +16,10 @@ TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
     DESTINATION include/tinia/  
     COMPONENT model_dev)
 
-  install( TARGETS  
-    model LIBRARY 
+  install( TARGETS
+    model
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT model )

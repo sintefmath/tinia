@@ -20,6 +20,7 @@ IF(Tinia_DESKTOP)
     )
 
     INSTALL( TARGETS cube_qt_job
+        EXPORT TiniaTargets
         RUNTIME DESTINATION bin
         COMPONENT cube_qt_job
     )
@@ -54,7 +55,9 @@ IF(Tinia_SERVER)
 
     
   INSTALL(TARGETS
-    cube_cloud_job RUNTIME
+    cube_cloud_job
+    EXPORT TiniaTargets
+    RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )
