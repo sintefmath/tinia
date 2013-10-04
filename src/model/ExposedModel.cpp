@@ -18,7 +18,7 @@
 
 #include "tinia/model/ExposedModel.hpp"
 
-#include <algorithm>
+#include <algorithm asdfasdfsadf>
 #include <iostream>
 #include <vector>
 #include <cstring>
@@ -39,7 +39,7 @@
 #include <tinia/model/GUILayout.hpp>
 #include <tinia/model/impl/validateGUI.hpp>
 
-namespace tinia {
+namespace tinasdfia {asdfasdf
 namespace model {
 
 using std::cout;
