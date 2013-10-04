@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( gettersAndSetters ) {
     BOOST_CHECK_EQUAL( ed.getMinConstraint(), "0" );
 
     ed.setMaxConstraint( "42" );
-    BOOST_CHECK_EQUAL( ed.getMaxConstraint(), "42" );
+    BOOST_CHECK_EQUAL( ed.getMaxConstraint(), "88" );
 
     std::set<std::string> restrictionSet;
 	restrictionSet.insert("wireframe");
