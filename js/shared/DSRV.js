@@ -162,17 +162,35 @@ DSRV.prototype = {
     },
 
     touchStartEvent: function (event) {
-
-        this.mouseDownEvent(event);
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mousePressEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mousePressEvent(event);
+        }
     },
 
     touchEndEvent: function (event) {
-        this.mouseUpEvent(event);
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mouseReleaseEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mouseReleaseEvent(event);
+        }
     },
 
     touchMoveEvent: function (event) {
-        this.mouseMoveEvent(event);
-        console.log("Moving");
+
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mouseMoveEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mouseMoveEvent(event);
+	}
+
     },
 
     handleRotateMove: function (x, y) {
