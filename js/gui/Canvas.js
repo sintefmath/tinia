@@ -216,8 +216,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this.on("mousemove", dojo.hitch(this, this._mousemove));
         this.on("touchstart", dojo.hitch(this, this._touchstart));
         this.on("touchend", dojo.hitch(this, this._touchend));
+        this.on("touchmove", dojo.hitch(this, this._thouchmove));
 
-        //	document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
+        //document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
         this.on("mouseover", dojo.hitch(this, function () {
             this._mouseOver = true;
             this._showCorrect();
@@ -254,8 +255,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this.on("keydown", dojo.hitch(this, this._keyPress));
 
     },
-    
-    _touchstart: function(event) {
+
+    _touchstart: function (event) {
         this._active = true;
 
         var x = event.pageX - this._placementX();
@@ -265,13 +266,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].touchStartEvent) {
                 this._eventHandlers[i].touchStartEvent(event);
-             }
+            }
         }
         this._showCorrect();
         event.preventDefault();
     },
 
-    _touchend: function(event) {
+    _touchend: function (event) {
         this._active = false;
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
@@ -285,7 +286,22 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._showCorrect();
         event.preventDefault();
     },
-    
+
+    _touchmove: function (event) {
+        this._active = false;
+        var x = event.pageX - this._placementX();
+        var y = event.pageY - this._placementY();
+        event.relativeX = x;
+        event.relativeY = y;
+        for (var i = 0; i < this._eventHandlers.length; ++i) {
+            if (this._eventHandlers[i].touchMoveEvent) {
+                this._eventHandlers[i].touchMoveEvent(event);
+            }
+        }
+        
+        event.preventDefault();
+    },
+
     _keyPress: function (event) {
         if (event.key === undefined) {
             event.key = event.keyCode ? event.keyCode : event.charCode;
