@@ -118,7 +118,7 @@ DSRV.prototype = {
                 break;
         }
 
-        if(this.m_state > -1) {
+        if (this.m_state > -1) {
             this.updateMatrices();
             this.insertMatrices();
         }
@@ -161,15 +161,17 @@ DSRV.prototype = {
         console.log(event.key);
     },
 
-    touchStartEvent: function(event) {
+    touchStartEvent: function (event) {
+
         this.mouseDownEvent(event);
     },
 
-    touchEndEvent: function(event) {
+    touchEndEvent: function (event) {
         this.mouseUpEvent(event);
     },
 
-    touchMoveEvent: function(event) {
+    touchMoveEvent: function (event) {
+        this.mouseMoveEvent(event);
         console.log("Moving");
     },
 
@@ -197,10 +199,10 @@ DSRV.prototype = {
 
     pointOnUnitSphere: function (x, y) {
         var nx = (x / this.m_width - .5) * this.m_aspect;
-        var ny = -( y / this.m_height - .5);
+        var ny = -(y / this.m_height - .5);
         var r2 = nx * nx + ny * ny;
 
-        if (r2 < 1 ) {
+        if (r2 < 1) {
             return vec3.create([nx, ny, Math.sqrt(1.0 - r2)]);
         }
         else {
@@ -279,7 +281,7 @@ DSRV.prototype = {
     },
 
     insertMatrices: function () {
-        
+
         var viewer = this.m_exposedModel.getElementValue(this.m_key);
         viewer.updateElement("modelview", this.m_modelview);
         viewer.updateElement("projection", this.m_projection);
