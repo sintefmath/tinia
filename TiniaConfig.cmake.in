@@ -34,6 +34,7 @@ ENDIF()
 
 # Compute paths
 get_filename_component(TINIA_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(TINIA_BOOST_LIBRARY_DIRS "@Boost_LIBRARY_DIRS@")
 set(TINIA_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 
 # Our library dependencies (contains definitions for IMPORTED targets)
