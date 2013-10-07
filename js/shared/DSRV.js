@@ -161,6 +161,14 @@ DSRV.prototype = {
         console.log(event.key);
     },
 
+    touchStartEvent: function(event) {
+        this.mouseDownEvent(event);
+    },
+
+    touchEndEvent: function(event) {
+        this.mouseUpEvent(event);
+    },
+
     handleRotateMove: function (x, y) {
         var axis = vec3.create(this.m_beginDirection);
         var curr_dir = this.pointOnUnitSphere(x, y);
