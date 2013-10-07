@@ -227,6 +227,9 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
 # This is for local build directory:
+export(TARGETS model jobcontroller
+  FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
+
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" ${TINIA_EXTERNAL_INCLUDE_DIRS})
 set(CONF_APPS_DIR "${PROJECT_BINARY_DIR}")
 configure_file(TiniaConfig.cmake.in
