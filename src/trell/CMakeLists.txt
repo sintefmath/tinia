@@ -9,10 +9,10 @@ SET( LIB_TRELL_SRC
 FILE( GLOB LIB_TRELL_HEADERS "../../include/tinia/trell/*.hpp" "../../include/tinia/trell/*.h" )
   
 
-ADD_LIBRARY( trell ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
-TARGET_LINK_LIBRARIES( trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobcontroller)
+ADD_LIBRARY( tinia_trell ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
+TARGET_LINK_LIBRARIES( tinia_trell ${RT} renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} model modelxml jobcontroller)
 
-INSTALL( TARGETS trell
+INSTALL( TARGETS tinia_trell
   EXPORT TiniaTargets
   LIBRARY DESTINATION lib
   COMPONENT libtrell
