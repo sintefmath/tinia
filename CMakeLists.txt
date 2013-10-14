@@ -227,6 +227,24 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
 # This is for local build directory:
+IF(Tinia_DESKTOP)
+	IF(Tinia_SERVER)
+		export(TARGETS model jobcontroller modelxml qtcontroller renderlist renderlistgl tinia_javascript trell
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
+	ELSE()
+	   IF(LIBXML2_FOUND)
+			export(TARGETS model jobcontroller modelxml qtcontroller renderlist renderlistgl tinia_javascript
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
+		ELSE()
+			export(TARGETS model jobcontroller qtcontroller renderlist renderlistgl
+					FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
+		ENDIF()
+	ENDIF()
+ELSE()
+	export(TARGETS model jobcontroller modelxml renderlist renderlistgl trell
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
+ENDIF()
+
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" ${TINIA_EXTERNAL_INCLUDE_DIRS})
 set(CONF_APPS_DIR "${PROJECT_BINARY_DIR}")
 configure_file(TiniaConfig.cmake.in
