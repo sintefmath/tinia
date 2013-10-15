@@ -10,7 +10,7 @@ SET( TRELL_MASTER_SRC
 )
 
 ADD_EXECUTABLE( tinia_trell_master ${TRELL_MASTER_SRC} )
-TARGET_LINK_LIBRARIES( tinia_trell_master renderlist renderlistgl trell ${RT} jobcontroller  ${LIBXML2_LIBRARIES} ${OPENGL_LIBRARY} model modelxml )
+TARGET_LINK_LIBRARIES( tinia_trell_master tinia_renderlist tinia_renderlistgl tinia_trell ${RT} tinia_jobcontroller  ${LIBXML2_LIBRARIES} ${OPENGL_LIBRARY} tinia_model tinia_modelxml )
 
 
 INSTALL( TARGETS 

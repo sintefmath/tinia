@@ -31,6 +31,7 @@ struct GLDebugLogWrapperData
     void*   m_logger_data;
 };
 
+#ifdef GLEW_khr_DEBUG // make sure the glew version is new enough
 static
 void
 GLDebugLogWrapper( GLenum source,
@@ -41,7 +42,6 @@ GLDebugLogWrapper( GLenum source,
                    const GLchar* message,
                    void* data )
 {
-#ifdef GLEW_khr_DEBUG // make sure the glew version is new enough
     const char* source_str = "???";
     switch( source ) {
     case GL_DEBUG_SOURCE_API:             source_str = "api"; break;
@@ -79,8 +79,8 @@ GLDebugLogWrapper( GLenum source,
                           source_str,
                           type_str,
                           message );
-#endif
 }
+#endif
 
 
 } // of anonymous namespace
