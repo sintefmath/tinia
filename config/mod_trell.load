@@ -1,1 +1,1 @@
-LoadModule trell_module /usr/var/trell/module/libmod_trell.so
+LoadModule trell_module /usr/var/trell/module/libmod_tinia_trell.so

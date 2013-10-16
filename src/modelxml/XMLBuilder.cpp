@@ -377,6 +377,10 @@ void XMLBuilder::buildGUILayout(model::gui::Element *root,
       addVisibilityKeys(addPopupButton(parent, dynamic_cast<model::gui::PopupButton*>(root)), root);
       break;
 
+   case FILE_DIALOG_BUTTON:
+      // Just to avoid a compiler warning
+      break;
+
    }
 
 
