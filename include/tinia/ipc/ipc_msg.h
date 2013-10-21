@@ -119,7 +119,7 @@ ipc_msg_client_sendrecv( tinia_ipc_msg_client_t* client,
                          ipc_msg_consumer_t consumer, void* consumer_data,
                          int longpoll_timeout );
 
-/** Send and receive a pair of messages using fixed buffers and no callbacks.
+/** Send and receive a pair of messages using fixed buffers, no callbacks, and an open connection.
  *
  * \param[in]  client             Initialized client struct.
  * \param[in]  query              Buffer that contains the query message.
@@ -135,6 +135,28 @@ int
 ipc_msg_client_sendrecv_buffered(tinia_ipc_msg_client_t* client,
                                   const char* query, const size_t query_size,
                                   char* reply, size_t* reply_size, const size_t reply_buffer_size);
+
+
+/** Open connection and send and receive a pair of messages using fixed buffers and no callbacks.
+ *
+ * \param[in]  destination        Where to open the connection.
+ * \param[in]  query              Buffer that contains the query message.
+ * \param[in]  query_size         Byte size of the query message.
+ * \param[out] reply              Buffer into which the reply message will be written
+ * \param[out] reply_size         Byte size of the reply message.
+ * \param[in]  reply_buffer_size  Size of reply message buffer.
+ *
+ * \note A singe buffer can safely be used as both the query and reply buffer
+ * simultaneously.
+ */
+int
+ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
+                                          ipc_msg_logger_t  logger_f,
+                                          void*             logger_d,
+                                          const char* query, const size_t query_size,
+                                          char* reply, size_t* reply_size, const size_t reply_buffer_size);
+        
+        
 
 // === SERVER PUBLIC API =======================================================
 
