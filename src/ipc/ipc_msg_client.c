@@ -606,3 +606,26 @@ ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
     }
 }
 
+
+int
+ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
+                                          ipc_msg_logger_t  logger_f,
+                                          void*             logger_d,
+                                          const char* query, const size_t query_size,
+                                          char* reply, size_t* reply_size, const size_t reply_buffer_size)
+{
+    static const char* who = "tinia.ipc.msg.client.sendrecv_buffered_by_name";
+    int rv = -1;
+    
+    tinia_ipc_msg_client_t client;
+    if( ipc_msg_client_init( &client, destination, logger_f, logger_d ) != 0 ) {
+        logger_f( logger_d, 0, who, "Failed to open connection to '%s'", destination );
+    }
+    else {
+        rv = ipc_msg_client_sendrecv_buffered( &client,
+                                               query, query_size,
+                                               reply, reply_size, reply_buffer_size );
+        ipc_msg_client_release( &client );
+    }
+    return rv;
+}

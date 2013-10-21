@@ -345,7 +345,6 @@ IPCController::run(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
-#if 0
 TrellMessageType
 IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessageType query )
 {
@@ -354,84 +353,61 @@ IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessage
     
     tinia_msg_t r;
     size_t rs;
-    tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &q, sizeof(q), &r, &rs, sizeof(r),
-                                                    m_logger_callback, m_logger_data,
-                                                    message_box_id.c_str(),
-                                                    0 );
-
-    if( (rv == MESSENGER_OK) && (rs == sizeof(r)) ) {
-        m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent small message to '%s'.",
-                           message_box_id.c_str() );
-        return TRELL_MESSAGE_ERROR;
+    
+    if( ipc_msg_client_sendrecv_buffered_by_name( message_box_id.c_str(),
+                                                  m_logger_callback, m_logger_data,
+                                                  reinterpret_cast<const char*>(&q), sizeof(q),
+                                                  reinterpret_cast<char*>(&r), &rs, sizeof(r)) == 0 )
+    {
+        if( rs == sizeof(r) ) {
+            m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent small message to '%s'.",
+                               message_box_id.c_str() );
+            return r.type;
+        }
+        else {
+            return TRELL_MESSAGE_ERROR;
+        }
     }
     else {
         m_logger_callback( m_logger_data, 0, package.c_str(), "Failed to send small message to '%s'.",
                            message_box_id.c_str());
-        return r.type;
+        return TRELL_MESSAGE_ERROR;
     }
 }
-#endif
 
 
 bool
 IPCController::sendHeartBeat()
 {
     static const std::string func = package + ".sendHeartBeat";
-    bool rv = false;
     
     if( m_is_master ) {
         return true; // Don't send heartbeats to oneself.
     }
     
-    char* buf = new char[tinia_ipc_msg_client_t_sizeof];
+
+    tinia_msg_heartbeat_t query;
+    query.msg.type = TRELL_MESSAGE_HEARTBEAT;
+    query.state = m_job_state;
+    strncpy( query.job_id, m_id.c_str(), TRELL_JOBID_MAXLENGTH );
+    query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
     
-    tinia_ipc_msg_client_t* client = reinterpret_cast<tinia_ipc_msg_client_t*>( buf );
-    if( ipc_msg_client_init( client,
-                             m_master_id.c_str(),
-                             m_logger_callback,
-                             m_logger_data ) != 0 )
+    tinia_msg_t reply;
+    size_t reply_actual;
+    
+    m_logger_callback( m_logger_data, 2, func.c_str(), "Sending heartbeat to '%s'.", m_master_id.c_str() );
+    
+    if( ipc_msg_client_sendrecv_buffered_by_name( m_master_id.c_str(),
+                                                  m_logger_callback, m_logger_data,
+                                                  reinterpret_cast<const char*>(&query), sizeof(query),
+                                                  reinterpret_cast<char*>(&reply), &reply_actual, sizeof(reply)) != 0 )
     {
-        m_logger_callback( m_logger_data, 0, func.c_str(), "Failed to open connection to master job." );
+        m_logger_callback( m_logger_data, 0, func.c_str(), "Failed to send message to master job." );
+        return false;
     }
     else {
-        tinia_msg_heartbeat_t query;
-        query.msg.type = TRELL_MESSAGE_HEARTBEAT;
-        query.state = m_job_state;
-        strncpy( query.job_id, m_id.c_str(), TRELL_JOBID_MAXLENGTH );
-        query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
-        
-        tinia_msg_t reply;
-        size_t reply_actual;
-        
-        m_logger_callback( m_logger_data, 2, func.c_str(), "Sending heartbeat to '%s'.", m_master_id.c_str() );
-        
-        if( ipc_msg_client_sendrecv_buffered( client,
-                                              reinterpret_cast<const char*>(&query), sizeof(query),
-                                              reinterpret_cast<char*>(&reply), &reply_actual, sizeof(reply)) != 0 )
-        {
-            m_logger_callback( m_logger_data, 0, func.c_str(), "Failed to send message to master job." );
-        }
-        else {
-            if( reply_actual != sizeof(reply) ) {
-                m_logger_callback( m_logger_data, 0, func.c_str(),
-                                   "Reply from master job is of unexpected size %ul.",
-                                   reply_actual );
-            }
-            else {
-                if( reply.type != TRELL_MESSAGE_OK ) {
-                    m_logger_callback( m_logger_data, 0, func.c_str(),
-                                       "Reply from master job is of unexpected type %ul.",
-                                       reply.type );
-                }
-                else {
-                    rv = true;
-                }
-            }
-        }
+        return true;
     }
-    delete buf;
-
-    return rv;
 }
 
 

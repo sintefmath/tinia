@@ -885,13 +885,14 @@ Master::addJob( const std::string& id,
             tinia_msg_t reply;
             size_t reply_actual;
         
-            tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &query, sizeof(query),
-                                                            &reply, &reply_actual, sizeof(reply),
-                                                            m_logger_callback, m_logger_data,
-                                                            getMasterID().c_str(),
-                                                            0 );
-        
-            if( (rv == MESSENGER_OK) && (reply_actual == sizeof(reply)) && (reply.type == TRELL_MESSAGE_OK ) ) {
+            
+            if( (ipc_msg_client_sendrecv_buffered_by_name( getMasterID().c_str(),
+                                                          m_logger_callback, m_logger_data,
+                                                          reinterpret_cast<const char*>( &query ), sizeof(query),
+                                                          reinterpret_cast<char*>( &reply ), &reply_actual, sizeof(reply) ) == 0 )
+                && (reply_actual == sizeof(reply))
+                    && (reply.type == TRELL_MESSAGE_OK) )
+            {
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Notified master that '%s' is about to terminate.",
                                    it->second.m_id.c_str() );
@@ -901,7 +902,7 @@ Master::addJob( const std::string& id,
                                    "Tried to notify master that '%s' is about terminate, but failed to send message.",
                                    it->second.m_id.c_str() );
             }
-
+                                                            
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "'%s' exits.", it->second.m_id.c_str() );
             exit( EXIT_FAILURE );
