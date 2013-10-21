@@ -1,9 +1,10 @@
 SET( LIB_IPC_SRC
-    "messenger_client.c"
-    "messenger_server.c"
+    "ipc_msg_client.c"
+    "ipc_msg_common.c"
+    "ipc_msg_server.c"
 )
 
-FILE( GLOB LIB_IPC_HEADERS "../../include/tinia/ipc/*.h" )
+FILE( GLOB LIB_IPC_HEADERS "ipc_msg_internal.h" "../../include/tinia/ipc/*.h" )
   
 ADD_DEFINITIONS( -fPIC )
 

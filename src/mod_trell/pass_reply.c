@@ -28,8 +28,10 @@
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
 
+
+
 // return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
-tinia_ipc_msg_status_t
+int
 trell_pass_reply_assert_ok( void* data,
                             unsigned char* buffer,
                             size_t offset,
@@ -39,14 +41,14 @@ trell_pass_reply_assert_ok( void* data,
     //trell_callback_data_t* cbd = (trell_callback_data_t*)data;
     trell_message_t* msg = (trell_message_t*)buffer;
     if( msg->m_type == TRELL_MESSAGE_OK ) {
-        return MESSENGER_OK;
+        return 0;   // ok
     }
     else {
-        return MESSENGER_ERROR;
+        return -1;  // error
     }
 }
 
-tinia_ipc_msg_status_t
+int
 trell_pass_reply(void* data,
                   const char *buffer,
                   const size_t buffer_bytes,
@@ -62,14 +64,14 @@ trell_pass_reply(void* data,
         
         if( msg->type == TRELL_MESSAGE_OK ) {
             if( cbd->longpolling ) {
-                return MESSENGER_TIMEOUT; // wait for notification
+                return 1;               // wait for notification.
             }
             else {
-                return MESSENGER_OK; // finished
+                return 0;               // ok
             }
         }
         if( msg->type == TRELL_MESSAGE_OK ) {
-            return MESSENGER_ERROR; // error
+            return -1;                  // error
         }
         else if( msg->type == TRELL_MESSAGE_XML ) {
             ap_set_content_type( cbd->r, "application/xml" );
@@ -83,7 +85,7 @@ trell_pass_reply(void* data,
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, cbd->r,
                            "trell_pass_reply: Unexpected message type %d of size %d.",
                            (int)msg->type, (int)buffer_bytes );
-            return MESSENGER_ERROR;
+            return -1;                  // error
         }
 
         char* datestring = apr_palloc( cbd->r->pool, APR_RFC822_DATE_LEN );
@@ -108,7 +110,7 @@ trell_pass_reply(void* data,
     if( rv != APR_SUCCESS ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
                        "trell_pass_reply: Failed to pass brigade." );
-        return MESSENGER_ERROR;
+        return -1;                  // error
     }
     
     if( more ) {
@@ -116,7 +118,7 @@ trell_pass_reply(void* data,
         if( rv != APR_SUCCESS ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
                            "trell_pass_reply: apr_brigade_cleanup failed. " );
-            return MESSENGER_ERROR;
+            return -1;                  // error
         }
     }
     else {
@@ -124,9 +126,9 @@ trell_pass_reply(void* data,
         if( rv != APR_SUCCESS ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
                            "trell_pass_reply: apr_brigade_destroy failed. " );
-            return MESSENGER_ERROR;
+            return -1;                  // error
         }
     }
-    return MESSENGER_OK;
+    return 0;   // ok
 }
 

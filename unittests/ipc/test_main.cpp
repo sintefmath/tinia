@@ -15,6 +15,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#define BOOST_TEST_MODULE IPCTest
+#define BOOST_TEST_MODULE IpcMsgTest
 #include <boost/test/unit_test.hpp>
+

@@ -24,7 +24,7 @@
 #include <apr_hash.h>
 #include <util_filter.h>
 #include <libxml/xmlschemas.h>
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/ipc_msg.h>
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
 
@@ -229,7 +229,7 @@ typedef struct {
  * - TRELL_MESSAGE_SCRIPT
  *
  */
-tinia_ipc_msg_status_t
+int
 trell_pass_reply( void* data,
                   const char* buffer,
                   const size_t buffer_bytes,
@@ -240,7 +240,7 @@ trell_pass_reply( void* data,
  * Handles:
  * - TRELL_MESSAGE_IMAGE
  */
-tinia_ipc_msg_status_t
+int
 trell_pass_reply_png( void* data,
                       const char* buffer,
                       const size_t buffer_bytes,

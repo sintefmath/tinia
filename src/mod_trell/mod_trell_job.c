@@ -37,6 +37,8 @@ trell_handle_get_script( trell_sconf_t           *sconf,
                          request_rec             *r,
                          trell_dispatch_info_t   *dispatch_info)
 {
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
     
     tinia_pass_reply_data_t rd;
@@ -59,6 +61,7 @@ trell_handle_get_script( trell_sconf_t           *sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+#endif
 }
 
 int
@@ -66,6 +69,8 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info )
 {
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
     trell_callback_data_t cbd = { sconf, r, dispatch_info };
     
     tinia_pass_reply_data_t rd;
@@ -89,6 +94,7 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }    
+#endif
 }
 
 int
@@ -96,6 +102,9 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                            request_rec*            r,
                            trell_dispatch_info_t*  dispatch_info )
 {
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
+    
     if( ( dispatch_info->m_width < 1 ) || ( dispatch_info->m_width > 2048  ) ||
         ( dispatch_info->m_width < 1 ) || ( dispatch_info->m_height > 2048 ) )
     {
@@ -138,6 +147,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+#endif
 }
 
 
@@ -166,6 +176,9 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
     
 #endif
     
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
+
     tinia_pass_reply_data_t rd;
     rd.sconf = sconf;
     rd.r = r;
@@ -186,6 +199,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+#endif
 }
 
 
@@ -194,6 +208,8 @@ trell_handle_update_state( trell_sconf_t* sconf,
                            request_rec* r,
                            trell_dispatch_info_t*  dispatch_info )
 {
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
     // check method
     if( r->method_number != M_POST ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: method != POST" );
@@ -257,6 +273,7 @@ trell_handle_update_state( trell_sconf_t* sconf,
     default:
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -267,6 +284,8 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
                       const char* job,
                       trell_dispatch_info_t*  dispatch_info )
 {
+    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
+#if 0
     // set up request config
     req_cfg_t* req_cfg = apr_palloc( r->pool, sizeof(*req_cfg) );
     req_cfg->m_schema = schema;
@@ -323,4 +342,5 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: boo.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
+#endif
 }
