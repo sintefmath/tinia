@@ -40,7 +40,7 @@ trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
 }
 
 
-tinia_ipc_msg_status_t
+int
 trell_pass_reply_png( void* data,
                       const char *buffer,
                       const size_t buffer_bytes,
@@ -192,13 +192,13 @@ trell_pass_reply_png( void* data,
     
         if( rv != APR_SUCCESS ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "ap_pass_brigade failed." );
-            return MESSENGER_ERROR;
+            return -1; // error
         }
-        return MESSENGER_OK;   // success
+        return 0;   // success
     }
     else {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->m_type );
-        return MESSENGER_ERROR;  // error
+        return -1; // error
     }
 }
     
