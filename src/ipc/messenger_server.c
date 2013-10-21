@@ -369,7 +369,7 @@ ipc_msg_server_mainloop( messenger_server_t*          s,
                            void*                        consumer_data,
                            messenger_server_producer_t  producer,
                            void*                        producer_data,
-                           messenger_periodic_t         periodic,
+                           ipc_msg_periodic_t         periodic,
                            void*                        periodic_data )
 {
     tinia_ipc_msg_status_t rv = MESSENGER_OK;

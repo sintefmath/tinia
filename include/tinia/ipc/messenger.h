@@ -44,8 +44,8 @@ typedef enum {
 
 
 
-typedef int (*messenger_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
-typedef int (*messenger_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
+typedef int (*ipc_msg_producer_t)( void* data, size_t* bytes_written, unsigned char* buffer, size_t buffer_size );
+typedef int (*ipc_msg_consumer_t)( void* data, unsigned char* pointer, size_t offset, size_t bytes, int more  );
 
 typedef void (*tinia_ipc_msg_logger_t)( void* data, int level, const char* who, const char* message, ... );
 
@@ -60,7 +60,7 @@ typedef tinia_ipc_msg_status_t (*messenger_server_producer_t)( void* data,
                                                                size_t* buffer_bytes,
                                                                const size_t buffer_size,
                                                                const int first );
-typedef tinia_ipc_msg_status_t (*messenger_periodic_t)( void* data, int seconds );
+typedef tinia_ipc_msg_status_t (*ipc_msg_periodic_t)( void* data, int seconds );
 
 typedef struct tinia_ipc_msg_client_struct tinia_ipc_msg_client_t;
 extern const size_t tinia_ipc_msg_client_t_sizeof;
@@ -83,7 +83,7 @@ tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client );
 
 
 tinia_ipc_msg_status_t
-tinia_ipc_msg_client_sendrecv_cb( messenger_producer_t query, void* query_data,
+tinia_ipc_msg_client_sendrecv_cb( ipc_msg_producer_t query, void* query_data,
                                   messenger_server_consumer_t reply, void* reply_data,
                                   tinia_ipc_msg_logger_t log, void* log_data,
                                   const char* message_box_id,
@@ -121,7 +121,7 @@ ipc_msg_server_mainloop( messenger_server_t*          s,
                            void*                        consumer_data,
                            messenger_server_producer_t  producer,
                            void*                        producer_data,
-                           messenger_periodic_t         periodic,
+                           ipc_msg_periodic_t         periodic,
                            void*                        periodic_data );
 
 /** Break the running mainloop of server. */
