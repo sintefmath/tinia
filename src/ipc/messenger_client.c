@@ -228,7 +228,7 @@ tinia_ipc_msg_client_init( tinia_ipc_msg_client_t* m,
 // -----------------------------------------------------------------------------
 // this should end up in messenger.c when it is working.
 tinia_ipc_msg_status_t
-tinia_ipc_msg_client_sendrecv_cb(messenger_producer_t query, void* query_data,
+tinia_ipc_msg_client_sendrecv_cb(ipc_msg_producer_t query, void* query_data,
                            messenger_server_consumer_t reply, void* reply_data,
                            tinia_ipc_msg_logger_t log, void* log_data,
                            const char* message_box_id,
