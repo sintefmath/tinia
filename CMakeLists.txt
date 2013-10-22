@@ -236,7 +236,7 @@ IF(Tinia_DESKTOP)
 			export(TARGETS model jobcontroller modelxml qtcontroller renderlist renderlistgl tinia_javascript
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
 		ELSE()
-			export(TARGETS model jobcontroller qtcontroller renderlist renderlistgl
+			export(TARGETS model jobcontroller qtcontroller renderlist renderlistgl tinia_javascript
 					FILE "${PROJECT_BINARY_DIR}/TiniaTargets.cmake")
 		ENDIF()
 	ENDIF()
