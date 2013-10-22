@@ -233,25 +233,35 @@ trell_pass_query_msg_post( void*           data,
 
 
 int
-trell_pass_query_xml(  void*           data,
-                       size_t*         bytes_written,
-                       unsigned char*  buffer,
-                       size_t          buffer_size )
+trell_pass_query_xml( void*         data,
+                      int*          more,
+                      char*         buffer,
+                      size_t*       buffer_bytes,
+                      const size_t  buffer_size,
+                      const int     part )
 {
-/*    typedef struct {
+    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+    if( part != 0 ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
+                       "%s.pass_query_xml: multi-part not implemented yet.", cbd->m_r->handler );
+        return -1;
+    }
+    *more = 0;
+    
+    /*    typedef struct {
         trell_sconf_t*          m_sconf;
         request_rec*            m_r;
         trell_dispatch_info_t*  m_dispatch_info;
     } trell_callback_data_t;    
   */  
 
-    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
 
-    // Create message
+
+    // --- populate header -----------------------------------------------------
     trell_message_t* msg = (trell_message_t*)buffer;
     msg->m_type = TRELL_MESSAGE_XML;
-    msg->m_size = 0;//TRELL_MSGHDR_SIZE;
-
+    msg->m_size = 0;
+    
     apr_bucket_brigade* bb;
     apr_status_t rv;
 
@@ -292,6 +302,7 @@ trell_pass_query_xml(  void*           data,
         }
     }
     while( keep_going );
-    *bytes_written = msg->m_size + TRELL_MSGHDR_SIZE;
+    *buffer_bytes = msg->m_size + TRELL_MSGHDR_SIZE;
+
     return 0;
 }

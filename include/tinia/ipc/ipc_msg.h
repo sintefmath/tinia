@@ -181,6 +181,18 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
                                void*                          consumer_data,
                                int                            longpoll_timeout );
 
+
+int
+tinia_ipc_msg_client_sendrecv_by_name( const char*                    destination,
+                                       tinia_ipc_msg_log_func_t       log_f,
+                                       void*                          log_d,
+                                       tinia_ipc_msg_producer_func_t  producer,
+                                       void*                          producer_data,
+                                       tinia_ipc_msg_consumer_func_t  consumer,
+                                       void*                          consumer_data,
+                                       int                            longpoll_timeout );
+
+
 /** Send and receive a pair of messages using fixed buffers, no callbacks, and an open connection.
  *
  * \param[in]  client             Initialized client struct.
@@ -194,7 +206,7 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
  * simultaneously.
  */
 int
-ipc_msg_client_sendrecv_buffered(tinia_ipc_msg_client_t* client,
+ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
                                   const char* query, const size_t query_size,
                                   char* reply, size_t* reply_size, const size_t reply_buffer_size);
 
