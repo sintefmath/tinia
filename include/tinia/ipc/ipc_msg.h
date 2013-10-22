@@ -230,7 +230,17 @@ ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
                                           const char* query, const size_t query_size,
                                           char* reply, size_t* reply_size, const size_t reply_buffer_size);
         
-        
+
+int
+tinia_ipc_msg_client_sendrecv_buffered_query_by_name( const char*                    destination,
+                                                      tinia_ipc_msg_log_func_t       log_f,
+                                                      void*                          log_d,
+                                                      const char*                    query,
+                                                      const size_t                   query_size,
+                                                      tinia_ipc_msg_consumer_func_t  consumer,
+                                                      void*                          consumer_data,
+                                                      int                            longpoll_timeout );
+
 
 // === SERVER PUBLIC API =======================================================
 
