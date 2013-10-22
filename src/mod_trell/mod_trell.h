@@ -203,11 +203,11 @@ trell_pass_query_xml( void*         data,
                       const size_t  buffer_size,
                       const int     part);
 
-int
-trell_pass_query_get_scripts( void*           data,
-                              size_t*         bytes_written,
-                              unsigned char*  buffer,
-                              size_t          buffer_size );
+//int
+//trell_pass_query_get_scripts( void*           data,
+//                              size_t*         bytes_written,
+//                              unsigned char*  buffer,
+//                              size_t          buffer_size );
 
 //int
 //trell_pass_query_update_state_xml( void*           data,

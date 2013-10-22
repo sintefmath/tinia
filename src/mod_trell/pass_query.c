@@ -52,19 +52,6 @@ trell_pass_query_get_renderlist( void*           data,
     return 0;
 }
 
-int
-trell_pass_query_get_scripts( void*           data,
-                              size_t*         bytes_written,
-                              unsigned char*  buffer,
-                              size_t          buffer_size )
-{
-    //trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->m_type = TRELL_MESSAGE_GET_SCRIPTS;
-    *bytes_written = TRELL_MSGHDR_SIZE;
-    return 0;
-}
-
 
 int
 trell_pass_query_get_exposedmodel( void*           data,
