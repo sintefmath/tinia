@@ -465,6 +465,7 @@ ipc_msg_server_recv( char* errnobuf,
         
         // --- In first part, we determine the consumer -----------------------
         if( part==0 ) { // If first part, determine consumer
+           
             if( input_handler( &consumer, &consumer_data,
                                input_handler_data,
                                (char*)server->shmem_payload_ptr,
@@ -618,15 +619,16 @@ ipc_msg_server_send( char* errnobuf,
 int
 ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 {
-    static const char* who = "tinia.ipc.msg.server.mainloop.break";
+    static const char* who = "tinia.ipc.msg.server.mainloop.notify";
     char errnobuf[256];
     int rc, ret = 0;
 
     // --- we're the mainloop thread -------------------------------------------
     if( pthread_equal( pthread_self(), server->thread_id ) != 0  ) {
 
+#ifdef TRACE
         server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread." );
-
+#endif
         // --- signal notification condition (linked to transaction lock) ------
         rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
         if( rc != 0 ) {
@@ -643,7 +645,9 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
     // managed to start listening.
     else {
 
+#ifdef TRACE
         server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread." );
+#endif
 
         // --- lock transaction lock -------------------------------------------
         rc = pthread_mutex_lock( &server->shmem_header_ptr->transaction_lock );
@@ -817,7 +821,9 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
     static const char* who = "tinia.ipc.msg.server.mainloop.iteration";
     int rc;
 
+#ifdef TRACE
     server->logger_f( server->logger_d, 2, who, "Starting new listen iteration." );
+#endif
     
     // --- signal client that might be waiting on us ---------------------------
     server->shmem_header_ptr->state = IPC_MSG_STATE_READY;

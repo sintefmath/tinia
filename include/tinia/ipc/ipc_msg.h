@@ -54,6 +54,10 @@ typedef int (*tinia_ipc_msg_periodic_func_t)( void* data );
  * Messages are a sequence of one or more parts, where each part fit into a
  * fixed buffer. This callback is invoked once per message part.
  *
+ * \warning In the case of long-polling, several message transactions take
+ * place inside a single send-receive call. Thus, in this case, the callback
+ * must initialize state when invoked with part=0.
+ *
  * \param[in] data          Optional data passed from callback supplier.
  * \param[in] buffer        Buffer that contains the message part.
  * \param[in] buffer_bytes  Number of bytes in this message part.
@@ -76,6 +80,10 @@ typedef int (*tinia_ipc_msg_consumer_func_t)( void*         data,
  *
  * Messages are a sequence of one or more parts, where each part fit into a
  * fixed buffer. This callback is invoked once per message part.
+ *
+ * \warning In the case of long-polling, several message transactions take
+ * place inside a single send-receive call. Thus, in this case, the callback
+ * must initialize state when invoked with part=0.
  *
  * \param[in]  data          Optional data passed from callback supplier.
  * \param[out] more          Set to 0 if the current part is the last part of

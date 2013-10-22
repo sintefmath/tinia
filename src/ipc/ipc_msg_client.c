@@ -572,9 +572,12 @@ sendrecv_buffered_producer( void* data,
                             char* buffer,
                             size_t* buffer_bytes,
                             const size_t buffer_size,
-                            const int iteration )
+                            const int part )
 {
     struct sendrecv_buffered_ctx* ctx = (struct sendrecv_buffered_ctx*)data;
+    if( part == 0 ) {
+        ctx->query_sent = 0;
+    }
     size_t size = ctx->query_size - ctx->query_sent;
     if( buffer_size < size ) {
         size = buffer_size;
@@ -595,10 +598,13 @@ int
 sendrecv_buffered_consumer( void* data,
                             const char* buffer,
                             const size_t buffer_bytes,
-                            const int iteration,
+                            const int part,
                             const int more )
 {
     struct sendrecv_buffered_ctx* ctx = (struct sendrecv_buffered_ctx*)data;
+    if( part == 0 ) {
+        ctx->reply_received = 0;
+    }
 
     if( ctx->reply_buffer_size < ctx->reply_received + buffer_bytes ) {
         // insufficiently sized buffer passed from caller
@@ -666,13 +672,13 @@ ipc_msg_client_sendrecv_buffered_by_name( const char*               destination,
 
 int
 tinia_ipc_msg_client_sendrecv_buffered_query_by_name( const char*                    destination,
-                                                tinia_ipc_msg_log_func_t       log_f,
-                                                void*                          log_d,
-                                                const char*                    query,
-                                                const size_t                   query_size,
-                                                tinia_ipc_msg_consumer_func_t  consumer,
-                                                void*                          consumer_data,
-                                                int                            longpoll_timeout )
+                                                      tinia_ipc_msg_log_func_t       log_f,
+                                                      void*                          log_d,
+                                                      const char*                    query,
+                                                      const size_t                   query_size,
+                                                      tinia_ipc_msg_consumer_func_t  consumer,
+                                                      void*                          consumer_data,
+                                                      int                            longpoll_timeout )
 {
     static const char* who = "tinia.ipc.msg.client.sendrecv_buffered_query_by_name";
     int rv = -1;
@@ -691,7 +697,6 @@ tinia_ipc_msg_client_sendrecv_buffered_query_by_name( const char*               
                                             sendrecv_buffered_producer, &ctx,
                                             consumer, consumer_data,
                                             longpoll_timeout );
-        
         tinia_ipc_msg_client_release( &client );
     }
     return rv;    

@@ -52,7 +52,7 @@ trell_pass_query_get_renderlist( void*           data,
     return 0;
 }
 
-
+#if 0
 int
 trell_pass_query_get_exposedmodel( void*           data,
                                    size_t*         bytes_written,
@@ -73,7 +73,7 @@ trell_pass_query_get_exposedmodel( void*           data,
     *bytes_written = msg->m_size + TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE;
     return 0;
 }
-
+#endif
 
 #if 0
 int
@@ -149,16 +149,18 @@ trell_pass_query_update_state_xml( void*           data,
 
 int
 trell_pass_query_msg_post( void*           data,
+                           int*            more,
+                           char*           buffer,
                            size_t*         bytes_written,
-                           unsigned char*  buffer,
-                           size_t          buffer_size )
+                           const size_t    buffer_size,
+                           const int       part )
 {
     trell_pass_query_msg_post_data_t* cbd = (trell_pass_query_msg_post_data_t*)data;
  
     // --- copy message part (if anything left) into buffer --------------------
     
     *bytes_written = 0;
-    int more = 0;       // are we finished, or do we have more data to send?
+    *more = 0;       // are we finished, or do we have more data to send?
     
     // bytes of message left
     size_t bytes = cbd->message_size - cbd->message_offset; 
@@ -167,7 +169,7 @@ trell_pass_query_msg_post( void*           data,
         
         if( buffer_size < bytes ) {
             bytes = buffer_size; // clamp to buffer size
-            more = 1;
+            *more = 1;
         }
         memcpy( buffer,
                 cbd->message + cbd->message_offset,
@@ -179,7 +181,7 @@ trell_pass_query_msg_post( void*           data,
     // --- copy data from HTTP POST if requested and any data present ----------
 
     if( cbd->pass_post ) {
-        more = 1;                               // always more until we see EOF
+        *more = 1;                               // always more until we see EOF
         bytes = buffer_size - *bytes_written;   // bytes left in buffer
 
         apr_bucket_brigade* bb = apr_brigade_create( cbd->r->pool,
@@ -215,7 +217,7 @@ trell_pass_query_msg_post( void*           data,
         }
         *bytes_written += wrote;
     }
-    return more;
+    return 0;
 }
 
 

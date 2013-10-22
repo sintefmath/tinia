@@ -83,8 +83,8 @@ trell_pass_reply( void*         data,
         }
         else {
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, cbd->r,
-                           "trell_pass_reply: Unexpected message type %d of size %d.",
-                           (int)msg->type, (int)buffer_bytes );
+                           "trell_pass_reply: Unexpected message type %d of size %d (%s).",
+                           (int)msg->type, (int)buffer_bytes, cbd->r->path_info );
             return -1;                  // error
         }
 
