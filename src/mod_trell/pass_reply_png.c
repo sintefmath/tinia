@@ -44,10 +44,16 @@ int
 trell_pass_reply_png( void* data,
                       const char *buffer,
                       const size_t buffer_bytes,
-                      const int first,
+                      const int part,
                       const int more )
 {
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+    if( part != 0 ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
+                       "%s.pass_query_xml: multi-part not implemented yet.", cbd->m_r->handler );
+        return -1;
+    }
+    
     request_rec* r = cbd->m_r;
 
     trell_message_t* msg = (trell_message_t*)buffer;
