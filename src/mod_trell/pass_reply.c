@@ -49,18 +49,18 @@ trell_pass_reply_assert_ok( void* data,
 }
 
 int
-trell_pass_reply(void* data,
-                  const char *buffer,
-                  const size_t buffer_bytes,
-                  const int first,
-                  const int more )
+trell_pass_reply( void*         data,
+                  const char*   buffer,
+                  const size_t  buffer_bytes,
+                  const int     part,
+                  const int     more )
 {
     tinia_pass_reply_data_t* cbd = (tinia_pass_reply_data_t*)data;
     
     tinia_msg_t* msg = (tinia_msg_t*)buffer;
 
     size_t offset = 0;
-    if( first ) {
+    if( part == 0 ) {
         
         if( msg->type == TRELL_MESSAGE_OK ) {
             if( cbd->longpolling ) {

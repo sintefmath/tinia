@@ -284,8 +284,7 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
                       const char* job,
                       trell_dispatch_info_t*  dispatch_info )
 {
-    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
-#if 0
+
     // set up request config
     req_cfg_t* req_cfg = apr_palloc( r->pool, sizeof(*req_cfg) );
     req_cfg->m_schema = schema;
@@ -328,19 +327,19 @@ trell_job_rpc_handle( trell_sconf_t* sconf,
     rd.longpolling = 0;
     rd.brigade = NULL;
     
-    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_xml, &cbd,
-                                              trell_pass_reply, &rd,
-                                              trell_messenger_log_wrapper, r,
-                                              job,
-                                              0 ) )
-    {
-    case MESSENGER_OK:
-        return HTTP_NO_CONTENT; // everything ok.
-    case MESSENGER_TIMEOUT:
+    int rv = tinia_ipc_msg_client_sendrecv_by_name( job,
+                                                    trell_messenger_log_wrapper, r,
+                                                    trell_pass_query_xml, &cbd,
+                                                    trell_pass_reply, &rd,
+                                                    0 );
+    if( rv == 0 ) {
+        return OK;
+    }
+    else if( rv == -1 ) {
         return HTTP_REQUEST_TIME_OUT;
-    default:
-        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: boo.", r->path_info );
+    }
+    else {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#endif
 }

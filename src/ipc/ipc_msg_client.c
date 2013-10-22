@@ -388,11 +388,42 @@ ipc_msg_client_recv( char* errnobuf,
     return ret;
 }
 
+
 int
-tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t* client,
-                         tinia_ipc_msg_producer_func_t producer, void* producer_data,
-                         tinia_ipc_msg_consumer_func_t consumer, void* consumer_data,
-                         int longpoll_timeout )
+tinia_ipc_msg_client_sendrecv_by_name( const char*                    destination,
+                                       tinia_ipc_msg_log_func_t       log_f,
+                                       void*                          log_d,
+                                       tinia_ipc_msg_producer_func_t  producer,
+                                       void*                          producer_data,
+                                       tinia_ipc_msg_consumer_func_t  consumer,
+                                       void*                          consumer_data,
+                                       int                            longpoll_timeout )
+{
+    static const char* who = "tinia.ipc.msg.client.sendrecv_by_name";
+    int rv = -1;
+    
+    tinia_ipc_msg_client_t client;
+    if( tinia_ipc_msg_client_init( &client, destination, log_f, log_d ) != 0 ) {
+        log_f( log_d, 0, who, "Failed to open connection to '%s'", destination );
+    }
+    else {
+        rv = tinia_ipc_msg_client_sendrecv( &client,
+                                            producer, producer_data,
+                                            consumer, consumer_data,
+                                            longpoll_timeout );
+        tinia_ipc_msg_client_release( &client );
+    }
+    return rv;    
+}
+
+
+int
+tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
+                               tinia_ipc_msg_producer_func_t  producer,
+                               void*                          producer_data,
+                               tinia_ipc_msg_consumer_func_t  consumer,
+                               void*                          consumer_data,
+                               int                            longpoll_timeout )
 {
     static const char* who = "tinia.ipc.msg.client.sendrecv";
     char errnobuf[256];
@@ -605,6 +636,8 @@ ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
         return -1;
     }
 }
+
+
 
 
 int

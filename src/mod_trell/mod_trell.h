@@ -190,11 +190,18 @@ trell_pass_query_get_exposedmodel( void*           data,
                                    size_t*         bytes_written,
                                    unsigned char*  buffer,
                                    size_t          buffer_size );
+
+/** Reads XML data and passes it as messages.
+ *  
+ * \implements tinia_ipc_msg_producer_func_t.
+ */
 int
-trell_pass_query_xml(  void*           data,
-                       size_t*         bytes_written,
-                       unsigned char*  buffer,
-                       size_t          buffer_size );
+trell_pass_query_xml( void*         data,
+                      int *         more,
+                      char*         buffer,
+                      size_t*       buffer_bytes,
+                      const size_t  buffer_size,
+                      const int     part);
 
 int
 trell_pass_query_get_scripts( void*           data,
@@ -222,6 +229,8 @@ typedef struct {
 
 /** Callback that passes data from ipc.msg.client to apache.
  *
+ * \implements tinia_ipc_msg_consumer_func_t.
+ *
  * Handles:
  * - MESSENGER_OK
  * - MESSENGER_ERROR
@@ -230,10 +239,10 @@ typedef struct {
  *
  */
 int
-trell_pass_reply( void* data,
+trell_pass_reply(void* data,
                   const char* buffer,
                   const size_t buffer_bytes,
-                  const int first,
+                  const int part,
                   const int more );
 
 /** Callback that passes data from ipc.msg.client to apache.
