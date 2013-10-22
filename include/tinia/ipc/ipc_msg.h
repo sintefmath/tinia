@@ -19,27 +19,65 @@
 
 // === CALLBACK TYPES ==========================================================
 
-typedef void (*ipc_msg_logger_t)( void* data,
-                                  int level,
-                                  const char* who,
-                                  const char* message, ... )
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** User-supplied callback that handles logging.
+ *
+ * \param[in] data     Optional data passed from callback supplier.
+ * \param[in] level    Loglevel, 0 implies error, 1 implies warning, and 2
+ *                     implies an informal message.
+ * \param[in] who      Identifier of function that wants to log.
+ * \param[in] message  Printf-formatted log message.
+ * \param[in] ...      Arguments to log message.
+ *
+ */
+typedef void (*tinia_ipc_msg_log_func_t)( void*        data,
+                                          int          level,
+                                          const char*  who,
+                                          const char*  message, ... )
 __attribute__((format(printf,4,5)))
 ;
 
-typedef int (*ipc_msg_periodic_t)( void* data );
 
-typedef int (*ipc_msg_consumer_t)( void* data,
-                                   const char* buffer,
-                                   const size_t buffer_bytes,
-                                   const int iteration,
-                                   const int more );
+/** User-supplied callback invoked every now and then by the server mainloop.
+ *
+ * \param[in] data   Optional data passed from callback supplier.
+ *
+ */
+typedef int (*tinia_ipc_msg_periodic_func_t)( void* data );
 
-/** Callback that produces a message part-by-part.
+
+/** User-supplied callback that consumes a message part-by-part.
  *
  * Messages are a sequence of one or more parts, where each part fit into a
- * fixed buffer.
+ * fixed buffer. This callback is invoked once per message part.
  *
- * \param[in]  data          Optional data passed.
+ * \param[in] data          Optional data passed from callback supplier.
+ * \param[in] buffer        Buffer that contains the message part.
+ * \param[in] buffer_bytes  Number of bytes in this message part.
+ * \param[in] part          Enumerates the message parts.
+ * \param[in] more          True if there is more parts of this message.
+ *
+ * \return 0 on success, -1 on error, and if invoked on client-side, 1 indicates
+ * a success, but client should wait on a notification followed by a new
+ * iteration of send and receive (used to implement long-polling).
+ *
+ */
+typedef int (*tinia_ipc_msg_consumer_func_t)( void*         data,
+                                              const char*   buffer,
+                                              const size_t  buffer_bytes,
+                                              const int     part,
+                                              const int     more );
+
+
+/** User-supplied callback that produces a message part-by-part.
+ *
+ * Messages are a sequence of one or more parts, where each part fit into a
+ * fixed buffer. This callback is invoked once per message part.
+ *
+ * \param[in]  data          Optional data passed from callback supplier.
  * \param[out] more          Set to 0 if the current part is the last part of
  *                           the message, or 1 if this callback should be
  *                           invoked one more time.
@@ -47,21 +85,20 @@ typedef int (*ipc_msg_consumer_t)( void* data,
  * \param[out] buffer_bytes  The number of bytes written into buffer.
  * \param[in]  buffer_size   The maximum number of bytes that can be written
  *                           into buffer.
- * \param[in]  iteration     Enumerates the invocations of this callback for a
- *                           given message.
+ * \param[in]  part          Enumerates the message parts.
  *
- * \returns 0 on success, -1 on error, and if invoked on client-sude,
- * 1 indicates a success, but client should wait on a notification followed by a
- * new iteration of send and receive.
+ * \return 0 on success, -1 on error.
+ *
  */
-typedef int (*ipc_msg_producer_t)( void* data,
-                                   int* more,
-                                   char* buffer,
-                                   size_t* buffer_bytes,
-                                   const size_t buffer_size,
-                                   const int iteration );
+typedef int (*tinia_ipc_msg_producer_func_t)( void*         data,
+                                              int*          more,
+                                              char*         buffer,
+                                              size_t*       buffer_bytes,
+                                              const size_t  buffer_size,
+                                              const int     part );
 
-/** Inspects the first part of a message and sets a message consumer.
+
+/** User-supplied callback that inspects the first part of a message and sets a message consumer callback.
  *
  * The server mainloop uses a pair of input and output handler callbacks to set
  * the specific message consumer and producer callbacks to be used for a given
@@ -69,19 +106,20 @@ typedef int (*ipc_msg_producer_t)( void* data,
  *
  * \param[out] consumer       Pointer to the message consumer callback.
  * \param[out] consumer_data  Optional data pointer passed to message consumer.
- * \param[in]  handler_data   Optional data passed from ipc_msg_server_mainloop.
+ * \param[in]  handler_data   Optional data passed from callback supplier.
  * \param[in]  buffer         First part of message contents.
  * \param[in]  buffer_bytes   First part of message byte size.
  *
  * \return 0 on success, -1 on error.
  */
-typedef int (*ipc_msg_input_handler_t)( ipc_msg_consumer_t* consumer,
-                                        void** consumer_data,
-                                        void* handler_data,
-                                        char* buffer,
-                                        size_t buffer_bytes );
+typedef int (*tinia_ipc_msg_input_handler_func_t)( tinia_ipc_msg_consumer_func_t*  consumer,
+                                                   void**                          consumer_data,
+                                                   void*                           handler_data,
+                                                   char*                           buffer,
+                                                   size_t                          buffer_bytes );
 
-/** Sets a message producer.
+
+/** User-supplied callback that sets a message producer callback.
  *
  * The server mainloop uses a pair of input and output handler callbacks to set
  * the specific message consumer and producer callbacks to be used for a given
@@ -93,31 +131,55 @@ typedef int (*ipc_msg_input_handler_t)( ipc_msg_consumer_t* consumer,
  *
  * \returns 0 on success, -1 on error.
  */
-typedef int (*ipc_msg_output_handler_t)( ipc_msg_producer_t* producer,
-                                         void** producer_data,
-                                         void* handler_data );
+typedef int (*tinia_ipc_msg_output_handler_func_t)( tinia_ipc_msg_producer_func_t*  producer,
+                                                    void**                          producer_data,
+                                                    void*                           handler_data );
 
 
 // === CLIENT PUBLIC API =======================================================
 
-typedef struct client_struct tinia_ipc_msg_client_t;
+typedef struct tinia_ipc_msg_client_struct tinia_ipc_msg_client_t;
 
 extern const size_t tinia_ipc_msg_client_t_sizeof;
 
+/** Initializes a new message client.
+ *
+ * \param[inout] client       User-supplied buffer that contains the client
+ *                            struct, the bytesize of this struct is
+ *                            tinia_ipc_msg_client_t_sizeof.
+ * \param[in]    destination  Job id of destination server.
+ * \param[in]    logger_f     Callback that handles log messages.
+ * \param[in]    logger_d     Optional data passed to logger callback.
+ *
+ * \return 0 on success, a negative value on error.
+ */
 int
-ipc_msg_client_init( tinia_ipc_msg_client_t*         client,
-                     const char*       jobid,
-                     ipc_msg_logger_t  logger_f,
-                     void*             logger_d );
+tinia_ipc_msg_client_init( tinia_ipc_msg_client_t*   client,
+                           const char*               jobid,
+                           tinia_ipc_msg_log_func_t  log_f,
+                           void*                     log_d );
+
+
+/** Releases resources of a message client.
+ *
+ * \param[in] client  Buffer that contains the client struct.
+ *
+ * \return 0 on success, a negative value on error.
+ */
+int
+tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client );
+
+
+
+
 
 int
-ipc_msg_client_release( tinia_ipc_msg_client_t* client );
-
-int
-ipc_msg_client_sendrecv( tinia_ipc_msg_client_t* client,
-                         ipc_msg_producer_t producer, void* producer_data,
-                         ipc_msg_consumer_t consumer, void* consumer_data,
-                         int longpoll_timeout );
+tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
+                               tinia_ipc_msg_producer_func_t  producer,
+                               void*                          producer_data,
+                               tinia_ipc_msg_consumer_func_t  consumer,
+                               void*                          consumer_data,
+                               int                            longpoll_timeout );
 
 /** Send and receive a pair of messages using fixed buffers, no callbacks, and an open connection.
  *
@@ -151,7 +213,7 @@ ipc_msg_client_sendrecv_buffered(tinia_ipc_msg_client_t* client,
  */
 int
 ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
-                                          ipc_msg_logger_t  logger_f,
+                                          tinia_ipc_msg_log_func_t  logger_f,
                                           void*             logger_d,
                                           const char* query, const size_t query_size,
                                           char* reply, size_t* reply_size, const size_t reply_buffer_size);
@@ -160,7 +222,7 @@ ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
 
 // === SERVER PUBLIC API =======================================================
 
-typedef struct server_struct tinia_ipc_msg_server_t;
+typedef struct tinia_ipc_msg_server_struct tinia_ipc_msg_server_t;
 
 /** Create a new server.
  *
@@ -170,7 +232,7 @@ typedef struct server_struct tinia_ipc_msg_server_t;
  */
 tinia_ipc_msg_server_t*
 ipc_msg_server_create( const char*       jobid,
-                       ipc_msg_logger_t  logger_f,
+                       tinia_ipc_msg_log_func_t  logger_f,
                        void*             logger_d );
 
 int
@@ -210,6 +272,10 @@ ipc_msg_server_mainloop_break( tinia_ipc_msg_server_t* server );
  */
 int
 ipc_msg_server_mainloop( tinia_ipc_msg_server_t* server,
-                         ipc_msg_periodic_t periodic, void* periodic_data,
-                         ipc_msg_input_handler_t input_handler, void* input_handler_data,
-                         ipc_msg_output_handler_t output_handler, void* output_handler_data );
+                         tinia_ipc_msg_periodic_func_t periodic, void* periodic_data,
+                         tinia_ipc_msg_input_handler_func_t input_handler, void* input_handler_data,
+                         tinia_ipc_msg_output_handler_func_t output_handler, void* output_handler_data );
+
+#ifdef __cplusplus
+}
+#endif

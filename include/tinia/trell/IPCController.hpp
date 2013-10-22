@@ -250,7 +250,7 @@ private:
 
     static
     int
-    message_input_handler( ipc_msg_consumer_t* consumer,
+    message_input_handler( tinia_ipc_msg_consumer_func_t* consumer,
                            void** consumer_data,
                            void* handler_data,
                            char* buffer,
@@ -258,7 +258,7 @@ private:
     
     static
     int
-    message_output_handler( ipc_msg_producer_t* producer,
+    message_output_handler( tinia_ipc_msg_producer_func_t* producer,
                             void** producer_data,
                             void* handler_data );
 

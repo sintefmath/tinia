@@ -37,21 +37,21 @@ const size_t tinia_ipc_msg_client_t_sizeof = sizeof( tinia_ipc_msg_client_t );
 
 
 int
-ipc_msg_client_init( tinia_ipc_msg_client_t*         client,
-                     const char*       jobid,
-                     ipc_msg_logger_t  logger_f,
-                     void*             logger_d  )
+tinia_ipc_msg_client_init( tinia_ipc_msg_client_t*   client,
+                           const char*               jobid,
+                           tinia_ipc_msg_log_func_t  log_f,
+                           void*                     log_d  )
 {
     static const char* who = "tinia.ipc.msg.client.init";
     char errnobuf[256];
     int rc, ret=0;
     
     client->shmem_name[0] = '\0';
-    client->logger_f = logger_f;
-    client->logger_d = logger_d;
+    client->logger_f = log_f;
+    client->logger_d = log_d;
     client->shmem_base = MAP_FAILED;
     client->shmem_total_size = 0;
-    client->shmem_header_ptr = (ipc_msg_header_t*)MAP_FAILED;
+    client->shmem_header_ptr = (tinia_ipc_msg_header_t*)MAP_FAILED;
     client->shmem_header_size = 0;
     client->shmem_payload_ptr = MAP_FAILED;
     client->shmem_payload_size = 0;
@@ -73,7 +73,7 @@ ipc_msg_client_init( tinia_ipc_msg_client_t*         client,
                 client->logger_f( client->logger_d, 0, who,
                                   "Failed to open fake shared memory '%s'.",
                                   client->shmem_name );
-                ipc_msg_client_release( client );
+                tinia_ipc_msg_client_release( client );
                 ret = -1;;
             }
             else {
@@ -138,7 +138,7 @@ ipc_msg_client_init( tinia_ipc_msg_client_t*         client,
     if( ret == 0 ) {
         
         // --- update pointers and do some sanity checks ---------------------------    
-        client->shmem_header_ptr = (ipc_msg_header_t*)client->shmem_base;
+        client->shmem_header_ptr = (tinia_ipc_msg_header_t*)client->shmem_base;
         client->shmem_header_size = client->shmem_header_ptr->header_size;
         client->shmem_payload_ptr = (char*)client->shmem_base + client->shmem_header_size;
         client->shmem_payload_size = client->shmem_header_ptr->payload_size;
@@ -154,13 +154,13 @@ ipc_msg_client_init( tinia_ipc_msg_client_t*         client,
     }
     
     if( ret != 0 ) {
-        ipc_msg_client_release( client );
+        tinia_ipc_msg_client_release( client );
     }
     return ret;
 }
 
 int
-ipc_msg_client_release( tinia_ipc_msg_client_t* client )
+tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client )
 {
     static const char* who = "tinia.ipc.msg.client.release";
     char errnobuf[256];
@@ -185,7 +185,7 @@ ipc_msg_client_release( tinia_ipc_msg_client_t* client )
     client->shmem_name[0] = '\0';
     client->shmem_base = MAP_FAILED;
     client->shmem_total_size = 0;
-    client->shmem_header_ptr = (ipc_msg_header_t*)MAP_FAILED;
+    client->shmem_header_ptr = (tinia_ipc_msg_header_t*)MAP_FAILED;
     client->shmem_header_size = 0;
     client->shmem_payload_ptr = MAP_FAILED;
     client->shmem_payload_size = 0;
@@ -247,7 +247,7 @@ ipc_msg_client_send( char* errnobuf,
                      size_t errnobuf_size,
                      struct timespec* timeout,
                      tinia_ipc_msg_client_t* client,
-                     ipc_msg_producer_t producer, void* producer_data )
+                     tinia_ipc_msg_producer_func_t producer, void* producer_data )
 {
     static const char* who = "tinia.ipc.msg.client.send";
 
@@ -314,7 +314,7 @@ ipc_msg_client_recv( char* errnobuf,
                      size_t errnobuf_size,
                      struct timespec* timeout,
                      tinia_ipc_msg_client_t* client,
-                     ipc_msg_consumer_t consumer, void* consumer_data )
+                     tinia_ipc_msg_consumer_func_t consumer, void* consumer_data )
 {
     static const char* who = "tinia.ipc.msg.client.recv";
     
@@ -389,9 +389,9 @@ ipc_msg_client_recv( char* errnobuf,
 }
 
 int
-ipc_msg_client_sendrecv( tinia_ipc_msg_client_t* client,
-                         ipc_msg_producer_t producer, void* producer_data,
-                         ipc_msg_consumer_t consumer, void* consumer_data,
+tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t* client,
+                         tinia_ipc_msg_producer_func_t producer, void* producer_data,
+                         tinia_ipc_msg_consumer_func_t consumer, void* consumer_data,
                          int longpoll_timeout )
 {
     static const char* who = "tinia.ipc.msg.client.sendrecv";
@@ -592,7 +592,7 @@ ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
     ctx.reply_received    = 0;
     ctx.reply_buffer_size = reply_buffer_size;
     
-    int rv = ipc_msg_client_sendrecv( client,
+    int rv = tinia_ipc_msg_client_sendrecv( client,
                                       sendrecv_buffered_producer, &ctx,
                                       sendrecv_buffered_consumer, &ctx,
                                       0 );
@@ -609,7 +609,7 @@ ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
 
 int
 ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
-                                          ipc_msg_logger_t  logger_f,
+                                          tinia_ipc_msg_log_func_t  logger_f,
                                           void*             logger_d,
                                           const char* query, const size_t query_size,
                                           char* reply, size_t* reply_size, const size_t reply_buffer_size)
@@ -618,14 +618,14 @@ ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
     int rv = -1;
     
     tinia_ipc_msg_client_t client;
-    if( ipc_msg_client_init( &client, destination, logger_f, logger_d ) != 0 ) {
+    if( tinia_ipc_msg_client_init( &client, destination, logger_f, logger_d ) != 0 ) {
         logger_f( logger_d, 0, who, "Failed to open connection to '%s'", destination );
     }
     else {
         rv = ipc_msg_client_sendrecv_buffered( &client,
                                                query, query_size,
                                                reply, reply_size, reply_buffer_size );
-        ipc_msg_client_release( &client );
+        tinia_ipc_msg_client_release( &client );
     }
     return rv;
 }

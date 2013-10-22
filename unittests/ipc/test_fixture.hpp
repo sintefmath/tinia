@@ -294,7 +294,7 @@ cleanup:
     
     static
     int
-    server_input_handler( ipc_msg_consumer_t* consumer_, void** consumer_data,
+    server_input_handler( tinia_ipc_msg_consumer_func_t* consumer_, void** consumer_data,
                           void* handler_data,
                           char* buffer,
                           size_t buffer_bytes )
@@ -306,7 +306,7 @@ cleanup:
 
     static
     int
-    server_output_handler( ipc_msg_producer_t* producer,
+    server_output_handler( tinia_ipc_msg_producer_func_t* producer,
                            void** producer_data,
                            void* handler_data)
     {
@@ -429,7 +429,7 @@ cleanup:
         assert( pthread_mutex_unlock( &that->lock ) == 0  );
 
         tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
-        rc = ipc_msg_client_init( client, "unittest", logger, arg );
+        rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
         {
             assert( pthread_mutex_lock( &that->lock ) == 0 );
             BOOST_REQUIRE( rc == 0 );
@@ -440,7 +440,7 @@ cleanup:
             int timeout = that->m_clients_should_longpoll ? 2 : 0;
             assert( pthread_mutex_unlock( &that->lock ) == 0  );
 
-            rc = ipc_msg_client_sendrecv( client,
+            rc = tinia_ipc_msg_client_sendrecv( client,
                                           client_producer, that,
                                           client_consumer, that,
                                           timeout );
@@ -454,7 +454,7 @@ cleanup:
             }
             assert( pthread_mutex_unlock( &that->lock ) == 0  );
         } while(0);
-        rc = ipc_msg_client_release( client );
+        rc = tinia_ipc_msg_client_release( client );
         assert( pthread_mutex_lock( &that->lock ) == 0 );
         BOOST_REQUIRE( rc == 0 );
         assert( pthread_mutex_unlock( &that->lock ) == 0  );
