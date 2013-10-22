@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <tinia/ipc/ipc_msg.h>
 
-enum ipc_msg_state_t
+enum tinia_ipc_msg_state_t
 {
     IPC_MSG_STATE_READY,
     IPC_MSG_STATE_CLIENT_TO_SERVER,
@@ -110,30 +110,30 @@ typedef struct {
     /** The number of bytes in the current message part. */
     size_t              bytes;
 
-    enum ipc_msg_state_t    state;
+    enum tinia_ipc_msg_state_t    state;
 
-} ipc_msg_header_t;
+} tinia_ipc_msg_header_t;
 
-struct client_struct {
+struct tinia_ipc_msg_client_struct {
     char                shmem_name[256];
-    ipc_msg_logger_t    logger_f;
+    tinia_ipc_msg_log_func_t    logger_f;
     void*               logger_d;
     void*               shmem_base;
     size_t              shmem_total_size;
-    ipc_msg_header_t*   shmem_header_ptr;
+    tinia_ipc_msg_header_t*   shmem_header_ptr;
     size_t              shmem_header_size;
     void*               shmem_payload_ptr;
     size_t              shmem_payload_size;
 };
 
-struct server_struct {
+struct tinia_ipc_msg_server_struct {
     pthread_t           thread_id;          ///< Thread id of the thread that initialized and runs the server.
-    ipc_msg_logger_t    logger_f;
+    tinia_ipc_msg_log_func_t    logger_f;
     void*               logger_d;
     char*               shmem_name;
     void*               shmem_base;
     size_t              shmem_total_size;
-    ipc_msg_header_t*   shmem_header_ptr;
+    tinia_ipc_msg_header_t*   shmem_header_ptr;
     size_t              shmem_header_size;
     void*               shmem_payload_ptr;
     size_t              shmem_payload_size;
@@ -173,14 +173,14 @@ ipc_msg_client_send( char* errnobuf,
                      size_t errnobuf_size,
                      struct timespec* timeout,
                      tinia_ipc_msg_client_t* client,
-                     ipc_msg_producer_t producer, void* producer_data );
+                     tinia_ipc_msg_producer_func_t producer, void* producer_data );
 
 int
 ipc_msg_client_recv( char* errnobuf,
                      size_t errnobuf_size,
                      struct timespec* timeout,
                      tinia_ipc_msg_client_t* client,
-                     ipc_msg_consumer_t consumer, void* consumer_data );
+                     tinia_ipc_msg_consumer_func_t consumer, void* consumer_data );
 
 
 // === SERVER INTERNAL API =====================================================
@@ -200,14 +200,14 @@ int
 ipc_msg_server_recv( char* errnobuf,
                      size_t errnobuf_size,
                      tinia_ipc_msg_server_t* server,
-                     ipc_msg_input_handler_t input_handler,
+                     tinia_ipc_msg_input_handler_func_t input_handler,
                      void* input_handler_data );
 
 int
 ipc_msg_server_send( char* errnobuf,
                             size_t errnobuf_size,
                             tinia_ipc_msg_server_t* server,
-                            ipc_msg_output_handler_t output_handler,
+                            tinia_ipc_msg_output_handler_func_t output_handler,
                             void* output_handler_data );
 
 
@@ -225,14 +225,14 @@ int
 ipc_msg_server_recv( char* errnobuf,
                      size_t errnobuf_size,
                      tinia_ipc_msg_server_t* server,
-                     ipc_msg_input_handler_t input_handler,
+                     tinia_ipc_msg_input_handler_func_t input_handler,
                      void* input_handler_data );
 
 int
 ipc_msg_server_send( char* errnobuf,
                      size_t errnobuf_size,
                      tinia_ipc_msg_server_t* server,
-                     ipc_msg_output_handler_t output_handler,
+                     tinia_ipc_msg_output_handler_func_t output_handler,
                      void* output_handler_data );
 
 int
@@ -240,6 +240,6 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
                                    size_t errnobuf_size,
                                    struct timespec* periodic_timeout,
                                    tinia_ipc_msg_server_t* server,
-                                   ipc_msg_periodic_t periodic, void* periodic_data,
-                                   ipc_msg_input_handler_t input_handler, void* input_handler_data,
-                                   ipc_msg_output_handler_t output_handler, void* output_handler_data );
+                                   tinia_ipc_msg_periodic_func_t periodic, void* periodic_data,
+                                   tinia_ipc_msg_input_handler_func_t input_handler, void* input_handler_data,
+                                   tinia_ipc_msg_output_handler_func_t output_handler, void* output_handler_data );

@@ -100,7 +100,7 @@ tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
     
     char* debug1 = "";
     char* debug2 = "";
-    char* debug3 = "";
+    //char* debug3 = "";
     
     // --- set up tokenizer for r->path_info
     if( r->path_info == NULL ) {

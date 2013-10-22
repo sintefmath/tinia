@@ -39,7 +39,7 @@
 
 tinia_ipc_msg_server_t*
 ipc_msg_server_create(const char*       jobid,
-                       ipc_msg_logger_t logger_f,
+                       tinia_ipc_msg_log_func_t logger_f,
                        void*            logger_d  )
 {
     static const char* who = "tinia.ipc.msg.server.create";
@@ -86,8 +86,8 @@ ipc_msg_server_create(const char*       jobid,
     server->shmem_name = strdup( path );
     server->shmem_base = MAP_FAILED;
     server->shmem_total_size = 0;
-    server->shmem_header_ptr = (ipc_msg_header_t*)MAP_FAILED;
-    server->shmem_header_size = ((sizeof(ipc_msg_header_t)+page_size-1)/page_size)*page_size; // multiple of page size
+    server->shmem_header_ptr = (tinia_ipc_msg_header_t*)MAP_FAILED;
+    server->shmem_header_size = ((sizeof(tinia_ipc_msg_header_t)+page_size-1)/page_size)*page_size; // multiple of page size
     server->shmem_payload_ptr = MAP_FAILED;
     server->shmem_payload_size = 0;
     
@@ -190,7 +190,7 @@ ipc_msg_server_create(const char*       jobid,
         close( fd );
     }
     
-    server->shmem_header_ptr = (ipc_msg_header_t*)server->shmem_base;
+    server->shmem_header_ptr = (tinia_ipc_msg_header_t*)server->shmem_base;
     server->shmem_payload_ptr = (char*)server->shmem_base + server->shmem_header_size;
     
     server->shmem_header_ptr->header_size = server->shmem_header_size;
@@ -295,7 +295,7 @@ ipc_msg_server_delete( tinia_ipc_msg_server_t* server )
         return -1;
     }
     
-    if( (server->shmem_header_ptr != (ipc_msg_header_t*)MAP_FAILED)
+    if( (server->shmem_header_ptr != (tinia_ipc_msg_header_t*)MAP_FAILED)
             && (server->shmem_header_ptr->initialized == 1 ) )
     {
 #define CHECK(A) \
@@ -420,13 +420,13 @@ int
 ipc_msg_server_recv( char* errnobuf,
                      size_t errnobuf_size,
                      tinia_ipc_msg_server_t* server,
-                     ipc_msg_input_handler_t input_handler,
+                     tinia_ipc_msg_input_handler_func_t input_handler,
                      void* input_handler_data )
 {
     static const char* who = "tinia.ipc.msg.server.recv";
     int ret = 0, part;
 
-    ipc_msg_consumer_t consumer = NULL;
+    tinia_ipc_msg_consumer_func_t consumer = NULL;
     void* consumer_data = NULL;
     
     // entry invariants:
@@ -521,14 +521,14 @@ int
 ipc_msg_server_send( char* errnobuf,
                      size_t errnobuf_size,
                      tinia_ipc_msg_server_t* server,
-                     ipc_msg_output_handler_t output_handler,
+                     tinia_ipc_msg_output_handler_func_t output_handler,
                      void* output_handler_data )
 {
     static const char* who = "tinia.ipc.msg.server.send";
     
     int ret = 0;
 
-    ipc_msg_producer_t producer = NULL;
+    tinia_ipc_msg_producer_func_t producer = NULL;
     void* producer_data = NULL;
 
     struct timespec timeout;
@@ -810,9 +810,9 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
                                    size_t errnobuf_size,
                                    struct timespec* periodic_timeout,
                                    tinia_ipc_msg_server_t* server,
-                                   ipc_msg_periodic_t periodic, void* periodic_data,
-                                   ipc_msg_input_handler_t input_handler, void* input_handler_data,
-                                   ipc_msg_output_handler_t output_handler, void* output_handler_data )
+                                   tinia_ipc_msg_periodic_func_t periodic, void* periodic_data,
+                                   tinia_ipc_msg_input_handler_func_t input_handler, void* input_handler_data,
+                                   tinia_ipc_msg_output_handler_func_t output_handler, void* output_handler_data )
 {
     static const char* who = "tinia.ipc.msg.server.mainloop.iteration";
     int rc;
@@ -933,9 +933,9 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
 
 int
 ipc_msg_server_mainloop( tinia_ipc_msg_server_t* server,
-                         ipc_msg_periodic_t periodic, void* periodic_data,
-                         ipc_msg_input_handler_t input_handler, void* input_handler_data,
-                         ipc_msg_output_handler_t output_handler, void* output_handler_data )
+                         tinia_ipc_msg_periodic_func_t periodic, void* periodic_data,
+                         tinia_ipc_msg_input_handler_func_t input_handler, void* input_handler_data,
+                         tinia_ipc_msg_output_handler_func_t output_handler, void* output_handler_data )
 {
     static const char* who = "tinia.ipc.msg.server.mainloop";
     char errnobuf[256];

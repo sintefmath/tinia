@@ -124,7 +124,7 @@ IPCController::shutdown()
     cleanup();
 
     if( !m_is_master ) {
-        if( ipc_msg_client_release( m_master_mbox ) != 0 ) {
+        if( tinia_ipc_msg_client_release( m_master_mbox ) != 0 ) {
             std::cerr << "Failed to close messenger.\n";
         }
         else {
@@ -146,7 +146,7 @@ IPCController::~IPCController()
 
 
 int
-IPCController::message_input_handler( ipc_msg_consumer_t* consumer,
+IPCController::message_input_handler( tinia_ipc_msg_consumer_func_t* consumer,
                                       void** consumer_data,
                                       void* handler_data,
                                       char* buffer,
@@ -159,7 +159,7 @@ IPCController::message_input_handler( ipc_msg_consumer_t* consumer,
 
 
 int
-IPCController::message_output_handler( ipc_msg_producer_t* producer,
+IPCController::message_output_handler( tinia_ipc_msg_producer_func_t* producer,
                                        void** producer_data,
                                        void* handler_data )
 {
@@ -293,7 +293,7 @@ IPCController::run(int argc, char **argv)
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED && !m_is_master ) {
         m_master_mbox = reinterpret_cast<tinia_ipc_msg_client_t*>( new char[tinia_ipc_msg_client_t_sizeof] );
         
-        if( ipc_msg_client_init(  m_master_mbox,
+        if( tinia_ipc_msg_client_init(  m_master_mbox,
                                                   m_master_id.c_str(),
                                                   m_logger_callback,
                                                   m_logger_data ) != 0 )
