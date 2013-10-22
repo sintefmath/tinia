@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Set this to where you have your FindTinia.cmake.
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/Modules")
+#SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake/Modules")
 
 # It's smart to have different options for building a server of dekstop version
 IF(NOT WIN32)
@@ -16,6 +16,7 @@ OPTION(DESKTOP "Build desktop version?" ON)
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_CXX_FLAGS "-std=c++0x")
 ENDIF()
+
 
 IF(${SERVER})
   IF(${DESKTOP})
