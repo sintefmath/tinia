@@ -47,7 +47,16 @@ trell_pass_reply_png( void* data,
                       const int part,
                       const int more )
 {
+    
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+
+    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
+                   "%s.pass_reply_png: Invoked.", cbd->m_r->handler );
+
+    
+    // FIXME: This is invoked as multipart (msg payload is currently restricted
+    //        to 4k).
+    
     if( part != 0 ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
                        "%s.pass_query_xml: multi-part not implemented yet.", cbd->m_r->handler );
@@ -61,8 +70,17 @@ trell_pass_reply_png( void* data,
         tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
         int width = m->width;
         int height = m->height;
+
+        
         char* payload = (char*)buffer + sizeof(*m);
 
+    
+        
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
+                       "%s.pass_reply_png: w=%d, h=%d, l=%d.", cbd->m_r->handler,
+                       width, height, (int)buffer_bytes );
+        return 0;
+        
         cbd->m_dispatch_info->m_png_entry = apr_time_now();
         int i, j;
     

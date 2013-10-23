@@ -174,10 +174,8 @@ trell_pass_query_msg_post( void*           data,
 
     
     // --- copy message part (if anything left) into buffer --------------------
-    
     *bytes_written = 0;
     *more = 0;       // are we finished, or do we have more data to send?
-    
     if( pass_func_data->message_offset < pass_func_data->message_size ) {
 
         size_t bytes = pass_func_data->message_size - pass_func_data->message_offset; 
@@ -190,6 +188,10 @@ trell_pass_query_msg_post( void*           data,
                 bytes );
         pass_func_data->message_offset += bytes;
         *bytes_written += bytes;
+        
+        //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r,
+        //               "%s.pass_query_msg_post: wrote %d bytes of header [%d].",
+        //               pass_func_data->r->handler, (int)bytes, *((int*)buffer) );
     }
     
     // --- copy data from HTTP POST if requested and any data present ----------
@@ -216,7 +218,7 @@ trell_pass_query_msg_post( void*           data,
         apr_bucket* e;
         for( e=APR_BRIGADE_FIRST(bb); e!=APR_BRIGADE_SENTINEL(bb); e=APR_BUCKET_NEXT(e) ) {
             if( APR_BUCKET_IS_EOS(e) ) {
-                more = 0;   // last iteration!
+                *more = 0;   // last iteration!
             }
         }
         
@@ -230,84 +232,8 @@ trell_pass_query_msg_post( void*           data,
         }
         *bytes_written += wrote;
     }
-    return 0;
-}
-
-
-int
-trell_pass_query_xml( void*         data,
-                      int*          more,
-                      char*         buffer,
-                      size_t*       buffer_bytes,
-                      const size_t  buffer_size,
-                      const int     part )
-{
-    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    if( part != 0 ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
-                       "%s.pass_query_xml: multi-part not implemented yet.", cbd->m_r->handler );
-        return -1;
-    }
-    *more = 0;
-    
-    /*    typedef struct {
-        trell_sconf_t*          m_sconf;
-        request_rec*            m_r;
-        trell_dispatch_info_t*  m_dispatch_info;
-    } trell_callback_data_t;    
-  */  
-
-
-
-    // --- populate header -----------------------------------------------------
-    tinia_msg_xml_t* msg = (tinia_msg_xml_t*)buffer;
-//    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->msg.type = TRELL_MESSAGE_XML;
-//    msg->m_size = 0;
-    
-    size_t msg_size = 0;
-    
-    apr_bucket_brigade* bb;
-    apr_status_t rv;
-
-    bb = apr_brigade_create( cbd->m_r->pool, cbd->m_r->connection->bucket_alloc );
-        
-    int keep_going = 1;
-    do {
-        apr_size_t free = buffer_size - msg_size;
-        rv = ap_get_brigade( cbd->m_r->input_filters,
-                             bb,
-                             AP_MODE_READBYTES,
-                             APR_BLOCK_READ,
-                             free );
-        if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
-                           "%s.pass_query_xml: ap_get_brigade failed.", cbd->m_r->handler );
-            return -1;
-        }
-        if( APR_BRIGADE_EMPTY( bb ) ) {
-            keep_going = 0;
-        }
-        else {
-            apr_bucket* e = APR_BRIGADE_FIRST( bb );
-            while( e != APR_BRIGADE_SENTINEL( bb ) ) {
-                if( APR_BUCKET_IS_EOS( e ) ) { // is test necessary?
-                    keep_going = 0;
-                }
-                e = APR_BUCKET_NEXT( e );
-            }
-            apr_size_t len = free;
-            rv = apr_brigade_flatten( bb, (char*)buffer + msg_size + sizeof(tinia_msg_xml_t), &len );
-            if( rv != APR_SUCCESS ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
-                               "%s.pass_query_xml: apr_brigade_flatten failed.", cbd->m_r->handler );
-                return -1;
-            }
-            msg_size += len;
-        }
-    }
-    while( keep_going );
-    *buffer_bytes = msg_size + + sizeof(tinia_msg_xml_t);
-
+    //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r,
+    //               "%s.pass_query_msg_post: wrote a total of %d bytes, part=%d.",
+    //               pass_func_data->r->handler, (int)(*bytes_written), part );
     return 0;
 }
