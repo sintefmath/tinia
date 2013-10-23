@@ -201,29 +201,6 @@ trell_pass_query_get_exposedmodel( void*           data,
                                    unsigned char*  buffer,
                                    size_t          buffer_size );
 
-/** Reads XML data and passes it as messages.
- *  
- * \implements tinia_ipc_msg_producer_func_t.
- */
-int
-trell_pass_query_xml( void*         data,
-                      int *         more,
-                      char*         buffer,
-                      size_t*       buffer_bytes,
-                      const size_t  buffer_size,
-                      const int     part);
-
-//int
-//trell_pass_query_get_scripts( void*           data,
-//                              size_t*         bytes_written,
-//                              unsigned char*  buffer,
-//                              size_t          buffer_size );
-
-//int
-//trell_pass_query_update_state_xml( void*           data,
-//                                   size_t*         bytes_written,
-//                                   unsigned char*  buffer,
-//                                   size_t          buffer_size );
 
 /******************************************************************************/
 // return 0 on success & finished, -1 failure, and 1 on longpoll wanted.

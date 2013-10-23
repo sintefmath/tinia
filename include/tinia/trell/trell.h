@@ -100,6 +100,7 @@ typedef struct tinia_msg
     enum TrellMessageType   type;    
 } tinia_msg_t;
 
+
 /** Message struct for TRELL_MESSAGE_HEARTBEAT. */
 typedef struct tinia_msg_heartbeat
 {
@@ -107,6 +108,7 @@ typedef struct tinia_msg_heartbeat
     enum TrellJobState  state;
     char                job_id[ TRELL_JOBID_MAXLENGTH+1 ];
 } tinia_msg_heartbeat_t;
+
 
 /** Message struct for TRELL_MESSAGE_HEARTBEAT. */
 typedef struct {
@@ -118,11 +120,13 @@ typedef struct {
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
 } tinia_msg_get_snapshot_t;
 
+
 /** Message struct for TRELL_MESSAGE_UPDATE_STATE. */
 typedef struct {
     tinia_msg_t             msg;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
 } tinia_msg_update_exposed_model_t;
+
 
 /** Message struct for TRELL_MESSAGE_GET_POLICY_UPDATE. */
 typedef struct {
@@ -130,6 +134,7 @@ typedef struct {
     unsigned int            revision;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
 } tinia_msg_get_exposed_model_t;
+
 
 /** Message struct for msg.type=TRELL_MESSAGE_GET_RENDERLIST. */
 typedef struct {
@@ -139,6 +144,7 @@ typedef struct {
     char                    timestamp[ TRELL_TIMESTAMP_MAXLENGTH + 1 ];
 } tinia_msg_get_renderlist_t;
 
+
 /** Message struct for TRELL_MESSAGE_IMAGE. */
 typedef struct {
     tinia_msg_t             msg;
@@ -147,73 +153,18 @@ typedef struct {
     unsigned int            height;
 } tinia_msg_image_t;
 
+
 /** Message struct for TRELL_MESSAGE_SCRIPT. */
 typedef struct {
     tinia_msg_t             msg;
 } tinia_msg_script_t;
+
 
 /** Message struct for TRELL_MESSAGE_XML. */
 typedef struct {
     tinia_msg_t             msg;
 } tinia_msg_xml_t;
 
-
-#if 0
-typedef struct trell_message
-{
-    /** The type of the message. */
-    enum TrellMessageType       m_type;
-    /** The size of the payload. */
-    //size_t                      m_size;
-    union {
-#if 1
-        struct {
-            unsigned int            m_revision;
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_tail;
-        }                       m_get_model_update_payload;
-#endif
-#if 0
-        struct {
-            char                    m_xml[1];
-        }                       m_xml;
-#endif
-        struct {
-            char                    m_xml[1];
-        }                       m_update_state;
-
-        struct {
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_key[ TRELL_KEYID_MAXLENGTH ];
-            char                    m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
-            char                    m_tail;
-
-        }                       m_get_renderlist;
-
-
-        /** Label used for address calculations. */
-        char                    m_payload;
-        /** Payload for character-based messages (XML). */
-        char                    m_xml_payload[1];
-        /** Payload for heartbeat messages. */
-        struct {
-            /** State of job sending the heartbeat. */
-            enum TrellJobState  m_state;
-            /** Id of job sending the heartbeat. */
-            char                m_job_id[ TRELL_JOBID_MAXLENGTH+1 ];
-            char                m_tail;
-        }                       m_ping_payload;
-    };
-} trell_message_t;
-
-#define TRELL_MSGHDR_SIZE                       (offsetof(trell_message_t, m_payload))
-#define TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE    (offsetof(trell_message_t, m_get_model_update_payload.m_tail ) )
-#define TRELL_MESSAGE_IMAGE_SIZE                (offsetof(trell_message_t, m_image.m_data))
-#define TRELL_MESSAGE_GET_RENDERLIST_SIZE       (offsetof(trell_message_t, m_get_renderlist.m_tail ) )
-#define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))
-#define TRELL_MESSAGE_SCRIPT_SIZE               (offsetof(trell_message_t, m_script.m_script ))
-#define TRELL_MESSAGE_UPDATE_STATE_SIZE         (offsetof(trell_message_t, m_update_state.m_xml))
-#endif
 
 
 #ifdef __cplusplus

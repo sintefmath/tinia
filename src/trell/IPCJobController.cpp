@@ -222,32 +222,38 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             if( format != TRELL_PIXEL_FORMAT_BGR8 ) {
                 m_logger_callback( m_logger_data, 0, package.c_str(),
                                    "Queried for snapshot, unsupported image format %d.", (int)format );
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
             }
             else if( buf_size <= 3*w*h+sizeof(tinia_msg_image_t) ) {
                 m_logger_callback( m_logger_data, 0, package.c_str(),
                                    "Queried for snapshot, buffer too small." );
-                volatile tinia_msg_t* r = (tinia_msg_t*)msg;
-                r->type = TRELL_MESSAGE_ERROR;
-                return sizeof(*r);
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
             }
-            else if( !onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
+            else if( onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
                                      format, w, h, session, key ) ) {
-                m_logger_callback( m_logger_data, 0, package.c_str(),
-                                   "Queried for snapshot, rendering error." );
-            }
-            else {
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok." );
-                volatile tinia_msg_image_t* r = (tinia_msg_image_t*)msg;
-                r->msg.type = TRELL_MESSAGE_IMAGE;
-                r->width = w;
-                r->height = h;
-                r->pixel_format = format;
-                return sizeof(*r) + 3*w*h; // size of msg + payload
+                tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
+                reply->msg.type     = TRELL_MESSAGE_IMAGE;
+                reply->width        = w;
+                reply->height       = h;
+                reply->pixel_format = format;
+                return sizeof(tinia_msg_image_t) + 3*w*h; // size of msg + payload
             }
-            volatile tinia_msg_t* r = (tinia_msg_t*)msg;
-            r->type = TRELL_MESSAGE_ERROR;
-            return sizeof(*r);
+            else {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Queried for snapshot, rendering error." );
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
+            }
         }
         break;
 
