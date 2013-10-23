@@ -56,8 +56,8 @@ trell_pass_reply_png( void* data,
     
     request_rec* r = cbd->m_r;
 
-    trell_message_t* msg = (trell_message_t*)buffer;
-    if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
+    tinia_msg_t* msg = (tinia_msg_t*)buffer;
+    if( msg->type == TRELL_MESSAGE_IMAGE ) {
         tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
         int width = m->width;
         int height = m->height;
@@ -203,7 +203,7 @@ trell_pass_reply_png( void* data,
         return 0;   // success
     }
     else {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->m_type );
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->type );
         return -1; // error
     }
 }

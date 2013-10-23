@@ -191,7 +191,7 @@ protected:
       */
     virtual
     size_t
-    handle( trell_message* msg, size_t msg_size, size_t buf_size ) = 0;
+    handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size ) = 0;
 
     /** Convenience function to send a message without payload to a message box.
       *
@@ -250,11 +250,11 @@ private:
 
     static
     int
-    message_input_handler( tinia_ipc_msg_consumer_func_t* consumer,
+    message_input_handler(tinia_ipc_msg_consumer_func_t* consumer,
                            void** consumer_data,
                            void* handler_data,
-                           char* buffer,
-                           size_t buffer_bytes );
+                           const char *buffer,
+                           const size_t buffer_bytes );
     
     static
     int

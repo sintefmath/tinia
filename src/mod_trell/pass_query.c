@@ -35,20 +35,31 @@ trell_pass_query_get_renderlist( void*           data,
                                  size_t          buffer_size )
 {
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
-    
-    msg->m_type = TRELL_MESSAGE_GET_RENDERLIST;
-    memcpy( msg->m_get_renderlist.m_session_id,
-            cbd->m_dispatch_info->m_sessionid,
-            TRELL_SESSIONID_MAXLENGTH );
-    memcpy( msg->m_get_renderlist.m_key,
-            cbd->m_dispatch_info->m_key,
-            TRELL_KEYID_MAXLENGTH );
-    memcpy( msg->m_get_renderlist.m_timestamp,
-            cbd->m_dispatch_info->m_timestamp,
-            TRELL_TIMESTAMP_MAXLENGTH );
 
-    *bytes_written = TRELL_MESSAGE_GET_RENDERLIST_SIZE;
+    tinia_msg_get_renderlist_t* msg = (tinia_msg_get_renderlist_t*)buffer;
+    msg->msg.type = TRELL_MESSAGE_GET_RENDERLIST;
+    memcpy( msg->session_id, cbd->m_dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
+    msg->session_id[ TRELL_SESSIONID_MAXLENGTH ] = '\0';
+    
+    memcpy( msg->key, cbd->m_dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
+    msg->key[ TRELL_KEYID_MAXLENGTH ] = '\0';
+
+    memcpy( msg->timestamp, cbd->m_dispatch_info->m_timestamp, TRELL_TIMESTAMP_MAXLENGTH );
+    msg->timestamp[ TRELL_TIMESTAMP_MAXLENGTH ] = '\0';
+    
+    //trell_message_t* msg = (trell_message_t*)buffer;
+    //msg->m_type = TRELL_MESSAGE_GET_RENDERLIST;
+    //memcpy( msg->m_get_renderlist.m_session_id,
+     //       cbd->m_dispatch_info->m_sessionid,
+    //        TRELL_SESSIONID_MAXLENGTH );
+    //memcpy( msg->m_get_renderlist.m_key,
+    //        cbd->m_dispatch_info->m_key,
+    //        TRELL_KEYID_MAXLENGTH );
+    //memcpy( msg->m_get_renderlist.m_timestamp,
+    //        cbd->m_dispatch_info->m_timestamp,
+    //        TRELL_TIMESTAMP_MAXLENGTH );
+
+    *bytes_written = sizeof(tinia_msg_get_renderlist_t);//TRELL_MESSAGE_GET_RENDERLIST_SIZE;
     return 0;
 }
 
@@ -155,47 +166,49 @@ trell_pass_query_msg_post( void*           data,
                            const size_t    buffer_size,
                            const int       part )
 {
-    trell_pass_query_msg_post_data_t* cbd = (trell_pass_query_msg_post_data_t*)data;
- 
+    trell_pass_query_msg_post_data_t* pass_func_data = (trell_pass_query_msg_post_data_t*)data;
+    
+    if( part == 0 ) {
+        pass_func_data->message_offset = 0;
+    }
+
+    
     // --- copy message part (if anything left) into buffer --------------------
     
     *bytes_written = 0;
     *more = 0;       // are we finished, or do we have more data to send?
     
-    // bytes of message left
-    size_t bytes = cbd->message_size - cbd->message_offset; 
-    if( bytes > 0 ) {
-        // we haven't finished writing the message
-        
+    if( pass_func_data->message_offset < pass_func_data->message_size ) {
+
+        size_t bytes = pass_func_data->message_size - pass_func_data->message_offset; 
         if( buffer_size < bytes ) {
             bytes = buffer_size; // clamp to buffer size
             *more = 1;
         }
         memcpy( buffer,
-                cbd->message + cbd->message_offset,
+                pass_func_data->message + pass_func_data->message_offset,
                 bytes );
-        cbd->message_offset += bytes;
+        pass_func_data->message_offset += bytes;
         *bytes_written += bytes;
     }
     
     // --- copy data from HTTP POST if requested and any data present ----------
-
-    if( cbd->pass_post ) {
+    if( /*(*bytes_written < buffer_size) &&*/ (pass_func_data->pass_post) ) {
         *more = 1;                               // always more until we see EOF
-        bytes = buffer_size - *bytes_written;   // bytes left in buffer
-
-        apr_bucket_brigade* bb = apr_brigade_create( cbd->r->pool,
-                                                     cbd->r->connection->bucket_alloc );
+        size_t bytes = buffer_size - *bytes_written;   // bytes left in buffer
         
-        apr_status_t rv = ap_get_brigade( cbd->r->input_filters,
+        apr_bucket_brigade* bb = apr_brigade_create( pass_func_data->r->pool,
+                                                     pass_func_data->r->connection->bucket_alloc );
+        
+        apr_status_t rv = ap_get_brigade( pass_func_data->r->input_filters,
                                           bb,
                                           AP_MODE_READBYTES,
                                           APR_BLOCK_READ,
                                           bytes );
         if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, pass_func_data->r,
                            "%s.pass_query_msg_post: ap_get_brigade failed.",
-                           cbd->r->handler );
+                           pass_func_data->r->handler );
             return -1;
         }
         
@@ -211,8 +224,8 @@ trell_pass_query_msg_post( void*           data,
         apr_size_t wrote = bytes;
         rv = apr_brigade_flatten( bb, buffer + *bytes_written, &wrote );
         if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
-                           "%s.pass_query_msg_post: apr_brigade_flatten failed.", cbd->r->handler );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, pass_func_data->r,
+                           "%s.pass_query_msg_post: apr_brigade_flatten failed.", pass_func_data->r->handler );
             return -1;
         }
         *bytes_written += wrote;
@@ -247,9 +260,12 @@ trell_pass_query_xml( void*         data,
 
 
     // --- populate header -----------------------------------------------------
-    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->m_type = TRELL_MESSAGE_XML;
-    msg->m_size = 0;
+    tinia_msg_xml_t* msg = (tinia_msg_xml_t*)buffer;
+//    trell_message_t* msg = (trell_message_t*)buffer;
+    msg->msg.type = TRELL_MESSAGE_XML;
+//    msg->m_size = 0;
+    
+    size_t msg_size = 0;
     
     apr_bucket_brigade* bb;
     apr_status_t rv;
@@ -258,7 +274,7 @@ trell_pass_query_xml( void*         data,
         
     int keep_going = 1;
     do {
-        apr_size_t free = buffer_size - msg->m_size;
+        apr_size_t free = buffer_size - msg_size;
         rv = ap_get_brigade( cbd->m_r->input_filters,
                              bb,
                              AP_MODE_READBYTES,
@@ -281,17 +297,17 @@ trell_pass_query_xml( void*         data,
                 e = APR_BUCKET_NEXT( e );
             }
             apr_size_t len = free;
-            rv = apr_brigade_flatten( bb, (char*)buffer + msg->m_size + TRELL_MSGHDR_SIZE, &len );
+            rv = apr_brigade_flatten( bb, (char*)buffer + msg_size + sizeof(tinia_msg_xml_t), &len );
             if( rv != APR_SUCCESS ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
                                "%s.pass_query_xml: apr_brigade_flatten failed.", cbd->m_r->handler );
                 return -1;
             }
-            msg->m_size += len;
+            msg_size += len;
         }
     }
     while( keep_going );
-    *buffer_bytes = msg->m_size + TRELL_MSGHDR_SIZE;
+    *buffer_bytes = msg_size + + sizeof(tinia_msg_xml_t);
 
     return 0;
 }
