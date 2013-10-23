@@ -39,14 +39,17 @@ trell_pass_reply_assert_ok( void* data,
                             int more )
 {
     //trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
-    if( msg->m_type == TRELL_MESSAGE_OK ) {
+    tinia_msg_t* msg = (tinia_msg_t*)buffer;
+    if( msg->type == TRELL_MESSAGE_OK ) {
         return 0;   // ok
     }
     else {
         return -1;  // error
     }
 }
+
+
+
 
 int
 trell_pass_reply( void*         data,
@@ -75,7 +78,7 @@ trell_pass_reply( void*         data,
         }
         else if( msg->type == TRELL_MESSAGE_XML ) {
             ap_set_content_type( cbd->r, "application/xml" );
-            offset = sizeof(*msg);
+            offset = sizeof(tinia_msg_xml_t);
         }
         else if( msg->type == TRELL_MESSAGE_SCRIPT ) {
             ap_set_content_type( cbd->r, "application/javascript" );

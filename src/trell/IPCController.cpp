@@ -149,8 +149,8 @@ int
 IPCController::message_input_handler( tinia_ipc_msg_consumer_func_t* consumer,
                                       void** consumer_data,
                                       void* handler_data,
-                                      char* buffer,
-                                      size_t buffer_bytes )
+                                      const char* buffer,
+                                      const size_t buffer_bytes )
 {
     *consumer = message_consumer;
     *consumer_data = handler_data;
@@ -190,7 +190,7 @@ IPCController::message_consumer( void*                     data,
     
     
     if( !more ) {
-        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<trell_message_t*>( ctx->m_buffer ),
+        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<tinia_msg_t*>( ctx->m_buffer ),
                                                              ctx->m_buffer_offset,
                                                              ctx->m_buffer_size );
         

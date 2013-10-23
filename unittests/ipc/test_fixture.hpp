@@ -296,8 +296,8 @@ cleanup:
     int
     server_input_handler( tinia_ipc_msg_consumer_func_t* consumer_, void** consumer_data,
                           void* handler_data,
-                          char* buffer,
-                          size_t buffer_bytes )
+                          const char* buffer,
+                          const size_t buffer_bytes )
     {
         *consumer_ = server_consumer;
         *consumer_data = handler_data;
@@ -410,6 +410,18 @@ cleanup:
                                                              buffer_bytes,
                                                              part,
                                                              more );
+    }
+
+    static
+    int
+    client_input_handler( tinia_ipc_msg_consumer_func_t* consumer_, void** consumer_data,
+                          void* handler_data,
+                          const char* buffer,
+                          const size_t buffer_bytes )
+    {
+        *consumer_ = client_consumer;
+        *consumer_data = handler_data;
+        return 0;
     }
 
     

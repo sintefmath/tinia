@@ -94,8 +94,6 @@ enum TrellMessageType {
  * Container for:
  * - TRELL_MESSAGE_OK
  * - TRELL_MESSAGE_ERROR
- * - TRELL_MESSAGE_SCRIPT
- * - TRELL_MESSAGE_XML
  */
 typedef struct tinia_msg
 {
@@ -133,6 +131,14 @@ typedef struct {
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
 } tinia_msg_get_exposed_model_t;
 
+/** Message struct for msg.type=TRELL_MESSAGE_GET_RENDERLIST. */
+typedef struct {
+    tinia_msg_t             msg;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1 ];
+    char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+    char                    timestamp[ TRELL_TIMESTAMP_MAXLENGTH + 1 ];
+} tinia_msg_get_renderlist_t;
+
 /** Message struct for TRELL_MESSAGE_IMAGE. */
 typedef struct {
     tinia_msg_t             msg;
@@ -141,12 +147,24 @@ typedef struct {
     unsigned int            height;
 } tinia_msg_image_t;
 
+/** Message struct for TRELL_MESSAGE_SCRIPT. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_script_t;
+
+/** Message struct for TRELL_MESSAGE_XML. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_xml_t;
+
+
+#if 0
 typedef struct trell_message
 {
     /** The type of the message. */
     enum TrellMessageType       m_type;
     /** The size of the payload. */
-    size_t                      m_size;
+    //size_t                      m_size;
     union {
 #if 1
         struct {
@@ -195,6 +213,8 @@ typedef struct trell_message
 #define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))
 #define TRELL_MESSAGE_SCRIPT_SIZE               (offsetof(trell_message_t, m_script.m_script ))
 #define TRELL_MESSAGE_UPDATE_STATE_SIZE         (offsetof(trell_message_t, m_update_state.m_xml))
+#endif
+
 
 #ifdef __cplusplus
 }

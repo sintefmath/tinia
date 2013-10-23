@@ -123,8 +123,8 @@ typedef int (*tinia_ipc_msg_producer_func_t)( void*         data,
 typedef int (*tinia_ipc_msg_input_handler_func_t)( tinia_ipc_msg_consumer_func_t*  consumer,
                                                    void**                          consumer_data,
                                                    void*                           handler_data,
-                                                   char*                           buffer,
-                                                   size_t                          buffer_bytes );
+                                                   const char*                     buffer,
+                                                   const size_t                    buffer_bytes );
 
 
 /** User-supplied callback that sets a message producer callback.
