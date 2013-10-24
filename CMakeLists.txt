@@ -3,6 +3,12 @@ CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
 SET( version_number "0.2.5" )
 SET(TINIA_VERSION ${version_number})
 
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 # Set shared for linux:
 IF(NOT WIN32)
     IF(NOT DEFINED ${BUILD_SHARED_LIBS})
