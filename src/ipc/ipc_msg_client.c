@@ -395,6 +395,7 @@ ipc_msg_client_recv( char* errnobuf,
             break;
         }
     }
+    client->logger_f( client->logger_d, 2, who, "Received %d parts from %s.", part+1, client->shmem_name );
     if( ret == 0 ) {
         ret = do_wait_on_notification;
     }

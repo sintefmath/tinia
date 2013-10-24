@@ -167,6 +167,14 @@ trell_pass_query_msg_post( void*           data,
                            const int       part )
 {
     trell_pass_query_msg_post_data_t* pass_func_data = (trell_pass_query_msg_post_data_t*)data;
+    *bytes_written = 0;
+    *more = 0;       // are we finished, or do we have more data to send?
+    
+    if( pass_func_data->r->connection->aborted ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r, "%s: connection aborted.", __func__ );
+        return -1;
+    }
+    
     
     if( part == 0 ) {
         pass_func_data->message_offset = 0;
@@ -174,8 +182,6 @@ trell_pass_query_msg_post( void*           data,
 
     
     // --- copy message part (if anything left) into buffer --------------------
-    *bytes_written = 0;
-    *more = 0;       // are we finished, or do we have more data to send?
     if( pass_func_data->message_offset < pass_func_data->message_size ) {
 
         size_t bytes = pass_func_data->message_size - pass_func_data->message_offset; 
