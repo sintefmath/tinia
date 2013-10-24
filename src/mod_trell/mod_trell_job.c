@@ -60,24 +60,31 @@ trell_handle_get_script( trell_sconf_t           *sconf,
                          request_rec             *r,
                          trell_dispatch_info_t   *dispatch_info)
 {
-    return HTTP_INTERNAL_SERVER_ERROR;
-#if 0
-    trell_message_t query;
-    query.m_type = TRELL_MESSAGE_GET_SCRIPTS;
+    tinia_msg_get_script_t query;
+    query.msg.type = TRELL_MESSAGE_GET_SCRIPTS;
     
-    tinia_pass_reply_data_t rd;
-    rd.sconf = sconf;
-    rd.r = r;
-    rd.dispatch_info = dispatch_info;
-    rd.longpolling = 0;
-    rd.brigade = NULL;
+    trell_pass_query_msg_post_data_t pass_query_data;
+    pass_query_data.sconf          = sconf;
+    pass_query_data.r              = r;
+    pass_query_data.dispatch_info  = dispatch_info;
+    pass_query_data.message        = &query;
+    pass_query_data.message_offset = 0;
+    pass_query_data.message_size   = sizeof(query);
+    pass_query_data.pass_post      = 0;
+
+    tinia_pass_reply_data_t pass_reply_data;
+    pass_reply_data.sconf         = sconf;
+    pass_reply_data.r             = r;
+    pass_reply_data.dispatch_info = dispatch_info;
+    pass_reply_data.longpolling   = 0;
+    pass_reply_data.brigade       = NULL;
     
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s", __func__ );
-    int rv = tinia_ipc_msg_client_sendrecv_buffered_query_by_name( dispatch_info->m_jobid,
-                                                                   trell_messenger_log_wrapper, r,
-                                                                   (const char*)&query, TRELL_MSGHDR_SIZE,
-                                                                   trell_pass_reply, &rd,
-                                                                   0 );
+    int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
+                                                    trell_messenger_log_wrapper, r,
+                                                    trell_pass_query_msg_post, &pass_query_data,
+                                                    trell_pass_reply, &pass_reply_data,
+                                                    0 );
     
     if( rv == 0 ) {
         return OK;
@@ -89,7 +96,6 @@ trell_handle_get_script( trell_sconf_t           *sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#endif
 }
 
 int
@@ -97,27 +103,38 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info )
 {
-    return HTTP_INTERNAL_SERVER_ERROR;
-#if 0
-    trell_message_t query;
-    query.m_type = TRELL_MESSAGE_GET_RENDERLIST;
-    memcpy( &query.m_get_renderlist.m_session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
-    memcpy( &query.m_get_renderlist.m_key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
-    memcpy( &query.m_get_renderlist.m_timestamp, dispatch_info->m_timestamp, TRELL_TIMESTAMP_MAXLENGTH );
- 
-    tinia_pass_reply_data_t rd;
-    rd.sconf = sconf;
-    rd.r = r;
-    rd.dispatch_info = dispatch_info;
-    rd.longpolling = 0;
-    rd.brigade = NULL;
+    tinia_msg_get_renderlist_t query;
+    query.msg.type = TRELL_MESSAGE_GET_RENDERLIST;
+    memcpy( &query.session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
+    query.session_id[TRELL_SESSIONID_MAXLENGTH] = '\0';
+    memcpy( &query.key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
+    query.key[TRELL_KEYID_MAXLENGTH] = '\0';
+    memcpy( &query.timestamp, dispatch_info->m_timestamp, TRELL_TIMESTAMP_MAXLENGTH );
+    query.timestamp[TRELL_TIMESTAMP_MAXLENGTH] = '\0';
     
+    
+    trell_pass_query_msg_post_data_t pass_query_data;
+    pass_query_data.sconf          = sconf;
+    pass_query_data.r              = r;
+    pass_query_data.dispatch_info  = dispatch_info;
+    pass_query_data.message        = &query;
+    pass_query_data.message_offset = 0;
+    pass_query_data.message_size   = sizeof(query);
+    pass_query_data.pass_post      = 0;
+
+    tinia_pass_reply_data_t pass_reply_data;
+    pass_reply_data.sconf         = sconf;
+    pass_reply_data.r             = r;
+    pass_reply_data.dispatch_info = dispatch_info;
+    pass_reply_data.longpolling   = 0;
+    pass_reply_data.brigade       = NULL;
+
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s", __func__ );
-    int rv = tinia_ipc_msg_client_sendrecv_buffered_query_by_name( dispatch_info->m_jobid,
-                                                                   trell_messenger_log_wrapper, r,
-                                                                   (const char*)&query, TRELL_MESSAGE_GET_RENDERLIST_SIZE,
-                                                                   trell_pass_reply, &rd,
-                                                                   0 );
+    int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
+                                                    trell_messenger_log_wrapper, r,
+                                                    trell_pass_query_msg_post, &pass_query_data,
+                                                    trell_pass_reply, &pass_reply_data,
+                                                    0 );
     
     if( rv == 0 ) {
         return OK;
@@ -129,7 +146,6 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#endif
 }
 
 int
@@ -137,7 +153,6 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                            request_rec*            r,
                            trell_dispatch_info_t*  dispatch_info )
 {
-    //return HTTP_INSUFFICIENT_STORAGE;
     if( ( dispatch_info->m_width < 1 ) || ( dispatch_info->m_width > 2048  ) ||
         ( dispatch_info->m_width < 1 ) || ( dispatch_info->m_height > 2048 ) )
     {
@@ -164,13 +179,19 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     pass_query_data.message_size   = sizeof(query);
     pass_query_data.pass_post      = 0;
 
-    trell_callback_data_t cbd = { sconf, r, dispatch_info };
+    trell_encode_png_state_t encode_png_state;
+    encode_png_state.sconf         = sconf;
+    encode_png_state.r             = r;
+    encode_png_state.dispatch_info = dispatch_info;
+    encode_png_state.width         = 0;
+    encode_png_state.height        = 0;
+    encode_png_state.buffer        = NULL;
     
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s", __func__ );
+    
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,
                                                     trell_pass_query_msg_post, &pass_query_data,
-                                                    trell_pass_reply_png, &cbd,
+                                                    trell_pass_reply_png, &encode_png_state,
                                                     0 );
     
     if( rv == 0 ) {
@@ -183,22 +204,6 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#if 0    
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s", __func__ );
-    switch( tinia_ipc_msg_client_sendrecv_cb( 
-                                              
-                                              trell_messenger_log_wrapper, r,
-                                              dispatch_info->m_jobid,
-                                              0 ) ) // no longpoll
-    {
-    case MESSENGER_OK:
-        return OK; // everything ok.
-    case MESSENGER_TIMEOUT:
-        return HTTP_REQUEST_TIME_OUT;
-    default:
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-#endif
 }
 
 
@@ -246,7 +251,6 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }    
-
 }
 
 
@@ -255,8 +259,6 @@ trell_handle_update_state( trell_sconf_t* sconf,
                            request_rec* r,
                            trell_dispatch_info_t*  dispatch_info )
 {
-    return HTTP_INTERNAL_SERVER_ERROR;  // FIXME
-#if 0
     // check method
     if( r->method_number != M_POST ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: method != POST" );
@@ -307,20 +309,22 @@ trell_handle_update_state( trell_sconf_t* sconf,
     rd.longpolling = 0;
     rd.brigade = NULL;
     
-    switch( tinia_ipc_msg_client_sendrecv_cb( trell_pass_query_msg_post, &qd,
-                                              trell_pass_reply, &rd,
-                                              trell_messenger_log_wrapper, r,
-                                              dispatch_info->m_jobid,
-                                              0 ) )
-    {
-    case MESSENGER_OK:
-        return HTTP_NO_CONTENT; // everything ok.
-    case MESSENGER_TIMEOUT:
+    int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
+                                                    trell_messenger_log_wrapper, r,
+                                                    trell_pass_query_msg_post, &qd,
+                                                    trell_pass_reply, &rd,
+                                                    0 );
+
+    if( rv == 0 ) {
+        return OK;
+    }
+    else if( rv == -1 ) {
         return HTTP_REQUEST_TIME_OUT;
-    default:
+    }
+    else {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-#endif
 }
 
 // -----------------------------------------------------------------------------

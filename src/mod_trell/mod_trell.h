@@ -172,6 +172,19 @@ typedef struct
     int                     pass_post;
 } trell_pass_query_msg_post_data_t;
 
+typedef struct {
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    int                     width;
+    int                     height;
+    char*                   buffer;
+    char*                   filtered;
+    size_t                  bytes_read;
+} trell_encode_png_state_t;
+        
+
+
 /** Sends a message composed by a predefined part and post data.
  *
  * \implements tinia_ipc_msg_producer_func_t.

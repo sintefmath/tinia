@@ -40,6 +40,8 @@ trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
 }
 
 
+
+
 int
 trell_pass_reply_png( void* data,
                       const char *buffer,
@@ -48,62 +50,75 @@ trell_pass_reply_png( void* data,
                       const int more )
 {
     
-    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
+    trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
-                   "%s.pass_reply_png: Invoked.", cbd->m_r->handler );
 
-    
-    // FIXME: This is invoked as multipart (msg payload is currently restricted
-    //        to 4k).
-    
-    if( part != 0 ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
-                       "%s.pass_query_xml: multi-part not implemented yet.", cbd->m_r->handler );
-        return -1;
+    size_t offset = 0;
+    if( part == 0 ) {
+        encoder_state->dispatch_info->m_png_entry = apr_time_now();
+        // first invocation
+        tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
+        if( msg->msg.type != TRELL_MESSAGE_IMAGE ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+                           "got reply of type %d.", msg->msg.type );
+            return -1; // error
+        }
+        
+        encoder_state->width  = msg->width;
+        encoder_state->height = msg->height;
+        encoder_state->buffer = apr_palloc( encoder_state->r->pool,
+                                            3*encoder_state->width*encoder_state->height );
+        encoder_state->filtered = apr_palloc( encoder_state->r->pool,
+                                              (3*encoder_state->width+1)*encoder_state->height );
+        encoder_state->bytes_read = 0;
+        
+        offset += sizeof(tinia_msg_image_t);
     }
     
-    request_rec* r = cbd->m_r;
-
-    tinia_msg_t* msg = (tinia_msg_t*)buffer;
-    if( msg->type == TRELL_MESSAGE_IMAGE ) {
-        tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
-        int width = m->width;
-        int height = m->height;
-
+    if( offset < buffer_bytes ) {
+        // we have data to copy. 
+        size_t bytes = buffer_bytes - offset;
+        memcpy( encoder_state->buffer + encoder_state->bytes_read,
+                buffer + offset,
+                bytes );
+        encoder_state->bytes_read += bytes;
         
-        char* payload = (char*)buffer + sizeof(*m);
-
+    }
     
+    if( more == 0 ) {
+        // last invocation
+        if( encoder_state->bytes_read != 3*encoder_state->width*encoder_state->height ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+                           "expected %d bytes, got %ld bytes.",
+                           3*encoder_state->width*encoder_state->height,
+                           encoder_state->bytes_read );
+            return -1;
+        }
         
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, cbd->m_r,
-                       "%s.pass_reply_png: w=%d, h=%d, l=%d.", cbd->m_r->handler,
-                       width, height, (int)buffer_bytes );
-        return 0;
         
-        cbd->m_dispatch_info->m_png_entry = apr_time_now();
-        int i, j;
-    
-        const unsigned int* crc_table = cbd->m_sconf->m_crc_table;
-    
-        // Apply an PNG prediction filter, and do it upside-down effectively
-        // flipping the image.
-    
-        char* filtered = apr_palloc( r->pool, (3*width+1)*height );
-        cbd->m_dispatch_info->m_png_filter_entry = apr_time_now();
-        for( j=0; j<height; j++) {
-            filtered[ (3*width+1)*j + 0 ] = 0;
-            for(i=0; i<width; i++) {
-                filtered[ (3*width+1)*j + 1 + 3*i + 0 ] = payload[ 3*width*(height-j-1) + 3*i + 2 ];
-                filtered[ (3*width+1)*j + 1 + 3*i + 1 ] = payload[ 3*width*(height-j-1) + 3*i + 1 ];
-                filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = payload[ 3*width*(height-j-1) + 3*i + 0 ];
+        int i,j;
+        int w = encoder_state->width;
+        int h = encoder_state->height;
+        
+        // apply png filter
+        char* filtered = encoder_state->filtered;
+        char* unfiltered = encoder_state->buffer;
+        
+        encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
+        for( j=0; j<h; j++ ) {
+            filtered[ 3*(w+1)*j + 0 ] = 0;
+            for( i=0; i<w; i++ ) {
+                filtered[ (3*w+1)*j + 1 + 3*i + 0 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 2 ];
+                filtered[ (3*w+1)*j + 1 + 3*i + 1 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 1 ];
+                filtered[ (3*w+1)*j + 1 + 3*i + 2 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 0 ];
             }
         }
-        cbd->m_dispatch_info->m_png_filter_exit = apr_time_now();
-    
-    
-        uLong bound = compressBound( (3*width+1)*height );
-        unsigned char* png = apr_palloc( r->pool, bound + 8 + 25 + 12 + 12 + 12 );
+        encoder_state->dispatch_info->m_png_filter_exit = apr_time_now();
+        
+         
+        
+        uLong bound = compressBound( (3*w+1)*h );
+        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 );
         unsigned char* p = png;
     
         // PNG signature, 8 bytes
@@ -125,20 +140,20 @@ trell_pass_reply_png( void* data,
         *p++ = 'H';
         *p++ = 'D';
         *p++ = 'R';
-        *p++ = ((width)>>24)&0xffu;    // image width
-        *p++ = ((width)>>16)&0xffu;
-        *p++ = ((width)>>8)&0xffu;
-        *p++ = ((width)>>0)&0xffu;
-        *p++ = ((height)>>24)&0xffu;    // image height
-        *p++ = ((height)>>16)&0xffu;
-        *p++ = ((height)>>8)&0xffu;
-        *p++ = ((height)>>0)&0xffu;
+        *p++ = ((w)>>24)&0xffu;    // image width
+        *p++ = ((w)>>16)&0xffu;
+        *p++ = ((w)>>8)&0xffu;
+        *p++ = ((w)>>0)&0xffu;
+        *p++ = ((h)>>24)&0xffu;    // image height
+        *p++ = ((h)>>16)&0xffu;
+        *p++ = ((h)>>8)&0xffu;
+        *p++ = ((h)>>0)&0xffu;
         *p++ = 8;                  // 8 bits per channel
         *p++ = 2;                  // RGB triple
         *p++ = 0;
         *p++ = 0;
         *p++ = 0;                  // image not interlaced
-        unsigned int crc = trell_png_crc( crc_table, p-13-4, 13+4 );
+        unsigned int crc = trell_png_crc( encoder_state->sconf->m_crc_table, p-13-4, 13+4 );
         *p++ = ((crc)>>24)&0xffu;    // image width
         *p++ = ((crc)>>16)&0xffu;
         *p++ = ((crc)>>8)&0xffu;
@@ -146,15 +161,15 @@ trell_pass_reply_png( void* data,
     
         // IDAT chunk, 12 + payload bytes in total.
     
-        cbd->m_dispatch_info->m_png_compress_entry = apr_time_now();
-        int c = compress( (Bytef*)(p+8), &bound, (Bytef*)filtered, (3*width+1)*height );
-        cbd->m_dispatch_info->m_png_compress_exit = apr_time_now();
+        encoder_state->dispatch_info->m_png_compress_entry = apr_time_now();
+        int c = compress( (Bytef*)(p+8), &bound, (Bytef*)filtered, (3*w+1)*h );
+        encoder_state->dispatch_info->m_png_compress_exit = apr_time_now();
         if( c == Z_MEM_ERROR ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "Z_MEM_ERROR" );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Z_MEM_ERROR" );
             return HTTP_INTERNAL_SERVER_ERROR;
         }
         else if( c == Z_BUF_ERROR ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "Z_BUF_ERROR" );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Z_BUF_ERROR" );
             return HTTP_INTERNAL_SERVER_ERROR;
         }
     
@@ -168,7 +183,7 @@ trell_pass_reply_png( void* data,
         *p++ = 'T';
     
         p += bound;                // skip forward
-        crc = trell_png_crc( crc_table, p-bound-4, bound+4 );
+        crc = trell_png_crc( encoder_state->sconf->m_crc_table, p-bound-4, bound+4 );
         *p++ = ((crc)>>24)&0xffu;    // CRC
         *p++ = ((crc)>>16)&0xffu;
         *p++ = ((crc)>>8)&0xffu;
@@ -189,40 +204,72 @@ trell_pass_reply_png( void* data,
         *p++ = 130;
       
         
-        char* datestring = apr_palloc( r->pool, APR_RFC822_DATE_LEN );
+        char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
         apr_rfc822_date( datestring, apr_time_now() );
-        apr_table_setn( r->headers_out, "Last-Modified", datestring );
-        apr_table_setn( r->headers_out, "Cache-Control", "no-cache" );
+        apr_table_setn( encoder_state->r->headers_out, "Last-Modified", datestring );
+        apr_table_setn( encoder_state->r->headers_out, "Cache-Control", "no-cache" );
     
-        struct apr_bucket_brigade* bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
-        if( cbd->m_dispatch_info->m_base64 == 0 ) {
+        struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool,
+                                                            encoder_state->r->connection->bucket_alloc );
+        if( encoder_state->dispatch_info->m_base64 == 0 ) {
             // Send as plain png image
-            ap_set_content_type( r, "image/png" );
-            ap_set_content_length( r, p-png );
+            ap_set_content_type( encoder_state->r, "image/png" );
+            ap_set_content_length( encoder_state->r, p-png );
             APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( (char*)png, p-png, bb->bucket_alloc ) );
         }
         else {
             // Encode png as base64 and send as string
-            apr_table_setn( r->headers_out, "Content-Type", "text/plain" );
-            ap_set_content_type( r, "text/plain" );
-            char* base64 = apr_palloc( r->pool, apr_base64_encode_len( p-png ) );
+            apr_table_setn( encoder_state->r->headers_out, "Content-Type", "text/plain" );
+            ap_set_content_type( encoder_state->r, "text/plain" );
+            char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
             int base64_size = apr_base64_encode( base64, (char*)png, p-png );
             APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( base64, base64_size, bb->bucket_alloc ) );
         }
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
     
-        apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
-        cbd->m_dispatch_info->m_png_exit = apr_time_now();
+        apr_status_t rv = ap_pass_brigade( encoder_state->r->output_filters, bb );
+        encoder_state->dispatch_info->m_png_exit = apr_time_now();
     
         if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "ap_pass_brigade failed." );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, encoder_state->r,
+                           "ap_pass_brigade failed." );
             return -1; // error
         }
-        return 0;   // success
+    }
+    return 0;   // success
+/*
+
+    
+    request_rec* r = encoder_state->m_r;
+
+    tinia_msg_t* msg = (tinia_msg_t*)buffer;
+    if( msg->type == TRELL_MESSAGE_IMAGE ) {
+        tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
+        int width = m->width;
+        int height = m->height;
+
+        
+        char* payload = (char*)buffer + sizeof(*m);
+
+    
+        
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->m_r,
+                       "%s.pass_reply_png: w=%d, h=%d, l=%d.", encoder_state->m_r->handler,
+                       width, height, (int)buffer_bytes );
+        return 0;
+        
+        int i, j;
+    
+        const unsigned int* crc_table = encoder_state->m_sconf->m_crc_table;
+    
+
+        
+    
     }
     else {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->type );
         return -1; // error
     }
+    */
 }
     
