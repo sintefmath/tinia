@@ -120,6 +120,15 @@ typedef struct {
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
 } tinia_msg_get_snapshot_t;
 
+/** Message struct for TRELL_MESSAGE_GET_SCRIPTS. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_get_script_t;
+
+/** Message struct for TRELL_MESSAGE_SCRIPT. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_script_t;
 
 /** Message struct for TRELL_MESSAGE_UPDATE_STATE. */
 typedef struct {
@@ -154,10 +163,6 @@ typedef struct {
 } tinia_msg_image_t;
 
 
-/** Message struct for TRELL_MESSAGE_SCRIPT. */
-typedef struct {
-    tinia_msg_t             msg;
-} tinia_msg_script_t;
 
 
 /** Message struct for TRELL_MESSAGE_XML. */
