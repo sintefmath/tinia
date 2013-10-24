@@ -224,6 +224,7 @@ typedef struct {
     trell_dispatch_info_t*  dispatch_info;
     int                     longpolling;
     apr_bucket_brigade*     brigade;
+    size_t                  bytes_sent;
 } tinia_pass_reply_data_t;
 
 

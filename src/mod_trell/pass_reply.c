@@ -64,6 +64,7 @@ trell_pass_reply( void*         data,
 
     size_t offset = 0;
     if( part == 0 ) {
+        cbd->bytes_sent = 0;
         
         if( msg->type == TRELL_MESSAGE_OK ) {
             if( cbd->longpolling ) {
@@ -98,13 +99,16 @@ trell_pass_reply( void*         data,
         
         cbd->brigade = apr_brigade_create( cbd->r->pool, cbd->r->connection->bucket_alloc );
     }
-    
-    size_t payload_bytes = buffer_bytes-offset;
-    apr_bucket* b = apr_bucket_transient_create( buffer + offset,
-                                                 payload_bytes,
-                                                 cbd->brigade->bucket_alloc );
 
-    APR_BRIGADE_INSERT_TAIL( cbd->brigade, b );
+    if( offset < buffer_bytes ) {
+        size_t payload_bytes = buffer_bytes-offset;
+        apr_bucket* b = apr_bucket_transient_create( buffer + offset,
+                                                     payload_bytes,
+                                                     cbd->brigade->bucket_alloc );
+        cbd->bytes_sent += payload_bytes;
+        APR_BRIGADE_INSERT_TAIL( cbd->brigade, b );
+    }    
+
     if( !more ) {
         APR_BRIGADE_INSERT_TAIL( cbd->brigade, apr_bucket_eos_create( cbd->brigade->bucket_alloc ) );
     }
@@ -131,6 +135,8 @@ trell_pass_reply( void*         data,
                            "trell_pass_reply: apr_brigade_destroy failed. " );
             return -1;                  // error
         }
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, cbd->r,
+                       "%s: sent %ld bytes of %s. ", __func__, cbd->bytes_sent, cbd->r->content_type );
     }
     return 0;   // ok
 }

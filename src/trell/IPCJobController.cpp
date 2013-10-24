@@ -322,11 +322,15 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                            (char*)msg + sizeof(tinia_msg_script_t),
                            buf_size - sizeof(tinia_msg_script_t) ) )
         {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for scripts, ok (result_size=%ld).", result_size );
             tinia_msg_script_t* reply = (tinia_msg_script_t*)msg;
             reply->msg.type = TRELL_MESSAGE_SCRIPT;
             return sizeof(tinia_msg_script_t) + result_size;
         }
         else {
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for scripts, failed." );
             msg->type = TRELL_MESSAGE_ERROR;
             return sizeof(tinia_msg_t);
         }

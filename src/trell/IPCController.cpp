@@ -90,7 +90,7 @@ bool IPCController::onGetScripts(size_t &result_size, char *buffer, const size_t
     std::string header("");
     header.copy(buffer, buffer_size);
     buffer += header.size();
-    result_size += header.size();
+    result_size = header.size();
     for(size_t i = 0; i < m_scripts.size(); ++i) {
         m_scripts[i].copy(buffer, buffer_size);
         buffer += m_scripts[i].size();
