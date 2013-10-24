@@ -335,7 +335,7 @@ trell_messenger_log_wrapper( void* data, int level, const char* who, const char*
     case 1: ap_level = APLOG_WARNING; break;
     default: ap_level = APLOG_NOTICE; break;
     }
-    ap_log_rerror( APLOG_MARK, ap_level, OK, r, "%s: %s", who, buf );
+    ap_log_rerror( APLOG_MARK, ap_level, OK, r, "[%d] %s: %s", getpid(), who, buf );
     
 }
 

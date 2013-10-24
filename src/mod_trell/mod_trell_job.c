@@ -234,7 +234,7 @@ trell_handle_get_model_update( trell_sconf_t* sconf,
     pass_reply_data.longpolling   = 1;
     pass_reply_data.brigade       = NULL;
     
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s", __func__ );
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "[%d] %s", getpid(), __func__ );
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,
                                                     trell_pass_query_msg_post, &pass_query_data,

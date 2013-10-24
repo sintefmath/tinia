@@ -154,6 +154,9 @@ ipc_msg_path( char* path, const size_t n, const char* jobid );
 int
 ipc_msg_shmem_path( char* path, const size_t n, const char* jobid );
 
+void
+tinia_ipc_msg_dump_backtrace( tinia_ipc_msg_log_func_t log_f, void* log_d );
+
 // === CLIENT INTERNAL API =====================================================
 
 

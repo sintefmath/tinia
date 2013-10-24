@@ -20,9 +20,11 @@
 #include <string.h>
 #include <ctype.h>  // isalnum
 #include <pthread.h>
-
 #include <string.h>
-
+#include <stdlib.h>
+#ifdef __GNUC__
+#include <execinfo.h>
+#endif
 #include "ipc_msg_internal.h"
 
 
@@ -40,6 +42,27 @@ ipc_msg_strerror_wrap( int errnum,
 {
     return strerror(errnum); //strerror_r( errnum, buf, buflen );
 }
+
+void
+tinia_ipc_msg_dump_backtrace( tinia_ipc_msg_log_func_t log_f, void* log_d )
+{
+    static const char* who = "tinia.ipc.msg.dump_backtrace";
+#ifdef __GNUC__
+    void* array[40];
+    char** strings;
+    
+    size_t size, i;
+    size = backtrace( array, 40 );
+    strings = backtrace_symbols( array, size );
+    for(i=0; i<size; i++) {
+        log_f( log_d, 2, who, "%2ld: %s.", i, strings[i] );
+    }
+    free(strings);  
+#else
+    log_f( log_d, 0, who, "Not implemented" );    
+#endif
+}
+
 
 
 int 

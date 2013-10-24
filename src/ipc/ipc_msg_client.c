@@ -228,6 +228,8 @@ ipc_msg_client_wait_server( char* errnobuf,
             client->logger_f( client->logger_d, 0, who,
                               "pthread_cond_timedwait( client_event ): %s",
                               ipc_msg_strerror_wrap(rc, errnobuf, errnobuf_size ) );
+            tinia_ipc_msg_dump_backtrace( client->logger_f, client->logger_d );
+            
             client->shmem_header_ptr->state = IPC_MSG_STATE_ERROR;
             ipc_msg_client_signal_server( errnobuf, errnobuf_size, client );
             if( rc == ETIMEDOUT ) {
@@ -292,6 +294,8 @@ ipc_msg_client_send( char* errnobuf,
                       part ) != 0 )
         {
             // --- error while producing message part --------------------------
+            client->logger_f( client->logger_d, 0, who,
+                              "Producer failed populating part %d.", part );
             ret = -1;
             client->shmem_header_ptr->state = IPC_MSG_STATE_ERROR;
             ipc_msg_client_signal_server( errnobuf, errnobuf_size, client );
@@ -306,6 +310,9 @@ ipc_msg_client_send( char* errnobuf,
             break;
         }
     }
+    
+    client->logger_f( client->logger_d, 2, who, "Sent %d parts to %s.", part, client->shmem_name );
+    
     return ret;
 }
 
@@ -322,8 +329,14 @@ ipc_msg_client_recv( char* errnobuf,
     int ret = 0, part, rc;
  
     for( part=0; ret == 0 ; part++ ) {
+
+        enum tinia_ipc_msg_state_t debug = client->shmem_header_ptr->state;
+        
         // --- wait for server to be ready -------------------------------------
         if( (ret = ipc_msg_client_wait_server( errnobuf, errnobuf_size, timeout, client )) != 0 ) {
+            client->logger_f( client->logger_d, 0, who, "server wait fail, part=%d, state=%d",
+                              part, debug );
+            
             break;
         }
         
@@ -429,19 +442,17 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
     char errnobuf[256];
     int rc, ret = 0;
 
-    // --- create timeouts -----------------------------------------------------
-    struct timespec timeout, timeout_lp;
-    if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
+    // --- create timeout for longpolling --------------------------------------
+    struct timespec timeout_lp;
+    if( clock_gettime( CLOCK_REALTIME, &timeout_lp ) != 0 ) {
         client->logger_f( client->logger_d, 0, who,
                           "clock_gettime( CLOCK_REALTIME ): %s",
                           ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
         return -2;
     }
-    timeout_lp = timeout;
     timeout_lp.tv_sec += longpoll_timeout;
-    timeout.tv_sec += 1;
-    
    
+    
     // --- make sure that we are the only client that interacts ----------------
     rc = pthread_mutex_lock( &client->shmem_header_ptr->transaction_lock );
     if( rc != 0 ) {
@@ -453,6 +464,17 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
     else {
         do {
             ret = 0;
+
+            // --- create timeout for this transaction -------------------------
+            struct timespec timeout;
+            if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
+                client->logger_f( client->logger_d, 0, who,
+                                  "clock_gettime( CLOCK_REALTIME ): %s",
+                                  ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
+                ret = -2;
+                break;
+            }
+            timeout.tv_sec += 1;
 
             // --- get control of shared memory buffer -------------------------
             rc = pthread_mutex_lock( &client->shmem_header_ptr->operation_lock );
@@ -479,6 +501,7 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
                         client->logger_f( client->logger_d, 0, who,
                                           "pthread_cond_timedwait( client_event ): %s",
                                           ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        tinia_ipc_msg_dump_backtrace( client->logger_f, client->logger_d );
                         break;
                     }
                 }
@@ -521,22 +544,33 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
                     ret = 0;
                     break;  // no longpolling, just break out
                 }
+                client->logger_f( client->logger_d, 2, who, "Wait on notification from %s.", client->shmem_name );
                 rc = pthread_cond_timedwait( &client->shmem_header_ptr->notification_event,
                                              &client->shmem_header_ptr->transaction_lock,
                                              &timeout_lp );
                 if( rc != 0 ) {
-                    if( rc == ETIMEDOUT ) { // likely to happen, not an error
+                    if( rc == ETIMEDOUT ) {
                         ret = -1;
-                        client->logger_f( client->logger_d, 2, who,
-                                          "pthread_cond_timedwait( notification_event ): %s",
-                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        // this is likely to happen when there actually are no
+                        // notifications, and is not an error
+
+                        // client->logger_f( client->logger_d, 2, who,
+                        //                   "pthread_cond_timedwait( notification_event ): %s",
+                        //                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        // tinia_ipc_msg_dump_backtrace( client->logger_f, client->logger_d );
+                        client->logger_f( client->logger_d, 2, who, "Timed out waiting on notification from %s.", client->shmem_name );
                     }
                     else {
                         ret = -2;
                         client->logger_f( client->logger_d, 0, who,
                                           "pthread_cond_timedwait( notification_event ): %s",
                                           ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        tinia_ipc_msg_dump_backtrace( client->logger_f, client->logger_d );
+                        
                     }
+                }
+                else {
+                    client->logger_f( client->logger_d, 2, who, "Got notification from %s.", client->shmem_name );
                 }
             }
         }
