@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <iostream>
 #include "tinia/trell/IPCController.hpp"
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/ipc_msg.h>
 
 namespace tinia {
 namespace trell {
@@ -55,14 +55,14 @@ void
 IPCController::finish()
 {
     m_job_state = TRELL_JOBSTATE_FINISHED;
-    ipc_msg_server_break( m_msgbox );
+    ipc_msg_server_mainloop_break( m_msgbox );
 }
 
 void
 IPCController::fail()
 {
     m_job_state = TRELL_JOBSTATE_FAILED;
-    ipc_msg_server_break( m_msgbox );
+    ipc_msg_server_mainloop_break( m_msgbox );
 }
 
 void
@@ -88,7 +88,7 @@ bool IPCController::onGetScripts(size_t &result_size, char *buffer, const size_t
     std::string header("");
     header.copy(buffer, buffer_size);
     buffer += header.size();
-    result_size += header.size();
+    result_size = header.size();
     for(size_t i = 0; i < m_scripts.size(); ++i) {
         m_scripts[i].copy(buffer, buffer_size);
         buffer += m_scripts[i].size();
@@ -124,16 +124,15 @@ IPCController::shutdown()
     cleanup();
 
     if( !m_is_master ) {
-        tinia_ipc_msg_status_t mrv = tinia_ipc_msg_client_release( m_master_mbox );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << "Failed to close messenger: " << messenger_strerror( mrv ) << "\n";
+        if( tinia_ipc_msg_client_release( m_master_mbox ) != 0 ) {
+            std::cerr << "Failed to close messenger.\n";
         }
         else {
             delete reinterpret_cast<char*>( m_master_mbox );
         }
     }
 
-    ipc_msg_server_release( m_msgbox );
+    ipc_msg_server_delete( m_msgbox );
 
     std::cerr << "Done.\n";
     m_cleanup_pid = -1;
@@ -146,28 +145,52 @@ IPCController::~IPCController()
 }
 
 
-tinia_ipc_msg_status_t
+int
+IPCController::message_input_handler( tinia_ipc_msg_consumer_func_t* consumer,
+                                      void** consumer_data,
+                                      void* handler_data,
+                                      const char* buffer,
+                                      const size_t buffer_bytes )
+{
+    *consumer = message_consumer;
+    *consumer_data = handler_data;
+    return 0;
+}
+
+
+int
+IPCController::message_output_handler( tinia_ipc_msg_producer_func_t* producer,
+                                       void** producer_data,
+                                       void* handler_data )
+{
+    *producer = message_producer;
+    *producer_data = handler_data;
+    return 0;
+}
+
+
+int
 IPCController::message_consumer( void*                     data,
-                  const char*               buffer,
-                  const size_t              buffer_bytes,
-                  const int                 first,
-                  const int                 more ) 
+                                 const char*               buffer,
+                                 const size_t              buffer_bytes,
+                                 const int                 iteration,
+                                 const int                 more ) 
 {
     IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
-    if( first ) {
+    if( iteration == 0 ) {
         ctx->m_buffer_offset = 0;
     }
     
     
     if( ctx->m_buffer_size <= ctx->m_buffer_offset + buffer_bytes ) {
-        return MESSENGER_ERROR;
+        return -1;
     }
     memcpy( ctx->m_buffer + ctx->m_buffer_offset, buffer, buffer_bytes );
     ctx->m_buffer_offset += buffer_bytes;
     
     
     if( !more ) {
-        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<trell_message_t*>( ctx->m_buffer ),
+        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<tinia_msg_t*>( ctx->m_buffer ),
                                                              ctx->m_buffer_offset,
                                                              ctx->m_buffer_size );
         
@@ -175,19 +198,19 @@ IPCController::message_consumer( void*                     data,
         //                                          "handle passed %d bytes, got %d bytes.", ctx->m_buffer_offset,
         //                                          ctx->m_output_bytes );
     }
-    return MESSENGER_OK;
+    return 0;
 }
 
-tinia_ipc_msg_status_t
+int
 IPCController::message_producer( void*         data,
                   int*          more,
                   char*         buffer,
                   size_t*       buffer_bytes,
                   const size_t  buffer_size,
-                  const int     first )
+                  const int     iteration )
 {
     IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
-    if( first ) {
+    if( iteration == 0 ) {
         ctx->m_buffer_offset = 0;
     }
     size_t bytes = ctx->m_output_bytes - ctx->m_buffer_offset;
@@ -198,18 +221,18 @@ IPCController::message_producer( void*         data,
     ctx->m_buffer_offset += bytes;
     *buffer_bytes = bytes;
     *more = ctx->m_buffer_offset < ctx->m_output_bytes ? 1 : 0;
-    return MESSENGER_OK;
+    return 0;
 }
 
-tinia_ipc_msg_status_t
-IPCController::handle_periodic( void* data, int seconds )
+int
+IPCController::handle_periodic(void* data)
 {
     IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
     if( ctx->m_ipc_controller->periodic() ) {
-        return MESSENGER_OK;
+        return 0;
     }
     else {
-        return MESSENGER_ERROR;
+        return -1;
     }
 }
 
@@ -260,8 +283,8 @@ IPCController::run(int argc, char **argv)
 
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        m_msgbox = reinterpret_cast<messenger_server_t*>( new char[ messenger_server_t_sizeof ] );
-        if( ipc_msg_server_init( m_msgbox, m_id.c_str(), m_logger_callback, m_logger_data ) != MESSENGER_OK ) {
+        m_msgbox = ipc_msg_server_create( m_id.c_str(), m_logger_callback, m_logger_data );
+        if( m_msgbox == NULL ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
         }
     }
@@ -269,12 +292,13 @@ IPCController::run(int argc, char **argv)
 
     if( m_job_state == TRELL_JOBSTATE_NOT_STARTED && !m_is_master ) {
         m_master_mbox = reinterpret_cast<tinia_ipc_msg_client_t*>( new char[tinia_ipc_msg_client_t_sizeof] );
-        tinia_ipc_msg_status_t mrv = tinia_ipc_msg_client_init(  m_master_mbox,
+        
+        if( tinia_ipc_msg_client_init(  m_master_mbox,
                                                   m_master_id.c_str(),
                                                   m_logger_callback,
-                                                  m_logger_data );
-        if( mrv != MESSENGER_OK ) {
-            std::cerr << "Failed to connect to master: " << messenger_strerror( mrv ) << "\n";
+                                                  m_logger_data ) != 0 )
+        {
+            std::cerr << "Failed to connect to master.\n";
             m_job_state = TRELL_JOBSTATE_FAILED;
         }
     }
@@ -302,9 +326,9 @@ IPCController::run(int argc, char **argv)
         ctx.m_buffer = new char[ctx.m_buffer_size];
     
         if( ipc_msg_server_mainloop( m_msgbox,
-                                       message_consumer, &ctx,
-                                       message_producer, &ctx,
-                                       handle_periodic, &ctx ) == MESSENGER_OK )
+                                     handle_periodic, &ctx,
+                                     message_input_handler, &ctx,
+                                     message_output_handler, &ctx ) == 0 )
         {
             m_job_state = TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY;
         }
@@ -319,7 +343,6 @@ IPCController::run(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
-
 TrellMessageType
 IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessageType query )
 {
@@ -328,20 +351,25 @@ IPCController::sendSmallMessage( const std::string& message_box_id, TrellMessage
     
     tinia_msg_t r;
     size_t rs;
-    tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &q, sizeof(q), &r, &rs, sizeof(r),
-                                                    m_logger_callback, m_logger_data,
-                                                    message_box_id.c_str(),
-                                                    0 );
-
-    if( (rv == MESSENGER_OK) && (rs == sizeof(r)) ) {
-        m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent small message to '%s'.",
-                           message_box_id.c_str() );
-        return TRELL_MESSAGE_ERROR;
+    
+    if( ipc_msg_client_sendrecv_buffered_by_name( message_box_id.c_str(),
+                                                  m_logger_callback, m_logger_data,
+                                                  reinterpret_cast<const char*>(&q), sizeof(q),
+                                                  reinterpret_cast<char*>(&r), &rs, sizeof(r)) == 0 )
+    {
+        if( rs == sizeof(r) ) {
+            m_logger_callback( m_logger_data, 2, package.c_str(), "Successfully sent small message to '%s'.",
+                               message_box_id.c_str() );
+            return r.type;
+        }
+        else {
+            return TRELL_MESSAGE_ERROR;
+        }
     }
     else {
         m_logger_callback( m_logger_data, 0, package.c_str(), "Failed to send small message to '%s'.",
                            message_box_id.c_str());
-        return r.type;
+        return TRELL_MESSAGE_ERROR;
     }
 }
 
@@ -354,6 +382,7 @@ IPCController::sendHeartBeat()
     if( m_is_master ) {
         return true; // Don't send heartbeats to oneself.
     }
+    
 
     tinia_msg_heartbeat_t query;
     query.msg.type = TRELL_MESSAGE_HEARTBEAT;
@@ -363,31 +392,20 @@ IPCController::sendHeartBeat()
     
     tinia_msg_t reply;
     size_t reply_actual;
-
+    
     m_logger_callback( m_logger_data, 2, func.c_str(), "Sending heartbeat to '%s'.", m_master_id.c_str() );
-
-    tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &query, sizeof(query),
-                                                               &reply, &reply_actual, sizeof(reply),
-                                                               m_logger_callback, m_logger_data,
-                                                               m_master_id.c_str(),
-                                                               0 );
-    if( rv != MESSENGER_OK ) {
-        m_logger_callback( m_logger_data, 0, func.c_str(), "ipc failed." );
-        return false;
-    }
     
-    if( reply_actual != sizeof(reply) ) {
-        m_logger_callback( m_logger_data, 0, func.c_str(), "Reply of wrong size." );
+    if( ipc_msg_client_sendrecv_buffered_by_name( m_master_id.c_str(),
+                                                  m_logger_callback, m_logger_data,
+                                                  reinterpret_cast<const char*>(&query), sizeof(query),
+                                                  reinterpret_cast<char*>(&reply), &reply_actual, sizeof(reply)) != 0 )
+    {
+        m_logger_callback( m_logger_data, 0, func.c_str(), "Failed to send message to master job." );
         return false;
     }
-        
-    if( reply.type != TRELL_MESSAGE_OK ) {
-        m_logger_callback( m_logger_data, 0, func.c_str(), "Reply was not OK." );
-        return false;
+    else {
+        return true;
     }
-    
-    m_logger_callback( m_logger_data, 2, func.c_str(), "Success." );
-    return true;
 }
 
 bool

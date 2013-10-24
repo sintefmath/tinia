@@ -134,22 +134,19 @@ Master::Master( bool for_real )
 
 
 size_t
-Master::handle( trell_message* msg, size_t msg_size, size_t buf_size )
+Master::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 {
     const std::string func = package + ".handle";
     
-    m_logger_callback( m_logger_data, 2, func.c_str(), "Got message %d", msg->m_type );
+    m_logger_callback( m_logger_data, 2, func.c_str(), "Got message %d", msg->type );
 
-    TrellMessageType return_type = TRELL_MESSAGE_ERROR;
-    
-    size_t osize = 0;
-
-    if( msg->m_type == TRELL_MESSAGE_XML ) {
-//        tinia_msg_t* query = (tinia_msg_t*)msg;
+    if( msg->type == TRELL_MESSAGE_XML ) {
         
         ParsedXML data;
         data.m_action = ParsedXML::ACTION_NONE;
-        parseXML( data, msg->m_xml_payload, msg->m_size );
+        parseXML( data,
+                  (char*)msg + sizeof(tinia_msg_xml_t),
+                  msg_size - sizeof(tinia_msg_xml_t) );
 
         string retval;
         switch( data.m_action ) {
@@ -196,7 +193,8 @@ Master::handle( trell_message* msg, size_t msg_size, size_t buf_size )
                         data.m_application,
                         data.m_args,
                         data.m_rendering_devices,
-                        string( msg->m_xml_payload, msg->m_size ) ) ) {
+                        string( (char*)msg + sizeof(tinia_msg_xml_t),
+                                msg_size - sizeof(tinia_msg_xml_t) ) ) ) {
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Received xml-rpc: addJob(%s): success.", data.m_job.c_str() );
                 retval = ret_success;
@@ -237,29 +235,25 @@ Master::handle( trell_message* msg, size_t msg_size, size_t buf_size )
         }
         
         if( !retval.empty() ) {
-            volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
-            if( buf_size  <= sizeof(*reply) + retval.size() ) {
+            if( buf_size  <= sizeof(tinia_msg_xml_t) + retval.size() ) {
                 m_logger_callback( m_logger_data, 0, package.c_str(),
                                    "Shmem buffer too small." );
-                reply->type = TRELL_MESSAGE_ERROR;
-                return sizeof(*reply);
             }
             else {
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Replied with %d bytes of XML.", retval.size() );
-                memcpy( (char*)msg + sizeof(*reply),
-                        retval.data(),
-                        retval.size() );
-                reply->type = TRELL_MESSAGE_XML;
-                return retval.size() + sizeof(*reply);
+                
+                tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
+                reply->msg.type = TRELL_MESSAGE_XML;
+                memcpy( (char*)msg + sizeof(tinia_msg_xml_t), retval.data(), retval.size() );
+                return sizeof(tinia_msg_xml_t) + retval.size();
             }
         }
-
-        msg->m_type = return_type;
-        msg->m_size = osize;
-        return osize + TRELL_MSGHDR_SIZE;
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_ERROR;
+        return sizeof(tinia_msg_t);
     }
-    else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
+    else if( msg->type == TRELL_MESSAGE_HEARTBEAT ) {
         tinia_msg_heartbeat_t* q = reinterpret_cast<tinia_msg_heartbeat_t*>(msg);
 
         m_logger_callback( m_logger_data, 2, package.c_str(),
@@ -269,17 +263,17 @@ Master::handle( trell_message* msg, size_t msg_size, size_t buf_size )
         std::string job = q->job_id;
         setJobState( job, q->state, true );
 
-        tinia_msg_t* r = reinterpret_cast<tinia_msg_t*>(msg);
-        r->type = TRELL_MESSAGE_OK;
-        return sizeof(*r);
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_OK;
+        return sizeof(tinia_msg_t);
     }
     else {
         m_logger_callback( m_logger_data, 0, package.c_str(),
                            "Received unknown message: type=%d, size=%d.",
-                           msg->m_type, msg->m_size );
-        tinia_msg_t* r = reinterpret_cast<tinia_msg_t*>(msg);
-        r->type = TRELL_MESSAGE_ERROR;
-        return sizeof(*r);
+                           msg->type, msg_size );
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_ERROR;
+        return sizeof(tinia_msg_t);
     }
 }
 
@@ -885,13 +879,14 @@ Master::addJob( const std::string& id,
             tinia_msg_t reply;
             size_t reply_actual;
         
-            tinia_ipc_msg_status_t rv = tinia_ipc_msg_client_sendrecv( &query, sizeof(query),
-                                                            &reply, &reply_actual, sizeof(reply),
-                                                            m_logger_callback, m_logger_data,
-                                                            getMasterID().c_str(),
-                                                            0 );
-        
-            if( (rv == MESSENGER_OK) && (reply_actual == sizeof(reply)) && (reply.type == TRELL_MESSAGE_OK ) ) {
+            
+            if( (ipc_msg_client_sendrecv_buffered_by_name( getMasterID().c_str(),
+                                                          m_logger_callback, m_logger_data,
+                                                          reinterpret_cast<const char*>( &query ), sizeof(query),
+                                                          reinterpret_cast<char*>( &reply ), &reply_actual, sizeof(reply) ) == 0 )
+                && (reply_actual == sizeof(reply))
+                    && (reply.type == TRELL_MESSAGE_OK) )
+            {
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Notified master that '%s' is about to terminate.",
                                    it->second.m_id.c_str() );
@@ -901,7 +896,7 @@ Master::addJob( const std::string& id,
                                    "Tried to notify master that '%s' is about terminate, but failed to send message.",
                                    it->second.m_id.c_str() );
             }
-
+                                                            
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "'%s' exits.", it->second.m_id.c_str() );
             exit( EXIT_FAILURE );

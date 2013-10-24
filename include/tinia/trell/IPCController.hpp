@@ -20,7 +20,7 @@
 
 #include <string>
 #include <semaphore.h>
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/ipc_msg.h>
 #include "trell.h"
 #include "tinia/jobcontroller/Controller.hpp"
 #include "tinia/model/StateListener.hpp"
@@ -191,7 +191,7 @@ protected:
       */
     virtual
     size_t
-    handle( trell_message* msg, size_t msg_size, size_t buf_size ) = 0;
+    handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size ) = 0;
 
     /** Convenience function to send a message without payload to a message box.
       *
@@ -215,7 +215,7 @@ private:
       * avoid clashes when fork succeds, but execl fails. */
     int             m_cleanup_pid;
 
-    messenger_server_t*  m_msgbox;
+    tinia_ipc_msg_server_t*  m_msgbox;
     /** The id of this message box. */
     std::string     m_id;
     /** True of this job is the master job. */
@@ -247,26 +247,42 @@ private:
         size_t          m_buffer_size;
     };
     
+
     static
-    tinia_ipc_msg_status_t
+    int
+    message_input_handler(tinia_ipc_msg_consumer_func_t* consumer,
+                           void** consumer_data,
+                           void* handler_data,
+                           const char *buffer,
+                           const size_t buffer_bytes );
+    
+    static
+    int
+    message_output_handler( tinia_ipc_msg_producer_func_t* producer,
+                            void** producer_data,
+                            void* handler_data );
+
+    
+    static
+    int
     message_consumer( void*                     data,
                       const char*               buffer,
                       const size_t              buffer_bytes,
-                      const int                 first,
+                      const int                 iteration,
                       const int                 more ) ;
 
     static
-    tinia_ipc_msg_status_t
+    int
     message_producer( void*         data,
                       int*          more,
                       char*         buffer,
                       size_t*       buffer_bytes,
                       const size_t  buffer_size,
-                      const int     first );
+                      const int     iteration );
 
     static
-    tinia_ipc_msg_status_t
-    handle_periodic( void* data, int seconds );
+    int
+    handle_periodic( void* data );
     
     
     

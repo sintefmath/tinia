@@ -216,7 +216,7 @@ protected:
 
     /** Handle a raw trell message. */
     size_t
-    handle( trell_message* msg, size_t msg_size, size_t buf_size );
+    handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size );
 
     /** Updates the state of a job.
       *

@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <semaphore.h>  // for trell_lock
 
 #include "tinia/trell/trell.h"
 #include "mod_trell.h"
@@ -103,11 +104,13 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
         
         // Wait failed, check to see if the messenger still lives... If not,
         // we assume it's dead.
-        tinia_ipc_msg_client_t* msgr = (tinia_ipc_msg_client_t*)apr_palloc( r->pool, tinia_ipc_msg_client_t_sizeof );
-        tinia_ipc_msg_status_t status = tinia_ipc_msg_client_init( msgr, svr_conf->m_master_id,
-                                                    trell_messenger_log_wrapper,
-                                                    r );
-        if( status != MESSENGER_OK ) {
+        tinia_ipc_msg_client_t* msgr = (tinia_ipc_msg_client_t*)apr_palloc( r->pool,
+                                                                            tinia_ipc_msg_client_t_sizeof );
+        if( tinia_ipc_msg_client_init( msgr,
+                                 svr_conf->m_master_id,
+                                 trell_messenger_log_wrapper,
+                                 r ) != 0 )
+        {
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
             return APR_SUCCESS;
         }
@@ -135,11 +138,11 @@ trell_kill_process( trell_sconf_t* svr_conf,  request_rec* r, pid_t pid )
         }
 
         tinia_ipc_msg_client_t* msgr = (tinia_ipc_msg_client_t*)apr_palloc( r->pool, tinia_ipc_msg_client_t_sizeof );
-        tinia_ipc_msg_status_t status = tinia_ipc_msg_client_init( msgr,
-                                                    svr_conf->m_master_id,
-                                                    trell_messenger_log_wrapper,
-                                                    r );
-        if( status != MESSENGER_OK ) {
+        if( tinia_ipc_msg_client_init( msgr,
+                                 svr_conf->m_master_id,
+                                 trell_messenger_log_wrapper,
+                                 r ) != 0 )
+        {
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r, "mod_trell: failed to get master messenger, assuming master is dead." );
             return APR_SUCCESS;
         }

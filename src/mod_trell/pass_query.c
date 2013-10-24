@@ -35,37 +35,35 @@ trell_pass_query_get_renderlist( void*           data,
                                  size_t          buffer_size )
 {
     trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
+
+    tinia_msg_get_renderlist_t* msg = (tinia_msg_get_renderlist_t*)buffer;
+    msg->msg.type = TRELL_MESSAGE_GET_RENDERLIST;
+    memcpy( msg->session_id, cbd->m_dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
+    msg->session_id[ TRELL_SESSIONID_MAXLENGTH ] = '\0';
     
-    msg->m_type = TRELL_MESSAGE_GET_RENDERLIST;
-    memcpy( msg->m_get_renderlist.m_session_id,
-            cbd->m_dispatch_info->m_sessionid,
-            TRELL_SESSIONID_MAXLENGTH );
-    memcpy( msg->m_get_renderlist.m_key,
-            cbd->m_dispatch_info->m_key,
-            TRELL_KEYID_MAXLENGTH );
-    memcpy( msg->m_get_renderlist.m_timestamp,
-            cbd->m_dispatch_info->m_timestamp,
-            TRELL_TIMESTAMP_MAXLENGTH );
+    memcpy( msg->key, cbd->m_dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
+    msg->key[ TRELL_KEYID_MAXLENGTH ] = '\0';
 
-    *bytes_written = TRELL_MESSAGE_GET_RENDERLIST_SIZE;
+    memcpy( msg->timestamp, cbd->m_dispatch_info->m_timestamp, TRELL_TIMESTAMP_MAXLENGTH );
+    msg->timestamp[ TRELL_TIMESTAMP_MAXLENGTH ] = '\0';
+    
+    //trell_message_t* msg = (trell_message_t*)buffer;
+    //msg->m_type = TRELL_MESSAGE_GET_RENDERLIST;
+    //memcpy( msg->m_get_renderlist.m_session_id,
+     //       cbd->m_dispatch_info->m_sessionid,
+    //        TRELL_SESSIONID_MAXLENGTH );
+    //memcpy( msg->m_get_renderlist.m_key,
+    //        cbd->m_dispatch_info->m_key,
+    //        TRELL_KEYID_MAXLENGTH );
+    //memcpy( msg->m_get_renderlist.m_timestamp,
+    //        cbd->m_dispatch_info->m_timestamp,
+    //        TRELL_TIMESTAMP_MAXLENGTH );
+
+    *bytes_written = sizeof(tinia_msg_get_renderlist_t);//TRELL_MESSAGE_GET_RENDERLIST_SIZE;
     return 0;
 }
 
-int
-trell_pass_query_get_scripts( void*           data,
-                              size_t*         bytes_written,
-                              unsigned char*  buffer,
-                              size_t          buffer_size )
-{
-    //trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->m_type = TRELL_MESSAGE_GET_SCRIPTS;
-    *bytes_written = TRELL_MSGHDR_SIZE;
-    return 0;
-}
-
-
+#if 0
 int
 trell_pass_query_get_exposedmodel( void*           data,
                                    size_t*         bytes_written,
@@ -86,7 +84,7 @@ trell_pass_query_get_exposedmodel( void*           data,
     *bytes_written = msg->m_size + TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE;
     return 0;
 }
-
+#endif
 
 #if 0
 int
@@ -162,51 +160,63 @@ trell_pass_query_update_state_xml( void*           data,
 
 int
 trell_pass_query_msg_post( void*           data,
+                           int*            more,
+                           char*           buffer,
                            size_t*         bytes_written,
-                           unsigned char*  buffer,
-                           size_t          buffer_size )
+                           const size_t    buffer_size,
+                           const int       part )
 {
-    trell_pass_query_msg_post_data_t* cbd = (trell_pass_query_msg_post_data_t*)data;
- 
-    // --- copy message part (if anything left) into buffer --------------------
-    
+    trell_pass_query_msg_post_data_t* pass_func_data = (trell_pass_query_msg_post_data_t*)data;
     *bytes_written = 0;
-    int more = 0;       // are we finished, or do we have more data to send?
+    *more = 0;       // are we finished, or do we have more data to send?
     
-    // bytes of message left
-    size_t bytes = cbd->message_size - cbd->message_offset; 
-    if( bytes > 0 ) {
-        // we haven't finished writing the message
-        
+    if( pass_func_data->r->connection->aborted ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r, "%s: connection aborted.", __func__ );
+        return -1;
+    }
+    
+    
+    if( part == 0 ) {
+        pass_func_data->message_offset = 0;
+    }
+
+    
+    // --- copy message part (if anything left) into buffer --------------------
+    if( pass_func_data->message_offset < pass_func_data->message_size ) {
+
+        size_t bytes = pass_func_data->message_size - pass_func_data->message_offset; 
         if( buffer_size < bytes ) {
             bytes = buffer_size; // clamp to buffer size
-            more = 1;
+            *more = 1;
         }
         memcpy( buffer,
-                cbd->message + cbd->message_offset,
+                pass_func_data->message + pass_func_data->message_offset,
                 bytes );
-        cbd->message_offset += bytes;
+        pass_func_data->message_offset += bytes;
         *bytes_written += bytes;
+        
+        //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r,
+        //               "%s.pass_query_msg_post: wrote %d bytes of header [%d].",
+        //               pass_func_data->r->handler, (int)bytes, *((int*)buffer) );
     }
     
     // --- copy data from HTTP POST if requested and any data present ----------
-
-    if( cbd->pass_post ) {
-        more = 1;                               // always more until we see EOF
-        bytes = buffer_size - *bytes_written;   // bytes left in buffer
-
-        apr_bucket_brigade* bb = apr_brigade_create( cbd->r->pool,
-                                                     cbd->r->connection->bucket_alloc );
+    if( /*(*bytes_written < buffer_size) &&*/ (pass_func_data->pass_post) ) {
+        *more = 1;                               // always more until we see EOF
+        size_t bytes = buffer_size - *bytes_written;   // bytes left in buffer
         
-        apr_status_t rv = ap_get_brigade( cbd->r->input_filters,
+        apr_bucket_brigade* bb = apr_brigade_create( pass_func_data->r->pool,
+                                                     pass_func_data->r->connection->bucket_alloc );
+        
+        apr_status_t rv = ap_get_brigade( pass_func_data->r->input_filters,
                                           bb,
                                           AP_MODE_READBYTES,
                                           APR_BLOCK_READ,
                                           bytes );
         if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, pass_func_data->r,
                            "%s.pass_query_msg_post: ap_get_brigade failed.",
-                           cbd->r->handler );
+                           pass_func_data->r->handler );
             return -1;
         }
         
@@ -214,7 +224,7 @@ trell_pass_query_msg_post( void*           data,
         apr_bucket* e;
         for( e=APR_BRIGADE_FIRST(bb); e!=APR_BRIGADE_SENTINEL(bb); e=APR_BUCKET_NEXT(e) ) {
             if( APR_BUCKET_IS_EOS(e) ) {
-                more = 0;   // last iteration!
+                *more = 0;   // last iteration!
             }
         }
         
@@ -222,76 +232,14 @@ trell_pass_query_msg_post( void*           data,
         apr_size_t wrote = bytes;
         rv = apr_brigade_flatten( bb, buffer + *bytes_written, &wrote );
         if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->r,
-                           "%s.pass_query_msg_post: apr_brigade_flatten failed.", cbd->r->handler );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, pass_func_data->r,
+                           "%s.pass_query_msg_post: apr_brigade_flatten failed.", pass_func_data->r->handler );
             return -1;
         }
         *bytes_written += wrote;
     }
-    return more;
-}
-
-
-int
-trell_pass_query_xml(  void*           data,
-                       size_t*         bytes_written,
-                       unsigned char*  buffer,
-                       size_t          buffer_size )
-{
-/*    typedef struct {
-        trell_sconf_t*          m_sconf;
-        request_rec*            m_r;
-        trell_dispatch_info_t*  m_dispatch_info;
-    } trell_callback_data_t;    
-  */  
-
-    trell_callback_data_t* cbd = (trell_callback_data_t*)data;
-
-    // Create message
-    trell_message_t* msg = (trell_message_t*)buffer;
-    msg->m_type = TRELL_MESSAGE_XML;
-    msg->m_size = 0;//TRELL_MSGHDR_SIZE;
-
-    apr_bucket_brigade* bb;
-    apr_status_t rv;
-
-    bb = apr_brigade_create( cbd->m_r->pool, cbd->m_r->connection->bucket_alloc );
-        
-    int keep_going = 1;
-    do {
-        apr_size_t free = buffer_size - msg->m_size;
-        rv = ap_get_brigade( cbd->m_r->input_filters,
-                             bb,
-                             AP_MODE_READBYTES,
-                             APR_BLOCK_READ,
-                             free );
-        if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
-                           "%s.pass_query_xml: ap_get_brigade failed.", cbd->m_r->handler );
-            return -1;
-        }
-        if( APR_BRIGADE_EMPTY( bb ) ) {
-            keep_going = 0;
-        }
-        else {
-            apr_bucket* e = APR_BRIGADE_FIRST( bb );
-            while( e != APR_BRIGADE_SENTINEL( bb ) ) {
-                if( APR_BUCKET_IS_EOS( e ) ) { // is test necessary?
-                    keep_going = 0;
-                }
-                e = APR_BUCKET_NEXT( e );
-            }
-            apr_size_t len = free;
-            rv = apr_brigade_flatten( bb, (char*)buffer + msg->m_size + TRELL_MSGHDR_SIZE, &len );
-            if( rv != APR_SUCCESS ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, cbd->m_r,
-                               "%s.pass_query_xml: apr_brigade_flatten failed.", cbd->m_r->handler );
-                return -1;
-            }
-            msg->m_size += len;
-        }
-    }
-    while( keep_going );
-    *bytes_written = msg->m_size + TRELL_MSGHDR_SIZE;
+    //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, pass_func_data->r,
+    //               "%s.pass_query_msg_post: wrote a total of %d bytes, part=%d.",
+    //               pass_func_data->r->handler, (int)(*bytes_written), part );
     return 0;
 }

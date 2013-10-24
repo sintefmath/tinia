@@ -24,7 +24,7 @@
 #include <apr_hash.h>
 #include <util_filter.h>
 #include <libxml/xmlschemas.h>
-#include "tinia/ipc/messenger.h"
+#include <tinia/ipc/ipc_msg.h>
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
 
@@ -134,6 +134,11 @@ int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info,
                         request_rec*           r );
 
+int
+trell_handle_get_snapshot( trell_sconf_t*          sconf,
+                           request_rec*            r,
+                           trell_dispatch_info_t*  dispatch_info );
+
 /** Handles long-polling request from client.
   *
   * - Opens connection to job, if fails, returns HTTP_NOT_FOUND.
@@ -167,12 +172,30 @@ typedef struct
     int                     pass_post;
 } trell_pass_query_msg_post_data_t;
 
+typedef struct {
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    int                     width;
+    int                     height;
+    char*                   buffer;
+    char*                   filtered;
+    size_t                  bytes_read;
+} trell_encode_png_state_t;
+        
+
+
+/** Sends a message composed by a predefined part and post data.
+ *
+ * \implements tinia_ipc_msg_producer_func_t.
+ */
 int
 trell_pass_query_msg_post( void*           data,
-                                size_t*         bytes_written,
-                                unsigned char*  buffer,
-                                size_t          buffer_size );
-
+                           int*            more,
+                           char*           buffer,
+                           size_t*         bytes_written,
+                           const size_t    buffer_size,
+                           const int       part );
 int
 trell_pass_query_get_snapshot( void*           data,
                                size_t*         bytes_written,
@@ -190,23 +213,7 @@ trell_pass_query_get_exposedmodel( void*           data,
                                    size_t*         bytes_written,
                                    unsigned char*  buffer,
                                    size_t          buffer_size );
-int
-trell_pass_query_xml(  void*           data,
-                       size_t*         bytes_written,
-                       unsigned char*  buffer,
-                       size_t          buffer_size );
 
-int
-trell_pass_query_get_scripts( void*           data,
-                              size_t*         bytes_written,
-                              unsigned char*  buffer,
-                              size_t          buffer_size );
-
-//int
-//trell_pass_query_update_state_xml( void*           data,
-//                                   size_t*         bytes_written,
-//                                   unsigned char*  buffer,
-//                                   size_t          buffer_size );
 
 /******************************************************************************/
 // return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
@@ -217,10 +224,13 @@ typedef struct {
     trell_dispatch_info_t*  dispatch_info;
     int                     longpolling;
     apr_bucket_brigade*     brigade;
+    size_t                  bytes_sent;
 } tinia_pass_reply_data_t;
 
 
 /** Callback that passes data from ipc.msg.client to apache.
+ *
+ * \implements tinia_ipc_msg_consumer_func_t.
  *
  * Handles:
  * - MESSENGER_OK
@@ -229,22 +239,25 @@ typedef struct {
  * - TRELL_MESSAGE_SCRIPT
  *
  */
-tinia_ipc_msg_status_t
-trell_pass_reply( void* data,
+int
+trell_pass_reply(void* data,
                   const char* buffer,
                   const size_t buffer_bytes,
-                  const int first,
+                  const int part,
                   const int more );
 
 /** Callback that passes data from ipc.msg.client to apache.
+ *
+ * \implements tinia_ipc_msg_consumer_func_t.
+ *
  * Handles:
  * - TRELL_MESSAGE_IMAGE
  */
-tinia_ipc_msg_status_t
+int
 trell_pass_reply_png( void* data,
                       const char* buffer,
                       const size_t buffer_bytes,
-                      const int first,
+                      const int part,
                       const int more );
 
 /******************************************************************************/
