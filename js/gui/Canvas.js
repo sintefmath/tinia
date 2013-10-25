@@ -214,11 +214,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.connect(document, "onmouseup", dojo.hitch(this, this._mouseup));
         //	this.on("touchend", dojo.hitch(this, this._mouseup));
         this.on("mousemove", dojo.hitch(this, this._mousemove));
-	this.domNode.addEventListener("touchstart", dojo.hitch(this, this._touchstart));
+        this.domNode.addEventListener("touchstart", dojo.hitch(this, this._touchstart));
         this.domNode.addEventListener("touchend", dojo.hitch(this, this._touchend));
         this.domNode.addEventListener("touchmove", dojo.hitch(this, this._touchmove));
-this.on(dojo.touch.move, dojo.hitch(this, this._touchmove));
-	this.on(dojo.touch.move, function(event) {console.log("mv"); });
+        this.on(dojo.touch.move, dojo.hitch(this, this._touchmove));
+        this.on(dojo.touch.move, function(event) {console.log("mv"); });
         //document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
         this.on("mouseover", dojo.hitch(this, function () {
             this._mouseOver = true;
@@ -259,16 +259,18 @@ this.on(dojo.touch.move, dojo.hitch(this, this._touchmove));
 
     _touchstart: function (event) {
         this._active = true;
-	for(var i = 0; i < event.touches.length; ++i) {
+
+        // We need to add the relative placement informatoin to all touch events
+        for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();
             event.touches[i].relativeX = x;
             event.touches[i].relativeY = y;
-	}
-	event.pageX = event.touches[0].pageX;
-	event.pageY = event.touches[0].pageY;
-	event.relativeX = event.touches[0].relativeX;
-	event.relativeY = event.touches[0].relativeY;        
+        }
+        event.pageX = event.touches[0].pageX;
+        event.pageY = event.touches[0].pageY;
+        event.relativeX = event.touches[0].relativeX;
+        event.relativeY = event.touches[0].relativeY;
 
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].touchStartEvent) {
@@ -287,6 +289,8 @@ this.on(dojo.touch.move, dojo.hitch(this, this._touchmove));
             event.touches[i].relativeX = x;
             event.touches[i].relativeY = y;
         }
+
+        // We need to add the relative placement informatoin to all touch events
         event.pageX = event.touches[0].pageX;
         event.pageY = event.touches[0].pageY;
         event.relativeX = event.touches[0].relativeX;
