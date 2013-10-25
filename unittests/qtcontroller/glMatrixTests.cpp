@@ -21,7 +21,7 @@
 #include <QtScript>
 
 #include <stdexcept>
-#include <tinia/qtcontroller/scripting/utils.hpp>
+#include <tinia/qtcontroller/impl/script_utils.hpp>
 namespace {
 
 using namespace std;

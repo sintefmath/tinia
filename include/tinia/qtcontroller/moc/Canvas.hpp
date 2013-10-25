@@ -26,7 +26,7 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/model/ExposedModel.hpp"
 #include "tinia/model/StateListener.hpp"
-#include <tinia/qtcontroller/scripting/EventHandler.hpp>
+#include <tinia/qtcontroller/impl/EventHandler.hpp>
 #include <boost/scoped_ptr.hpp>
 
 namespace tinia {

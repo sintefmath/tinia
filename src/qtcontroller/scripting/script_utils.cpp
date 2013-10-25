@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <tinia/qtcontroller/scripting/utils.hpp>
+#include <tinia/qtcontroller/impl/script_utils.hpp>
 #include <QFile>
 #include <stdexcept>
 

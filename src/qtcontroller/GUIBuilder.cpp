@@ -34,7 +34,7 @@
 #include "tinia/qtcontroller/moc/PopupEventFilter.hpp"
 #include "tinia/qtcontroller/moc/FileDialogButton.hpp"
 #include "tinia/qtcontroller/impl/utils.hpp"
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 
 #include <QLayout>
 #include <QVBoxLayout>

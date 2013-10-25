@@ -17,7 +17,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 
 BOOST_AUTO_TEST_SUITE(ScriptEngine)
 

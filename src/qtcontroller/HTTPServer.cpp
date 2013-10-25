@@ -22,7 +22,7 @@
 #include <GL/glew.h>
 #include "tinia/qtcontroller/moc/HTTPServer.hpp"
 #include "tinia/qtcontroller/moc/LongPollHandler.hpp"
-#include "tinia/qtcontroller/moc/ServerThread.hpp"
+#include "tinia/qtcontroller/impl/ServerThread.hpp"
 #include "tinia/qtcontroller/impl/http_utils.hpp"
 #include "tinia/renderlist.hpp"
 #include <stdexcept>
