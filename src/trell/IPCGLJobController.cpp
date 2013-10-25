@@ -81,6 +81,7 @@ GLDebugLogWrapper( GLenum source,
                           source_str,
                           type_str,
                           message );
+#endif
 
 }
 #endif

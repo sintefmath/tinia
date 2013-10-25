@@ -9,12 +9,12 @@ SET( TRELL_MASTER_SRC
     "RenderingDevices.cpp"
 )
 
-ADD_EXECUTABLE( trell_master ${TRELL_MASTER_SRC} )
-TARGET_LINK_LIBRARIES( trell_master renderlist renderlistgl trell ${RT} jobcontroller  ${LIBXML2_LIBRARIES} ${OPENGL_LIBRARY} model modelxml )
+ADD_EXECUTABLE( tinia_trell_master ${TRELL_MASTER_SRC} )
+TARGET_LINK_LIBRARIES( tinia_trell_master tinia_renderlist tinia_renderlistgl tinia_trell ${RT} tinia_jobcontroller  ${LIBXML2_LIBRARIES} ${OPENGL_LIBRARY} tinia_model tinia_modelxml )
 
 
 INSTALL( TARGETS 
-  trell_master
+  tinia_trell_master
   EXPORT TiniaTargets
   RUNTIME DESTINATION var/trell/bin
     COMPONENT mod_trell

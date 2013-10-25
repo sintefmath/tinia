@@ -380,6 +380,7 @@ void XMLBuilder::buildGUILayout(model::gui::Element *root,
        addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
                                              "TextInput", parent), root);
        break;
+
    }
 
 
