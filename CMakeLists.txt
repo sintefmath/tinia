@@ -292,32 +292,13 @@ install(FILES
 install(EXPORT TiniaTargets DESTINATION
   "${INSTALL_CMAKE_DIR}" COMPONENT tinia_dev)
 
-IF(WIN32)
-    SET( CPACK_GENERATOR "NSIS" )
-    SET( CPACK_NSIS_CONTACT "kjetil.olsen.lye@sintef.no" )
-    SET(CPACK_PACKAGE_INSTALL_DIRECTORY "tinia-${version_number}")
-    SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Akerselva")
-    SET( CPACK_COMPONENTS_ALL 
-         model
-         model_dev   
-         jobcontroller
-         jobcontroller_dev
-         renderlist
-         renderlist_dev
-         renderlistgl
-         renderlistgl_dev
-         qtcontroller
-         qtcontroller_dev
-		 tinia_dev
-         #simple_qt_job
-         #tinia_3rdparty 
-    )
-ELSE()
+IF(NOT WIN32)
     SET( CPACK_GENERATOR "DEB" )
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
     SET(CPACK_MONOLITHIC_INSTALL 1)
     SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
+    include ( CPack )
 ENDIF()
 
 
@@ -325,4 +306,4 @@ ENDIF()
 
 
 
-include ( CPack )
+
