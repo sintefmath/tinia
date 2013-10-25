@@ -49,7 +49,7 @@ using std::vector;
 using std::for_each;
 using std::pair;
 
-ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL)
+ExposedModel::ExposedModel() : revisionNumber( 1 ), m_gui(NULL), holdEventCounter(0)
 {
 }
 
@@ -538,13 +538,18 @@ void model::ExposedModel::makeDefaultGUILayout()
 void model::ExposedModel::holdStateEvents()
 {
     scoped_lock lock(m_listenerHandlersMutex);
+    holdEventCounter++;
    m_stateListenerHandler.holdEvents();
 }
 
 void model::ExposedModel::releaseStateEvents()
 {
     scoped_lock lock(m_listenerHandlersMutex);
-   m_stateListenerHandler.releaseEvents();
+    holdEventCounter--;
+    if(holdEventCounter <= 0) {
+        holdEventCounter = 0;
+        m_stateListenerHandler.releaseEvents();
+    }
 }
 
 model::ExposedModel::mutex_type& model::ExposedModel::getExposedModelMutex()

@@ -17,8 +17,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <tinia/qtcontroller/scripting/EventHandler.hpp>
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/EventHandler.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 #include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
 #include <boost/make_shared.hpp>
 

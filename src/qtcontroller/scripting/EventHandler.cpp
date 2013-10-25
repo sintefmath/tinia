@@ -16,8 +16,8 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <tinia/qtcontroller/scripting/EventHandler.hpp>
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/EventHandler.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 #include <tinia/qtcontroller/scripting/ScriptMouseEvent.hpp>
 #include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
 

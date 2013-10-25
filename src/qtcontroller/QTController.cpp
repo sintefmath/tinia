@@ -20,8 +20,8 @@
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/qtcontroller/QTController.hpp"
 #include "tinia/qtcontroller/GUIBuilder.hpp"
-#include <tinia/qtcontroller/scripting/utils.hpp>
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/script_utils.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 #ifdef TINIA_HAVE_LIBXML
 #include <tinia/qtcontroller/moc/ServerController.hpp>
 #endif

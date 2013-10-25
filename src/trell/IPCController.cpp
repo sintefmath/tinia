@@ -583,7 +583,7 @@ IPCController::sendHeartBeat()
     msg->m_ping_payload.m_state = m_job_state;
     int i = 0, idSize = m_id.size();
     const char* idString = m_id.c_str();
-    for( i; i < idSize ; ++i){
+    for( ; i < idSize ; ++i){
       msg->m_ping_payload.m_job_id[i] = idString[i];
     }
     msg->m_ping_payload.m_job_id[i] = '\0';
