@@ -244,7 +244,7 @@ IF(Tinia_DESKTOP)
 			export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
 		ELSE()
-			export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl
+                        export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
 					FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
 		ENDIF()
 	ENDIF()
