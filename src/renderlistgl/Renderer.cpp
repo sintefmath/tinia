@@ -101,7 +101,6 @@ Renderer::pull()
     bool needs_pruning;
 
 
-    Revision old_revision = m_current_revision;
     m_current_revision = m_db.changes( buffers,
                                        images,
                                        shaders,

@@ -456,7 +456,8 @@ private:
      */
    void makeDefaultGUILayout();
 
-
+   // The number of places that have called holdEvents without releasing them again
+   int holdEventCounter;
 
 
    // --- private utilities used during development ---

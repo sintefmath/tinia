@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <tinia/renderlist/DataBase.hpp>
 #include <tinia/renderlist/Buffer.hpp>
+#include <stdexcept>
 
 namespace tinia {
 namespace renderlist {
@@ -46,6 +47,8 @@ Buffer::count() const
         return m_payload.size()/sizeof(int);
         break;
     }
+    throw std::logic_error("Unknown type specificied, could not count items.");
+    return 0;
 }
 
 const float*

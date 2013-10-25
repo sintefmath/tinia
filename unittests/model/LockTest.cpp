@@ -60,3 +60,22 @@ BOOST_FIXTURE_TEST_CASE(SimpleLockTest, ExposedModelListenerFixture)
 
 }
 
+BOOST_FIXTURE_TEST_CASE(SimpleLockTestDoubleLock, ExposedModelListenerFixture)
+{
+   {// Scoped lock
+      BOOST_CHECK(!hasSeenEvent);
+      model::ExposedModelLock modelLock(model);
+      {
+        model::ExposedModelLock modelLock2(model);
+        BOOST_CHECK(!hasSeenEvent);
+        model->addElement("AValueKey", "AValue");
+        BOOST_CHECK(!hasSeenEvent);
+        model->updateElement("AValueKey", "ANewValue");
+        BOOST_CHECK(!hasSeenEvent);
+      }
+      BOOST_CHECK(!hasSeenEvent);
+   }
+   BOOST_CHECK(hasSeenEvent);
+
+}
+
