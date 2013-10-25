@@ -38,8 +38,22 @@ struct SetupQtApplication {
     }
 };
 
+
+#ifdef __GNUC__
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 // Only available on 4.6 and newer
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#endif
+#endif
+
 char* SetupQtApplication::argv = "bleh";
 int SetupQtApplication::argc = 1;
+
+#ifdef __GNUC__
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 // Only available on 4.6 and newer
+#pragma GCC diagnostic pop
+#endif
+#endif
 /*}}*/
 
 //using namespace tinia::test;
