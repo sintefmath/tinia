@@ -39,6 +39,10 @@ protected:
  
     std::list<std::string>
     parseExtensions( const char* string );
+
+private:
+    std::string m_xml;
+    bool        m_hasRenderingInformation;
 };
 
 } // of namespace impl
