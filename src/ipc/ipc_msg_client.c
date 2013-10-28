@@ -443,22 +443,28 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
     char errnobuf[256];
     int rc, ret = 0;
 
-    // --- create timeout for longpolling --------------------------------------
-    struct timespec timeout_lp;
-    if( clock_gettime( CLOCK_REALTIME, &timeout_lp ) != 0 ) {
+    struct timespec timeout, timeout_lp;
+
+    if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
         client->logger_f( client->logger_d, 0, who,
                           "clock_gettime( CLOCK_REALTIME ): %s",
                           ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
         return -2;
     }
+  
+    // timeout for longpolling
+    timeout_lp = timeout;
     timeout_lp.tv_sec += longpoll_timeout;
    
+    // timeout for transaction lock
+    timeout.tv_sec += 1;
     
     // --- make sure that we are the only client that interacts ----------------
-    rc = pthread_mutex_lock( &client->shmem_header_ptr->transaction_lock );
+    rc = pthread_mutex_timedlock( &client->shmem_header_ptr->transaction_lock,
+                                  &timeout );
     if( rc != 0 ) {
         client->logger_f( client->logger_d, 0, who,
-                          "pthread_mutex_lock( transaction_lock ): %s",
+                          "pthread_mutex_timedlock( transaction_lock ): %s",
                           ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
         ret = -2;
     }
@@ -467,7 +473,6 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
             ret = 0;
 
             // --- create timeout for this transaction -------------------------
-            struct timespec timeout;
             if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
                 client->logger_f( client->logger_d, 0, who,
                                   "clock_gettime( CLOCK_REALTIME ): %s",
@@ -478,10 +483,11 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
             timeout.tv_sec += 1;
 
             // --- get control of shared memory buffer -------------------------
-            rc = pthread_mutex_lock( &client->shmem_header_ptr->operation_lock );
+            rc = pthread_mutex_timedlock( &client->shmem_header_ptr->operation_lock,
+                                          &timeout );
             if( rc != 0 ) {
                 client->logger_f( client->logger_d, 0, who,
-                                  "pthread_mutex_lock( operation_lock ): %s",
+                                  "pthread_mutex_timedlock( operation_lock ): %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                 ret = -2;
             }
