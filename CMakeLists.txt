@@ -28,6 +28,7 @@ OPTION( Tinia_DESKTOP "Build qtcontroller?" ON )
 OPTION( Tinia_BUILD_EXAMPLES "Build example jobs?" ON )
 OPTION( Tinia_BUILD_TUTORIALS "Build tutorials?" ON )
 OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
+OPTION( Tinia_AMAZON "Configurations needed to make Tinia work smoothly on Amazon" OFF)
 
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
@@ -51,7 +52,9 @@ IF(WIN32)
 	"${Tinia_3RDPARTY_LOC}" )
 ENDIF()
 
-
+IF(Tinia_AMAZON) 
+  ADD_DEFINITIONS(-DTINIA_AMAZON)
+ENDIF()
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
 ENDIF()
