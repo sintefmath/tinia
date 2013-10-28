@@ -697,42 +697,28 @@ ipc_msg_client_sendrecv_buffered_by_name( const char*               destination,
         logger_f( logger_d, 0, who, "Failed to open connection to '%s'", destination );
     }
     else {
-        rv = ipc_msg_client_sendrecv_buffered( &client,
-                                               query, query_size,
-                                               reply, reply_size, reply_buffer_size );
-        tinia_ipc_msg_client_release( &client );
-    }
-    return rv;
-}
-
-int
-tinia_ipc_msg_client_sendrecv_buffered_query_by_name( const char*                    destination,
-                                                      tinia_ipc_msg_log_func_t       log_f,
-                                                      void*                          log_d,
-                                                      const char*                    query,
-                                                      const size_t                   query_size,
-                                                      tinia_ipc_msg_consumer_func_t  consumer,
-                                                      void*                          consumer_data,
-                                                      int                            longpoll_timeout )
-{
-    static const char* who = "tinia.ipc.msg.client.sendrecv_buffered_query_by_name";
-    int rv = -1;
-    
-    tinia_ipc_msg_client_t client;
-    if( tinia_ipc_msg_client_init( &client, destination, log_f, log_d ) != 0 ) {
-        log_f( log_d, 0, who, "Failed to open connection to '%s'", destination );
-    }
-    else {
         struct sendrecv_buffered_ctx ctx;
         ctx.query             = query;
         ctx.query_sent        = 0;
         ctx.query_size        = query_size;
+        ctx.reply             = reply;
+        ctx.reply_received    = 0;
+        ctx.reply_buffer_size = reply_buffer_size;
         
-        rv = tinia_ipc_msg_client_sendrecv( &client,
-                                            sendrecv_buffered_producer, &ctx,
-                                            consumer, consumer_data,
-                                            longpoll_timeout );
+        int rv = tinia_ipc_msg_client_sendrecv( &client,
+                                                sendrecv_buffered_producer, &ctx,
+                                                sendrecv_buffered_consumer, &ctx,
+                                                0 );
         tinia_ipc_msg_client_release( &client );
+        if( rv == 0 ) {
+            *reply_size = ctx.reply_received;
+            return 0;
+        }
+        else {
+            *reply_size = 0;
+            return -1;
+        }
     }
-    return rv;    
+    return rv;
 }
+

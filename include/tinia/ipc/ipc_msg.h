@@ -201,24 +201,6 @@ tinia_ipc_msg_client_sendrecv_by_name( const char*                    destinatio
                                        int                            longpoll_timeout );
 
 
-/** Send and receive a pair of messages using fixed buffers, no callbacks, and an open connection.
- *
- * \param[in]  client             Initialized client struct.
- * \param[in]  query              Buffer that contains the query message.
- * \param[in]  query_size         Byte size of the query message.
- * \param[out] reply              Buffer into which the reply message will be written
- * \param[out] reply_size         Byte size of the reply message.
- * \param[in]  reply_buffer_size  Size of reply message buffer.
- *
- * \note A singe buffer can safely be used as both the query and reply buffer
- * simultaneously.
- */
-int
-ipc_msg_client_sendrecv_buffered( tinia_ipc_msg_client_t* client,
-                                  const char* query, const size_t query_size,
-                                  char* reply, size_t* reply_size, const size_t reply_buffer_size);
-
-
 /** Open connection and send and receive a pair of messages using fixed buffers and no callbacks.
  *
  * \param[in]  destination        Where to open the connection.
@@ -238,17 +220,6 @@ ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
                                           const char* query, const size_t query_size,
                                           char* reply, size_t* reply_size, const size_t reply_buffer_size);
         
-
-int
-tinia_ipc_msg_client_sendrecv_buffered_query_by_name( const char*                    destination,
-                                                      tinia_ipc_msg_log_func_t       log_f,
-                                                      void*                          log_d,
-                                                      const char*                    query,
-                                                      const size_t                   query_size,
-                                                      tinia_ipc_msg_consumer_func_t  consumer,
-                                                      void*                          consumer_data,
-                                                      int                            longpoll_timeout );
-
 
 // === SERVER PUBLIC API =======================================================
 
