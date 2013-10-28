@@ -240,7 +240,7 @@ int
 ipc_msg_server_delete( tinia_ipc_msg_server_t* server );
 
 int
-ipc_msg_server_wipe( const char* jobid );
+ipc_msg_server_wipe(tinia_ipc_msg_log_func_t log_f, void *log_d, const char* jobid );
 
 int
 ipc_msg_server_notify( tinia_ipc_msg_server_t* server );

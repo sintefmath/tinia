@@ -56,7 +56,12 @@ tinia_ipc_msg_client_init( tinia_ipc_msg_client_t*   client,
     client->shmem_payload_ptr = MAP_FAILED;
     client->shmem_payload_size = 0;
     
-    if( ipc_msg_shmem_path( client->shmem_name, sizeof(client->shmem_name), jobid ) != 0 ) {
+    if( ipc_msg_shmem_path( client->logger_f,
+                            client->logger_d,
+                            client->shmem_name,
+                            sizeof(client->shmem_name),
+                            jobid ) != 0 )
+    {
         return -1;
     }
 

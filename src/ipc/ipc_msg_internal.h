@@ -148,11 +148,10 @@ extern void*            ipc_msg_fake_shmem_ptr;
 extern size_t           ipc_msg_fake_shmem_size;
 extern int              ipc_msg_fake_shmem_users;
 
-int 
-ipc_msg_path( char* path, const size_t n, const char* jobid );
 
 int
-ipc_msg_shmem_path( char* path, const size_t n, const char* jobid );
+ipc_msg_shmem_path( tinia_ipc_msg_log_func_t log_f, void* log_d, 
+                    char* path, const size_t n, const char* jobid );
 
 void
 tinia_ipc_msg_dump_backtrace( tinia_ipc_msg_log_func_t log_f, void* log_d );
