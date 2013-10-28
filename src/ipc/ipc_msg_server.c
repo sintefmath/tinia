@@ -132,7 +132,9 @@ ipc_msg_server_create(const char*       jobid,
     else {
         // --- remove old shared memory segment if it hasn't been cleaned up -------
         if( shm_unlink( path ) == 0 ) {
-            fprintf( stderr, "I: Removed existing shared memory segment '%s'\n", path );
+            server->logger_f( server->logger_d, 2, who,
+                              "Removed existing shared memory segment '%s'\n",
+                              path );
         }
         
         // --- create and open -----------------------------------------------------
@@ -657,30 +659,41 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 #endif
 
         // --- lock transaction lock -------------------------------------------
-        rc = pthread_mutex_lock( &server->shmem_header_ptr->transaction_lock );
-        if( rc != 0 ) {
+        struct timespec timeout;
+        if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
             server->logger_f( server->logger_d, 0, who,
-                              "pthread_mutex_lock( transaction_lock ) failed: %s",
-                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                              "clock_gettime( CLOCK_REALTIME ): %s",
+                              ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
             ret = -2;
         }
         else {
-            // --- signal notification condition (linked to transaction lock) --
-            rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
+            timeout.tv_sec += 1;
+            rc = pthread_mutex_timedlock( &server->shmem_header_ptr->transaction_lock,
+                                          &timeout );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
-                                  "pthread_cond_broadcast( notification_event ) failed: %s",
+                                  "pthread_mutex_timedlock( transaction_lock ) failed: %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                 ret = -2;
             }
-
-            // --- unlock transaction lock -------------------------------------
-            rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
-            if( rc != 0 ) {
-                server->logger_f( server->logger_d, 0, who,
-                                  "pthread_mutex_unlock( transaction_lock ) failed: %s",
-                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                ret = -2;
+            else {
+                // --- signal notification condition (linked to transaction lock) --
+                rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "pthread_cond_broadcast( notification_event ) failed: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                    ret = -2;
+                }
+                
+                // --- unlock transaction lock -------------------------------------
+                rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "pthread_mutex_unlock( transaction_lock ) failed: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                    ret = -2;
+                }
             }
         }
     }
@@ -709,53 +722,66 @@ ipc_msg_server_mainloop_break( tinia_ipc_msg_server_t* server )
     // transaction if one is in progress, so we must take the transaction lock
     // as well.
     else {
-
         server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread." );
 
-        // --- take transaction lock -------------------------------------------
-        rc = pthread_mutex_lock( &server->shmem_header_ptr->transaction_lock );
-        if( rc != 0 ) {
+        struct timespec timeout;
+        
+        if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
             server->logger_f( server->logger_d, 0, who,
-                              "pthread_mutex_lock( transaction_lock ) failed: %s",
-                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                              "clock_gettime( CLOCK_REALTIME ): %s",
+                              ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
             ret = -2;
         }
         else {
-            // --- take operation lock -----------------------------------------
-            rc = pthread_mutex_lock( &server->shmem_header_ptr->operation_lock );
+            timeout.tv_sec += 1;
+            
+            // --- take transaction lock ---------------------------------------
+            rc = pthread_mutex_timedlock( &server->shmem_header_ptr->transaction_lock,
+                                          &timeout );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
-                                  "pthread_mutex_lock( operation_lock ) failed: %s",
+                                  "pthread_mutex_timedlock( transaction_lock ) failed: %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                 ret = -2;
             }
             else {
-                // --- set flags and signal server event -----------------------
-                server->shmem_header_ptr->mainloop_running = 0;
-                server->shmem_header_ptr->server_event_predicate = 1;
-                rc = pthread_cond_signal( &server->shmem_header_ptr->server_event );
+                // --- take operation lock -------------------------------------
+                rc = pthread_mutex_timedlock( &server->shmem_header_ptr->operation_lock,
+                                              &timeout );
                 if( rc != 0 ) {
                     server->logger_f( server->logger_d, 0, who,
-                                      "pthread_cond_signal( server_event ) failed: %s",
+                                      "pthread_mutex_lock( operation_lock ) failed: %s",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                     ret = -2;
                 }
-                // --- release operation lock ----------------------------------
-                rc = pthread_mutex_unlock( &server->shmem_header_ptr->operation_lock );
+                else {
+                    // --- set flags and signal server event -------------------
+                    server->shmem_header_ptr->mainloop_running = 0;
+                    server->shmem_header_ptr->server_event_predicate = 1;
+                    rc = pthread_cond_signal( &server->shmem_header_ptr->server_event );
+                    if( rc != 0 ) {
+                        server->logger_f( server->logger_d, 0, who,
+                                          "pthread_cond_signal( server_event ) failed: %s",
+                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        ret = -2;
+                    }
+                    // --- release operation lock ------------------------------
+                    rc = pthread_mutex_unlock( &server->shmem_header_ptr->operation_lock );
+                    if( rc != 0 ) {
+                        server->logger_f( server->logger_d, 0, who,
+                                          "pthread_mutex_unlock( operation_lock ) failed: %s",
+                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        ret = -2;
+                    }
+                }
+                // --- release transaction lock --------------------------------
+                rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
                 if( rc != 0 ) {
                     server->logger_f( server->logger_d, 0, who,
-                                      "pthread_mutex_unlock( operation_lock ) failed: %s",
+                                      "pthread_mutex_unlock( transaction_lock ) failed: %s",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                     ret = -2;
                 }
-            }
-            // --- release transaction lock ------------------------------------
-            rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
-            if( rc != 0 ) {
-                server->logger_f( server->logger_d, 0, who,
-                                  "pthread_mutex_unlock( transaction_lock ) failed: %s",
-                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                ret = -2;
             }
         }
     }
@@ -960,77 +986,90 @@ ipc_msg_server_mainloop( tinia_ipc_msg_server_t* server,
                           "Mainloop and init invoked in different threads." );
         return -2;
     }
-    
-    // --- don't let any clients commence a transaction before we are ready ----
-    if( (rc=pthread_mutex_lock( &server->shmem_header_ptr->operation_lock )) != 0 ) {
+
+    struct timespec timeout;
+    if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
         server->logger_f( server->logger_d, 0, who,
-                          "Failed to lock operation lock: %s",
-                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                          "clock_gettime( CLOCK_REALTIME ): %s",
+                          ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
         ret = -2;
     }
     else {
-        // --- set up signal checker thread ------------------------------------
-
-        // signal checker thread will set this variable to zero when it receives
-        // a SIGTERM.
-        server->shmem_header_ptr->mainloop_running = 1;
-        
-        pthread_t signal_checker;
-        rc = pthread_create( &signal_checker,
-                             NULL,
-                             ipc_msg_server_signal_thread,
-                             server );
+        timeout.tv_sec += 1;
+    
+        // --- don't let any clients commence a transaction before we are ready
+        rc = pthread_mutex_timedlock( &server->shmem_header_ptr->operation_lock,
+                                      &timeout );
         if( rc != 0 ) {
             server->logger_f( server->logger_d, 0, who,
-                              "Failed to create signal checker thread: %s",
+                              "Failed to lock operation lock: %s",
                               ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
             ret = -2;
         }
         else {
-            // --- set up initial periodic timeout -----------------------------
-            struct timespec periodic_timeout;
-            rc = clock_gettime( CLOCK_REALTIME, &periodic_timeout );
+            // --- set up signal checker thread --------------------------------
+            
+            // signal checker thread will set this variable to zero when it
+            // receives a SIGTERM.
+            server->shmem_header_ptr->mainloop_running = 1;
+            
+            pthread_t signal_checker;
+            rc = pthread_create( &signal_checker,
+                                 NULL,
+                                 ipc_msg_server_signal_thread,
+                                 server );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
-                                  "clock_gettime failed: %s",
+                                  "Failed to create signal checker thread: %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                 ret = -2;
             }
-
-            // --- run mainlooop iterations ------------------------------------
-            while( (ret > -2 ) && (server->shmem_header_ptr->mainloop_running != 0) ) {
-                ret = ipc_msg_server_mainloop_iteration( errnobuf, sizeof(errnobuf), &periodic_timeout,
-                                                         server, periodic, periodic_data,
-                                                         input_handler, input_handler_data,
-                                                         output_handler, output_handler_data );
+            else {
+                // --- set up initial periodic timeout -----------------------------
+                struct timespec periodic_timeout;
+                rc = clock_gettime( CLOCK_REALTIME, &periodic_timeout );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "clock_gettime failed: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                    ret = -2;
+                }
+                
+                // --- run mainlooop iterations ------------------------------------
+                while( (ret > -2 ) && (server->shmem_header_ptr->mainloop_running != 0) ) {
+                    ret = ipc_msg_server_mainloop_iteration( errnobuf, sizeof(errnobuf), &periodic_timeout,
+                                                             server, periodic, periodic_data,
+                                                             input_handler, input_handler_data,
+                                                             output_handler, output_handler_data );
+                }
+                server->logger_f( server->logger_d, 2, who,
+                                  "Breaking the main loop." );
+                server->shmem_header_ptr->state = IPC_MSG_STATE_DONE;
+                
+                // --- terminate signal checker thread -----------------------------
+                void* retval;
+                rc = pthread_cancel( signal_checker );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 1, who,
+                                      "Failed to cancel signal checker thread: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                }
+                rc = pthread_join( signal_checker, &retval );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 1, who,
+                                      "Failed to join signal checker thread: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                }
             }
-            server->logger_f( server->logger_d, 2, who,
-                              "Breaking the main loop." );
-            server->shmem_header_ptr->state = IPC_MSG_STATE_DONE;
-            
-            // --- terminate signal checker thread -----------------------------
-            void* retval;
-            rc = pthread_cancel( signal_checker );
+            // --- unlock operation lock ---------------------------------------
+            rc = pthread_mutex_unlock( &server->shmem_header_ptr->operation_lock );
             if( rc != 0 ) {
-                server->logger_f( server->logger_d, 1, who,
-                                  "Failed to cancel signal checker thread: %s",
+                server->logger_f( server->logger_d, 0, who,
+                                  "Failed to unlock operation lock: %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-            }
-            rc = pthread_join( signal_checker, &retval );
-            if( rc != 0 ) {
-                server->logger_f( server->logger_d, 1, who,
-                                  "Failed to join signal checker thread: %s",
-                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-            }
+                ret = -1;
+            } 
         }
-        // --- unlock operation lock -------------------------------------------
-        rc = pthread_mutex_unlock( &server->shmem_header_ptr->operation_lock );
-        if( rc != 0 ) {
-            server->logger_f( server->logger_d, 0, who,
-                              "Failed to unlock operation lock: %s",
-                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-            ret = -1;
-        } 
     }
     
     return ret;
