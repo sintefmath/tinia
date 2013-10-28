@@ -64,56 +64,21 @@ tinia_ipc_msg_dump_backtrace( tinia_ipc_msg_log_func_t log_f, void* log_d )
 }
 
 
-
-int 
-ipc_msg_path( char* path, const size_t n, const char* jobid )
-{
-    if( (path == NULL) || (jobid==NULL) ) {
-        return -1;
-    }
-    if( jobid[0]=='\0' ) {
-        fprintf( stderr, "Empty job id.\n" );
-        return -1;
-    }
-    
-    static const char* prefix = "/tmp/tinia_";
-    size_t i;
-    for(i=0; (i<n) && (prefix[i]!='\0'); i++) {
-        path[i] = prefix[i];
-    }
-    if( n <= i+1 ) {
-        fprintf( stderr, "Buffer too small for prefix.\n" );
-        return -1;  // path buffer too small
-    }
-    int k=i;
-    for( ; (i<n) && jobid[i-k] != '\0'; i++ ) {
-        int c = jobid[i-k];
-        if( isalnum(c) || (c=='_') ) {
-            path[i] = c;
-        }
-        else {
-            fprintf( stderr, "Illegal char '%c' in jobid '%s'.\n",
-                     c, jobid );
-            return -1;  // Illegal char in jobid.
-        }
-    }
-    if( n <= i+1 ) {
-        fprintf( stderr, "Jobid too long.\n" );
-        return -1;  // path buffer too small
-    }
-    path[i] = '\0';
-    return 0;
-}
-
 int
-ipc_msg_shmem_path( char* path, const size_t n, const char* jobid )
+ipc_msg_shmem_path( tinia_ipc_msg_log_func_t log_f,
+                    void *log_d,
+                    char* path,
+                    const size_t n,
+                    const char* jobid )
 {
+    static const char* who = "tinia.ipc.msg.shmem.path";
+
     if( path == 0 ) {
-        fprintf( stderr, "Passed null-pointer in path.\n" );
+        log_f( log_d, 0, who, "Passed null-pointer in path.\n" );
         return -1;
     }
     else if( jobid == NULL) {
-        fprintf( stderr, "Passed null-pointer in jobid.\n" );
+        log_f( log_d, 0, who, "Passed null-pointer in jobid.\n" );
         return -1;
     }
 
@@ -132,7 +97,7 @@ ipc_msg_shmem_path( char* path, const size_t n, const char* jobid )
         return 0;
     }
     else {
-        fprintf( stderr, "Insufficient space in buffer: jobid too long.\n" );
+        log_f( log_d, 0, who, "Insufficient space in buffer: jobid too long.\n" );
         return -1;
     }
 }

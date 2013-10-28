@@ -64,7 +64,12 @@ ipc_msg_server_create(const char*       jobid,
 
     // --- create name of shared memory ----------------------------------------
     char path[256];
-    if( ipc_msg_shmem_path( path, sizeof(path), jobid ) != 0 ) {
+    if( ipc_msg_shmem_path( logger_f,
+                            logger_d,
+                            path,
+                            sizeof(path),
+                            jobid ) != 0 )
+    {
         return NULL;
     }
 
@@ -273,10 +278,12 @@ do { \
 }
 
 int
-ipc_msg_server_wipe( const char* jobid )
+ipc_msg_server_wipe( tinia_ipc_msg_log_func_t log_f,
+                     void *log_d,
+                     const char* jobid )
 {
     char path[256];
-    if( ipc_msg_shmem_path( path, sizeof(path), jobid ) == 0 ) {
+    if( ipc_msg_shmem_path( log_f, log_d, path, sizeof(path), jobid ) == 0 ) {
         if( shm_unlink( path ) == 0 ) {
             return 0;
         }
