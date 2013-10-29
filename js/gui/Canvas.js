@@ -217,9 +217,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this.domNode.addEventListener("touchstart", dojo.hitch(this, this._touchstart));
         this.domNode.addEventListener("touchend", dojo.hitch(this, this._touchend));
         this.domNode.addEventListener("touchmove", dojo.hitch(this, this._touchmove));
-        this.on(dojo.touch.move, dojo.hitch(this, this._touchmove));
-        this.on(dojo.touch.move, function(event) {console.log("mv"); });
-        //document.addEventListener("touchmove", dojo.hitch(this, this._mousemove));
         this.on("mouseover", dojo.hitch(this, function () {
             this._mouseOver = true;
             this._showCorrect();
