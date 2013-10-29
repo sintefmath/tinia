@@ -1,6 +1,6 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
-SET( version_number "0.2.5" )
+SET( version_number "0.3.0" )
 SET(TINIA_VERSION ${version_number})
 
 IF(NOT CMAKE_BUILD_TYPE)
