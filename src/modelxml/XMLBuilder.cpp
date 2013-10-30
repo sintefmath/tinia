@@ -378,7 +378,7 @@ void XMLBuilder::buildGUILayout(model::gui::Element *root,
       break;
   case FILE_DIALOG_BUTTON:
        addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
-                                             "TextInput", parent), root);
+                                             "Label", parent), root);
        break;
 
    }
