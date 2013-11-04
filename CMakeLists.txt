@@ -290,7 +290,7 @@ install(FILES
 
 # Install the export set for use with the install-tree
 install(EXPORT TiniaTargets DESTINATION
-  "${INSTALL_CMAKE_DIR}" COMPONENT tinia_dev)
+  "${INSTALL_CMAKE_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake" COMPONENT tinia_dev)
 
 IF(NOT WIN32)
     SET( CPACK_GENERATOR "DEB" )
