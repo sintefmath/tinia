@@ -178,6 +178,8 @@ IPCController::message_consumer( void*                     data,
                                  const int                 iteration,
                                  const int                 more ) 
 {
+    static const std::string who = package + ".message_consumer";
+    
     IPCController::Context* ctx = reinterpret_cast<IPCController::Context*>( data );
     if( iteration == 0 ) {
         ctx->m_buffer_offset = 0;
@@ -192,10 +194,17 @@ IPCController::message_consumer( void*                     data,
     
     
     if( !more ) {
-        ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<tinia_msg_t*>( ctx->m_buffer ),
-                                                             ctx->m_buffer_offset,
-                                                             ctx->m_buffer_size );
-        
+        try {
+            ctx->m_output_bytes = ctx->m_ipc_controller->handle( reinterpret_cast<tinia_msg_t*>( ctx->m_buffer ),
+                                                                 ctx->m_buffer_offset,
+                                                                 ctx->m_buffer_size );
+        }
+        catch( const std::exception& e ) {
+            ctx->m_ipc_controller->m_logger_callback( ctx->m_ipc_controller->m_logger_data, 0, who.c_str(),
+                                                      "Caught exception: %s.", e.what() );
+            return -1;
+        }
+            
         //ctx->m_ipc_controller->m_logger_callback( ctx->m_ipc_controller->m_logger_data, 2, package.c_str(),
         //                                          "handle passed %d bytes, got %d bytes.", ctx->m_buffer_offset,
         //                                          ctx->m_output_bytes );
