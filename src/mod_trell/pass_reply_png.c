@@ -223,6 +223,10 @@ trell_pass_reply_png( void* data,
             ap_set_content_type( encoder_state->r, "text/plain" );
             char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
             int base64_size = apr_base64_encode( base64, (char*)png, p-png );
+            // Seems like the zero-byte is included in the string size.
+            if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
+                base64_size--;
+            }
             APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( base64, base64_size, bb->bucket_alloc ) );
         }
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
