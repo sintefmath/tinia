@@ -48,7 +48,7 @@ target_link_libraries ( tinia_qtcontroller
     ${Freeglut_LIBRARY}
 )
 ELSe()
-target_link_libraries ( qtcontroller
+target_link_libraries ( tinia_qtcontroller
     tinia_renderlist
     tinia_renderlistgl
     tinia_model
