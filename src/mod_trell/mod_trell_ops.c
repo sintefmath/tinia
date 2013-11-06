@@ -18,6 +18,7 @@
 
 #include <httpd.h>
 #include <http_log.h>
+#include <http_protocol.h>
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
@@ -31,32 +32,6 @@
 #include "apr_strings.h"
 #include "apr_env.h"
 
-int
-trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r )
-{
-    apr_hash_t* args = trell_parse_args_uniq_key( r, r->args );
-    if( args == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                       "mod_trell: mod/rpc.xml without any arguments." );
-        return HTTP_BAD_REQUEST;
-    }
-
-    const char* action = apr_hash_get( args, "action", APR_HASH_KEY_STRING );
-
-    if( action == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                       "mod_trell: mod/rpc.xml without action argument." );
-        return HTTP_BAD_REQUEST;
-    }
-    else if( strcmp( action, "restart_master" ) == 0 ) {
-        return trell_ops_do_restart_master( sconf, r );
-    }
-    else {
-        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, OK, r,
-                       "mod_trell: mod/rpc.xml got illegal action '%s'.", action );
-        return HTTP_BAD_REQUEST;
-    }
-}
 
 static const char* master_job_pidfile_path = "/tmp/trell_master.pid";
 
@@ -363,10 +338,26 @@ trell_ops_do_restart_master( trell_sconf_t* svr_conf,  request_rec* r )
         }
         sem_close( trell_lock );
     }
+    
+    
+    static const char* xml = NULL;
     if( success ) {
-        return trell_send_xml_success( svr_conf, r );
+        xml = "<?xml version=\"1.0\"><success/>";
     }
     else {
-        return trell_send_xml_failure( svr_conf, r );
+        xml = "<?xml version=\"1.0\"><failure/>";
+    }
+    ap_set_content_type( r, "application/xml" );
+    ap_set_content_length( r, strlen( xml ) );
+    apr_bucket_brigade* bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( xml, strlen(xml), bb->bucket_alloc ) );
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
+    apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+    else {
+        return OK;
     }
 }

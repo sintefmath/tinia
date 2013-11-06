@@ -365,6 +365,20 @@ trell_child_init_parse_schema( const char* path, const char* file, apr_pool_t* p
     return schema;
 }
 
+/** Helper callback for logging libxml output to apache using server_rec. */
+static void
+trell_xml_error_s_cb( void* ctx, const char* msg, ... )
+{
+    server_rec* s = (server_rec*)ctx;
+    va_list args;
+    char *fmsg;
+    va_start( args, msg );
+    fmsg = apr_pvsprintf( s->process->pool, msg, args );
+    va_end( args );
+    ap_log_perror( APLOG_MARK, APLOG_NOTICE, 0, s->process->pool,
+                   "mod_trell: libxml2: %s", fmsg );
+}
+
 static void
 trell_child_init(apr_pool_t *p, server_rec *s)
 {
