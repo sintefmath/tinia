@@ -23,6 +23,7 @@
 #include "mod_trell.h"
 
 
+
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 {
@@ -43,19 +44,14 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     char* p = r->path_info;
 
     if( p == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: path_info is NULL." );
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: path_info is NULL.", r->handler );
         return HTTP_NOT_FOUND;
     }
 
+    // --- determine which component that should handle the request ------------
     static const char* mod_prefix    = "/mod/";
     static const char* master_prefix = "/master/";
     static const char* job_prefix    = "/job/";
-
-
-    
-    
-
-    // determine which component that should handle the request
     if( strncmp( p, mod_prefix, strlen(mod_prefix) ) == 0 ) {
         p += strlen(mod_prefix);
         dispatch_info->m_component = TRELL_COMPONENT_OPS;
@@ -69,30 +65,31 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         dispatch_info->m_component = TRELL_COMPONENT_JOB;
     }
     else {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: missing component in path_info='%s'.",
+                       r->handler, r->path_info );
         return HTTP_NOT_FOUND;
     }
 
-    // If job path, determine job id
     if( dispatch_info->m_component == TRELL_COMPONENT_JOB ) {
+
+        // --- If job path, determine job id ------------------------------------
         for( i=0; i<TRELL_JOBID_MAXLENGTH-1; i++) {
-            if( (i>0) && (*p == '/') ) {
+            if( (i>0) && (*p == '/') ) {                // at least one char long
                 break;      // found separator
             }
-            else if( !(isalnum(*p) || (*p=='_' ) ) ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: Illegal char in jobid." );
+            else if( !(isalnum(*p) || (*p=='_' ) ) ) {  // only alnum or _
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: Illegal char in jobid.", r->handler );
                 return HTTP_NOT_FOUND;
             }
-            dispatch_info->m_jobid[i] = *p++;
+            dispatch_info->m_jobid[i] = *p++;           // copy to struct
         }
-        dispatch_info->m_jobid[i] = '\0';
+        dispatch_info->m_jobid[i] = '\0';               // terminate
         if( *p++ != '/' ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: Jbid too long." );
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: Jobid too long.", r->handler );
             return HTTP_NOT_FOUND;
         }
-    }
 
-    // If job path, determine session id
-    if( dispatch_info->m_component == TRELL_COMPONENT_JOB ) {
+        // --- If job path, determine session id -------------------------------
         for( i=0; i<TRELL_SESSIONID_MAXLENGTH-1; i++ ) {
             if( (i>0) && (*p == '/') ) {
                 break;      // found separator
@@ -108,47 +105,11 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: Sessionid too long." );
             return HTTP_NOT_FOUND;
         }
+
     }
 
 
 
-    // Parse arguments. Note that the HTTP protocol allows multiple entries
-    // with the same keys, but we disallow it.
-    apr_hash_t* form = apr_hash_make( r->pool );
-    if( r->args != NULL ) {
-        //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: args=%s.", r->args );
-        char* last;
-        const char* delim = "&";
-        char* pair = apr_strtok( r->args, delim, &last );
-        while( pair != NULL ) {
-            char* eq = NULL;
-            char* t;
-            for( t = pair; *t; ++t ) {
-                if( *t == '+' ) {
-                    *t = ' ';
-                }
-                else if( eq == NULL && *t == '=' ) {
-                    eq = t;
-                }
-            }
-            if( eq ) {
-                *eq++ = '\0';
-                ap_unescape_url( pair );
-                ap_unescape_url( eq );
-            }
-            else {
-                eq = "";
-                ap_unescape_url( pair );
-            }
-            apr_hash_set( form, pair, APR_HASH_KEY_STRING, apr_pstrdup( r->pool, eq ) );
-
-            // iterate forward
-            pair = apr_strtok( NULL, delim, &last );
-        }
-    }
-    else {
-        //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: no args" );
-    }
 
 
     int want_revision     = 0;
@@ -213,8 +174,81 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         dispatch_info->m_request = TRELL_REQUEST_STATIC_FILE;
     }
 
+    
+    
+    
 
     // process arguments
+    // Parse arguments. Note that the HTTP protocol allows multiple entries
+    // with the same keys, but we disallow it.
+    apr_hash_t* form = apr_hash_make( r->pool );
+    if( r->args != NULL ) {
+        //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: args=%s.", r->args );
+        char* last;
+        const char* delim = "&";
+        char* key = apr_strtok( r->args, delim, &last );
+        while( key != NULL ) {
+            char* value = NULL;
+            char* t;
+            for( t = key; *t; ++t ) {
+
+                if( *t == '+' ) {       // s/+/ /g
+                    *t = ' ';
+                }
+                else if( value == NULL && *t == '=' ) {
+                    value = t;
+                }
+            }
+            if( value ) {
+                *value++ = '\0';
+                ap_unescape_url( key );
+            }
+            else {
+                value = "";
+                ap_unescape_url( key );
+            }
+            ap_unescape_url( value );
+            
+            
+            if( (want_revision) && (apr_strnatcmp( "revision", key ) == 0) ) {
+                int t = (int)atoi( value );
+                if( t < 0 ) {
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: malformed revision.", r->handler );
+                    return HTTP_BAD_REQUEST;
+                }
+                dispatch_info->m_revision = t;
+                want_revision = 0;
+            }
+            else if( (require_width) && (apr_strnatcmp( "width", key ) == 0) ) {
+                int t = (int)atoi( value );
+                if( t < 0 ) {
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: malformed width.", r->handler );
+                    return HTTP_BAD_REQUEST;
+                }
+                dispatch_info->m_width = t;
+                require_width = 0;
+            }
+            else if( (require_height) && (apr_strnatcmp( "height", key ) == 0) ) {
+                int t = (int)atoi( value );
+                if( t < 0 ) {
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: malformed height.", r->handler );
+                    return HTTP_BAD_REQUEST;
+                }
+                dispatch_info->m_height = t;
+                require_height = 0;
+            }
+            
+            apr_hash_set( form, key, APR_HASH_KEY_STRING, apr_pstrdup( r->pool, value ) );
+
+            // iterate forward
+            key = apr_strtok( NULL, delim, &last );
+        }
+    }
+    else {
+        //ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "mod_trell: no args" );
+    }
+    
+    
     if( want_revision != 0 ) {
         const char* p = apr_hash_get( form, "revision", APR_HASH_KEY_STRING );
         if( p != NULL ) {
