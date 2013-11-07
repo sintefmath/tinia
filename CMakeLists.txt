@@ -120,10 +120,10 @@ FIND_PACKAGE( GLM REQUIRED )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 IF(Tinia_SERVER)
 
-  FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
-    HINTS "/usr/include/apache2" "/usr/include/httpd/" 
+  FIND_PATH( APACHE_INCLUDE_DIR httpd.h
+    HINTS "/usr/include/apache2" "/usr/include/httpd/"
   )
-  
+
   FIND_LIBRARY( RT
     NAMES rt
     PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
@@ -133,7 +133,7 @@ IF(Tinia_SERVER)
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-    
+
   FIND_PATH(APR_INCLUDE_DIR "apr.h"
 HINTS   "/usr/include/apr-1.0"
         "/usr/include/apr-1"
@@ -152,7 +152,7 @@ SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${QT_QTOPENGL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS})
 
-include_directories( "./include" 
+include_directories( "./include"
     ${TINIA_EXTERNAL_INCLUDE_DIRS}
 )
 
@@ -228,8 +228,8 @@ ENDIF()
 
 FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")
 install( FILES
-	${tinia_headerFiles} 
-    DESTINATION include/tinia/  
+	${tinia_headerFiles}
+    DESTINATION include/tinia/
     COMPONENT tinia_dev)
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
@@ -240,23 +240,32 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
+# Only multiple configuration systems like MSVC and nmake, 
+# we get all configurations included in one targets file,
+# otherwise we use one target file for each configuration
+IF(CMAKE_CONFIGURATION_TYPES) 
+	SET(TINIA_TARGETS_APPEND "")
+ELSE()
+	SET(TINIA_TARGETS_APPEND ${CMAKE_BUILD_TYPE})
+ENDIF()
+
 # This is for local build directory:
 IF(Tinia_DESKTOP)
 	IF(Tinia_SERVER)
 		export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tinia_trell
-				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 	ELSE()
 	   IF(LIBXML2_FOUND)
 			export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
-				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 		ELSE()
-                        export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
-					FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
+						export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
+					FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 		ENDIF()
 	ENDIF()
 ELSE()
 	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tinia_trell
-				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake")
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 ENDIF()
 
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" ${TINIA_EXTERNAL_INCLUDE_DIRS})
@@ -290,7 +299,7 @@ install(FILES
 
 # Install the export set for use with the install-tree
 install(EXPORT TiniaTargets DESTINATION
-  "${INSTALL_CMAKE_DIR}/TiniaTargets${CMAKE_BUILD_TYPE}.cmake" COMPONENT tinia_dev)
+  "${INSTALL_CMAKE_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake" COMPONENT tinia_dev)
 
 IF(NOT WIN32)
     SET( CPACK_GENERATOR "DEB" )
