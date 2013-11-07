@@ -183,13 +183,15 @@ IPCController::message_consumer( void*                     data,
         ctx->m_buffer_offset = 0;
     }
     
-    
     if( ctx->m_buffer_size <= ctx->m_buffer_offset + buffer_bytes ) {
+        ctx->m_ipc_controller->m_logger_callback( ctx->m_ipc_controller->m_logger_data, 0, who.c_str(),
+                                                  "Buffer too small (bufsiz=%ld, bytes=%ld).",
+                                                  ctx->m_buffer_size,
+                                                  ctx->m_buffer_offset + buffer_bytes );
         return -1;
     }
     memcpy( ctx->m_buffer + ctx->m_buffer_offset, buffer, buffer_bytes );
     ctx->m_buffer_offset += buffer_bytes;
-    
     
     if( !more ) {
         try {
@@ -202,10 +204,6 @@ IPCController::message_consumer( void*                     data,
                                                       "Caught exception: %s.", e.what() );
             return -1;
         }
-            
-        //ctx->m_ipc_controller->m_logger_callback( ctx->m_ipc_controller->m_logger_data, 2, package.c_str(),
-        //                                          "handle passed %d bytes, got %d bytes.", ctx->m_buffer_offset,
-        //                                          ctx->m_output_bytes );
     }
     return 0;
 }
