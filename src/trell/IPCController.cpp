@@ -125,14 +125,14 @@ IPCController::shutdown()
     std::cerr << "Cleaning up.\n";
     cleanup();
 
-    if( !m_is_master ) {
-        if( tinia_ipc_msg_client_release( m_master_mbox ) != 0 ) {
-            std::cerr << "Failed to close messenger.\n";
-        }
-        else {
-            delete reinterpret_cast<char*>( m_master_mbox );
-        }
-    }
+    //if( !m_is_master ) {
+    //    if( tinia_ipc_msg_client_release( m_master_mbox ) != 0 ) {
+    //        std::cerr << "Failed to close messenger.\n";
+    //    }
+    //    else {
+    //        delete reinterpret_cast<char*>( m_master_mbox );
+    //    }
+    //}
 
     ipc_msg_server_delete( m_msgbox );
 
@@ -249,106 +249,97 @@ IPCController::handle_periodic(void* data)
 int
 IPCController::run(int argc, char **argv)
 {
+    static const std::string who = package + ".run";
+   
     m_cleanup_pid = getpid();
 
     for( int i=0; environ[i] != NULL; i++ ) {
-        std::cerr << "ENV " << i <<": " << environ[i] << std::endl;
+        m_logger_callback( m_logger_data, 2, who.c_str(),
+                           "environ[%d] = \"%s\".", i, environ[i] );
     }
 
     for( int i=0; i<argc; i++ ) {
-        std::cerr << "ARG " << i << ": " << argv[i] << std::endl;
+        m_logger_callback( m_logger_data, 2, who.c_str(),
+                           "argv[%d] = \"%s\".", i, argv[i] );
     }    
 
-    // m_id = env[ TINIA_JOB_ID ].
+    // --- get job id ----------------------------------------------------------
     const char* tinia_job_id = getenv( "TINIA_JOB_ID" );
-    if( tinia_job_id == NULL ) {
-        std::cerr << "Environment variable 'TINIA_JOB_ID' not set, exiting.\n";
+    if( tinia_ipc_util_valid_jobid( m_logger_callback, m_logger_data, tinia_job_id ) == 0 ) {
         m_job_state = TRELL_JOBSTATE_FAILED;
+        m_logger_callback( m_logger_data, 0, who.c_str(),
+                           "Problem retrieving env['TINIA_JOB_ID']." );
     }
     else {
-        m_id = std::string( tinia_job_id );
-    }
-
-    if( m_id.empty() ) {
-        std::cerr << "empty id, exiting.\n";
-        m_job_state = TRELL_JOBSTATE_FAILED;
-    }
-    for( size_t i=0; i<m_id.size(); i++ ) {
-        if( !(isalnum( m_id[i] ) || m_id[i] == '_') ) {
-            std::cerr << "Illegal id '" << m_id << "', exiting.\n";
-            m_job_state = TRELL_JOBSTATE_FAILED;
-        }
-    }
-
-    // m_master_id = env[ TINIA_MASTER_ID ].
-    const char* tinia_master_id = getenv( "TINIA_MASTER_ID" );
-    if( tinia_master_id == NULL ) {
-        std::cerr << "Environment variable 'TINIA_MASTER_ID' not set, exiting.\n";
-        m_job_state = TRELL_JOBSTATE_FAILED;
-    }
-    else {
-        m_master_id = std::string( tinia_master_id );
-    }
-
-
-    if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        m_msgbox = ipc_msg_server_create( m_id.c_str(), m_logger_callback, m_logger_data );
-        if( m_msgbox == NULL ) {
-            m_job_state = TRELL_JOBSTATE_FAILED;
-        }
-    }
-
-
-    if( m_job_state == TRELL_JOBSTATE_NOT_STARTED && !m_is_master ) {
-        m_master_mbox = reinterpret_cast<tinia_ipc_msg_client_t*>( new char[tinia_ipc_msg_client_t_sizeof] );
+        m_id = tinia_job_id;
         
-        if( tinia_ipc_msg_client_init(  m_master_mbox,
-                                                  m_master_id.c_str(),
-                                                  m_logger_callback,
-                                                  m_logger_data ) != 0 )
-        {
-            std::cerr << "Failed to connect to master.\n";
+        // --- get master id ---------------------------------------------------
+        const char* master_id = getenv( "TINIA_MASTER_ID" );
+        if( tinia_ipc_util_valid_jobid( m_logger_callback, m_logger_data, master_id ) == 0 ) {
             m_job_state = TRELL_JOBSTATE_FAILED;
-        }
-    }
-    std::cerr << "Finished running setup code:\n";
-    std::cerr << "  id               = " << m_id << "\n";
-    std::cerr << "  master id        = " << m_master_id << "\n";
-
-
-
-    if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        if( !init() ) {
-            m_job_state = TRELL_JOBSTATE_FAILED;
-            std::cerr << "Init failed.\n";
-        }
-    }
-
-    if( m_job_state == TRELL_JOBSTATE_NOT_STARTED ) {
-        m_job_state = TRELL_JOBSTATE_RUNNING;
-        sendHeartBeat();
-
-
-        Context ctx;
-        ctx.m_ipc_controller = this;
-        ctx.m_buffer_size = 1000*1024*1024;
-        ctx.m_buffer = new char[ctx.m_buffer_size];
-    
-        if( ipc_msg_server_mainloop( m_msgbox,
-                                     handle_periodic, &ctx,
-                                     message_input_handler, &ctx,
-                                     message_output_handler, &ctx ) == 0 )
-        {
-            m_job_state = TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY;
+            m_logger_callback( m_logger_data, 0, who.c_str(),
+                               "Problem retrieving env['TINIA_MASTER_ID']." );
         }
         else {
-            m_job_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
+            m_master_id = master_id;
+
+            // --- create message server ---------------------------------------
+            m_msgbox = ipc_msg_server_create( m_id.c_str(), m_logger_callback, m_logger_data );
+            if( m_msgbox == NULL ) {
+                m_job_state = TRELL_JOBSTATE_FAILED;
+                m_logger_callback( m_logger_data, 0, who.c_str(),
+                                   "Problem initializing message server." );
+            }
+            else {
+                //if( m_job_state == TRELL_JOBSTATE_NOT_STARTED && !m_is_master ) {
+                //    m_master_mbox = reinterpret_cast<tinia_ipc_msg_client_t*>( new char[tinia_ipc_msg_client_t_sizeof] );
+                //    if( tinia_ipc_msg_client_init(  m_master_mbox,
+                //                                              m_master_id.c_str(),
+                //                                              m_logger_callback,
+                //                                              m_logger_data ) != 0 ) {
+                //        std::cerr << "Failed to connect to master.\n";
+                //        m_job_state = TRELL_JOBSTATE_FAILED;
+                //    }
+                //}
+                
+                m_logger_callback( m_logger_data, 2, who.c_str(),
+                                   "Finished running ipc setup code, id='%s', master='%s.",
+                                   m_id.c_str(), m_master_id.c_str() );
+                
+                // --- invoke virtual init func --------------------------------
+                if( !init() ) {
+                    m_job_state = TRELL_JOBSTATE_FAILED;
+                    m_logger_callback( m_logger_data, 0, who.c_str(),
+                                       "init() failed." );
+                }
+                else {
+
+                    // --- wee, we're ready to start running! ------------------
+                    m_job_state = TRELL_JOBSTATE_RUNNING;
+                    sendHeartBeat();
+                    
+                    Context ctx;
+                    ctx.m_ipc_controller = this;
+                    ctx.m_buffer_size = 1000*1024*1024;
+                    ctx.m_buffer = new char[ctx.m_buffer_size];
+                    if( ipc_msg_server_mainloop( m_msgbox,
+                                                 handle_periodic, &ctx,
+                                                 message_input_handler, &ctx,
+                                                 message_output_handler, &ctx ) == 0 )
+                    {
+                        m_job_state = TRELL_JOBSTATE_TERMINATED_SUCCESSFULLY;
+                    }
+                    else {
+                        m_job_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
+                    }
+                    delete reinterpret_cast<char*>( ctx.m_buffer );
+                    sendHeartBeat();
+                }
+            }
         }
-         
-        delete reinterpret_cast<char*>( ctx.m_buffer );
-        sendHeartBeat();
     }
     failHard();
+    m_logger_callback( m_logger_data, 2, who.c_str(), "Exiting." );
     return EXIT_SUCCESS;
 }
 
@@ -396,8 +387,8 @@ IPCController::sendHeartBeat()
     tinia_msg_heartbeat_t query;
     query.msg.type = TRELL_MESSAGE_HEARTBEAT;
     query.state = m_job_state;
-    strncpy( query.job_id, m_id.c_str(), TRELL_JOBID_MAXLENGTH );
-    query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
+    strncpy( query.job_id, m_id.c_str(), TINIA_IPC_JOBID_MAXLENGTH );
+    query.job_id[ TINIA_IPC_JOBID_MAXLENGTH ] = '\0';
     
     tinia_msg_t reply;
     size_t reply_actual;

@@ -2,6 +2,7 @@ SET( LIB_IPC_SRC
     "ipc_msg_client.c"
     "ipc_msg_common.c"
     "ipc_msg_server.c"
+    "ipc_util.c"
 )
 
 FILE( GLOB LIB_IPC_HEADERS "ipc_msg_internal.h" "../../include/tinia/ipc/*.h" )

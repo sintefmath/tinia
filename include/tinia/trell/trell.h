@@ -26,7 +26,6 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-#define TRELL_JOBID_MAXLENGTH 64
 #define TRELL_SESSIONID_MAXLENGTH 64
 #define TRELL_REQUESTNAME_MAXLENGTH 128
 #define TRELL_KEYID_MAXLENGTH 64
@@ -106,7 +105,7 @@ typedef struct tinia_msg_heartbeat
 {
     tinia_msg_t         msg;
     enum TrellJobState  state;
-    char                job_id[ TRELL_JOBID_MAXLENGTH+1 ];
+    char                job_id[ TINIA_IPC_JOBID_MAXLENGTH+1 ];
 } tinia_msg_heartbeat_t;
 
 

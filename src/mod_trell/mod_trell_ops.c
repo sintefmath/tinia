@@ -26,8 +26,8 @@
 #include <sys/stat.h>
 #include <semaphore.h>  // for trell_lock
 
-#include "tinia/trell/trell.h"
 #include "mod_trell.h"
+#include "tinia/trell/trell.h"
 
 #include "apr_strings.h"
 #include "apr_env.h"

@@ -18,27 +18,12 @@
  */
 
 // === CALLBACK TYPES ==========================================================
+#include "ipc_util.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** User-supplied callback that handles logging.
- *
- * \param[in] data     Optional data passed from callback supplier.
- * \param[in] level    Loglevel, 0 implies error, 1 implies warning, and 2
- *                     implies an informal message.
- * \param[in] who      Identifier of function that wants to log.
- * \param[in] message  Printf-formatted log message.
- * \param[in] ...      Arguments to log message.
- *
- */
-typedef void (*tinia_ipc_msg_log_func_t)( void*        data,
-                                          int          level,
-                                          const char*  who,
-                                          const char*  message, ... )
-__attribute__((format(printf,4,5)))
-;
 
 
 /** User-supplied callback invoked every now and then by the server mainloop.

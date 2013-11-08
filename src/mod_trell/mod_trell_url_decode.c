@@ -73,7 +73,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     if( dispatch_info->m_component == TRELL_COMPONENT_JOB ) {
 
         // --- If job path, determine job id ------------------------------------
-        for( i=0; i<TRELL_JOBID_MAXLENGTH-1; i++) {
+        for( i=0; i<TINIA_IPC_JOBID_MAXLENGTH-1; i++) {
             if( (i>0) && (*p == '/') ) {                // at least one char long
                 break;      // found separator
             }

@@ -125,7 +125,7 @@ tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
 
         // if job, then next token is the job id
         tok = apr_strtok( path_info, "/", &state );
-        if( tinia_check_and_copy( dispatch_info->m_jobid, tok, TRELL_JOBID_MAXLENGTH, r, "jobid" ) != 0 ) {
+        if( tinia_check_and_copy( dispatch_info->m_jobid, tok, TINIA_IPC_JOBID_MAXLENGTH, r, "jobid" ) != 0 ) {
             return HTTP_BAD_REQUEST;
         }
         debug2 = apr_pstrdup( r->pool, tok );
