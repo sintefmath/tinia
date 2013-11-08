@@ -24,6 +24,35 @@
 extern "C" {
 #endif
 
+/** \defgroup ipc_msg Interprocess messaging
+ *
+ * The tinia interprocess messaging allows the apache webserver to communicate
+ * with jobs, and jobs with eachother. A job gets this capability by being
+ * controlled by IPCController or a subclass of it.
+ *
+ * The communication is carried out between a messaging client and a messaging
+ * server. A job has a single message server, identified by the job id, and
+ * managed by the controller. A communication is composed of a query message and
+ * a reply message, where each message can be decomposed into several parts, so
+ * that each part fit into the shared memory buffer.
+ *
+ * It is the client that initializes the communication:
+ * - First, a client is initialized with the job id of the message server. This
+ *   opens a shared memory segment that is created by the server, and maps this
+ *   memory into the address space of the client.
+ * - Then, the client sends a query message to the server:
+ *   - The client locks the transaction lock, which makes sure that only one
+ *     client interacts with the server at a time.
+ *   - The client locks the operation lock, which makes sure that the client has
+ *     exclusive access over the shared memory segment (i.e., the server doesn't
+ *     touch it).
+ *   - The 
+ *
+ *
+ * @{
+ *
+ */
+
 
 
 /** User-supplied callback invoked every now and then by the server mainloop.
@@ -261,6 +290,8 @@ ipc_msg_server_mainloop( tinia_ipc_msg_server_t* server,
                          tinia_ipc_msg_periodic_func_t periodic, void* periodic_data,
                          tinia_ipc_msg_input_handler_func_t input_handler, void* input_handler_data,
                          tinia_ipc_msg_output_handler_func_t output_handler, void* output_handler_data );
+
+/** @} */
 
 #ifdef __cplusplus
 }
