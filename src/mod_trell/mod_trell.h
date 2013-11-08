@@ -25,6 +25,7 @@
 #include <util_filter.h>
 #include <libxml/xmlschemas.h>
 #include <tinia/ipc/ipc_msg.h>
+#include <tinia/ipc/ipc_util.h>
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
 
@@ -104,11 +105,11 @@ typedef struct mod_trell_dispatch_info
     int                  m_base64;
     int                  m_width;
     int                  m_height;
-    char                 m_jobid[TRELL_JOBID_MAXLENGTH];
-    char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH];
-    char                 m_requestname[TRELL_REQUESTNAME_MAXLENGTH];
-    char                 m_key[TRELL_KEYID_MAXLENGTH];
-    char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
+    char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
+    char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
+    char                 m_requestname[TRELL_REQUESTNAME_MAXLENGTH+1];
+    char                 m_key[TRELL_KEYID_MAXLENGTH+1];
+    char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH+1];
     apr_time_t           m_entry;
     apr_time_t           m_exit;
     apr_time_t           m_png_entry;

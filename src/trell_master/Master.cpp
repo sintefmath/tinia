@@ -873,8 +873,8 @@ Master::addJob( const std::string& id,
             tinia_msg_heartbeat_t query;
             query.msg.type = TRELL_MESSAGE_HEARTBEAT;
             query.state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
-            strncpy( query.job_id, it->second.m_id.c_str(), TRELL_JOBID_MAXLENGTH );
-            query.job_id[ TRELL_JOBID_MAXLENGTH ] = '\0';
+            strncpy( query.job_id, it->second.m_id.c_str(), TINIA_IPC_JOBID_MAXLENGTH );
+            query.job_id[ TINIA_IPC_JOBID_MAXLENGTH ] = '\0';
             
             tinia_msg_t reply;
             size_t reply_actual;

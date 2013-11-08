@@ -25,8 +25,8 @@
 #include <stdarg.h>
 
 
-#include "tinia/trell/trell.h"
 #include "mod_trell.h"
+#include "tinia/trell/trell.h"
 
 
 

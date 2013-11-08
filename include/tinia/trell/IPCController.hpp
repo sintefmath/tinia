@@ -225,8 +225,8 @@ private:
     /** The current state of this job/messagebox */
     TrellJobState   m_job_state;
 
-    /** A messenger to the master job's message box. */
-    tinia_ipc_msg_client_t*    m_master_mbox;
+    // /** A messenger to the master job's message box. */
+    // tinia_ipc_msg_client_t*    m_master_mbox;
 
 
     /** Sends a heartbeat message to the master job. */
@@ -283,6 +283,7 @@ private:
     static
     int
     handle_periodic( void* data );
+    
     
     
     
