@@ -240,7 +240,7 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
-# Only multiple configuration systems like MSVC and nmake, 
+# Only on multiple configuration systems like MSVC and nmake, 
 # we get all configurations included in one targets file,
 # otherwise we use one target file for each configuration
 IF(CMAKE_CONFIGURATION_TYPES) 
