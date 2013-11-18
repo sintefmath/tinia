@@ -27,8 +27,82 @@ extern "C" {
 /** \defgroup ipc_msg Interprocess messaging
  *
  * The tinia interprocess messaging allows the apache webserver to communicate
- * with jobs, and jobs with eachother. A job gets this capability by being
- * controlled by IPCController or a subclass of it.
+ * with jobs, and jobs to communicate with eachother, a capability a job gets
+ * by being controlled by an \ref tinia::trell::IPCController subclass.
+ *
+ * Clients and servers
+ * -------------------
+ * 
+ * Messaging is carried out between a _client_ and a _server_. When a subclass
+ * of \ref tinia::trell::IPCController controls a job, it also creates a
+ * messaging server, and the mainloop waits for messages on this server. Any
+ * client can connect to this server, but only one client at a time. All jobs as
+ * well as the apache webserver module creates clients to communicate with
+ * each other.
+ *
+ * A client is tied to a specific server. When the client is initiated, a shared
+ * memory segment owned by the server is mapped into the clients address space.
+ * This memory segment contains, in addition to a communication buffer, some
+ * locks and condition variables used for communication.
+ *
+ * The client initiates the communication, which consists of one or more
+ * request-response-pairs. Processing of such a request-response pair is atomic
+ * in the sense that a single client has exclusive ownership of the server
+ * during that processing. The client sends the request, and the server provides
+ * a response. The actual contents of these messages are irrelevant for the
+ * messaging code, only the message size and its role as a request or a
+ * response.
+ *
+ * Producers, consumers, and handlers
+ * ----------------------------------
+ *
+ * Since a fixed buffer is used for communication and message size is arbitrary,
+ * the messages must be split into one or more parts that fit into this buffer.
+ * The burden of splitting the messages is put on the code that uses this API,
+ * as that code may do something clever to avoid extra copies. This buffer is 
+ * atleast \ref TINIA_IPC_MSG_PART_MIN_BYTES, and hence, one can safely assume
+ * that a message smaller than this doesn't need to be split into parts.
+ * However, note that message parts can be smaller than the buffer size (and 
+ * \ref TINIA_IPC_MSG_PART_MIN_BYTES), if that is convenient.
+ *
+ * Splitting and merging of messages is handled by _producers_ and _consumers_,
+ * which are callbacks with the signatures \ref tinia_ipc_msg_producer_func_t
+ * and \ref tinia_ipc_msg_consumer_func_t respectively. These are called in
+ * lockstep, first the producer is invoked for part 0, then the consumer is
+ * invoked for part 0, then the producer for part 1, consumer for part 1, and so
+ * on, until the producer indicates that the last part has been produced, or an
+ * error has occured. The producer and consumer is invoked in different
+ * processes writing and reading from a shared memory segment.
+ *
+ * To avoid having to create a single pair of producers and consumers that can
+ * handle all types of messages, one specifies a pair of handlers (\ref
+ * tinia_ipc_msg_input_handler_func_t and
+ * \ref tinia_ipc_msg_output_handler_func_t) that are callbacks that are used
+ * to set specific producers and consumers for a given content. That is, when
+ * the server gets the first part of a message, the input handler is invoked
+ * with that part. The input handler may use the contents of that message part
+ * to specify an appropriate consumer, and that message part as well as all
+ * subsequent parts are then passed to that consumer. Further, when a reply is
+ * to be formed, the output handler is invoked to specify which producer that
+ * should create the reply message.
+ *
+ * Notification and long-polling
+ * -----------------------------
+ *
+ * A client may also wait for a given time to be notified by a server. The
+ * server is free for other clients while a client is waiting. This
+ * functionality is used to implement long-polling.
+ *
+ * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ * Execution flow
+ * --------------
  *
  * The communication is carried out between a messaging client and a messaging
  * server. A job has a single message server, identified by the job id, and
@@ -49,10 +123,21 @@ extern "C" {
  *   - The 
  *
  *
+ *
  * @{
  *
  */
 
+/** Minimum size for the buffer that holds message parts.
+ *
+ * It can be safely assumed that the buffer that is used to transmit message
+ * parts between the client and server is of this size, and that messages
+ * smaller than this size doesn't need to be split.
+ *
+ * \note This compile-time constant _might_ change, and thus, assumming it is of
+ * at least a given fixed size warrants an assertion.
+ */
+#define TINIA_IPC_MSG_PART_MIN_BYTES 4096
 
 
 /** User-supplied callback invoked every now and then by the server mainloop.

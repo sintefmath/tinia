@@ -24,6 +24,19 @@ extern "C" {
 
 #define TINIA_IPC_JOBID_MAXLENGTH 64
 
+/** \defgroup ipc_util Interprocess utilities
+ *
+ * Logging
+ * -------
+ *
+ * Throughout the interprocess code, logging callbacks are passed. The
+ * interprocess code tries to log all erronous and unexpected events, and by
+ * providing a callback, the user may inject these messages into the logging
+ * system used by the controller.
+ *
+ * @{
+ */
+
 /** User-supplied callback that handles logging.
  *
  * \param[in] data     Optional data passed from callback supplier.
@@ -62,6 +75,7 @@ tinia_ipc_util_valid_jobid( tinia_ipc_msg_log_func_t  log_f,
                             const char*               job_id );
 
 
+/** @} */
 
 #ifdef __cplusplus
 }

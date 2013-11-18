@@ -96,7 +96,7 @@ ipc_msg_server_create(const char*       jobid,
     server->shmem_payload_ptr = MAP_FAILED;
     server->shmem_payload_size = 0;
     
-    size_t minimum_size = 4096;
+    size_t minimum_size = TINIA_IPC_MSG_PART_MIN_BYTES;
     if( ipc_msg_fake_shmem != 0 ) {
         
         rc = pthread_mutex_lock( &ipc_msg_fake_shmem_lock );
