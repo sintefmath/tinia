@@ -62,8 +62,8 @@ extern "C" {
  * as that code may do something clever to avoid extra copies. This buffer is 
  * atleast \ref TINIA_IPC_MSG_PART_MIN_BYTES, and hence, one can safely assume
  * that a message smaller than this doesn't need to be split into parts.
- * However, note that message parts can be smaller than the buffer size (and 
- * \ref TINIA_IPC_MSG_PART_MIN_BYTES), if that is convenient.
+ * However, note that message parts doesn't _need_ to be of at least of this
+ * size, it is just a guarantee for the buffer size.
  *
  * Splitting and merging of messages is handled by _producers_ and _consumers_,
  * which are callbacks with the signatures \ref tinia_ipc_msg_producer_func_t
@@ -93,36 +93,51 @@ extern "C" {
  * server is free for other clients while a client is waiting. This
  * functionality is used to implement long-polling.
  *
- * 
+ * On the server side, notification is invoked using \ref ipc_msg_server_notify,
+ * which can be invoked from any thread, including the mainloop-thread (which
+ * usually is a result of an update from a client).
  *
+ * On the client side, waiting for notification is triggered by the consumer. If
+ * the consumer returns 1, \ref tinia_ipc_msg_client_sendrecv does not
+ * immediately return after handling a single pair of query-response messages,
+ * but waits for a notification. If a notification happens before the wait
+ * timeout, a new pair of query-response is handled, and so on until the
+ * timeout. Specifying a zero timeout disables any waiting, guaranteeing a
+ * single pair of query-response-messages.
  *
+ * Server execution flow
+ * ---------------------
  *
+ * - Invoke \ref ipc_msg_server_create to initialize a server. This function
+ *   must be called before any extra threads are created.
+ *   - This creates a shared memory segment used for communication, and
+ *     initializes some concurrency primitives inside this segment.
+ * - Create other threads and do init code.
+ * - Invoke \ref ipc_msg_server_mainloop to start listening. 
+ *   - If a new query message arrives:
+ *     - Invoke input handler to determine consumer.
+ *     - Let consumer process all parts.
+ *     - Invoke output handler to determine producer.
+ *     - Let producer produce until it is finished.
+ *   - If a notification:
+ *     - Wake all clients waiting for a notification.
+ *   - If mainloop break is requested:
+ *     - Break out of loop and return.
+ *   - Invoke \ref ipc_msg_server_delete to clean up
  *
+ * Client execution flow
+ * ---------------------
  *
- *
- *
- * Execution flow
- * --------------
- *
- * The communication is carried out between a messaging client and a messaging
- * server. A job has a single message server, identified by the job id, and
- * managed by the controller. A communication is composed of a query message and
- * a reply message, where each message can be decomposed into several parts, so
- * that each part fit into the shared memory buffer.
- *
- * It is the client that initializes the communication:
- * - First, a client is initialized with the job id of the message server. This
- *   opens a shared memory segment that is created by the server, and maps this
- *   memory into the address space of the client.
- * - Then, the client sends a query message to the server:
- *   - The client locks the transaction lock, which makes sure that only one
- *     client interacts with the server at a time.
- *   - The client locks the operation lock, which makes sure that the client has
- *     exclusive access over the shared memory segment (i.e., the server doesn't
- *     touch it).
- *   - The 
- *
- *
+ * - Each time the client wants to send one or more messages to the server:
+ * - Either (elaborate):
+ *   - Allocate \ref tinia_ipc_msg_client_t_sizeof bytes of memory
+ *   - Invoke \ref tinia_ipc_msg_client_init on this memory, passing along the
+ *     id of the destination server.
+ *   - Invoke \ref tinia_ipc_msg_client_sendrecv one or more times.
+ *   - Invoke \ref tinia_ipc_msg_client_release
+ * - Or (simple):
+ *   - Invoke \ref tinia_ipc_msg_client_sendrecv_by_name (which does the actions
+ *     outlined above for you).
  *
  * @{
  *
@@ -277,9 +292,20 @@ int
 tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client );
 
 
-
-
-
+/** Send a query and process a reply on an initialized client.
+ *
+ * \param[in] client            Initialized client structure.
+ * \param[in] producer          Callback to message producer function.
+ * \param[in] producer_data     Optional data passed to the message producer
+ *                              function.
+ * \param[in] consumer          Callback to message consumer function.
+ * \param[in] consumer_data     Optional data passed to the message consumer
+ *                              function.
+ * \param[in] longpoll_timeout  Maximum number of seconds to spend inside this
+ *                              function waiting for a notification. Passing
+ *                              zero disables waiting.
+ * \return 0 on success, a negative value on an error.
+ */
 int
 tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
                                tinia_ipc_msg_producer_func_t  producer,
@@ -288,7 +314,23 @@ tinia_ipc_msg_client_sendrecv( tinia_ipc_msg_client_t*        client,
                                void*                          consumer_data,
                                int                            longpoll_timeout );
 
-
+/** Set up a client and end a query and process a reply.
+ *
+ * Wraps \ref tinia_ipc_msg_client_sendrecv inside
+ * \ref tinia_ipc_msg_client_init and \ref tinia_ipc_msg_client_release.
+ *
+ * \param[in] destination       Job id of destination server.
+ * \param[in] producer          Callback to message producer function.
+ * \param[in] producer_data     Optional data passed to the message producer
+ *                              function.
+ * \param[in] consumer          Callback to message consumer function.
+ * \param[in] consumer_data     Optional data passed to the message consumer
+ *                              function.
+ * \param[in] longpoll_timeout  Maximum number of seconds to spend inside this
+ *                              function waiting for a notification. Passing
+ *                              zero disables waiting.
+ * \return 0 on success, a negative value on an error.
+ */
 int
 tinia_ipc_msg_client_sendrecv_by_name( const char*                    destination,
                                        tinia_ipc_msg_log_func_t       log_f,
@@ -324,28 +366,84 @@ ipc_msg_client_sendrecv_buffered_by_name( const char* destination,
 
 typedef struct tinia_ipc_msg_server_struct tinia_ipc_msg_server_t;
 
+
 /** Create a new server.
  *
- * Note: This function must be invoked before any additional threads are
+ * \param jobid     Id of the server.
+ * \param logger_f  Callback used for logging.
+ * \param logger_d  Optional data passed to logger callback.
+ *
+ * \warning This function must be invoked before any additional threads are
  * created, otherwise the signalmask cannot be set properly. 
  *
+ * \warning Only one server should be created per process.
  */
 tinia_ipc_msg_server_t*
 ipc_msg_server_create( const char*       jobid,
                        tinia_ipc_msg_log_func_t  logger_f,
                        void*             logger_d );
 
+
+/** Clean up and release resources of an existing server.
+ *
+ * \param[in] server  Pointer to an existing server.
+ *
+ * \return 0 on success, or a negative value on failure.
+ */
 int
 ipc_msg_server_delete( tinia_ipc_msg_server_t* server );
 
+
+/** Wipes the shared memory segment of a server.
+ *
+ * Used to clean up after jobs that has crashed and not released all of its
+ * resources.
+ *
+ * \param jobid     Id of the server.
+ * \param logger_f  Callback used for logging.
+ * \param logger_d  Optional data passed to logger callback.
+ *
+ * \return 0 on success, or a negative value on failure.
+ */
 int
 ipc_msg_server_wipe(tinia_ipc_msg_log_func_t log_f, void *log_d, const char* jobid );
 
+
+/** Wake all clients waiting for notification.
+ *
+ * Wakes all the clients that are currently waiting for notification.
+ *
+ * If invoked in the same thread as the thread running the mainloop, waiting
+ * clients are notified immediatly. Otherwise, it first waits for any currently
+ * active clients to finish. This behaviour is to avoid that a client misses a
+ * notification in the moment between a query was processed and a client starts
+ * to wait for notifications.
+ *
+ * \param[in] server               Pointer to initialized server struct.
+ *
+ * \return 0 on success, or a negative value on failure.
+ */
 int
 ipc_msg_server_notify( tinia_ipc_msg_server_t* server );
 
+
+/** Break and return from the mainloop.
+ *
+ * Make the mainloop stop running and return control to the function that
+ * invoked the mainloop.
+ *
+ * If this function is invoked in the same thread as the thread running the
+ * mainloop, a flag is set such that the mainloop will break and return in the
+ * next iteration. Otherwise, it first waits for any currently active clients
+ * to finish, then setting the flag and signals the mainloop thread.
+ *
+ * \param[in] server               Pointer to initialized server struct.
+ *
+ * \return 0 on success, or a negative value on failure.
+ */
 int
 ipc_msg_server_mainloop_break( tinia_ipc_msg_server_t* server );
+
 
 /** Run message server mainloop.
  *
