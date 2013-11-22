@@ -603,5 +603,39 @@ DataBase::bump( )
     return m_current_rev++;
 }
 
+DataBase::~DataBase()
+{
+    for(std::map<std::string, Item*>::iterator it = m_name_map.begin(); it != m_name_map.end(); ++it) {
+        delete it->second;
+    }
+
+    std::vector<Id> shadersToDelete;
+    for(std::map<Id, Shader*>::iterator it = m_shaders.begin(); it != m_shaders.end(); ++it) {
+        shadersToDelete.push_back(it->first);
+    }
+
+    for(size_t i = 0; i < shadersToDelete.size(); ++i) {
+        deleteShader(shadersToDelete[i]);
+    }
+
+    std::vector<Id> actionsToDelete;
+    for(std::map<Id, Action*>::iterator it = m_actions.begin(); it != m_actions.end(); ++it) {
+        actionsToDelete.push_back(it->first);
+    }
+
+    for(size_t i = 0; i < actionsToDelete.size(); ++i) {
+        deleteAction(actionsToDelete[i]);
+    }
+
+    std::vector<Id> buffersToDelete;
+    for(std::map<Id, Buffer*>::iterator it = m_buffers.begin(); it != m_buffers.end(); ++it) {
+        buffersToDelete.push_back(it->first);
+    }
+
+    for(size_t i = 0; i < buffersToDelete.size(); ++i) {
+        deleteBuffer(buffersToDelete[i]);
+    }
+}
+
 } // of namespace renderlist
 } // of namespace tinia
