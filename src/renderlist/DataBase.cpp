@@ -605,10 +605,6 @@ DataBase::bump( )
 
 DataBase::~DataBase()
 {
-    for(std::map<std::string, Item*>::iterator it = m_name_map.begin(); it != m_name_map.end(); ++it) {
-        delete it->second;
-    }
-
     std::vector<Id> shadersToDelete;
     for(std::map<Id, Shader*>::iterator it = m_shaders.begin(); it != m_shaders.end(); ++it) {
         shadersToDelete.push_back(it->first);
