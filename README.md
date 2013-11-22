@@ -11,5 +11,7 @@ just a few lines of code. This means the applications can be developed with all
 the usual debugging tools available on the desktop, making sure the program is
 running as it should before deploying on your servers.
 
+
+Compilation and installation instructions are available on the [Wiki](https://github.com/sintefmath/tinia/wiki/Compilation-instructions).
+
 The API-reference and tutorials is available at http://doc.tinia.org
-Compilation and installation instructions are available on the [Wiki](https://github.com/sintefmath/tinia/wiki/Compilation-instructions)
