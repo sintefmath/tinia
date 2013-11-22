@@ -54,12 +54,12 @@ XMLReader::XMLReader()
             depth = xmlTextReaderDepth(reader);
             xmlChar *localName = xmlTextReaderLocalName(reader);
             if (type==1) {
-                state_begin_found = xmlStrEqual(localName, BAD_CAST name.c_str());
+                state_begin_found = (xmlStrEqual(localName, BAD_CAST name.c_str()) != 0);
                 if (state_begin_found)
-                    state_end_found = xmlTextReaderIsEmptyElement(reader);
+                    state_end_found = (xmlTextReaderIsEmptyElement(reader) != 0);
             } else
                 if (type==15) {
-                    state_end_found = xmlStrEqual(localName, BAD_CAST name.c_str());
+                    state_end_found = (xmlStrEqual(localName, BAD_CAST name.c_str()) != 0);
                 }
             xmlFree(localName);
             r=xmlTextReaderRead(reader);
@@ -95,7 +95,7 @@ XMLReader::XMLReader()
             depth = xmlTextReaderDepth(reader);
             switch ( xmlTextReaderNodeType( reader ) ) {
             case 15:
-                state_end_found = xmlStrEqual(localName, BAD_CAST section_name.c_str());
+                state_end_found = (xmlStrEqual(localName, BAD_CAST section_name.c_str()) != 0);
                 break;
             case 1:
                 r = xmlTextReaderRead(reader);
