@@ -12,12 +12,12 @@ if [ -f /tmp/trell_master.pid ]
 then
     pid=$(cat /tmp/trell_master.pid)
     # Check if it's really the trell_master pid
-    if [[ $(ps ${pid}) == *"trell_master"* ]]
+    if [[ $(ps ${pid}) == *"tinia_trell_master"* ]]
     then
 	kill -SIGTERM ${pid}
-	echo "Trying to kill trell_master, waiting 3 seconds"
+        echo "Trying to kill tinia_trell_master, waiting 3 seconds"
 	sleep 3s
-	if [[ $(ps ${pid}) == *"trell_master"* ]]
+        if [[ $(ps ${pid}) == *"tinia_trell_master"* ]]
 	then
 	    echo "WARNING: trell_master did not die from SIGTERM, doing kill -9"
 	    kill -9 ${pid}

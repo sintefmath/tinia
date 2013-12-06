@@ -27,7 +27,7 @@ void LongPollHandler::handle()
         QMap<QString, QString> args = decodeGetParameters(m_request);
         boost::tuple<unsigned int> params = parseGet<boost::tuple<unsigned int> >(decodeGetParameters(m_request), "revision");
         revision = params.get<0>();
-    } catch(std::invalid_argument& e) {
+    } catch(std::invalid_argument&) {
         // Don't have to do anything;
     }
 

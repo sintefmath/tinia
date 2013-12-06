@@ -41,7 +41,7 @@ void ParseGetHelper<0>::parse(Sequence& seq, const QMap<QString, QString>& param
     try {
         boost::tuples::get<0>(seq) =
                 boost::lexical_cast<typename boost::tuples::element<0, Sequence>::type>(parameters[keys[0]].toStdString());
-    } catch(boost::bad_lexical_cast& e) {
+    } catch(boost::bad_lexical_cast&) {
         throw std::invalid_argument("Could not parse the value of key "
                                     + keys[0].toStdString());
     }
@@ -59,7 +59,7 @@ void ParseGetHelper<i>::parse(Sequence& seq, const QMap<QString, QString>& param
     try {
         boost::tuples::get<i>(seq) =
                 boost::lexical_cast<typename boost::tuples::element<i, Sequence>::type>(parameters[keys[i]].toStdString());
-    } catch(boost::bad_lexical_cast& e) {
+    } catch(boost::bad_lexical_cast& ) {
         throw std::invalid_argument("Could not parse the value of key "
                                     + keys[i].toStdString());
     }

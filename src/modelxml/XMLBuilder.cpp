@@ -376,6 +376,10 @@ void XMLBuilder::buildGUILayout(model::gui::Element *root,
    case POPUP_BUTTON:
       addVisibilityKeys(addPopupButton(parent, dynamic_cast<model::gui::PopupButton*>(root)), root);
       break;
+  case FILE_DIALOG_BUTTON:
+       addVisibilityKeys(addExposedModelGUIElement(dynamic_cast<KeyValue*>(root),
+                                             "Label", parent), root);
+       break;
 
    }
 

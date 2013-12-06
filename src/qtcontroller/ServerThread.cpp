@@ -1,4 +1,4 @@
-#include "tinia/qtcontroller/moc/ServerThread.hpp"
+#include "tinia/qtcontroller/impl/ServerThread.hpp"
 #include <QTcpSocket>
 #include "tinia/qtcontroller/impl/http_utils.hpp"
 #include "GL/glew.h"

@@ -30,7 +30,7 @@ function axisAngle(axis, angle) {
     return q;
 }
 function DSRV(parameters) {
-    console.log("constructing dsrv");
+    //console.log("constructing dsrv");
     this.m_exposedModel = parameters.exposedModel;
     this.m_key = parameters.key;
     this.m_boundingBoxKey = parameters.boundingBoxKey;
@@ -79,7 +79,7 @@ function DSRV(parameters) {
     this.updateMatrices();
     this.insertMatrices();
 
-    console.log("DSRV Constructed");
+    //console.log("DSRV Constructed");
 
 }
 
@@ -118,18 +118,18 @@ DSRV.prototype = {
                 break;
         }
 
-        if(this.m_state > -1) {
+        if (this.m_state > -1) {
             this.updateMatrices();
             this.insertMatrices();
         }
     },
 
     mousePressEvent: function (event) {
-        console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
+        //console.log("PRESS: " + event.relativeX + ", " + event.relativeY);
 
         // CTRL + Left mouse button is zoom.
         if (event.ctrlKey && event.button === 0) {
-            console.log("Zooming start");
+           // console.log("Zooming start");
             this.m_zoomStart = event.relativeY;
             this.m_translateZBegin = this.m_translateZ;
             this.m_state = this.ZOOM;
@@ -142,7 +142,7 @@ DSRV.prototype = {
                 this.m_state = this.ROTATE;
                 break;
             case this.ZOOM:
-                console.log("Zooming start");
+                //console.log("Zooming start");
                 this.m_zoomStart = event.relativeY;
                 this.m_translateZBegin = this.m_translateZ;
                 this.m_state = this.ZOOM;
@@ -153,12 +153,44 @@ DSRV.prototype = {
     },
 
     mouseReleaseEvent: function (event) {
-        console.log("released");
+        //console.log("released");
         this.m_state = -1;
     },
 
     keyPressEvent: function (event) {
-        console.log(event.key);
+        //console.log(event.key);
+    },
+
+    touchStartEvent: function (event) {
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mousePressEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mousePressEvent(event);
+        }
+    },
+
+    touchEndEvent: function (event) {
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mouseReleaseEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mouseReleaseEvent(event);
+        }
+    },
+
+    touchMoveEvent: function (event) {
+
+	if(event.touches.length == 1) {
+	    event.button = this.ROTATE;
+            this.mouseMoveEvent(event);
+	} else if(event.touches.length == 2) {
+	    event.button = this.ZOOM;
+	    this.mouseMoveEvent(event);
+	}
+
     },
 
     handleRotateMove: function (x, y) {
@@ -177,18 +209,18 @@ DSRV.prototype = {
     },
 
     handleZoomMove: function (x, y) {
-        console.log("Zooming move");
+        //console.log("Zooming move");
         var scale = this.m_maxLength || this.m_height ? this.m_maxLength / this.m_height : 1;
         this.m_translateZ = this.m_translateZBegin - (y - this.m_zoomStart) * scale;
-        console.log(this.m_translateZ);
+        //console.log(this.m_translateZ);
     },
 
     pointOnUnitSphere: function (x, y) {
         var nx = (x / this.m_width - .5) * this.m_aspect;
-        var ny = -( y / this.m_height - .5);
+        var ny = -(y / this.m_height - .5);
         var r2 = nx * nx + ny * ny;
 
-        if (r2 < 1 ) {
+        if (r2 < 1) {
             return vec3.create([nx, ny, Math.sqrt(1.0 - r2)]);
         }
         else {
@@ -267,7 +299,7 @@ DSRV.prototype = {
     },
 
     insertMatrices: function () {
-        
+
         var viewer = this.m_exposedModel.getElementValue(this.m_key);
         viewer.updateElement("modelview", this.m_modelview);
         viewer.updateElement("projection", this.m_projection);

@@ -21,7 +21,7 @@ QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
 QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
 QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
 
- add_library( qtcontroller
+ add_library( tinia_qtcontroller
     ${qtcontroller_QRC_SOURCES}
     ${qtcontroller_HEADERS}
     ${qtcontroller_SOURCES}
@@ -31,31 +31,31 @@ QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
     )
 
 IF(LIBXML2_FOUND)
-target_link_libraries ( qtcontroller
-    renderlist
-    renderlistgl
-    model
-	modelxml
+target_link_libraries ( tinia_qtcontroller
+    tinia_renderlist
+    tinia_renderlistgl
+    tinia_model
+	tinia_modelxml
     tinia_javascript
     ${LIBXML2_LIBRARIES}
-    modelxml
+    tinia_modelxml
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
-    jobcontroller
+    tinia_jobcontroller
     ${Boost_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
 )
 ELSe()
-target_link_libraries ( qtcontroller
-    renderlist
-    renderlistgl
-    model
+target_link_libraries ( tinia_qtcontroller
+    tinia_renderlist
+    tinia_renderlistgl
+    tinia_model
     tinia_javascript
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
-    jobcontroller
+    tinia_jobcontroller
     ${Boost_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
@@ -74,7 +74,7 @@ ENDIF()
     DESTINATION include/tinia/qtcontroller/moc  COMPONENT qtcontroller_dev)
 
   install( TARGETS 
-    qtcontroller
+    tinia_qtcontroller
     EXPORT TiniaTargets
     LIBRARY
     DESTINATION lib/ 

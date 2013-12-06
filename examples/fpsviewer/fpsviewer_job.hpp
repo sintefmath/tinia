@@ -76,18 +76,18 @@ void DrawCube(float size) {
 
  glBegin(GL_QUADS);
 
-  glColor3f(0.7, 0.0, 0.0);
+  glColor3f(0.7f, 0.0f, 0.0f);
   glVertex3f(-size, -size, -size);
   glVertex3f( size, -size, -size);
   glVertex3f( size,  size, -size);
   glVertex3f(-size,  size, -size);
-  glColor3f(0.0, 1.0, 1.0);
+  glColor3f(0.0f, 1.0f, 1.0f);
   glVertex3f(-size, -size,  size);
   glVertex3f( size, -size,  size);
   glVertex3f( size,  size,  size);
   glVertex3f(-size,  size,  size);
 
-  glColor3f(0.0, 0.0, 0.7);
+  glColor3f(0.0f, 0.0f, 0.7f);
 
   glVertex3f(-size, -size, -size);
   glVertex3f(-size, -size,  size);
@@ -100,14 +100,14 @@ void DrawCube(float size) {
   glVertex3f( size,  size,  size);
   glVertex3f( size,  size, -size);
 
-  glColor3f(0.0, 0.7, 0.0);
+  glColor3f(0.0f, 0.7f, 0.0f);
 
   glVertex3f(-size, -size, -size);
   glVertex3f(-size, -size,  size);
   glVertex3f( size, -size,  size);
   glVertex3f( size, -size, -size);
 
-  glColor3f( 0.25, 0.25, 0.25 );
+  glColor3f( 0.25f, 0.25f, 0.25f );
   glVertex3f(-size, size, -size);
   glVertex3f(-size, size,  size);
   glVertex3f( size, size,  size);

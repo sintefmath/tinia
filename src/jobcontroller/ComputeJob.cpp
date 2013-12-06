@@ -43,7 +43,7 @@ ComputeJob::operator()()
 		run();
 		m_model->updateElement("status", "finished");
 	}
-	catch (Interrupted &e)
+	catch (Interrupted &)
 	{
 		m_model->updateElement("status", "terminated");
 	}
