@@ -265,7 +265,7 @@ trell_handle_get_script( trell_sconf_t*          sconf,
   * -- If messenger buffer is too small, return HTTP_INSUFFICIENT_STORAGE.
   * -- If message post fails, return HTTP_INTERNAL_SERVER.
   * - Unlock and close connection to job, if fails return HTTP_INTERNAL_SERVER_ERROR.
-  * - If succeeds, return HTTP_NO_CONTENT.
+  * - If succeeds, return OK. (Defined by Apache.)
   */
 int
 trell_handle_update_state( trell_sconf_t*          sconf,
