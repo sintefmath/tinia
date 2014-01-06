@@ -27,7 +27,7 @@ extern "C" {
 /** \defgroup ipc_msg Interprocess messaging
  *
  * The tinia interprocess messaging allows the apache webserver to communicate
- * with jobs, and jobs to communicate with eachother, a capability a job gets
+ * with jobs, and jobs to communicate with each other, a capability a job gets
  * by being controlled by an \ref tinia::trell::IPCController subclass.
  *
  * Clients and servers
@@ -35,13 +35,13 @@ extern "C" {
  * 
  * Messaging is carried out between a _client_ and a _server_. When a subclass
  * of \ref tinia::trell::IPCController controls a job, it also creates a
- * messaging server, and the mainloop waits for messages on this server. Any
+ * messaging server, and the main loop waits for messages on this server. Any
  * client can connect to this server, but only one client at a time. All jobs as
- * well as the apache webserver module creates clients to communicate with
- * each other.
+ * well as the apache webserver module create clients to communicate with
+ * each other, through the messaging server.
  *
  * A client is tied to a specific server. When the client is initiated, a shared
- * memory segment owned by the server is mapped into the clients address space.
+ * memory segment owned by the server is mapped into the client's address space.
  * This memory segment contains, in addition to a communication buffer, some
  * locks and condition variables used for communication.
  *
@@ -51,7 +51,7 @@ extern "C" {
  * during that processing. The client sends the request, and the server provides
  * a response. The actual contents of these messages are irrelevant for the
  * messaging code, only the message size and its role as a request or a
- * response.
+ * response matters.
  *
  * Producers, consumers, and handlers
  * ----------------------------------
@@ -60,7 +60,7 @@ extern "C" {
  * the messages must be split into one or more parts that fit into this buffer.
  * The burden of splitting the messages is put on the code that uses this API,
  * as that code may do something clever to avoid extra copies. This buffer is 
- * atleast \ref TINIA_IPC_MSG_PART_MIN_BYTES, and hence, one can safely assume
+ * at least \ref TINIA_IPC_MSG_PART_MIN_BYTES, and hence, one can safely assume
  * that a message smaller than this doesn't need to be split into parts.
  * However, note that message parts doesn't _need_ to be of at least of this
  * size, it is just a guarantee for the buffer size.

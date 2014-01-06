@@ -187,6 +187,8 @@ tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client )
             }
         }
     }
+    // Note that MAP_FAILED is used to flag shared memory as "unmapped" or "unused", 
+    // not necessarily that mapping has really failed.
     client->shmem_name[0] = '\0';
     client->shmem_base = MAP_FAILED;
     client->shmem_total_size = 0;
