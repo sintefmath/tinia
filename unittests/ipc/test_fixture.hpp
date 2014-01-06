@@ -18,6 +18,7 @@
 #include <cassert>
 #include <ctime>
 #include <cstdarg>
+#include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <tinia/ipc/ipc_msg.h>
 #include "../../src/ipc/ipc_msg_internal.h"
