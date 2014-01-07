@@ -59,7 +59,7 @@ ipc_msg_server_create(const char*       jobid,
     }
     
     // -------------------------------------------------------------------------
-    // --- first, do stuff that doesn't requere server structure ---------------
+    // --- first, do stuff that doesn't require server structure ---------------
     // -------------------------------------------------------------------------
 
     // --- create name of shared memory ----------------------------------------
