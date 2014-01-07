@@ -198,7 +198,7 @@ trell_pass_reply_png( void* data,
         *p++ = 'E';
         *p++ = 'N';
         *p++ = 'D';
-        *p++ = 174;     // CRC
+        *p++ = 174;     // CRC (for the IEND-chunk)
         *p++ = 66;
         *p++ = 96;
         *p++ = 130;
