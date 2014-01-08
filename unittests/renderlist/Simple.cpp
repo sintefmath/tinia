@@ -16,7 +16,6 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_AUTO_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 #include <typeinfo>
 #include <tinia/renderlist/DataBase.hpp>
@@ -95,8 +94,8 @@ BOOST_FIXTURE_TEST_CASE( foobar, Fixture )
             ->set( temporaryCubeNormArray, sizeof(temporaryCubeNormArray) / sizeof(float));
 
 
-    float P[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1.0202, -1, 0, 0, -0.121333, 0 };
-    float Pi[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -8.24176, 0, 0, -1, 8.40826 };
+    float P[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1.0202f, -1, 0, 0, -0.121333f, 0 };
+    float Pi[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -8.24176f, 0, 0, -1, 8.40826f };
     float cfw[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, -3, 1};
     float ctw[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 3, 1 };
     float lfw[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};

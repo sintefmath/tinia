@@ -1,6 +1,17 @@
 PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
-SET( version_number "0.2.5" )
+SET( version_number "0.3.0" )
+SET(TINIA_VERSION ${version_number})
+
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+# Tagging debug-libraries
+# Note: If the postfix string is changed, remember also to modify the contents of config/debug/mod_trell.load!
+SET(CMAKE_DEBUG_POSTFIX "d")
+
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 # Set shared for linux:
 IF(NOT WIN32)
@@ -9,16 +20,25 @@ IF(NOT WIN32)
     ENDIF()
 ENDIF()
 
+if(WIN32 AND NOT CYGWIN)
+  set(DEF_INSTALL_CMAKE_DIR cmake)
+else()
+  set(DEF_INSTALL_CMAKE_DIR lib/cmake/Tinia)
+endif()
+set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
+  "Installation directory for CMake files")
+
 IF(NOT WIN32)
-  OPTION( Tinia_SERVER "Build mod_trell and related components?" ON)
+  OPTION( Tinia_SERVER "Build mod_tinia_trell and related components?" ON)
 ELSE()
-  OPTION( Tinia_SERVER "Build mod_trell and related components?" OFF)
+  OPTION( Tinia_SERVER "Build mod_tinia_trell and related components?" OFF)
 ENDIF()
 
 OPTION( Tinia_DESKTOP "Build qtcontroller?" ON )
 OPTION( Tinia_BUILD_EXAMPLES "Build example jobs?" ON )
 OPTION( Tinia_BUILD_TUTORIALS "Build tutorials?" ON )
 OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
+OPTION( Tinia_AMAZON "Configurations needed to make Tinia work smoothly on Amazon" OFF)
 
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
@@ -42,7 +62,9 @@ IF(WIN32)
 	"${Tinia_3RDPARTY_LOC}" )
 ENDIF()
 
-
+IF(Tinia_AMAZON) 
+  ADD_DEFINITIONS(-DTINIA_AMAZON)
+ENDIF()
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
     SET( CMAKE_C_FLAGS "-g3 ${CMAKE_C_FLAGS}" )
@@ -54,7 +76,7 @@ IF(MSVC10)
 ENDIF()
 
 
-# We don't need XML support on Windows (only needed for mod_trell...)
+# We don't need XML support on Windows (only needed for mod_tinia_trell...)
 IF(Tinia_SERVER)
     find_package( LibXml2 REQUIRED )
 ELSE()
@@ -62,7 +84,7 @@ ELSE()
 ENDIF()
 
 IF(LIBXML2_FOUND)
-
+    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${LIBXML2_LIBRARIES})
     ADD_DEFINITIONS(-DTINIA_HAVE_LIBXML)
 ELSE()
     SET(LIBXML2_INCLUDE_DIRS "")
@@ -75,7 +97,8 @@ ENDIF()
 set(BOOST_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
-FIND_PACKAGE( Boost 1.46 COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
+FIND_PACKAGE( Boost REQUIRED COMPONENTS unit_test_framework prg_exec_monitor thread date_time system )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${BOOST_LIBRARIES})
 
 ##### QT #####
 IF(Tinia_DESKTOP)
@@ -89,6 +112,7 @@ IF(Tinia_DESKTOP)
   QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
   ADD_DEFINITIONS(${QT_DEFINITIONS})
   ADD_DEFINITIONS(-DQT_SHARED)
+  SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${LIBXML2_LIBRARIES} ${QT_LIBRARIES})
 ENDIF()
 
 
@@ -97,12 +121,13 @@ FIND_PACKAGE( OpenGL REQUIRED )
 FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 IF(Tinia_SERVER)
 
-  FIND_PATH( APACHE_INCLUDE_DIR httpd.h 
-    HINTS "/usr/include/apache2" "/usr/include/httpd/" 
+  FIND_PATH( APACHE_INCLUDE_DIR httpd.h
+    HINTS "/usr/include/apache2" "/usr/include/httpd/"
   )
-  
+
   FIND_LIBRARY( RT
     NAMES rt
     PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
@@ -112,15 +137,16 @@ IF(Tinia_SERVER)
     NAMES apr-1
     PATHS "/usr/lib/"
     )
-    
+
   FIND_PATH(APR_INCLUDE_DIR "apr.h"
 HINTS   "/usr/include/apr-1.0"
         "/usr/include/apr-1"
         "apr-1/"
         "apr-1.0")
+    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${LIB_APR})
 ENDIF()
 
-include_directories( "./include" 
+SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${LIBXML2_INCLUDE_DIR}
   ${GLEW_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
@@ -128,7 +154,10 @@ include_directories( "./include"
   ${APR_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS})
+
+include_directories( "./include"
+    ${TINIA_EXTERNAL_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -136,20 +165,27 @@ link_directories(
 )
 
 ADD_SUBDIRECTORY( "src/model" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_model)
 IF(LIBXML2_FOUND)
   ADD_SUBDIRECTORY( "src/modelxml" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_modelxml)
 ENDIF()
 ADD_SUBDIRECTORY( "src/renderlist" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_renderlist)
 ADD_SUBDIRECTORY( "src/renderlistgl" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_renderlistgl)
 ADD_SUBDIRECTORY( "src/jobcontroller" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_jobcontroller)
 IF(Tinia_DESKTOP)
   ADD_SUBDIRECTORY( "js")
+  SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_javascript)
   ADD_SUBDIRECTORY( "src/qtcontroller" )
-
+  SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_qtcontroller)
 ENDIF()
 IF(Tinia_SERVER)
   ADD_SUBDIRECTORY( "src/ipc" )
   ADD_SUBDIRECTORY( "src/trell" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
   ADD_SUBDIRECTORY( "src/mod_trell" )
   ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
@@ -167,6 +203,10 @@ IF( Tinia_BUILD_UNIT_TESTS )
   ADD_SUBDIRECTORY( "unittests/jobcontroller/" )
   IF(Tinia_DESKTOP)
     ADD_SUBDIRECTORY( "unittests/qtcontroller/" )
+    IF(LIBXML2_FOUND)
+      # This has of course all dependencies of "sub-tests" combined.
+      ADD_SUBDIRECTORY( "unittests/combined/" )
+    ENDIF()
   ENDIF()
 ENDIF()
 
@@ -196,8 +236,8 @@ ENDIF()
 
 FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")
 install( FILES
-	${tinia_headerFiles} 
-    DESTINATION include/tinia/  
+	${tinia_headerFiles}
+    DESTINATION include/tinia/
     COMPONENT tinia_dev)
 
 #SET( CPACK_DEB_COMPONENT_INSTALL ON)
@@ -208,32 +248,74 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
-IF(WIN32)
-    SET( CPACK_GENERATOR "NSIS" )
-    SET( CPACK_NSIS_CONTACT "kjetil.olsen.lye@sintef.no" )
-    SET(CPACK_PACKAGE_INSTALL_DIRECTORY "tinia-${version_number}")
-    SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} Akerselva")
-    SET( CPACK_COMPONENTS_ALL 
-         model
-         model_dev   
-         jobcontroller
-         jobcontroller_dev
-         renderlist
-         renderlist_dev
-         renderlistgl
-         renderlistgl_dev
-         qtcontroller
-         qtcontroller_dev
-		 tinia_dev
-         #simple_qt_job
-         #tinia_3rdparty 
-    )
+# Only on multiple configuration systems like MSVC and nmake, 
+# we get all configurations included in one targets file,
+# otherwise we use one target file for each configuration
+IF(CMAKE_CONFIGURATION_TYPES) 
+	SET(TINIA_TARGETS_APPEND "")
 ELSE()
+	SET(TINIA_TARGETS_APPEND ${CMAKE_BUILD_TYPE})
+ENDIF()
+
+# This is for local build directory:
+IF(Tinia_DESKTOP)
+	IF(Tinia_SERVER)
+                export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tinia_trell tiniaipc
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
+	ELSE()
+	   IF(LIBXML2_FOUND)
+			export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
+		ELSE()
+						export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
+					FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
+		ENDIF()
+	ENDIF()
+ELSE()
+        export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tinia_trell tiniaipc
+				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
+ENDIF()
+
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" ${TINIA_EXTERNAL_INCLUDE_DIRS})
+set(CONF_APPS_DIR "${PROJECT_BINARY_DIR}")
+configure_file(TiniaConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/TiniaConfig.cmake" @ONLY)
+
+# This is for the installed file
+# First we need relative path for include
+file(RELATIVE_PATH REL_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_CMAKE_DIR}"
+   "${CMAKE_INSTALL_PREFIX}/include")
+set(CONF_INCLUDE_DIRS "\${TINIA_CMAKE_DIR}/${REL_INCLUDE_DIR}" ${TINIA_EXTERNAL_INCLUDE_DIRS})
+
+# And the relative path for apps:
+file(RELATIVE_PATH REL_APPS_DIR "${CMAKE_INSTALL_PREFIX}/${INSTALL_CMAKE_DIR}"
+   "${CMAKE_INSTALL_PREFIX}/var/trell/apps")
+set(CONF_APPS_DIR "\${TINIA_CMAKE_DIR}/${REL_APPS_DIR}")
+
+configure_file(TiniaConfig.cmake.in
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TiniaConfig.cmake" @ONLY)
+
+configure_file(TiniaConfigVersion.cmake.in
+  "${PROJECT_BINARY_DIR}/TiniaConfigVersion.cmake" @ONLY)
+
+
+# We need to install the config files
+install(FILES
+  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TiniaConfig.cmake"
+  "${PROJECT_BINARY_DIR}/TiniaConfigVersion.cmake"
+  DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT tinia_dev)
+
+# Install the export set for use with the install-tree
+install(EXPORT TiniaTargets DESTINATION
+  "${INSTALL_CMAKE_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake" COMPONENT tinia_dev)
+
+IF(NOT WIN32)
     SET( CPACK_GENERATOR "DEB" )
     SET( CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/debian/postrm;" )
     SET( CPACK_DEBIAN_PACKAGE_MAINTAINER "kjetil.olsen.lye@sintef.no" )
     SET(CPACK_MONOLITHIC_INSTALL 1)
     SET( CPACK_PACKAGE_INSTALL_DIRECTORY "/" )
+    include ( CPack )
 ENDIF()
 
 
@@ -241,4 +323,4 @@ ENDIF()
 
 
 
-include ( CPack )
+

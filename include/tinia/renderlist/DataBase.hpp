@@ -31,6 +31,8 @@ class DataBase
 public:
     DataBase();
 
+    ~DataBase();
+
     /** Fetch an item (shader,buffer,image,action) by name.
       *
       * \returns The item or null if no item is found.

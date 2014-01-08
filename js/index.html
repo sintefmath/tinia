@@ -64,7 +64,23 @@ and open the template in the editor.
         <script type="text/javascript" src="main.js"></script>
 
         <script>
+
             dojo.ready(function() {
+	        document.addEventListener('touchmove', function() {if(event.preventDefault) {
+	                 event.preventDefault();
+	             }
+	        });
+                document.oncontextmenu = function(event) {
+                    // Disable right click
+                    if (event.preventDefault) {
+                        event.preventDefault();
+                    }
+                    if(event.stopPropagation) {
+                        event.stopPropagation();
+                    }
+                    return false
+                };
+
                 var append = "";
                 var isLocal = false;
                 var debug = false;

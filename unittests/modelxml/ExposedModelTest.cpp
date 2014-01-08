@@ -262,7 +262,7 @@ struct AddMatrixFixture : public Fixture {
         matrixName( "projection" )
     {
         for(int i = 0; i < 16; ++i) {
-            myMatrix[i] = i + 1;
+            myMatrix[i] = float(i + 1);
         }
         
         model->addMatrixElement( matrixName, myMatrix.data() );

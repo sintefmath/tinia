@@ -195,10 +195,10 @@ bool Tutorial3Job::renderFrame( const std::string &session,
 
     /** [renderloop] */
     glBegin(GL_TRIANGLES);
-    glColor3f(1, 0, 0);
-    glVertex2f(0 - s1, 0);
-    glVertex2f(1 + s2, 0);
-    glVertex2f(1 + s2, 1 + s3);
+    glColor3f(1.f, 0.f, 0.f);
+    glVertex2f(0.f - s1, 0.f);
+    glVertex2f(1.f + s2, 0.f);
+    glVertex2f(1.f + s2, 1.f + s3);
     glEnd();
     /** [renderloop] */
 

@@ -39,7 +39,8 @@ RenderingDevices::RenderingDevices(void (*logger)( void* data, int level, const 
                                    void* logger_data )
     : m_display_name( ":0.0" ),
       m_logger( logger ),
-      m_logger_data( logger_data )
+      m_logger_data( logger_data ),
+      m_hasRenderingInformation(false)
 {
 }
 
@@ -66,7 +67,12 @@ RenderingDevices::parseExtensions( const char* string )
 std::string
 RenderingDevices::xml()
 {
-
+    // We cache the results
+    if(m_hasRenderingInformation) {
+      std::cout << m_xml<<std::endl;
+        return m_xml;
+    }
+    
     std::stringstream xml;
     xml << "  <renderingDevices>\n";
    
@@ -96,7 +102,11 @@ RenderingDevices::xml()
                 continue;
             }
 
-            int screen_count = ScreenCount( display );
+#ifdef TINIA_AMAZON
+            int screen_count = 1;
+#else
+	    int screen_count = ScreenCount ( display );
+#endif
             XCloseDisplay( display );
             
             if( screen_count < 1 ) {
@@ -178,6 +188,8 @@ RenderingDevices::xml()
         closedir( dir );
     }
     xml << "  </renderingDevices>\n";
+    m_hasRenderingInformation = true;
+    m_xml = xml.str();
     return xml.str();
 }
 

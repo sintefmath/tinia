@@ -1,17 +1,38 @@
 Compilation and installation {#sec_compilation}
 ============================
-
 Compilation is done by using Cmake on both Linux and Windows.
 
 The supported software platforms are Ubuntu Linux 12.04 LTS and Windows 7 with
-Visual Studio 2010. 
+Visual Studio 2010.
 
 Other fairly recent *NIXes will probably work, as long as they have a
 fairly recent C++ compiler supporting C++11.
 
+A note on the server module on Linux
+---------------------------
+You need to run the apache2 server from a user that has access to the X system. The easiest way to achieve this is to disable X access control from local connections, i.e. issue the command
+
+    xhost +local:
+
+Compilation on Ubuntu 13.10
+---------------------------
+You need to install the required packages, this can be done with the command
+
+    $ sudo apt-get install libxml2-dev libglew-dev libglm-dev libqt4-dev libapr1-dev cmake libboost-all-dev build-essential apache2-dev apache2 git
+
+Then you need to checkout tinia from github:
+    git clone https://github.com/sintefmath/tinia.git
+
+and finally run cmake and make out of source:
+
+    mkdir tinia-build
+    cd tinia-build
+    cmake ../tinia
+    make -j9
+
 Compilation on Ubuntu 12.04 and 12.10
 ---------------------------
-The supported Linux platform is Ubuntu 12.04 LTS and Ubuntu 12.10, utilizing 
+The supported Linux platform is Ubuntu 12.04 LTS and Ubuntu 12.10, utilizing
 dependencies from the official repositories.
 
 ### Dependencies for Ubuntu 12.04
@@ -46,10 +67,10 @@ Ubuntu packages (with dependencies) for Ubuntu 12.10:
 
 ### Compiling and installing on Ubuntu (both 12.04 and 12.10)
 
-Once these are installed a simple 
+Once these are installed a simple
 
-    $ cmake . 
-    $ make 
+    $ cmake .
+    $ make
 
 Should be enough to compile it. You can optionally issue
 ` $ make package` Which will build a debian package which installs into
@@ -61,9 +82,9 @@ system with the following command:
 Compilation on Windows 7 with Visual Studio 2010
 ------------------------------------------------
 To compile on Windows it is required to download and install several
-thirdparty packages. 
+thirdparty packages.
 
-Compilation and running on Windows is definitively quite complicated, 
+Compilation and running on Windows is definitively quite complicated,
 and it is not possible to guarantee 100% compatability with other software
 you have installed.
 
@@ -71,17 +92,17 @@ you have installed.
 
 - CMake 2.8 from <http://www.cmake.org>
 - Qt 4.8 from <http://qt.nokia.com/downloads> you need just the [Qt libraries](http://qt.nokia.com/downloads/windows-cpp-vs2010), but
-  feel free to grab the larger SDK packages if you prefer them. 
+  feel free to grab the larger SDK packages if you prefer them.
 - A precompiled archive of [Boost](http://www.boost.org), [GLEW](http://glew.sf.net) and [GLM](http://glm.g-truc.net/)
   from can be downloaded from our [Github](https://github.com/downloads/hetcomp/tinia/Tinia_3rdParty-18.07.12.zip) page.
-  
+
 ### Generating a Visual Studio Solution file
 
 Once the dependencies are installed, we invoke CMake to generate a Visual Studio
 solution file that can be compiled either on the command line by `msbuild` or loaded
-into the IDE. 
+into the IDE.
 
-For the following example, we assume you have extracted the precompiled 
+For the following example, we assume you have extracted the precompiled
 package to <tinia_3rdparty_location> and that Qt is installed by the normal installer (so that
 it can be found either by registry keys or the `QTDIR` environment variable).
 
@@ -112,13 +133,13 @@ which will build the libraries, unit tests, tutorials and examples.
 
 Running the compiled programs can however be a bit troublesome.
 You _must_ ensure that the following is in you path:
-- `<tinia_3rdparty_location>\bin` 
+- `<tinia_3rdparty_location>\bin`
 - `QTDIR`\bin
 
-It is possible you have installed other tools which include dlls from 
+It is possible you have installed other tools which include dlls from
 the package above in your path. However, they might very well be of
-different and incompatible versions than the ones provided in the above 
+different and incompatible versions than the ones provided in the above
 packages leading to the so called Windows DLL-hell.
 
 For invoking Tinia-application you can ensure that the above directories are
-_first_ in your path, this should be acceptable for developement. 
+_first_ in your path, this should be acceptable for developement.

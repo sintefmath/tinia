@@ -7,4 +7,4 @@ ADD_EXECUTABLE( ipc_unittest
   ${ipcTestSrc} 
   ${ipcTestHeaders} )
 
-TARGET_LINK_LIBRARIES( ipc_unittest ${Boost_LIBRARIES} trell )
+TARGET_LINK_LIBRARIES( ipc_unittest ${Boost_LIBRARIES} tinia_trell )

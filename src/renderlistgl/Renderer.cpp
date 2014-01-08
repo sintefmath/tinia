@@ -100,8 +100,11 @@ Renderer::pull()
     bool new_draworder;
     bool needs_pruning;
 
-
+#ifdef DEBUG
+    // This is only used when DEBUG is set (see line 117, "RL_LOG_DEBUG(...)")
     Revision old_revision = m_current_revision;
+#endif
+
     m_current_revision = m_db.changes( buffers,
                                        images,
                                        shaders,

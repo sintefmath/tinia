@@ -103,7 +103,7 @@ QScriptValue ExposedModel::getElementValue(const QString &key)
     if (type == std::string("complexType")) {
         Viewer* v = new Viewer(m_engine);
         m_model->getElementValue(key.toStdString(), v->viewer());
-        return m_engine->newQObject(v);
+        return m_engine->newQObject(v, QScriptEngine::ScriptOwnership);
     }
     return QScriptValue();
 }

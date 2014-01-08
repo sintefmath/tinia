@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 rm -f /etc/apache2/mods-enabled/mod_trell.load
 rm -f /etc/apache2/mods-enabled/mod_trell.conf
 
@@ -6,3 +6,23 @@ rm -f /etc/apache2/mods-available/mod_trell.load
 rm -f /etc/apache2/mods-available/mod_trell.conf
 service apache2 restart
 rm -rf /usr/var/trell
+
+# If trell master is running, kill it
+if [ -f /tmp/trell_master.pid ] 
+then
+    pid=$(cat /tmp/trell_master.pid)
+    # Check if it's really the trell_master pid
+    if [[ $(ps ${pid}) == *"tinia_trell_master"* ]]
+    then
+	kill -SIGTERM ${pid}
+        echo "Trying to kill tinia_trell_master, waiting 3 seconds"
+	sleep 3s
+        if [[ $(ps ${pid}) == *"tinia_trell_master"* ]]
+	then
+	    echo "WARNING: trell_master did not die from SIGTERM, doing kill -9"
+	    kill -9 ${pid}
+	fi
+    fi
+    # We want to delete this file either way
+    rm /tmp/trell_master.pid
+fi

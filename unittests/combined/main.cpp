@@ -15,36 +15,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-#pragma once
-#include <string>
-#include <list>
 
+#define BOOST_TEST_MODULE CombinedTest
+#include <boost/test/unit_test.hpp>
+
+#include <QApplication>
+
+/*
 namespace tinia {
-namespace trell {
-namespace impl {
+namespace test {
+*/
 
-class RenderingDevices
-{
-public:
-    RenderingDevices( void (*logger)( void* data, int level, const char* who, const char* message, ... ) = NULL,
-                      void* logger_data = NULL);
+struct SetupQtApplication {
+    QCoreApplication app;
 
-    std::string
-    xml();
-    
-protected:
-    std::string     m_display_name; ///< String used to open display.
-    void          (*m_logger)( void* data, int level, const char* who, const char* message, ... );
-    void*           m_logger_data;
- 
-    std::list<std::string>
-    parseExtensions( const char* string );
+    static char* argv;
+    static int argc;
 
-private:
-    std::string m_xml;
-    bool        m_hasRenderingInformation;
+    SetupQtApplication()
+        : app(argc, &argv)
+    {
+    Q_INIT_RESOURCE(resources);
+    }
 };
 
-} // of namespace impl
-} // of namespace trell
-} // of namespace tinia
+#ifdef __GNUC__
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 // Only available on 4.6 and newer
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#endif
+#endif
+
+char* SetupQtApplication::argv = "bleh";
+int SetupQtApplication::argc = 1;
+
+#ifdef __GNUC__
+#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 6 // Only available on 4.6 and newer
+#pragma GCC diagnostic pop
+#endif
+#endif
+
+//using namespace tinia::test;
+BOOST_GLOBAL_FIXTURE( SetupQtApplication );
+

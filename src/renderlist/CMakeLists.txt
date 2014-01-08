@@ -1,8 +1,8 @@
 FILE( GLOB renderlist_SRC "*.cpp" )
 FILE( GLOB renderlist_HEADERS "../../include/tinia/renderlist/*.hpp")
 
-ADD_LIBRARY( renderlist STATIC ${renderlist_SRC} ${renderlist_HEADERS} )
-TARGET_LINK_LIBRARIES( renderlist )
+ADD_LIBRARY( tinia_renderlist STATIC ${renderlist_SRC} ${renderlist_HEADERS} )
+TARGET_LINK_LIBRARIES( tinia_renderlist )
 
 
 # The reason for the development name to be <component>_dev is
@@ -16,7 +16,9 @@ TARGET_LINK_LIBRARIES( renderlist )
     COMPONENT renderlist_dev)
 
   install( TARGETS  
-    renderlist LIBRARY
+    tinia_renderlist
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT renderlist)

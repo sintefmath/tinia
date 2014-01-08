@@ -21,7 +21,7 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <tinia/jobcontroller/OpenGLJob.hpp>
-#include <tinia/qtcontroller/scripting/ScriptEngine.hpp>
+#include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 
 namespace tinia {
 namespace qtcontroller {

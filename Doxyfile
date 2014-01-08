@@ -32,7 +32,7 @@ PROJECT_NAME           = Tinia
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = "Release Akerselva"
+PROJECT_NUMBER         = "Release Carl Berner"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description 
 # for a project that appears at the top of each page and should give viewer 

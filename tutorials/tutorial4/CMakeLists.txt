@@ -7,16 +7,16 @@ ADD_EXECUTABLE(tutorial4_desktop
     tutorial4_desktop.cpp
 )
   TARGET_LINK_LIBRARIES(tutorial4_desktop
-	      model
-    qtcontroller
-    renderlist
-    renderlistgl
+	      tinia_model
+    tinia_qtcontroller
+    tinia_renderlist
+    tinia_renderlistgl
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
-    model
-    jobcontroller
+    tinia_model
+    tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
 ENDIF()
@@ -35,17 +35,19 @@ IF(Tinia_SERVER)
     ${OPENGL_LIBRARIES}
     ${Boost_LIBRARIES} 
     ${LIBXML2_LIBRARIES} 
-    model 
-    modelxml
-    renderlist
-    renderlistgl
-    jobcontroller
-    trell
+    tinia_model 
+    tinia_modelxml
+    tinia_renderlist
+    tinia_renderlistgl
+    tinia_jobcontroller
+    tinia_trell
     )
 
 
   INSTALL(TARGETS
-    tutorial4_web RUNTIME
+    tutorial4_web
+    EXPORT TiniaTargets
+    RUNTIME
     DESTINATION var/trell/apps/
     COMPONENT mod_trell
     )

@@ -2,9 +2,9 @@ FILE( GLOB modelSrc "*.cpp" )
 FILE( GLOB_RECURSE modelHeaders "../../include/tinia/model/*.hpp")
 
 
-ADD_LIBRARY( model ${modelSrc} ${modelHeaders} )
+ADD_LIBRARY( tinia_model ${modelSrc} ${modelHeaders} )
 
-TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
+TARGET_LINK_LIBRARIES( tinia_model ${Boost_LIBRARIES} )
 
 # The reason for the development name to be <component>_dev is
 # that using <component>-dev does not work with NSIS Windows installer.
@@ -16,8 +16,10 @@ TARGET_LINK_LIBRARIES( model ${Boost_LIBRARIES} )
     DESTINATION include/tinia/  
     COMPONENT model_dev)
 
-  install( TARGETS  
-    model LIBRARY 
+  install( TARGETS
+    tinia_model
+    EXPORT TiniaTargets
+    LIBRARY
     DESTINATION lib/ 
     ARCHIVE DESTINATION lib/
     COMPONENT model )

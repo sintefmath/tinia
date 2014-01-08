@@ -1,0 +1,63 @@
+#Test to see if we will find components
+IF( Tinia_FIND_COMPONENTS )
+  FOREACH(component ${Tinia_FIND_COMPONENTS})
+    IF( component STREQUAL "Desktop" )
+	# Complicated if-test to fix CMAKE 2.6
+        IF("@Tinia_DESKTOP@" STREQUAL "ON")
+	    SET(Tinia_Desktop_FOUND 1)
+        ELSE()
+            SET(Tinia_Desktop_FOUND 0)
+                IF(Tinia_FIND_REQUIRED_Desktop)
+                MESSAGE(FATAL_ERROR "Tinia desktop not available.")
+            ENDIF()
+        ENDIF()
+    ENDIF()
+
+    IF( component STREQUAL "Server" )
+    	# Complicated if-test to fix CMAKE 2.6
+        IF("@Tinia_SERVER@" STREQUAL "ON")
+	    SET(Tinia_Server_FOUND 1)
+        ELSE()
+            SET(Tinia_Server_FOUND 0)
+            IF(Tinia_FIND_REQUIRED_Server)
+                MESSAGE(FATAL_ERROR "Tinia server not available.")
+            ENDIF()
+        ENDIF()
+    ENDIF()
+  ENDFOREACH()
+ENDIF()
+
+# Only multiple configuration systems like MSVC and nmake, 
+# we get all configurations included in one targets file,
+# otherwise we use one target file for each configuration
+IF(CMAKE_CONFIGURATION_TYPES) 
+	SET(TINIA_TARGETS_APPEND "")
+ELSE()
+	SET(TINIA_TARGETS_APPEND ${CMAKE_BUILD_TYPE})
+ENDIF()
+
+# - Config file for the Tinia package
+# It defines the following variables
+#  TINIA_INCLUDE_DIRS - include directories for Tinia
+#  TINIA_LIBRARIES    - libraries to link against
+
+
+
+# Compute paths
+get_filename_component(TINIA_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(TINIA_BOOST_LIBRARY_DIRS "@Boost_LIBRARY_DIRS@")
+set(TINIA_BOOST_DIR "@Boost_DIR@")
+set(TINIA_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+
+IF(WIN32)
+	# To support automatic linking
+	LINK_DIRECTORIES("@Boost_LIBRARY_DIRS@")
+ENDIF()
+# Our library dependencies (contains definitions for IMPORTED targets)
+#if(NOT TARGET  AND NOT Tinia_BINARY_DIR)
+  include("${TINIA_CMAKE_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
+#endif()
+
+SET(TINIA_APPS_DIR "@CONF_APPS_DIR@")
+set(TINIA_LIBRARIES @TINIA_LIBRARIES_FOR_CONFIG@)
+
