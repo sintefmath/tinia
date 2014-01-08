@@ -263,7 +263,7 @@ static int trell_handler_body(request_rec *r)
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
                 int rv = trell_handle_update_state( sconf, r, dispatch_info );
-                if( rv != HTTP_NO_CONTENT ) {
+                if( rv != OK ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
@@ -285,7 +285,7 @@ static int trell_handler_body(request_rec *r)
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
                 int rv = trell_handle_update_state( sconf, r, dispatch_info );
-                if( rv != HTTP_NO_CONTENT ) {
+                if( rv != OK ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
