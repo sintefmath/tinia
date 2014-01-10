@@ -172,9 +172,15 @@ tinia_ipc_msg_client_release( tinia_ipc_msg_client_t* client )
     int ret=0;
 
     if( ipc_msg_fake_shmem != 0 ) {
-        assert( pthread_mutex_lock( &ipc_msg_fake_shmem_lock ) == 0 );
+        if ( pthread_mutex_lock( &ipc_msg_fake_shmem_lock ) != 0) {
+            return -1;
+        }
+
         ipc_msg_fake_shmem_users--;
-        assert( pthread_mutex_unlock( &ipc_msg_fake_shmem_lock ) == 0 );
+
+        if ( pthread_mutex_unlock( &ipc_msg_fake_shmem_lock ) != 0) {
+            return -1;
+        }
     }
     else {
         if( client->shmem_base != MAP_FAILED ) {

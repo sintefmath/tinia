@@ -48,7 +48,7 @@ struct NotificationFixture
     {
         struct timespec timeout;
         clock_gettime( CLOCK_REALTIME, &timeout );
-        timeout.tv_sec += 1;
+        timeout.tv_sec += 10;
 
         int ret=0;
         while( m_longpolling_clients != m_clients ) {
@@ -62,11 +62,11 @@ struct NotificationFixture
         }
         m_flag = 1;
         
-        assert( pthread_mutex_unlock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
 
         int rc = ipc_msg_server_notify( m_server );
         
-        assert( pthread_mutex_lock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
         BOOST_CHECK_EQUAL( rc, 0 );
         return ret;
     }
@@ -88,9 +88,9 @@ struct NotificationFixture
                     const size_t buffer_size,
                     const int part )
     {
-        assert( pthread_mutex_lock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
         int flag = m_flag;
-        assert( pthread_mutex_unlock( &lock ) == 0  );
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
         *((int*)buffer) = flag;
         *buffer_bytes = sizeof(flag);
         *more = 0;
@@ -116,18 +116,18 @@ struct NotificationFixture
                     const int more ) 
     {
         if( *((int*)buffer) == 0 ) {
-            assert( pthread_mutex_lock( &lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
             m_longpolling_clients++;
             if( m_longpolling_clients == m_clients ) {
-                assert( pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );   
+                BOOST_REQUIRE( pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
             }
-            assert( pthread_mutex_unlock( &lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
             return 1;
         }
         else {
-            assert( pthread_mutex_lock( &lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
             m_clients_that_got_flag++;
-            assert( pthread_mutex_unlock( &lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
         }
         return 0;
     }                                        
