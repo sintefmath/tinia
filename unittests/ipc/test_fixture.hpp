@@ -120,7 +120,7 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_mutexattr_destroy( &mutex_attr) == 0 );
 
         // wait for server to be up and running.
-        assert( pthread_mutex_lock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
         m_server = NULL;
         m_threads.resize( m_threads.size()+1 );
 
@@ -185,9 +185,9 @@ struct SendRecvFixtureBase
         fprintf( stderr, "%s@%d: %d clients have exited.\n", __FILE__, __LINE__, m_clients_exited );
         // kill server
         BOOST_REQUIRE( m_server != NULL );
-        assert( pthread_mutex_unlock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
         rc = ipc_msg_server_mainloop_break( m_server );
-        assert( pthread_mutex_lock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
         BOOST_REQUIRE( rc == 0 );
         
         // wait for server thread to finsh
@@ -201,7 +201,7 @@ struct SendRecvFixtureBase
                 goto hung;
             }
         }
-        assert( pthread_mutex_unlock( &lock ) == 0);
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0);
         goto cleanup;
 hung:
         ipc_msg_server_mainloop_break( m_server );
@@ -212,7 +212,7 @@ hung:
         for( auto it=m_threads.begin(); it!=m_threads.end(); ++it ) {
             pthread_cancel( *it );
         }
-        assert( pthread_mutex_unlock( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
 
 cleanup:
         for( size_t i=0; i<m_threads.size(); i++ ) {
@@ -241,7 +241,7 @@ cleanup:
             const char* msg, ... )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)data;
-        assert( pthread_mutex_lock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
         char buf[1024];
         va_list args;
         va_start( args, msg );
@@ -259,7 +259,7 @@ cleanup:
             std::cerr << ' ';
         }
         std::cerr << buf << std::endl;
-        assert( pthread_mutex_unlock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0 );
     }
     
     
@@ -329,12 +329,12 @@ cleanup:
     server_periodic( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        assert( pthread_mutex_lock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
         if( that->m_server_runs_flag == 0 ) {
             that->m_server_runs_flag = 1;
-            assert( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+            BOOST_REQUIRE( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
-        assert( pthread_mutex_unlock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0 );
         return 0;
     }
     
@@ -343,17 +343,18 @@ cleanup:
     server_thread_func( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
+
         // setup server
         tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
                                                   logger,
                                                   arg );
         {
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             BOOST_REQUIRE( server != NULL );
             BOOST_REQUIRE( server->shmem_base != NULL );
             BOOST_REQUIRE( server->shmem_header_ptr != NULL );
             that->m_server = server;
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         }
         // run server mainloop
         //std::cerr << __LINE__ << ": A\n";
@@ -364,17 +365,17 @@ cleanup:
         //std::cerr << __LINE__ << ": B\n";
         // teardown server
         {
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             BOOST_CHECK( rc == 0 );
             that->m_server = NULL;
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         }
         rc = ipc_msg_server_delete( server );
         {
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             BOOST_CHECK( rc == 0 );
-            assert( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         }
         return NULL;
     }
@@ -433,55 +434,55 @@ cleanup:
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
         
-        assert( pthread_mutex_lock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
         that->m_clients_initialized++;
         if( that->m_clients_initialized == that->m_clients ) {
             // last client to finish init
             BOOST_REQUIRE( pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
         }
-        assert( pthread_mutex_unlock( &that->lock ) == 0  );
+        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
 
         tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
         rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
         {
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             BOOST_REQUIRE( rc == 0 );
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         }
         do {
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             int timeout = that->m_clients_should_longpoll ? 2 : 0;
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
 
             rc = tinia_ipc_msg_client_sendrecv( client,
                                           client_producer, that,
                                           client_consumer, that,
                                           timeout );
             
-            assert( pthread_mutex_lock( &that->lock ) == 0 );
+            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
             if( that->m_failure_is_an_option ) {
                 BOOST_REQUIRE_GE( rc, -1 );
             }
             else {
                 BOOST_REQUIRE_EQUAL( rc, 0 );
             }
-            assert( pthread_mutex_unlock( &that->lock ) == 0  );
+            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         } while(0);
         rc = tinia_ipc_msg_client_release( client );
-        assert( pthread_mutex_lock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
         BOOST_REQUIRE( rc == 0 );
-        assert( pthread_mutex_unlock( &that->lock ) == 0  );
+        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         
         free( client );
         
         // notify that we have finished
-        assert( pthread_mutex_lock( &that->lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
         that->m_clients_exited++;
         if( that->m_clients_exited == that->m_clients ) {
             // last client to finish init
             BOOST_REQUIRE( pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
         }
-        assert( pthread_mutex_unlock( &that->lock ) == 0  );
+        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
         return NULL;
     }
 
