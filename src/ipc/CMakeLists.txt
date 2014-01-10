@@ -7,7 +7,7 @@ SET( LIB_IPC_SRC
 
 FILE( GLOB LIB_IPC_HEADERS "ipc_msg_internal.h" "../../include/tinia/ipc/*.h" )
   
-ADD_DEFINITIONS( -g3 -fPIC )
+ADD_DEFINITIONS(-fPIC )
 
 ADD_LIBRARY( tiniaipc STATIC ${LIB_IPC_SRC} ${LIB_IPC_HEADERS})
 TARGET_LINK_LIBRARIES( tiniaipc ${RT} )
