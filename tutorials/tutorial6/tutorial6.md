@@ -81,9 +81,39 @@ Calculating the Perspective Projection Matrix
 To make our models appear on the screen, we need to use the Perspective Projection matrix, which will make it look like a road leading away look like a point the closer it gets to the horizon.
 There are many ways with which to calculate this matrix, and we will use the one found in the ```OpenGL Red Book``` which also corresponds to the one you get when calling the gl-matrix.js library.
 The mathematical formula is \f[projection = \begin{pmatrix}\frac{near*2}{right-left}& 0& \frac{right + left}{right - left}& 0\\ 0& \frac{near*2}{top - bottom}& \frac{top + bottom}{top - bottom}& 0\\0& 0& -\frac{far + near}{far - near}& -\frac{far * near * 2}{far - near} \\0& 0& -1& 0 \end{pmatrix}\f]
+As you can seee this is not a very scary formula, the only question is how do we get the values for far, near, top, bottom, left right? You can of course set them to arbitrary values, but it makes much more sense to tailor them to the scene you are looking at.
+This can be done relatively easily by using the bounding box of the scene, finding the points furthest and closest to the camera, and then calculate the rest of the values from this and the aspect ratio.
 
+We can "steal" the relevant code to do this from (@ref DSRV.js):
 
+      // --- set up projection matrix
 
+        // the eight corners of the bounding box
+        var corners = [[bbmin[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmax[2], 1.0]];
+        // apply the modelview matrix to the eight corners to get the minimum
+        // and maximum z in the camera's local coordinate system.
+        var near, far;
+        for (i in corners) {
+            var c = corners[i];
+            var p = mat4.multiplyVec4(this.m_modelview, c);
+            //           window.console.log( p );
+            var z = (1.0 / p[3]) * p[2];
+            if (near == null) {
+                near = z;
+                far = z;
+            }
+            else {
+                near = Math.max(near, z);
+                far = Math.min(far, z);
+            }
+        }
 
 The minimal javascript file
 ---
