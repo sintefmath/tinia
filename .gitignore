@@ -31,6 +31,7 @@ build
 
 # Doxygen generated documentation
 /doxygen
+/docs
 
 # Qt generated stuff
 moc_*

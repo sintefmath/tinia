@@ -17,3 +17,5 @@ a proxy geometry.
 
 - \subpage tut_tutorial5 "Specifying your own viewer controls" specifies how you
 can write your own input controls using Javascript.
+
+- \subpage tut_tutorial6 "Implementing an FPS viewer" specifies how to implement a FPS viewer for use with Tinia.
