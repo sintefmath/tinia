@@ -26,9 +26,9 @@
 namespace tinia { namespace tutorial {
 
 /** [class] */
-class FPSViewer : public tinia::jobcontroller::OpenGLJob {
+class tutorial6 : public tinia::jobcontroller::OpenGLJob {
 public:
-    FPSViewer();
+    tutorial6();
 
     bool renderFrame( const std::string &session,
                       const std::string &key,
@@ -41,7 +41,7 @@ private:
 /** [class]*/
 
 /** [ctor] */
-FPSViewer::FPSViewer()
+tutorial6::tutorial6()
 {
     m_model->addElement( "myViewer", tinia::model::Viewer() );
     m_model->addElement("boundingbox", "-2 -2 -2 2 2 2");
@@ -52,7 +52,7 @@ FPSViewer::FPSViewer()
 
     /** [canvas] */
     tinia::model::gui::Canvas* canvas = new tinia::model::gui::Canvas("myViewer");
-    canvas->setViewerType( std::string("FPSViewer") );
+    canvas->setViewerType( std::string("tutorial6") );
     /** [canvas] */
 
     /** [boundingbox] */
@@ -72,51 +72,34 @@ FPSViewer::FPSViewer()
 }
 /** [ctor]*/
 
+/** [drawColoredBox] */
 void DrawCube(float size) {
 
  glBegin(GL_QUADS);
 
   glColor3f(0.7f, 0.0f, 0.0f);
-  glVertex3f(-size, -size, -size);
-  glVertex3f( size, -size, -size);
-  glVertex3f( size,  size, -size);
-  glVertex3f(-size,  size, -size);
+  glVertex3f(-size, -size, -size); glVertex3f( size, -size, -size); glVertex3f( size,  size, -size); glVertex3f(-size,  size, -size);
   glColor3f(0.0f, 1.0f, 1.0f);
-  glVertex3f(-size, -size,  size);
-  glVertex3f( size, -size,  size);
-  glVertex3f( size,  size,  size);
-  glVertex3f(-size,  size,  size);
+  glVertex3f(-size, -size,  size); glVertex3f( size, -size,  size); glVertex3f( size,  size,  size); glVertex3f(-size,  size,  size);
 
   glColor3f(0.0f, 0.0f, 0.7f);
+  glVertex3f(-size, -size, -size); glVertex3f(-size, -size,  size); glVertex3f(-size,  size,  size); glVertex3f(-size,  size, -size);
 
-  glVertex3f(-size, -size, -size);
-  glVertex3f(-size, -size,  size);
-  glVertex3f(-size,  size,  size);
-  glVertex3f(-size,  size, -size);
-
-  glColor3f( 1.0f, 0.25f, 0.0f);
-  glVertex3f( size, -size, -size);
-  glVertex3f( size, -size,  size);
-  glVertex3f( size,  size,  size);
-  glVertex3f( size,  size, -size);
+  glColor3f( 1.0f, 0.25f, 0.0f); 
+  glVertex3f( size, -size, -size); glVertex3f( size, -size,  size); glVertex3f( size,  size,  size); glVertex3f( size,  size, -size);
 
   glColor3f(0.0f, 0.7f, 0.0f);
-
-  glVertex3f(-size, -size, -size);
-  glVertex3f(-size, -size,  size);
-  glVertex3f( size, -size,  size);
-  glVertex3f( size, -size, -size);
+  glVertex3f(-size, -size, -size); glVertex3f(-size, -size,  size); glVertex3f( size, -size,  size); glVertex3f( size, -size, -size);
 
   glColor3f( 0.25f, 0.25f, 0.25f );
-  glVertex3f(-size, size, -size);
-  glVertex3f(-size, size,  size);
-  glVertex3f( size, size,  size);
-  glVertex3f( size, size, -size);
+  glVertex3f(-size, size, -size); glVertex3f(-size, size,  size); glVertex3f( size, size,  size); glVertex3f( size, size, -size);
 
- glEnd(); }
+ glEnd(); 
+}
+/** [drawColoredBox] */
 
 /** [renderframe] */
-bool FPSViewer::renderFrame( const std::string &session,
+bool tutorial6::renderFrame( const std::string &session,
                                 const std::string &key,
                                 unsigned int fbo,
                                 const size_t width,
@@ -126,7 +109,9 @@ bool FPSViewer::renderFrame( const std::string &session,
     tinia::model::Viewer viewer;
     m_model->getElementValue("myViewer", viewer);
     /** [viewer] */
-
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glClear( GL_DEPTH_BUFFER_BIT );
     /** [matrices] */
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(viewer.modelviewMatrix.data());

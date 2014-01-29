@@ -227,6 +227,7 @@ IF( Tinia_BUILD_TUTORIALS )
   IF(Tinia_DESKTOP)
     ADD_SUBDIRECTORY( "tutorials/tutorial5/")
   ENDIF()
+  ADD_SUBDIRECTORY( "tutorials/tutorial6/")
 ENDIF()
 
 FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")

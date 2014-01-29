@@ -16,7 +16,7 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fpsviewer_job.hpp"
+#include "tutorial6_job.hpp"
 /** [headers] */
 #include "tinia/trell/IPCGLJobController.hpp"
 /** [headers] */
@@ -24,7 +24,7 @@
 /** [main] */
 int main(int argc, char** argv) {
     /** [job] */
-    tinia::tutorial::FPSViewer job;
+    tinia::tutorial::tutorial6 job;
     /** [job] */
 
     /** [controller] */
