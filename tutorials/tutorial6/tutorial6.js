@@ -17,205 +17,145 @@
  */
 
 function FPSViewer( params ) {
-    console.log( "Constructing FPSViewer" );
-    this._model = params.exposedModel;
-    this._key = params.key;
-    this._bbKey = params.boundingBoxKey;
+    this.m_model = params.exposedModel;
+    this.m_key = params.key;
+    this.m_bboxKey = params.boundingBoxKey;
 
-    //...
+    this.m_modelView = mat4.identity( mat4.create() );
+    this.m_projection = mat4.identity( mat4.create() );
 
+    this.m_bbMin = vec3.create();
+    this.m_bbMax = vec3.create();
 
-    var viewDirection = vec3.createFrom( 0, 0, -1 );
-    var viewRight = vec3.createFrom( 1, 0, 0 );
-    var viewUp = vec3.createFrom( 0, 1, 0 );
+    var viewer = this.m_model.getElementValue( this.m_key );
+    this.m_width = viewer.getElementValue( "width" );
+    this.m_height = viewer.getElementValue( "height" );
+    this.m_aspect = this.m_width / this.height;        
 
-    this._orientation = quat4.fromAxes( viewDirection, viewRight, viewUp );
+    this.m_leftRightRotation = 0;
+    this.m_upDownRotation = 0;
+    this.m_rotationStart = vec2.create();
+    this.m_moveSpeed = 0;
+    this.m_foward = vec3.create(0, 0, 1);
 
-    this._rotationStart = vec3.createFrom(0, 0, 0);
+    this.m_exposedModel.addLocalListener(this.m_boundingBoxKey, tinia.hitch(this, function(key, bb) {
+        this.updateBoundingBox(bb);
+        this.calculateProjectionMatrix();
+        this.insertMatrices();
+    }));
 
-    this._cameraPosition = vec3.createFrom( 0, 0, 5 );
-    this._lookAtPosition = vec3.createFrom( 0, 0, -1 );
-
-    this._bbmin = vec3.create();
-    this._bbmax = vec3.create();
-    this.getBoundingBoxFromModel();
-
-    this._modelView = mat4.identity( mat4.create() );
-    this._projection = mat4.identity( mat4.create() );
-    this._near  = -0.001;
-    this._far = 1.0;
-    this._fov = 90;
-
-    var viewer = this._model.getElementValue(  this._key );
-    this._width = viewer.getElementValue( "width" );
-    this._height = viewer.getElementValue( "height" );
-    this._aspect = this._width / this._height ;
-
-    this.calculateMatrices();
-
+    this.m_exposedModel.addLocalListener(this.m_key, tinia.hitch(this, function(key, viewer) {
+        var height = viewer.getElementValue("height");
+        var width = viewer.getElementValue("width");
+        if(height !== this.m_height || width !== this.m_width) {
+            this.m_height = height;
+            this.m_width = width;
+            this.m_aspect = width / height;
+            this.calculateProjectionMatrix();
+            this.insertMatrices();
+        }
+    }));
 }
 
 FPSViewer.prototype = {
-
-    keyPressEvent : function( event ) {
-        console.log( event.key );
-        var direction = vec3.create();
-        var speed = 0.01;
-
-        console.log( "camPos before move: " + this._cameraPosition );
-
-        switch( event.key ){
-        case 87 : this.moveForward( speed ); break;  //w, move forward in z direction
-        case 83 : this.moveForward( -speed ); break;//s, back off mister
-        case 65 : this.moveHorizontal( -speed ); break;//a, move left on x-axis
-        case 68 : this.moveHorizontal( speed ); break;//moving right
-        case 81 : this.moveVertical( speed ); break; //move up
-        case 69 : this.moveVertical( -speed ); break; //move down
-        }
-
-        console.log( "camPos after  move: " + this._cameraPosition );
-
-        // direction = quat4.multiplyVec3( this._orientation, direction );
-
-        // console.log( "rotate direction " + direction );
-        // console.log( "initial cameraPosition " + this._cameraPosition );
-
-        // this._cameraPosition = vec3.add( this._cameraPosition, direction );
-        // this._lookAtPosition = vec3.add( this._lookAtPosition, direction );
-
-        // console.log( "updated cameraPosition " + this._cameraPosition );
-        // console.log( "updated lookAtPosition " + this._lookAtPosition );
-        console.log("modelview: " + this._modelView );
-        this.calculateMatrices();
-
+    insertMatrices: function () {
+        var viewer = this.m_exposedModel.getElementValue(this.m_key);
+        viewer.updateElement("modelview", this.m_modelView);
+        viewer.updateElement("projection", this.m_projection);
+        this.m_exposedModel.updateElement(this.m_key, viewer);
     },
-
-    moveHorizontal: function( speed ) {
-        console.log( "horizontal move:  "  + speed );
-
-        var rightVec = vec3.createFrom( this._modelView[0], this._modelView[4], this._modelView[8] );
-
-        console.log( "right vector:  " + rightVec );
-
-        rightVec = vec3.scale( rightVec, speed );
-
-        console.log( "scaled right vector:  " + rightVec );
-
-        this._lookAtPosition = vec3.add( this._lookAtPosition, rightVec );
-
-    },
-
-    moveForward: function( speed ) {
-
-        var forwardVec = vec3.createFrom( this._modelView[2], this._modelView[6], this._modelView[10] );
-
-        console.log( "forward vector:  " + forwardVec );
-        forwardVec = vec3.scale( forwardVec, speed );
-        this._lookAtPosition = vec3.add( this._lookAtPosition, forwardVec );
-
-    },
-
-    moveVertical: function( speed ) {
-        var upVec = vec3.createFrom( this._modelView[1], this._modelView[5], this._modelView[9] );
-        console.log( "up vector " + upVec );
-        upVec = vec3.scale( upVec, speed );
-        this._lookAtPosition = vec3.add( this._lookAtPosition, upVec );
-
-    },
-
-    mousePressEvent : function( event ) {
-
-        this._rotationStart = this.getPointOnUnitSphere( event.relativeX, event.relativeY );
-    },
-
-    mouseMoveEvent : function( event ) {
-
-        var rotationEnd = this.getPointOnUnitSphere( event.relativeX, event.relativeY );
-
-        var rotation = vec3.rotationTo( this._rotationStart, rotationEnd );
-
-        if( rotation !== this._orientation ){
-
-            this._orientation = quat4.multiply( rotation, this._orientation );
-            this._rotationStart = rotationEnd;
-
-        }
-
-        this.calculateMatrices();
-    },
-
-    mouseReleaseEvent : function( event ) {
-
-    },
-
-
-    calculateMatrices : function( event ) {
-
-        var negCamPos = vec3.negate( vec3.create( this._cameraPosition ) );
-        this._modelView = mat4.identity( mat4.create() );
-        //this._modelView = mat4.translate( this._modelView, negCamPos );
-        this._modelView = mat4.multiply(  this._modelView, quat4.toMat4( this._orientation ) );
-        //this._modelView = mat4.translate( this._modelView, this._cameraPosition);
-        this._modelView = mat4.translate( this._modelView, this._lookAtPosition );
-
-        var viewer = this._model.getElementValue( this._key );
-        this._width = viewer.getElementValue( "width" );
-        this._height = viewer.getElementValue( "height" );
-        this._aspect = this._width / this._height ;
-        //this._projection = mat4.perspective( 90.0, this._aspect, this._near, this._far );
-
-        this._projection = this.createProjectionMatrix( this._fov, this._near);
-
-
-        viewer.updateElement( "modelview", this._modelView );
-        viewer.updateElement( "projection", this._projection );
-        this._model.updateElement( this._key, viewer );
-    },
-
-
-    //Based on the "Projection Matrix found in "The Graphics Codex" by Morgan McGuire
-    createProjectionMatrix: function(  ) {
-        proj = mat4.identity( mat4.create( ) );
-
-        var tanFov2 = Math.tan( this._fov / 2 );
-        var k = 1 / tanFov2;
-
-        proj[0] = this._aspect * k;
-        proj[5] = k;
-        proj[10] = ( this._near + this._far ) / (this._near - this._far );
-        proj[11] = -( (2 * this._near * this._far) / (this._near - this._far ) );
-
-        proj[14] = -1;
-        proj[15] = 0;
-        proj = mat4.transpose( proj );
-        return proj;
-    },
-
-    //From DSRV.js
-    getPointOnUnitSphere: function(x, y) {
-        var nx = ((2.0 * x) / this._width - 1.0) * this._aspect;
-        var ny = -((2.0 * y) / this._height - 1.0);
-        var r2 = nx * nx + ny * ny;
-
-        if (r2 < 1.0) {
-            return vec3.create([nx, ny, Math.sqrt(1.0 - r2)]);
-        }
-        else {
-            var r = 1.0 / Math.sqrt(r2);
-            return vec3.create([r * nx, r * ny, 0.0]);
-        }
-    },
-
 
     updateBoundingBox : function(bb) {
         bb = bb.split(" ");
         this._bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
         this._bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
     },
+    
+    calculateProjectionMatrix: function () {
+        // --- set up projection matrix
+        // the eight corners of the bounding box
+        var corners = [[bbmin[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmin[0], bbmax[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmin[1], bbmax[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmin[2], 1.0],
+                       [bbmax[0], bbmax[1], bbmax[2], 1.0]];
+        // apply the modelview matrix to the eight corners to get the minimum
+        // and maximum z in the camera's local coordinate system.
+        var near, far;
+        for (i in corners) {
+            var c = corners[i];
+            var p = mat4.multiplyVec4(this.m_modelview, c);
+            //do the perspective division
+            var z = (1.0 / p[3]) * p[2];
+            if (near == null) {
+                near = z;
+                far = z;
+            }
+            else {
+                near = Math.max(near, z);
+                far = Math.min(far, z);
+            }
+        }
 
-    getBoundingBoxFromModel : function() {
-        this.updateBoundingBox(this._model.getElementValue(this._bbKey));
+        var epsilon = 0.001;
+        far = Math.min(-epsilon, far - epsilon);
+        // don't let near get closer than 0.01 of far, and make sure near is
+        // closer than far
+        near = Math.min(0.01 * far, Math.max(far, near + epsilon));
+
+        this._projection = mat4.perspective( 90, this._aspect, -near, -far );
+    },
+
+    calculateModelView: function () {
+        var udAngle = this.m_upDownRotation * (180 / Math.PI );
+        var qRot = quat4.fromAngleAxis( udAngle, this.m_right); //up down rotates around x axis
+        var lrAngle = this.m_leftRightRotation * (180 / Math.PI );
+        qRot *= quat4.fromAngleAxis( lrAngle, this.m_up); //right left rotates around y axis
+        var movement = quat4.multiplyVec3 = function (qRot, this.m_foward); // movement
+        this.m_modelview = mat4.fromRotationTranslation = function (qRot, movement, this.m_modelview); //get final modelview
+    },
+
+    mousePressEvent: function( event ) {
+        this.m_rotationStart = vec2.create( event.relativeX, event.relativeY );
+    },
+
+    mouseMoveEvent: function( event ) {
+        var rotationEnd = vec2.create( event.relativeX, event.relativeY );
+
+
+        this.m_leftRightRotation += rotationEnd[0] - this.m_rotationStart[0];
+
+        if( this.m_leftRightRotation < 0){
+            this.m_leftRightRotation += 360;
+        }else if( this.m_leftRightRotation > 360){
+            this.m_leftRightRotation -= 360;
+        }
+
+        this.m_upDownRotation += rotationEnd[1] - this.m_rotationStart.[1];
+        if(this.m_upDownRotation < -89 ){
+            this.m_upDownRotation = -89;
+        }else if(this.m_upDownRotation > 89){
+            this.m_upDownRotation = 89;
+        }
+        
+        this.m_rotationStart = rotationEnd;
+
+        this.calculateModelView();
+    },                              
+                                  
+    keyPressEvent: function ( event ) {
+        var speed = 1;
+        switch( event.key ){
+            case 87 : this.moveForward( speed ); break; //w, move camera in z direction
+            case 83 : this.moveForward( -speed); break; //s, move camera in reverse z direction
+        }
+    },
+
+    moveForward: function ( speed ) {
+        this.m_forward += vec3.create( 0, 0, speed*this.m_moveSpeed );
     }
-
 }
 
