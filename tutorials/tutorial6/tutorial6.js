@@ -1,27 +1,14 @@
-/* Copyright STIFTELSEN SINTEF 2012
- *
- * This file is part of the Tinia Framework.
- *
- * The Tinia Framework is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The Tinia Framework is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
- */
 function tutorial6( params ) {
     this.m_model = params.exposedModel;
     this.m_key = params.key;
     this.m_bboxKey = params.boundingBoxKey;
 
-    this.m_bbMin = vec3.create();
-    this.m_bbMax = vec3.create();
+    this.m_bbMin = vec3.createFrom(-1.0, -1.0, -1.0);
+    this.m_bbMax = vec3.createFrom(1.0, 1.0, 1.0);
+    this.getBoundingBoxFromModel();
+        console.log(" bbMin.x: " + this.m_bbMin[0] + " bbMin.y: " + this.m_bbMin[1] + " bbMin.z: " + this.m_bbMin[2] );
+        console.log(" bbMax.x: " + this.m_bbMax[0] + " bbMax.y: " + this.m_bbMax[1] + " bbMax.z: " + this.m_bbMax[2] ); 
+
     this.m_modelView = mat4.identity( mat4.create() );
     this.m_projection = mat4.identity( mat4.create() );
 
@@ -34,9 +21,9 @@ function tutorial6( params ) {
     this.m_upDownRotation = 0.0;
     this.m_rotationStart = vec2.create();
     this.m_moveSpeed = 1.0;
-    this.m_forward = vec3.create(0.0, 0.0, -4.0);
-    this.m_up = vec3.create( 0.0, 1.0, 0.0);
-    this.m_right = vec3.create( 1.0, 0.0, 0.0);
+    this.m_forward = vec3.createFrom(0.0, 0.0, -4.0);
+    this.m_up = vec3.createFrom( 0.0, 1.0, 0.0);
+    this.m_right = vec3.createFrom( 1.0, 0.0, 0.0);
 
     this.m_model.addLocalListener(this.m_boundingBoxKey, tinia.hitch(this, function(key, bb) {
         this.updateBoundingBox(bb);
@@ -69,14 +56,27 @@ tutorial6.prototype = {
         this.m_model.updateElement(this.m_key, viewer);
     },
 
+    getBoundingBoxFromModel: function () {
+        this.updateBoundingBox( this.m_model.getElementValue( this.m_bboxKey ) );
+    },
     updateBoundingBox : function(bb) {
         bb = bb.split(" ");
-        this.m_bbmin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
-        this.m_bbmax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
+        this.m_bbMin = vec3.createFrom(bb[0] - 0.0, bb[1] - 0.0, bb[2] - 0.0);
+        this.m_bbMax = vec3.createFrom(bb[3] - 0.0, bb[4] - 0.0, bb[5] - 0.0);
     },
     
     calculateProjectionMatrix: function () {
         // --- set up projection matrix
+        console.log("Calculating projection matrix");
+        console.log(" bbMin.x: " + this.m_bbMin[0] + " bbMin.y: " + this.m_bbMin[1] + " bbMin.z: " + this.m_bbMin[2] );
+        console.log(" bbMax.x: " + this.m_bbMax[0] + " bbMax.y: " + this.m_bbMax[1] + " bbMax.z: " + this.m_bbMax[2] ); 
+
+        var first = true;
+        if( this.m_modelView[0] != this.m_modelView[0] && first ){
+            first = false;
+            console.log("Modelview has NaNs, recalculating it!");
+            this.calculateModelView();
+        }
         // the eight corners of the bounding box
         var corners = [[this.m_bbMin[0], this.m_bbMin[1], this.m_bbMin[2], 1.0],
                        [this.m_bbMin[0], this.m_bbMin[1], this.m_bbMax[2], 1.0],
@@ -104,6 +104,7 @@ tutorial6.prototype = {
             }
         }
         console.log( "far ", far);
+        console.log("near: ", near);
         var epsilon = 0.001;
         far = Math.min(-epsilon, far - epsilon);
         // don't let near get closer than 0.01 of far, and make sure near is
@@ -136,21 +137,25 @@ tutorial6.prototype = {
     },
 
     calculateModelView: function () {
+        console.log("Calculating modelView");
+        
         var udAngle = this.m_upDownRotation * (180.0 / Math.PI );
         var qRot = quat4.fromAngleAxis( udAngle, this.m_right, quat4.create()); 
         var lrAngle = this.m_leftRightRotation * (180.0 / Math.PI );
         qRot *= quat4.fromAngleAxis( lrAngle, this.m_up, quat4.create()); 
         var movement = quat4.multiplyVec3(qRot, this.m_forward); // movement
+        console.log("mvmnt.x: " + movement[0] + " mvmnt.y: " + movement[1] + " mvmnt.z: " + movement[2] );
         this.m_modelView = mat4.fromRotationTranslation(qRot, movement, this.m_modelView); //get final modelView
-        this.m_modelView = mat4.create(mat4.identity());
+//        this.m_modelView = mat4.create(mat4.identity());
+        console.log("modelview: "+ this.m_modelView[0] + ", " + this.m_modelView[1] + ", " + this.m_modelView[2] + ", " + this.m_modelView[3] + ", " + this.m_modelView[4] + ", " + this.m_modelView[5] + ", " + this.m_modelView[6] + ", " + this.m_modelView[7] + ", " + this.m_modelView[8] + ", " + this.m_modelView[9] + ", " + this.m_modelView[10] + ", " + this.m_modelView[11] + ", " + this.m_modelView[12] + ", " + this.m_modelView[13] + ", " + this.m_modelView[14] + ", " + this.m_modelView[15]);
     },
 
     mousePressEvent: function( event ) {
-        this.m_rotationStart = vec2.create( event.relativeX, event.relativeY );
+        this.m_rotationStart = vec2.createFrom( event.relativeX, event.relativeY );
     },
 
     mouseMoveEvent: function( event ) {
-        var rotationEnd = vec2.create( event.relativeX, event.relativeY );
+        var rotationEnd = vec2.createFrom( event.relativeX, event.relativeY );
 
         this.m_leftRightRotation += rotationEnd[0] - this.m_rotationStart[0];
 
@@ -181,7 +186,7 @@ tutorial6.prototype = {
     },
 
     moveForward: function ( speed ) {
-        this.m_forward += vec3.create( 0.0, 0.0, speed*this.m_moveSpeed );
+        this.m_forward += vec3.createFrom( 0.0, 0.0, speed*this.m_moveSpeed );
     }
 }
 
