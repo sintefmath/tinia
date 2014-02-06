@@ -71,12 +71,12 @@ tutorial6.prototype = {
         console.log(" bbMin.x: " + this.m_bbMin[0] + " bbMin.y: " + this.m_bbMin[1] + " bbMin.z: " + this.m_bbMin[2] );
         console.log(" bbMax.x: " + this.m_bbMax[0] + " bbMax.y: " + this.m_bbMax[1] + " bbMax.z: " + this.m_bbMax[2] ); 
 
-        var first = true;
-        if( this.m_modelView[0] != this.m_modelView[0] && first ){
-            first = false;
-            console.log("Modelview has NaNs, recalculating it!");
+        //var first = true;
+        //if( this.m_modelView[0] != this.m_modelView[0] && first ){
+        //    first = false;
+          //  console.log("Modelview has NaNs, recalculating it!");
             this.calculateModelView();
-        }
+    //}
         // the eight corners of the bounding box
         var corners = [[this.m_bbMin[0], this.m_bbMin[1], this.m_bbMin[2], 1.0],
                        [this.m_bbMin[0], this.m_bbMin[1], this.m_bbMax[2], 1.0],
@@ -133,21 +133,32 @@ tutorial6.prototype = {
 //
         //mat4.frustum( -right, right+epsilon, -top, top+epsilon, near, far, this.m_projection);
         //        this.m_projection = mat4.create(mat4.identity());
-
+        console.log("projection: "+ this.m_projection[0] + ", " + this.m_projection[1] + ", " + this.m_projection[2] + ", " + this.m_projection[3] + ", " + this.m_projection[4] + ", " + this.m_projection[5] + ", " + this.m_projection[6] + ", " + this.m_projection[7] + ", " + this.m_projection[8] + ", " + this.m_projection[9] + ", " + this.m_projection[10] + ", " + this.m_projection[11] + ", " + this.m_projection[12] + ", " + this.m_projection[13] + ", " + this.m_projection[14] + ", " + this.m_projection[15]);
+        console.log("Done calculating projection");
     },
 
     calculateModelView: function () {
         console.log("Calculating modelView");
         
         var udAngle = this.m_upDownRotation * (180.0 / Math.PI );
-        var qRot = quat4.fromAngleAxis( udAngle, this.m_right, quat4.create()); 
+        console.log("udr: " + this.m_upDownRotation + ", udAngle: " + udAngle);
+        console.log("180/pi: " + (180.0 / Math.PI) );
+        var qRot = quat4.fromAngleAxis( udAngle, this.m_right, quat4.create());
+        console.log("qRot: " + qRot[0] + ", " + qRot[1] + ", " + qRot[2] + ", " + qRot[3]);
         var lrAngle = this.m_leftRightRotation * (180.0 / Math.PI );
-        qRot *= quat4.fromAngleAxis( lrAngle, this.m_up, quat4.create()); 
+        console.log("lrr: " + this.m_leftRightRotation + ", lrAngle: " + lrAngle);
+        var qRot2 = quat4.fromAngleAxis( lrAngle, this.m_up, quat4.create()); 
+        console.log("qRot2: " + qRot2[0] + ", " + qRot2[1] + ", " + qRot2[2] + ", " + qRot2[3]);
+
+        console.log("this.m_forward: " + this.m_forward[0] + ", " + this.m_forward[1] + ", " + this.m_forward[2]);
+        var qRot3 = quat4.multiply(qRot, qRot2);
+        console.log("qRot3: " + qRot3[0] + ", " + qRot3[1] + ", " + qRot3[2] + ", " + qRot3[3]);
         var movement = quat4.multiplyVec3(qRot, this.m_forward); // movement
         console.log("mvmnt.x: " + movement[0] + " mvmnt.y: " + movement[1] + " mvmnt.z: " + movement[2] );
         this.m_modelView = mat4.fromRotationTranslation(qRot, movement, this.m_modelView); //get final modelView
 //        this.m_modelView = mat4.create(mat4.identity());
-        console.log("modelview: "+ this.m_modelView[0] + ", " + this.m_modelView[1] + ", " + this.m_modelView[2] + ", " + this.m_modelView[3] + ", " + this.m_modelView[4] + ", " + this.m_modelView[5] + ", " + this.m_modelView[6] + ", " + this.m_modelView[7] + ", " + this.m_modelView[8] + ", " + this.m_modelView[9] + ", " + this.m_modelView[10] + ", " + this.m_modelView[11] + ", " + this.m_modelView[12] + ", " + this.m_modelView[13] + ", " + this.m_modelView[14] + ", " + this.m_modelView[15]);
+        console.log("modelView: "+ this.m_modelView[0] + ", " + this.m_modelView[1] + ", " + this.m_modelView[2] + ", " + this.m_modelView[3] + ", " + this.m_modelView[4] + ", " + this.m_modelView[5] + ", " + this.m_modelView[6] + ", " + this.m_modelView[7] + ", " + this.m_modelView[8] + ", " + this.m_modelView[9] + ", " + this.m_modelView[10] + ", " + this.m_modelView[11] + ", " + this.m_modelView[12] + ", " + this.m_modelView[13] + ", " + this.m_modelView[14] + ", " + this.m_modelView[15]);
+        console.log("Done calculating modelView");
     },
 
     mousePressEvent: function( event ) {
