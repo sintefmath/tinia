@@ -10,8 +10,7 @@ function tutorial6( params ) {
     this.m_bbMin = vec3.create();
     this.m_bbMax = vec3.create();
     this.getBoundingBoxFromModel();
-//        console.log(" bbMin.x: " + this.m_bbMin[0] + " bbMin.y: " + this.m_bbMin[1] + " bbMin.z: " + this.m_bbMin[2] );
-//        console.log(" bbMax.x: " + this.m_bbMax[0] + " bbMax.y: " + this.m_bbMax[1] + " bbMax.z: " + this.m_bbMax[2] ); 
+
 
     this.m_modelView = mat4.identity( mat4.create() );
     this.m_projection = mat4.identity( mat4.create() );
@@ -20,8 +19,6 @@ function tutorial6( params ) {
     this.m_width = (viewer.getElementValue( "width" ) - 0.0);
     this.m_height = (viewer.getElementValue( "height" ) - 0.0);
     this.m_aspect = (this.m_width - 0.0) / (this.m_height-0.0);
-
-    console.log("w: " + this.m_width + ", h: " + this.m_height + ", aspect: " + this.m_aspect);
 
     this.m_leftRightRotation = 0.0;
     this.m_upDownRotation = 0.0;
@@ -49,8 +46,8 @@ function tutorial6( params ) {
             this.insertMatrices();
         }
     }));
-    this.calculateProjectionMatrix();
     this.calculateModelView();
+    this.calculateProjectionMatrix();
     this.insertMatrices();
 }
 
@@ -72,17 +69,8 @@ tutorial6.prototype = {
     },
     
     calculateProjectionMatrix: function () {
-        // --- set up projection matrix
-        console.log("Calculating projection matrix");
-        console.log(" bbMin.x: " + this.m_bbMin[0] + " bbMin.y: " + this.m_bbMin[1] + " bbMin.z: " + this.m_bbMin[2] );
-        console.log(" bbMax.x: " + this.m_bbMax[0] + " bbMax.y: " + this.m_bbMax[1] + " bbMax.z: " + this.m_bbMax[2] ); 
-
-        //var first = true;
-        //if( this.m_modelView[0] != this.m_modelView[0] && first ){
-        //    first = false;
-        //  console.log("Modelview has NaNs, recalculating it!");
         this.calculateModelView();
-        //}
+        // --- set up projection matrix
         // the eight corners of the bounding box
         var corners = [[this.m_bbMin[0], this.m_bbMin[1], this.m_bbMin[2], 1.0],
                        [this.m_bbMin[0], this.m_bbMin[1], this.m_bbMax[2], 1.0],
@@ -121,31 +109,7 @@ tutorial6.prototype = {
         var left = epsilon - right;
         var bottom = epsilon - top;
         this.m_projection = mat4.perspective( 90.0, this.m_aspect, -near, -far );
-//this.m_projection = mat4.create();
-//console.log("aspect: " + this.m_aspect);
-//console.log("right: " + right + ", left: " + left);
-//console.log("top: " + top + ", left: " + bottom);
-//this.m_projection[0] = (2 * near) / (right - left);
-//this.m_projection[1] = 0;
-//this.m_projection[2] = 0;
-//this.m_projection[3] = 0;
-//this.m_projection[4] = 0;
-//this.m_projection[5] = (2 * near)/ (top - bottom);
-//this.m_projection[6] = 0;
-//this.m_projection[7] = 0;
-//this.m_projection[8] = (right + left)/(right - left);
-//this.m_projection[9] = (top + bottom)/(top - bottom);
-//this.m_projection[10] = -(far+near)/(far-near);
-//this.m_projection[11] = -1;
-//this.m_projection[12] = 0;
-//this.m_projection[13] = 0;
-//this.m_projection[14] = -(far*near*2)/(far-near);
-//this.m_projection[15] = 0;
-//
-        //mat4.frustum( -right, right+epsilon, -top, top+epsilon, near, far, this.m_projection);
-        //        this.m_projection = mat4.create(mat4.identity());
-        console.log("projection: "+ this.m_projection[0] + ", " + this.m_projection[1] + ", " + this.m_projection[2] + ", " + this.m_projection[3] + ", " + this.m_projection[4] + ", " + this.m_projection[5] + ", " + this.m_projection[6] + ", " + this.m_projection[7] + ", " + this.m_projection[8] + ", " + this.m_projection[9] + ", " + this.m_projection[10] + ", " + this.m_projection[11] + ", " + this.m_projection[12] + ", " + this.m_projection[13] + ", " + this.m_projection[14] + ", " + this.m_projection[15]);
-        console.log("Done calculating projection");
+       // console.log("projection: "+ this.m_projection[0] + ", " + this.m_projection[1] + ", " + this.m_projection[2] + ", " + this.m_projection[3] + ", " + this.m_projection[4] + ", " + this.m_projection[5] + ", " + this.m_projection[6] + ", " + this.m_projection[7] + ", " + this.m_projection[8] + ", " + this.m_projection[9] + ", " + this.m_projection[10] + ", " + this.m_projection[11] + ", " + this.m_projection[12] + ", " + this.m_projection[13] + ", " + this.m_projection[14] + ", " + this.m_projection[15]);
     },
 
     calculateModelView: function () {
@@ -164,10 +128,11 @@ tutorial6.prototype = {
         qRot = quat4.multiply(qRot, qRot2);
         console.log("qRot: " + qRot[0] + ", " + qRot[1] + ", " + qRot[2] + ", " + qRot[3]);
         var movement = quat4.multiplyVec3(qRot, this.m_forward); // movement
+//        var movement = this.m_forward;
         console.log("mvmnt.x: " + movement[0] + " mvmnt.y: " + movement[1] + " mvmnt.z: " + movement[2] );
         this.m_modelView = mat4.fromRotationTranslation(qRot, movement, this.m_modelView); //get final modelView
-//        this.m_modelView = mat4.create(mat4.identity());
-        console.log("modelView: "+ this.m_modelView[0] + ", " + this.m_modelView[1] + ", " + this.m_modelView[2] + ", " + this.m_modelView[3] + ", " + this.m_modelView[4] + ", " + this.m_modelView[5] + ", " + this.m_modelView[6] + ", " + this.m_modelView[7] + ", " + this.m_modelView[8] + ", " + this.m_modelView[9] + ", " + this.m_modelView[10] + ", " + this.m_modelView[11] + ", " + this.m_modelView[12] + ", " + this.m_modelView[13] + ", " + this.m_modelView[14] + ", " + this.m_modelView[15]);
+
+       // console.log("modelView: "+ this.m_modelView[0] + ", " + this.m_modelView[1] + ", " + this.m_modelView[2] + ", " + this.m_modelView[3] + ", " + this.m_modelView[4] + ", " + this.m_modelView[5] + ", " + this.m_modelView[6] + ", " + this.m_modelView[7] + ", " + this.m_modelView[8] + ", " + this.m_modelView[9] + ", " + this.m_modelView[10] + ", " + this.m_modelView[11] + ", " + this.m_modelView[12] + ", " + this.m_modelView[13] + ", " + this.m_modelView[14] + ", " + this.m_modelView[15]);
         console.log("Done calculating modelView");
     },
 
@@ -207,15 +172,22 @@ tutorial6.prototype = {
     },
                                   
     keyPressEvent: function ( event ) {
-        var speed = 1;
+        var speed = 0.01;
         switch( event.key ){
             case 87 : this.moveForward( speed ); break; //w, move camera in z direction
             case 83 : this.moveForward( -speed); break; //s, move camera in reverse z direction
         }
+
     },
 
     moveForward: function ( speed ) {
-        this.m_forward += vec3.createFrom( 0.0, 0.0, speed*this.m_moveSpeed );
+        console.log("speed: " + speed);
+        console.log("forward before update: " + this.m_forward[0] + ", " + this.m_forward[1] + ", " + this.m_forward[2]);
+        this.m_forward[2] += (speed*this.m_moveSpeed)-0.0;
+        console.log("forward AFTER update: " + this.m_forward[0] + ", " + this.m_forward[1] + ", " + this.m_forward[2]);
+
+        this.calculateModelView();
+        this.insertMatrices();
     }
 }
 
