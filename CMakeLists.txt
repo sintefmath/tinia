@@ -243,14 +243,9 @@ SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
 
 SET(CPACK_PACKAGE_VERSION ${version_number} )
 
-# Only on multiple configuration systems like MSVC and nmake, 
-# we get all configurations included in one targets file,
-# otherwise we use one target file for each configuration
-IF(CMAKE_CONFIGURATION_TYPES) 
-	SET(TINIA_TARGETS_APPEND "")
-ELSE()
-	SET(TINIA_TARGETS_APPEND ${CMAKE_BUILD_TYPE})
-ENDIF()
+
+SET(TINIA_TARGETS_APPEND "")
+
 
 # This is for local build directory:
 IF(Tinia_DESKTOP)
@@ -302,7 +297,7 @@ install(FILES
 
 # Install the export set for use with the install-tree
 install(EXPORT TiniaTargets DESTINATION
-  "${INSTALL_CMAKE_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake" COMPONENT tinia_dev)
+  "${INSTALL_CMAKE_DIR}/" COMPONENT tinia_dev)
 
 IF(NOT WIN32)
     SET( CPACK_GENERATOR "DEB" )

@@ -27,14 +27,9 @@ IF( Tinia_FIND_COMPONENTS )
   ENDFOREACH()
 ENDIF()
 
-# Only multiple configuration systems like MSVC and nmake, 
-# we get all configurations included in one targets file,
-# otherwise we use one target file for each configuration
-IF(CMAKE_CONFIGURATION_TYPES) 
-	SET(TINIA_TARGETS_APPEND "")
-ELSE()
-	SET(TINIA_TARGETS_APPEND ${CMAKE_BUILD_TYPE})
-ENDIF()
+
+SET(TINIA_TARGETS_APPEND "")
+
 
 # - Config file for the Tinia package
 # It defines the following variables
