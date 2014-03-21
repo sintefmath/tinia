@@ -30,10 +30,12 @@ class KeyboardEvent : public QObject
 public:
     explicit KeyboardEvent(const QKeyEvent& event, QObject *parent = 0);
     Q_PROPERTY(int key READ key)
+    Q_PROPERTY(int keyCode READ keyCode)
 signals:
     
 public slots:
     int key();
+    int keyCode();
 private:
     const QKeyEvent& m_event;
 };
