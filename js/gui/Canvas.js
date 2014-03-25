@@ -25,6 +25,7 @@ dojo.require("renderlist.RenderListRenderer" );
 dojo.require("dijit._Widget");
 dojo.require("gui.TrackBallViewer");
 dojo.require("dojo.touch");
+dojo.require("gui.ProxyRenderer");
 
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function (params) {
@@ -346,6 +347,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             response = response.substring(0, response.length - 1);
         }
         this._img.src = "data:image/png;base64," + response;
+		this._proxyRenderer.setDepthBuffer(response);
         this._showCorrect();
         return response;
     },
@@ -438,10 +440,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _startGL: function () {
         this._gl = WebGLUtils.setupWebGL(this._canvas);
         if (this._gl) {
-            this._render_list_store = new renderlist.RenderListStore(this._gl);
+            /*this._render_list_store = new renderlist.RenderListStore(this._gl);
             this._render_list_parser = new renderlist.RenderListParser();
             this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
-            this._getRenderList();
+            this._getRenderList();*/
+			
+			this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
+
+			this._render();
         }
     },
 
@@ -467,9 +473,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _render: function () {
-        window.requestAnimFrame(dojo.hitch(this, function () {
-            this._render();
-        }));
+			window.requestAnimFrame(dojo.hitch(this, function () {
+				this._render();
+			}));
 
         var viewer = this._modelLib.getElementValue(this._key);
         var view_coord_sys = {
@@ -478,7 +484,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             m_to_world: mat4.inverse(mat4.create(viewer.getElementValue("modelview"))),
             m_from_world: viewer.getElementValue("modelview")
         }
-        this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+        //this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+		this._proxyRenderer.render(view_coord_sys);
     },
 
     _loadImage: function () {
