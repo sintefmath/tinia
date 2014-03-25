@@ -38,7 +38,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
         m_waitCondition.wait(&m_waitMutex);
     }
 
-    QImage img(m_buffer, width, height, QImage::Format_RGB888);
+	QImage img(m_buffer, width, height, QImage::Format_RGB888);
 
     // This is a temporary fix. The image is reflected through the horizontal
     // line y=height ((x, y) |--> (x, h-y) ).
@@ -87,12 +87,17 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
      std::cout << "grabber" << std::endl;
 
      glReadPixels( 0, 0, width, height,
-                   // GL_RGB,
-                   GL_DEPTH_COMPONENT,
-                   GL_UNSIGNED_BYTE, m_buffer );
+                   //GL_RGB,
+				   GL_DEPTH_COMPONENT,
+				   GL_FLOAT, m_buffer );
 
-
-
+	 for(int i = 0; i < width*height; i++) {
+		 float value = ((float*)m_buffer)[i];
+		 m_buffer[3*i] = value*255;
+		 m_buffer[3*i + 1] = 0;
+		 m_buffer[3*i + 2] = 0;
+		 
+	 }
      glBindFramebuffer(GL_FRAMEBUFFER, 0);
      emit glImageReady();
 }

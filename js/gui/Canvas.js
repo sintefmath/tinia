@@ -43,8 +43,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 500;
-        this._height = 500;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
         this._snapshotURL = params.snapshotURL;
 
