@@ -1,6 +1,6 @@
-/* Copyright STIFTELSEN SINTEF 2013
+/* Copyright STIFTELSEN SINTEF 2014
  *
- * This file is part of FRView.
+ * This file is part of the Tinia Framework.
  * FRView is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
