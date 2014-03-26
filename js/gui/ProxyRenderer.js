@@ -136,10 +136,9 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
         this.gl.uniform1i(this.gl.getUniformLocation(this.shaderProgram, "uSampler"), 0);
 
-        // Draw the cube.
+        // Draw the two-triangle "quad".
 
-        //this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexBuffer);
- this.gl.vertexAttribPointer(this.vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.vertexAttribPointer(this.vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
 
         console.log("rendering");

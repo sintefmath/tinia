@@ -91,9 +91,9 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 				   GL_DEPTH_COMPONENT,
 				   GL_FLOAT, m_buffer );
 
-	 for(int i = 0; i < width*height; i++) {
+     for(unsigned i = 0; i < width*height; i++) {
 		 float value = ((float*)m_buffer)[i];
-		 m_buffer[3*i] = value*255;
+         m_buffer[3*i] = value*255;
 		 m_buffer[3*i + 1] = 0;
 		 m_buffer[3*i + 2] = 0;
 		 

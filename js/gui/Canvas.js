@@ -347,8 +347,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             response = response.substring(0, response.length - 1);
         }
         this._img.src = "data:image/png;base64," + response;
-		this._proxyRenderer.setDepthBuffer(response);
+
+        // For now; the image received is a depth buffer disguised as rgb-image, we set the depth
+        // buffer in the proxy object to this.
+        this._proxyRenderer.setDepthBuffer(response);
+
+        // This would show the image from the server, if it was the rgb-image.
+        // When it is the depth buffer, it may look "funny".
         this._showCorrect();
+
         return response;
     },
 
@@ -361,6 +368,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         event.preventDefault();
     },
+
     _touchGesture: function (event) {
 
         if (event && event.scale && event.scale != 1) {
