@@ -1,5 +1,6 @@
 dojo.declare("gui.ProxyRenderer", null, {
     constructor: function(glContext, exposedModel, viewerKey) {
+        this._depthBufferCounter= 0;
         this.gl = glContext;
 
         this.shaderFSSrc = "varying highp vec2 vTextureCoord;\n" +
@@ -99,7 +100,10 @@ dojo.declare("gui.ProxyRenderer", null, {
         console.log("Constructor ended");
     },
     setDepthBuffer: function(depthBufferAsText) {
-
+        if(this._depthBufferCounter++ > 10) {
+            return;
+        }
+        console.log(this._depthBufferCounter);
         var image = new Image();
 
         image.onload = dojo.hitch(this, function() {
