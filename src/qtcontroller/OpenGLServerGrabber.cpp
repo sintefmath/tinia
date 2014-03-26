@@ -84,8 +84,6 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 
      glPixelStorei( GL_PACK_ALIGNMENT, 1 );
 
-     std::cout << "grabber" << std::endl;
-
      glReadPixels( 0, 0, width, height,
                    //GL_RGB,
 				   GL_DEPTH_COMPONENT,

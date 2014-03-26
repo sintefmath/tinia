@@ -480,6 +480,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         );
     },
 
+
     _render: function () {
 			window.requestAnimFrame(dojo.hitch(this, function () {
 				this._render();
@@ -495,6 +496,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         //this._render_list_renderer.render(this._render_list_store, view_coord_sys);
 		this._proxyRenderer.render(view_coord_sys);
     },
+
 
     _loadImage: function () {
         return;
