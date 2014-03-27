@@ -10,13 +10,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this.gl = glContext;
 
-        this.shaderFSSrc =
-             "varying highp vec2 vTextureCoord;\n" +
-             "uniform sampler2D uSampler;\n" +
-             "void main(void) {\n" +
-             "   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
-             "   gl_FragColor.xy = gl_FragColor.yx;\n"+
-             "}\n";
         this.shaderVSSrc =
              "attribute vec2 aVertexPosition;\n" +
              "varying highp vec2 vTextureCoord;\n" +
@@ -30,81 +23,34 @@ dojo.declare("gui.ProxyRenderer", null, {
              "   vTextureCoord = aVertexPosition.xy;\n" +
              "}\n";
 
+        this.shaderFSSrc =
+             "varying highp vec2 vTextureCoord;\n" +
+             "uniform sampler2D uSampler;\n" +
+             "void main(void) {\n" +
+             "   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
+             "   gl_FragColor.xy = gl_FragColor.yx;\n"+
+             "}\n";
+
         var splat_vs_src =
-                "\n" +
-                "in layout (location=2) vec3 position;\n" +
-                "in layout (location=3) vec2 input_texcoo;\n" +
-                "\n" +
-                "out vec2 tex_coo;\n" +
-                "out VF\n" +
-                "{\n" +
-                "    smooth float render;\n" +
-                "} vert_out;\n" +
-                "\n" +
-                "uniform mat4 MV;\n" +
+                "attribute vec2 aVertexPosition;\n" +
+                "varying highp vec2 vTextureCoord;\n" +
                 "uniform mat4 PM;\n" +
-                "\n" +
-                "uniform sampler2D rgb_sampler;\n" +
-                "uniform sampler2D depth_sampler;\n" +
-                "uniform sampler2D q_hat_sampler;\n" +
-                "\n" +
-                "uniform int pt_size;\n" +
-                "\n" +
-                "void main()\n" +
-                "{\n" +
-                "\n" +
-                "    vec3 new_pos = position;\n" +
-                "    float depth  = texture2D( depth_sampler, input_texcoo ).x;\n" +
-                "    vec3 q_hat   = texture2D( q_hat_sampler, input_texcoo ).xyz;\n" +
-                "\n" +
-                "    new_pos = q_hat;\n" +
-                "\n" +
-                "    vert_out.render = 1.0;\n" +
-                "    gl_Position = PM * MV * vec4( new_pos, 1.0 );\n" +
-                "    tex_coo = input_texcoo;\n" +
-                "    gl_PointSize = pt_size;\n" +
-                "\n" +
+                "uniform mat4 MV;\n" +
+                "void main(void) {\n" +
+                "   gl_Position = PM * MV * vec4(aVertexPosition, 0.0, 1.0);\n" +
+                "   gl_PointSize = 3.0;\n" +
+                "   vTextureCoord = aVertexPosition.xy;\n" +
                 "}\n";
+
         var splat_fs_src =
-                "in vec2 tex_coo;\n" +
-                "\n" +
-                "in VF\n" +
-                "{\n" +
-                "    smooth float render;\n" +
-                "} frag_in;\n" +
-                "\n" +
-                "out vec4 color;\n" +
-                "\n" +
-                "uniform sampler2D rgb_sampler;\n" +
-                "uniform sampler2D q_hat_sampler;\n" +
-                "uniform sampler2D depth_sampler;\n" +
-                "\n" +
-                "uniform int q_ring_cursor;\n" +
-                "uniform float splat_marker_weight;\n" +
-                "\n" +
-                "void main()\n" +
-                "{\n" +
-                "    color = vec4(1.0);\n" +
-                "\n" +
-                "    if (frag_in.render<0.999)\n" +
-                "        discard;\n" +
-                "\n" +
-                "    vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2\n" +
-                "    float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25\n" +
-                "    if (r_squared>0.25)\n" +
-                "        discard;\n" +
-                "\n" +
-                "    color.xyz = texture2D( rgb_sampler, tex_coo ).rgb; //  + vec3(0.1);\n" +
-                "\n" +
-                "    float attenuation = 1.0 - 4.0*r_squared;\n" +
-                "\n" +
-                "    attenuation = attenuation + 0.4;\n" +
-                "\n" +
-                "    \n" +
-                "    // attenuation = 1.0; // Hiding the actual points\n" +
-                "\n" +
-                "    color.xyz = color.xyz * attenuation;\n" +
+                "varying highp vec2 vTextureCoord;\n" +
+                "uniform sampler2D uSampler;\n" +
+                "void main(void) {\n" +
+                "   gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+                "   // gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
+                "   // gl_FragColor.xy = gl_FragColor.yx;\n"+
                 "}\n";
+
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
             this._depthBufferCounter++;
@@ -128,6 +74,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.depthTexture = this.gl.createTexture();
 
 
+        // ------------- Mockup-shader showing depth buffer as a green quad filling the viewport ------------------
+
         this.vertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         this.textureCoordinates = [
@@ -138,8 +86,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             1.0, 1.0,
             0.0, 1.0
         ];
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates),
-                this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates), this.gl.STATIC_DRAW);
         var shaderFS = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         var shaderVS = this.gl.createShader(this.gl.VERTEX_SHADER);
         this.gl.shaderSource(shaderFS, this.shaderFSSrc);
@@ -162,58 +109,46 @@ dojo.declare("gui.ProxyRenderer", null, {
             alert("Unable to initialize the shader program.");
         }
 
-
         this.gl.useProgram(this.shaderProgram);
         this.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
         this.gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
+        // ------------- Shader for testing splatting with preloaded vertex buffer object ------------------
 
-
-
-        this.splatVertexBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.splatVertexBuffer);
-        this._splatCoordinates = new Float32Array( this._splats*this._splats*3);
-
+        this._splatVertexBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+        this._splatCoordinates = new Float32Array( this._splats*this._splats*2 );
         for (i=0; i<this._splats; i++) {
             for (j=0; j<this._splats; j++) {
-                this._splatCoordinates[(this._splats*i+j)     ] = 2.0*j/this._splats - 1.0;
-                this._splatCoordinates[(this._splats*i+j) + 1 ] = 2.0*i/this._splats - 1.0;
-                this._splatCoordinates[(this._splats*i+j) + 2 ] = 0.0;
+                this._splatCoordinates[(this._splats*i+j)*2     ] = (2.0*j)/this._splats - 1.0;
+                this._splatCoordinates[(this._splats*i+j)*2 + 1 ] = (2.0*i)/this._splats - 1.0;
             }
         }
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
-//        this.splatCoordinates = [
-//            0.0, 0.0,
-//            1.0, 0.0,
-//            1.0, 1.0,
-//            0.0, 0.0,
-//            1.0, 1.0,
-//            0.0, 1.0
-//        ];
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.splatCoordinates), this.gl.STATIC_DRAW);
-//        var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-//        var splat_vs = this.gl.createShader(this.gl.VERTEX_SHADER);
-//        this.gl.shaderSource(splat_fs, splat_fs_src);
-//        this.gl.compileShader(splat_fs);
-//        if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
-//            alert("An error occurred compiling the splat_fs: " + this.gl.getShaderInfoLog(splat_fs));
-//            return null;
-//        }
-//        this.gl.shaderSource(splat_vs, splat_vs_src);
-//        this.gl.compileShader(splat_vs);
-//        if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
-//            alert("An error occurred compiling the splat_vs: " + this.gl.getShaderInfoLog(splat_vs));
-//            return null;
-//        }
-//        this.splatProgram = this.gl.createProgram();
-//        this.gl.attachShader(this.splatProgram, splat_vs);
-//        this.gl.attachShader(this.splatProgram, splat_fs);
-//        this.gl.linkProgram(this.splatProgram);
-//        if (!this.gl.getProgramParameter(this.splatProgram, this.gl.LINK_STATUS)) {
-//            alert("Unable to initialize the shader program.");
-//        }
+        var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
+        this.gl.shaderSource(splat_fs, splat_fs_src);
+        this.gl.compileShader(splat_fs);
+        if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
+            alert("An error occurred compiling the splat_fs: " + this.gl.getShaderInfoLog(splat_fs));
+            return null;
+        }
 
+        var splat_vs = this.gl.createShader(this.gl.VERTEX_SHADER);
+        this.gl.shaderSource(splat_vs, splat_vs_src);
+        this.gl.compileShader(splat_vs);
+        if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
+            alert("An error occurred compiling the splat_vs: " + this.gl.getShaderInfoLog(splat_vs));
+            return null;
+        }
 
+        this._splatProgram = this.gl.createProgram();
+        this.gl.attachShader(this._splatProgram, splat_vs);
+        this.gl.attachShader(this._splatProgram, splat_fs);
+        this.gl.linkProgram(this._splatProgram);
+        if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
+            alert("Unable to initialize the shader program.");
+        }
 
         console.log("Constructor ended");
     },
@@ -246,6 +181,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._cntr++;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
+        // ------------- Rendering two-triangle "quad" to cover viewport with colour-coded depth buffer -----------
+
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
         this.gl.activeTexture(this.gl.TEXTURE0);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
@@ -261,9 +198,40 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
         }
 
-        // Draw the two-triangle "quad".
         this.gl.vertexAttribPointer(this.vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+
+        // ----------------------------------- Rendering splats -----------------------------------------
+
+        this.gl.useProgram(this._splatProgram);
+        var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
+        this.gl.enableVertexAttribArray( vertexPositionAttribute );
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
+        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 ); // this.gl.TEXTURE0);
+
+        loc = this.gl.getUniformLocation(this._splatProgram, "MV");
+        if (loc) {
+            // this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
+            this.gl.uniformMatrix4fv( loc, false, /* transposition */ matrices.m_from_world );
+        }
+
+        loc = this.gl.getUniformLocation(this._splatProgram, "PM");
+        if (loc) {
+            // this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
+            this.gl.uniformMatrix4fv( loc, false, /* transposition */ matrices.m_projection );
+        }
+
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+        // GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset
+        this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.enable(this.gl.POINT_SPRITE);
+        this.gl.enable(this.gl.VERTEX_PROGRAM_POINT_SIZE);
+        this.gl.drawArrays(this.gl.POINTS, 0, this._splats*this._splats);
+
 
         // console.log("rendering");
     }
