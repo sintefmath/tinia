@@ -36,6 +36,8 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "varying highp vec2 vTextureCoord;\n" + // Implicitly taken to be *output*?!
                 "uniform mat4 PM;\n" +
                 "uniform mat4 MV;\n" +
+                "uniform mat4 depthPM;\n" +
+                "uniform mat4 depthMV;\n" +
                 "uniform mat4 depthPMinv;\n" +
                 "uniform mat4 depthMVinv;\n" +
                 "uniform sampler2D uSampler;\n" +
@@ -44,28 +46,47 @@ dojo.declare("gui.ProxyRenderer", null, {
 
                 "    // gl_Position = PM * MV * vec4(aVertexPosition, 0.0, 1.0);\n" +
 
-                "    vec2 st = vec2( vTextureCoord.s, 1.0-vTextureCoord.t );\n" +
+                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);\n" +
                 "    depth = texture2D( uSampler, st ).r;\n" +
+
                 "    vec4 pos_from_depth = vec4( aVertexPosition, depth, 1.0 );\n" +
                 "    vec4 pos_pre_depth_matrices = depthMVinv * depthPMinv * pos_from_depth;\n" +
                 "    gl_Position = PM * MV * pos_pre_depth_matrices;\n" +
 
+                "    float A = depthPM[2].z;\n" +
+                "    float B = depthPM[3].z;\n" +
+                "    float near = - B / (1.0 - A);\n" +
+                "    float far  =   B / (1.0 + A);\n" +
+                "    float z_ndc = 2.0*depth - 1.0;\n" +
+                "    float z_es  = 2.0*far*near / (far + near - (far - near) * z_ndc );\n" +
+
+                "    vec4 pos_es_before = vec4( 0.0, 0.0, z_es, 1.0 );\n" +
+                "    pos_es_before.xy = aVertexPosition;\n" +
+                "    vec4 pos_ws_before = depthMVinv * pos_es_before;\n" +
+//                "    pos_ws_before.xy = aVertexPosition;\n" +
+                "    vec4 pos_es = MV * pos_ws_before;\n" +
+                "    gl_Position = PM * pos_es;\n" +
+
                 "    gl_PointSize = 5.0;\n" +
-                "    vTextureCoord = aVertexPosition.xy;\n" +
+                "    vTextureCoord = 0.5*(aVertexPosition.xy+1.0);\n" +
                 "}\n";
 
         var splat_fs_src =
                 "varying highp vec2 vTextureCoord;\n" +
                 "uniform sampler2D uSampler;\n" +
                 "highp float depth;\n" +
+                "// uniform highp float near;\n" +
+                "// uniform highp float far;\n" +
                 "void main(void) {\n" +
-                "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
-                "    if ( depth > 0.99 ) {\n" +
-                "        gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n" +
+                "    gl_FragColor = vec4(0.0, 0.0, depth, 1.0);\n" +
+                "    if ( depth > 1110.99 ) {\n" +
+                "        gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" +
                 "    }\n" +
-                "    if ( depth <0.01 ) {\n" +
+                "    if ( depth < -0.01 ) {\n" +
                 "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" +
                 "    }\n" +
+                "    // gl_FragColor.x = near;\n" +
+                "    // gl_FragColor.y = far;\n" +
                 "    // gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
                 "    // gl_FragColor.xy = gl_FragColor.yx;\n"+
                 "}\n";
@@ -177,7 +198,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     setDepthBuffer: function(depthBufferAsText) {
         //this._depthBufferCounter++;
-        if ( this._depthBufferCounter > this._depthBufferCounterLimit ) {
+        //if ( this._depthBufferCounter > this._depthBufferCounterLimit )
+        {
             console.log("setDepthBuffer: not setting depth buffer, counter too high");
             return;
         }
@@ -234,23 +256,23 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
             this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 ); // this.gl.TEXTURE0);
 
-            loc = this.gl.getUniformLocation(this._splatProgram, "MV");
-            if (loc) {
-                // this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
-                this.gl.uniformMatrix4fv( loc, false, /* transposition */ matrices.m_from_world );
+            if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
             }
-            loc = this.gl.getUniformLocation(this._splatProgram, "PM");
-            if (loc) {
-                // this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
-                this.gl.uniformMatrix4fv( loc, false, /* transposition */ matrices.m_projection );
+            if (this.gl.getUniformLocation(this._splatProgram, "PM")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
-            loc = this.gl.getUniformLocation(this._splatProgram, "depthPMinv");
-            if (loc) {
-                this.gl.uniformMatrix4fv( loc, false, /* transposition */ this._depth_matrices.m_projection_inverse );
+            if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._depth_matrices.m_projection_inverse );
             }
-            loc = this.gl.getUniformLocation(this._splatProgram, "depthMVinv");
-            if (loc) {
-                this.gl.uniformMatrix4fv( loc, false, /* transposition */ this._depth_matrices.m_to_world );
+            if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._depth_matrices.m_to_world );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "depthPM")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPM"), false, this._depth_matrices.m_projection );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "depthMV")) {
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMV"), false, this._depth_matrices.m_from_world );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
