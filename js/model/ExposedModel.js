@@ -186,10 +186,22 @@ dojo.declare("model.ExposedModel", null, {
         return this._getElementData(key).type();
     },
     
-    updateElement: function(key, newValue) {
+    /**
+     * Only updates the element if it is accepted.
+     * @param {type} key
+     * @param {type} newValue
+     * @returns {undefined}
+     */
+    passiveUpdateElement  : function(key, newValue) {
         if(!this._acceptElement(key, newValue)) {
             return;
         }
+        
+        return this.updateElement(key, newValue);
+    },
+    
+    updateElement: function(key, newValue) {
+
         var elementData = this._getElementData(key);
         var oldValue = this._get(key);
         elementData.setValue(newValue);
