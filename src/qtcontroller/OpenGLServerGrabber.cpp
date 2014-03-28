@@ -8,6 +8,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
+
 OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
                                          QObject *parent) :
 QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
@@ -15,10 +16,12 @@ QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
 {
     connect(this, SIGNAL(glImageReady()), this,
             SLOT(wakeListeners()));
-
     connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
             SLOT(getImage(uint,uint,QString)));
+    connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
+            SLOT(getdepthBuffer(uint,uint,QString)));
 }
+
 
 OpenGLServerGrabber::~OpenGLServerGrabber()
 {
@@ -28,6 +31,7 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
         glDeleteRenderbuffers(1, &m_renderbufferDepth);
     }
 }
+
 
 void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
 {
@@ -60,7 +64,10 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
     m_mainMutex.unlock();
 }
 
-void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QString key)
+
+void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height, QString key,
+                                         const bool depthBufferRequested)
+
 {
     tinia::jobcontroller::OpenGLJob* openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
     if(!openGLJob) {
@@ -78,44 +85,52 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 
     glViewport( 0, 0, width, height );
 
-
-
     openGLJob->renderFrame( "session", key.toStdString(), m_fbo, width, height );
 
-     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+    glPixelStorei( GL_PACK_ALIGNMENT, 1 );
 
-     glReadPixels( 0, 0, width, height,
-                   //GL_RGB,
-				   GL_DEPTH_COMPONENT,
-				   GL_FLOAT, m_buffer );
-
-     std::vector<unsigned char> tmp(width*height*4);
-     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &(tmp[0]) );
-
-     for(unsigned i = 0; i < width*height; i++) {
-         float value = ((float*)m_buffer)[i];
-
-         // 8
-         m_buffer[3*i + 0] = value*255;
-         m_buffer[3*i + 1] = 0;
-         m_buffer[3*i + 2] = 0;
-
-         // 16
-         m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
-         m_buffer[3*i + 1] = value*255;
-         // Blue component: To get some sort of outline of the object in the depth image displayed by the browser.
-         // This is not used by the shaders.
-         m_buffer[3*i + 2] = 255 * ( (tmp[3*i]!=0) || (tmp[3*i+1]!=0) || (tmp[3*i+2]!=0) );
-
-         // 24
-//         m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
-//         m_buffer[3*i + 1] = value*255;         value -= m_buffer[3*i +1] * 255.0;
-//         m_buffer[3*i + 2] = value*255;
-
-     }
-     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-     emit glImageReady();
+    if (depthBufferRequested) {
+        glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
+#if 1
+        // @@@ We record touched fragments in the blue channel, and use r+g as a 16 bit fixed point depth
+        std::vector<unsigned char> tmp(width*height*3);
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &(tmp[0]) );
+        for(unsigned i = 0; i < width*height; i++) {
+            float value = ((float*)m_buffer)[i];
+            m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
+            m_buffer[3*i + 1] = value*255;
+            m_buffer[3*i + 2] = 255 * ( (tmp[3*i]!=0) || (tmp[3*i+1]!=0) || (tmp[3*i+2]!=0) );
+        }
+#else
+        // Depth encoded as 24 bit fixed point values.
+        for(unsigned i = 0; i < width*height; i++) {
+            float value = ((float*)m_buffer)[i];
+            // 24
+            m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
+            m_buffer[3*i + 1] = value*255;         value -= m_buffer[3*i +1] * 255.0;
+            m_buffer[3*i + 2] = value*255;
+        }
+#endif
+    } else {
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    emit glImageReady();
 }
+
+
+void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QString key)
+{
+//    getImageCommon(width, height, key, false);
+    getImageCommon(width, height, key, true); // Testing; replacing rgb with depth
+}
+
+
+void OpenGLServerGrabber::getDepthBuffer(unsigned int width, unsigned int height, QString key)
+{
+    getImageCommon(width, height, key, true);
+}
+
 
 void OpenGLServerGrabber::wakeListeners()
 {

@@ -28,11 +28,14 @@ signals:
 
 private slots:
     void getImage(unsigned int width, unsigned int height, QString key);
+    void getDepthBuffer(unsigned int width, unsigned int height, QString key);
     void wakeListeners();
 
 private:
     void setupOpenGL();
     void resize(unsigned int width, unsigned int height);
+    void getImageCommon(unsigned int width, unsigned int height, QString key, const bool depthBufferRequested);
+
     bool m_glImageIsReady;
 
     // We only want to grab one image at the time

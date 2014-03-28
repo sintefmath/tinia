@@ -10,27 +10,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this.gl = glContext;
 
-        this.shaderVSSrc =
-             "attribute vec2 aVertexPosition;\n" +
-             "varying highp vec2 vTextureCoord;\n" +
-             "uniform mat4 MV;\n" +
-             "void main(void) {\n" +
-             "   vec2 tmp = vec2(2.0 * aVertexPosition.x - 1.0, 2.0 * aVertexPosition.y - 1.0);\n" +
-
-             "   // gl_Position = MV * vec4(tmp, 0.0, 1.0);\n" +
-             "   gl_Position = vec4(tmp, 0.0, 1.0);\n" +
-
-             "   vTextureCoord = aVertexPosition.xy;\n" +
-             "}\n";
-
-        this.shaderFSSrc =
-             "varying highp vec2 vTextureCoord;\n" +
-             "uniform sampler2D uSampler;\n" +
-             "void main(void) {\n" +
-             "   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
-             "   gl_FragColor.xy = gl_FragColor.yx;\n"+
-             "}\n";
-
         var splat_vs_src =
                 "attribute vec2 aVertexPosition;\n" +
                 "varying highp vec2 vTextureCoord;\n" + // Implicitly taken to be *output*?!
@@ -61,15 +40,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 //                "    depth = ( texture2D( uSampler, st ).r +\n" +
 //                "              texture2D( uSampler, st ).g / 255.0 +\n" +
 //                "              texture2D( uSampler, st ).b / (255.0*255.0) );\n" +
-
-//                "    vec4 pos_from_depth = vec4( aVertexPosition, depth, 1.0 );\n" +
-//                "    vec4 pos_pre_depth_matrices = depthMVinv * depthPMinv * pos_from_depth;\n" +
-//                "    gl_Position = PM * MV * pos_pre_depth_matrices;\n" +
-
-//                "    float A = depthPM[2].z;\n" +
-//                "    float B = depthPM[3].z;\n" +
-//                "    float near = - B / (1.0 - A);\n" +
-//                "    float far  =   B / (1.0 + A);\n" +
 
                 "    // We may think of the depth texture as a grid of screen space points together with\n" +
                 "    // depths, which we will subsample in order to get a sparser set of 'splats'.\n" +
@@ -123,47 +93,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this.depthTexture = this.gl.createTexture();
 
-
-        // ------------- Mockup-shader showing depth buffer as a green quad filling the viewport ------------------
-
-        this.vertexBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-        this.textureCoordinates = [
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0
-        ];
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates), this.gl.STATIC_DRAW);
-        var shaderFS = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-        var shaderVS = this.gl.createShader(this.gl.VERTEX_SHADER);
-        this.gl.shaderSource(shaderFS, this.shaderFSSrc);
-        this.gl.compileShader(shaderFS);
-        if (!this.gl.getShaderParameter(shaderFS, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the shadersFS: " + this.gl.getShaderInfoLog(shaderFS));
-            return null;
-        }
-        this.gl.shaderSource(shaderVS, this.shaderVSSrc);
-        this.gl.compileShader(shaderVS);
-        if (!this.gl.getShaderParameter(shaderVS, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the shadersVS: " + this.gl.getShaderInfoLog(shaderVS));
-            return null;
-        }
-        this.shaderProgram = this.gl.createProgram();
-        this.gl.attachShader(this.shaderProgram, shaderVS);
-        this.gl.attachShader(this.shaderProgram, shaderFS);
-        this.gl.linkProgram(this.shaderProgram);
-        if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
-            alert("Unable to initialize the shader program.");
-        }
-
-        this.gl.useProgram(this.shaderProgram);
-        this.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-        this.gl.enableVertexAttribArray(this.vertexPositionAttribute);
-
-        // ------------- Shader for testing splatting with preloaded vertex buffer object ------------------
 
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
@@ -226,26 +155,6 @@ dojo.declare("gui.ProxyRenderer", null, {
     render: function(matrices) {
         this._cntr++;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-        // ------------- Rendering two-triangle "quad" to cover viewport with colour-coded depth buffer -----------
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexBuffer);
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
-        this.gl.uniform1i( this.gl.getUniformLocation(this.shaderProgram, "uSampler"), 0 ); // this.gl.TEXTURE0);
-
-        var worldChange = mat4.create( matrices.m_from_world );
-        if (this._depth_matrices) {
-            mat4.multiply( worldChange, this._depth_matrices.m_to_world, worldChange );
-        }
-
-        var loc = this.gl.getUniformLocation(this.shaderProgram, "MV");
-        if (loc) {
-            this.gl.uniformMatrix4fv( loc, false, /* transposition */ worldChange );
-        }
-
-        this.gl.vertexAttribPointer(this.vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
 
         // ----------------------------------- Rendering splats -----------------------------------------
 
