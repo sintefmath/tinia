@@ -6,7 +6,6 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._depthBufferCounter = 0;
         this._subscriptionCounter = 0;
         this._splats = 100;
-        this._cntr = 0;
 
         this.gl = glContext;
 
@@ -15,15 +14,11 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "varying highp vec2 vTextureCoord;\n" + // Implicitly taken to be *output*?!
                 "uniform mat4 PM;\n" +
                 "uniform mat4 MV;\n" +
-                "uniform mat4 depthPM;\n" +
-                "uniform mat4 depthMV;\n" +
                 "uniform mat4 depthPMinv;\n" +
                 "uniform mat4 depthMVinv;\n" +
                 "uniform sampler2D uSampler;\n" +
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
-
-                "    // gl_Position = PM * MV * vec4(aVertexPosition, 0.0, 1.0);\n" +
 
                 "    vec2 st = 0.5*(aVertexPosition.xy+1.0);   st.y=1.0-st.y; \n" +
                 "    vTextureCoord = st;\n" +
@@ -59,6 +54,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "}\n";
 
         var splat_fs_src =
+                "uniform sampler2D rgbImage;\n" +
                 "varying highp vec2 vTextureCoord;\n" +
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
@@ -72,6 +68,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "    if ( depth < 0.01 ) {\n" +
                 "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
                 "    }\n" +
+                "    gl_FragColor = texture2D( rgbImage, vTextureCoord ).yzxw;\n" +
                 "}\n";
 
 
@@ -137,7 +134,6 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._depthBufferCounter++;
         console.log("setDepthBuffer: Setting buffer, count = " + this._depthBufferCounter);
         var image = new Image();
-
         image.onload = dojo.hitch(this, function() {
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
@@ -145,15 +141,31 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-            console.log("Updated texture");
+            console.log("Updated texture (depth buffer)");
         });
         image.src = "data:image/png;base64," + depthBufferAsText;
         console.log("Depth buffer set");
     },
 
 
-    render: function(matrices) {
-        this._cntr++;
+     setRGBimage: function(imageAsText) {
+         console.log("setRGBimage: Setting image, count = " + this._depthBufferCounter);
+         var image = new Image();
+         image.onload = dojo.hitch(this, function() {
+             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
+             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
+             this.gl.generateMipmap(this.gl.TEXTURE_2D);
+             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+             console.log("Updated texture (image)");
+         });
+         image.src = "data:image/png;base64," + imageAsText;
+         console.log("image set");
+     },
+
+
+        render: function(matrices) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         // ----------------------------------- Rendering splats -----------------------------------------
@@ -181,14 +193,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false,
                                           this._depth_matrices.m_to_world );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "depthPM")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPM"), false,
-                                          this._depth_matrices.m_projection );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "depthMV")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMV"), false,
-                                          this._depth_matrices.m_from_world );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);

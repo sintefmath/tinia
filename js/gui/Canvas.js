@@ -352,6 +352,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // buffer in the proxy object to this.
         this._proxyRenderer.setDepthBuffer(response);
 
+        // And if we also had the rgbImage available at the same time, we could set it like this,
+        // so that we could render the proxy with appropriate colours.
+        this._proxyRenderer.setRGBimage(response);
+
         // This would show the image from the server, if it was the rgb-image.
         // When it is the depth buffer, it may look "funny".
         this._showCorrect();

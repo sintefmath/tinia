@@ -18,8 +18,9 @@ QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
             SLOT(wakeListeners()));
     connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
             SLOT(getImage(uint,uint,QString)));
-    connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
-            SLOT(getdepthBuffer(uint,uint,QString)));
+    // @@@
+//    connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
+//            SLOT(getdepthBuffer(uint,uint,QString)));
 }
 
 
