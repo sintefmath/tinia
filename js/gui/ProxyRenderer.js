@@ -4,8 +4,8 @@ dojo.declare("gui.ProxyRenderer", null, {
     constructor: function(glContext, exposedModel, viewerKey) {
 
         this._depthBufferCounter = 0;
-        this._depthBufferCounterLimit = 3;
-        this._splats = 50;
+        this._subscriptionCounter = 0;
+        this._splats = 100;
         this._cntr = 0;
 
         this.gl = glContext;
@@ -41,65 +41,73 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "uniform mat4 depthPMinv;\n" +
                 "uniform mat4 depthMVinv;\n" +
                 "uniform sampler2D uSampler;\n" +
-                "highp float depth;\n" +
+                "varying highp float depth;\n" +
                 "void main(void) {\n" +
 
                 "    // gl_Position = PM * MV * vec4(aVertexPosition, 0.0, 1.0);\n" +
 
-                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);\n" +
-                "    depth = texture2D( uSampler, st ).r;\n" +
+                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);   st.y=1.0-st.y; \n" +
+                "    vTextureCoord = st;\n" +
+                "    gl_PointSize = 3.0;\n" +
 
-                "    vec4 pos_from_depth = vec4( aVertexPosition, depth, 1.0 );\n" +
-                "    vec4 pos_pre_depth_matrices = depthMVinv * depthPMinv * pos_from_depth;\n" +
-                "    gl_Position = PM * MV * pos_pre_depth_matrices;\n" +
+//                "    // 8-bit version. Remember to fix in depth-reading code also, if changed.\n" +
+//                "    depth = texture2D( uSampler, st ).r;\n" +
 
-                "    float A = depthPM[2].z;\n" +
-                "    float B = depthPM[3].z;\n" +
-                "    float near = - B / (1.0 - A);\n" +
-                "    float far  =   B / (1.0 + A);\n" +
+                "    // 16-bit version. Remember to fix in depth-reading code also, if changed.\n" +
+                "    depth = ( texture2D( uSampler, st ).r +\n" +
+                "              texture2D( uSampler, st ).g / 255.0 );\n" +
+
+                "    // 24-bit version. Remember to fix in depth-reading code also, if changed.\n" +
+//                "    depth = ( texture2D( uSampler, st ).r +\n" +
+//                "              texture2D( uSampler, st ).g / 255.0 +\n" +
+//                "              texture2D( uSampler, st ).b / (255.0*255.0) );\n" +
+
+//                "    vec4 pos_from_depth = vec4( aVertexPosition, depth, 1.0 );\n" +
+//                "    vec4 pos_pre_depth_matrices = depthMVinv * depthPMinv * pos_from_depth;\n" +
+//                "    gl_Position = PM * MV * pos_pre_depth_matrices;\n" +
+
+//                "    float A = depthPM[2].z;\n" +
+//                "    float B = depthPM[3].z;\n" +
+//                "    float near = - B / (1.0 - A);\n" +
+//                "    float far  =   B / (1.0 + A);\n" +
+
+                "    // We may think of the depth texture as a grid of screen space points together with\n" +
+                "    // depths, which we will subsample in order to get a sparser set of 'splats'.\n" +
+                "    // I.e., we have given (x, y, z)_{s, i, j, b}, s=screen, j=x-coo, i=y-coo, b=before.\n" +
+                "    // First, we obtain ndc coordinates.\n" +
+                "    float x_ndc = aVertexPosition.x;\n" +
+                "    float y_ndc = aVertexPosition.y;\n" +
                 "    float z_ndc = 2.0*depth - 1.0;\n" +
-                "    float z_es  = 2.0*far*near / (far + near - (far - near) * z_ndc );\n" +
 
-                "    vec4 pos_es_before = vec4( 0.0, 0.0, z_es, 1.0 );\n" +
-                "    pos_es_before.xy = aVertexPosition;\n" +
-                "    vec4 pos_ws_before = depthMVinv * pos_es_before;\n" +
-//                "    pos_ws_before.xy = aVertexPosition;\n" +
-                "    vec4 pos_es = MV * pos_ws_before;\n" +
-                "    gl_Position = PM * pos_es;\n" +
+                "    // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.\n" +
+                "    vec4 vert_eb = depthPMinv * vec4( x_ndc, y_ndc, z_ndc, 1.0 );\n" +
+                "    vec4 vert_wb = depthMVinv * vert_eb;\n" +
 
-                "    gl_PointSize = 5.0;\n" +
-                "    vTextureCoord = 0.5*(aVertexPosition.xy+1.0);\n" +
+                "    // Next, we apply the current transformation to get the proxy splat.\n" +
+                "    gl_Position = PM * MV * vert_wb;\n" +
+
                 "}\n";
 
         var splat_fs_src =
                 "varying highp vec2 vTextureCoord;\n" +
-                "uniform sampler2D uSampler;\n" +
-                "highp float depth;\n" +
-                "// uniform highp float near;\n" +
-                "// uniform highp float far;\n" +
+                "varying highp float depth;\n" +
                 "void main(void) {\n" +
-                "    gl_FragColor = vec4(0.0, 0.0, depth, 1.0);\n" +
-                "    if ( depth > 1110.99 ) {\n" +
-                "        gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" +
+                "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+                "    if ( depth > 0.99 ) {\n" +
+                "        // The depth should be 1 for fragments not rendered. It may be a problem that depth\n" +
+                "        // input is 'varying'.\n" +
+                "        discard;\n" +
+                "        // gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" + // cyan
                 "    }\n" +
-                "    if ( depth < -0.01 ) {\n" +
-                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" +
+                "    if ( depth < 0.01 ) {\n" +
+                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
                 "    }\n" +
-                "    // gl_FragColor.x = near;\n" +
-                "    // gl_FragColor.y = far;\n" +
-                "    // gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, 1.0-vTextureCoord.t));\n" +
-                "    // gl_FragColor.xy = gl_FragColor.yx;\n"+
                 "}\n";
 
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
-            this._depthBufferCounter++;
-            console.log("Subscriber: _depthBufferCounter: " + this._depthBufferCounter);
-            if ( this._depthBufferCounter > this._depthBufferCounterLimit ) {
-                console.log("Subscriber: not setting matrices.")
-                return;
-            }
-            console.log("Subscriber: setting matrices.");
+            this._subscriptionCounter++;
+            console.log("Subscriber: Setting matrices, _subscriptionCounter: " + this._subscriptionCounter);
             var viewer = exposedModel.getElementValue(viewerKey);
             // These are matrices available when we set the depth texture. But are these the exact
             // matrices used by the server to produce the depth image? Or do they just coincide
@@ -197,13 +205,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     setDepthBuffer: function(depthBufferAsText) {
-        //this._depthBufferCounter++;
-        //if ( this._depthBufferCounter > this._depthBufferCounterLimit )
-        {
-            console.log("setDepthBuffer: not setting depth buffer, counter too high");
-            return;
-        }
-        console.log("setDepthBuffer: setting buffer, count = " + this._depthBufferCounter);
+        this._depthBufferCounter++;
+        console.log("setDepthBuffer: Setting buffer, count = " + this._depthBufferCounter);
         var image = new Image();
 
         image.onload = dojo.hitch(this, function() {
@@ -263,16 +266,20 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._depth_matrices.m_projection_inverse );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false,
+                                          this._depth_matrices.m_projection_inverse );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._depth_matrices.m_to_world );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false,
+                                          this._depth_matrices.m_to_world );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthPM")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPM"), false, this._depth_matrices.m_projection );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPM"), false,
+                                          this._depth_matrices.m_projection );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthMV")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMV"), false, this._depth_matrices.m_from_world );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMV"), false,
+                                          this._depth_matrices.m_from_world );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);

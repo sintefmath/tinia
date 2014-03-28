@@ -89,13 +89,30 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 				   GL_DEPTH_COMPONENT,
 				   GL_FLOAT, m_buffer );
 
+     std::vector<unsigned char> tmp(width*height*4);
+     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &(tmp[0]) );
+
      for(unsigned i = 0; i < width*height; i++) {
-		 float value = ((float*)m_buffer)[i];
-         m_buffer[3*i] = value*255;
-		 m_buffer[3*i + 1] = 0;
-		 m_buffer[3*i + 2] = 0;
-		 
-	 }
+         float value = ((float*)m_buffer)[i];
+
+         // 8
+         m_buffer[3*i + 0] = value*255;
+         m_buffer[3*i + 1] = 0;
+         m_buffer[3*i + 2] = 0;
+
+         // 16
+         m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
+         m_buffer[3*i + 1] = value*255;
+         // Blue component: To get some sort of outline of the object in the depth image displayed by the browser.
+         // This is not used by the shaders.
+         m_buffer[3*i + 2] = 255 * ( (tmp[3*i]!=0) || (tmp[3*i+1]!=0) || (tmp[3*i+2]!=0) );
+
+         // 24
+//         m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
+//         m_buffer[3*i + 1] = value*255;         value -= m_buffer[3*i +1] * 255.0;
+//         m_buffer[3*i + 2] = value*255;
+
+     }
      glBindFramebuffer(GL_FRAMEBUFFER, 0);
      emit glImageReady();
 }
