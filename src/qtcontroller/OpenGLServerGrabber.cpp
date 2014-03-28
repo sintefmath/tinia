@@ -18,9 +18,8 @@ QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
             SLOT(wakeListeners()));
     connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
             SLOT(getImage(uint,uint,QString)));
-    // @@@
-//    connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
-//            SLOT(getdepthBuffer(uint,uint,QString)));
+    connect(this, SIGNAL(getGLDepthBuffer(uint,uint,QString)), this,
+            SLOT(getdepthBuffer(uint,uint,QString)));
 }
 
 
@@ -34,10 +33,15 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
 }
 
 
-void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
+void OpenGLServerGrabber::getImageAsTextCommon(QTextStream &os, unsigned int width, unsigned int height, QString key,
+                                               const bool depthBuffer)
 {
     m_mainMutex.lock();
-    emit getGLImage(width, height, key);
+    if (depthBuffer) {
+        emit getGLDepthBuffer(width, height, key);
+    } else {
+        emit getGLImage(width, height, key);
+    }
     m_waitMutex.lock();
     while(!m_glImageIsReady) {
         m_waitCondition.wait(&m_waitMutex);
@@ -63,6 +67,16 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
     m_glImageIsReady = false;
     m_waitMutex.unlock();
     m_mainMutex.unlock();
+}
+
+void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
+{
+    getImageAsTextCommon(os, width, height, key, false);
+}
+
+void OpenGLServerGrabber::getDepthBufferAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
+{
+    getImageAsTextCommon(os, width, height, key, true);
 }
 
 

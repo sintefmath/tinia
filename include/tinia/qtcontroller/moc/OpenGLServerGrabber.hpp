@@ -20,11 +20,16 @@ public:
 
     ~OpenGLServerGrabber();
 
+private:
+    void getImageAsTextCommon(QTextStream& os, unsigned int width, unsigned int height, QString key, const bool depthBuffer);
+public:
     void getImageAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
-    
+    void getDepthBufferAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
+
 signals:
     void glImageReady();
     void getGLImage(unsigned int width, unsigned int height, QString key);
+    void getGLDepthBuffer(unsigned int width, unsigned int height, QString key);
 
 private slots:
     void getImage(unsigned int width, unsigned int height, QString key);

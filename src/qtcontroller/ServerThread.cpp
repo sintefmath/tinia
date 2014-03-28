@@ -81,7 +81,7 @@ bool ServerThread::isLongPoll(const QString &request)
 }
 
 
-void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
+void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request, const bool depthBuffer)
 {
     boost::tuple<unsigned int, unsigned int,
             std::string> arguments =
@@ -91,17 +91,27 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
     unsigned int width = arguments.get<0>();
     unsigned int height = arguments.get<1>();
     std::string key = arguments.get<2>();
-
-    m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
+// @@@
+    //    if (depthBuffer) {
+//        m_grabber.getDepthBufferAsText(os, width, height, QString(key.c_str()));
+//    } else {
+        m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
+//    }
 }
+
+
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
                                  const QString& request)
 {
     try {
         if(file == "/snapshot.txt") {
-
             updateState(os, request);
-            getSnapshotTxt(os, request);
+            getSnapshotTxt(os, request, false);
+            return true;
+        }
+        else if (file == "/depthBuffer.txt") { // @@@
+            updateState(os, request);
+            getSnapshotTxt(os, request, true);
             return true;
         }
         else if(file == "/getRenderList.xml") {
@@ -129,6 +139,7 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
     std::string content = getPostContent(request).toStdString();
     m_xmlHandler.updateState(content.c_str(), content.size());
 }
+
 
 void ServerThread::getRenderList(QTextStream &os, const QString &request)
 {
