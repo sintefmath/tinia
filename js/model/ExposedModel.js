@@ -28,7 +28,27 @@ dojo.declare("model.ExposedModel", null, {
         this._elements = {};
         this._gui = null;
         this._revision = 0;
+        this._accepters = [];
     },
+    
+    /**
+     * 
+     * @param {type} accepter a function that takes two arguments (keyName, value)
+     *               returns true if the function allows the given change, false otherwise.
+     * @returns {undefined}
+     */
+    addElementAccepter: function(accepter) {
+        this._accepters[this._accepters.length] = accepter;
+    },
+    
+    _acceptElement : function(key, value) {
+        for(var i = 0; i < this._accepters.length; ++i) {
+            if(!this._accepters[i](key, value)) {
+                return false;
+            }
+        }
+        return true;
+    }, 
     
     setRevision : function(revision) {
         this._revision = revision;
@@ -167,7 +187,9 @@ dojo.declare("model.ExposedModel", null, {
     },
     
     updateElement: function(key, newValue) {
-        
+        if(!this._acceptElement(key, newValue)) {
+            return;
+        }
         var elementData = this._getElementData(key);
         var oldValue = this._get(key);
         elementData.setValue(newValue);
