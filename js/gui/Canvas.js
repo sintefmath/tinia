@@ -350,11 +350,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         // For now; the image received is a depth buffer disguised as rgb-image, we set the depth
         // buffer in the proxy object to this.
-        this._proxyRenderer.setDepthBuffer(response);
+        if (this._proxyRenderer) {
+            this._proxyRenderer.setDepthBuffer(response);
+        }
 
         // And if we also had the rgbImage available at the same time, we could set it like this,
         // so that we could render the proxy with appropriate colours.
-        this._proxyRenderer.setRGBimage(response);
+        if (this._proxyRenderer) {
+            this._proxyRenderer.setRGBimage(response);
+        }
 
         // This would show the image from the server, if it was the rgb-image.
         // When it is the depth buffer, it may look "funny".
@@ -450,7 +454,16 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _startGL: function () {
+
+        if (window.WebGLRenderingContext) {
+          // browser supports WebGL
+            console.log("The browser should support WebGL.");
+        } else {
+            console.log("The browser doesn't seem to support WebGL.");
+        }
+
         this._gl = WebGLUtils.setupWebGL(this._canvas);
+        console.log("_startGL");
         if (this._gl) {
             /*this._render_list_store = new renderlist.RenderListStore(this._gl);
             this._render_list_parser = new renderlist.RenderListParser();
@@ -460,6 +473,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 			this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
 
 			this._render();
+        } else {
+            console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quite the browser, and restart it.");
         }
     },
 
