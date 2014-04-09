@@ -71,23 +71,19 @@ ExposedModel::incrementRevisionNumber(impl::ElementData &updatedElement) {
 
 void ExposedModel::updateElementFromString( const std::string &key, const std::string &value )
 {
-   impl::ElementData data;
-   impl::ElementData before;
+    scoped_lock lock(m_selfMutex);
 
-   {// Lock scope
-      scoped_lock lock(m_selfMutex);
+    impl::ElementData& element = findElementInternal(key);
+    impl::ElementData before = element;
+    incrementRevisionNumber(element);
+    element.setStringValue( value );
+    impl::ElementData data = element;
 
-      impl::ElementData& element = findElementInternal(key);
-      before = element;
-      incrementRevisionNumber(element);
-      element.setStringValue( value );
-      data = element;
-   }
 
-   if(before.getStringValue() != data.getStringValue())
-   {
-      fireStateElementModified(key, data);
-   }
+    if(before.getStringValue() != data.getStringValue())
+    {
+        fireStateElementModified(key, data);
+    }
 }
 
 
@@ -114,7 +110,6 @@ void ExposedModel::updateElementFromPTree( const std::string &key, const StringS
       // printCurrentState();
       element.setPropertyTreeValue( value.begin()->second );
       impl::ElementData data  = element;
-      lock.unlock();
 
       // For now we don't add checking for complex types
       fireStateElementModified(key, data);
@@ -123,17 +118,16 @@ void ExposedModel::updateElementFromPTree( const std::string &key, const StringS
 
 void
 ExposedModel::addAnnotationHelper( std::string key, std::map<std::string, std::string> & annotationMap ) {
-   impl::ElementData data;
-   {
-      scoped_lock lock(m_selfMutex);
 
-      impl::ElementData& elementData = findElementInternal(key);
-      elementData.setAnnotation( annotationMap );
+    scoped_lock lock(m_selfMutex);
 
-      // Copy
-      data = elementData;
-   }
-   fireStateSchemaElementModified(key, data);
+    impl::ElementData& elementData = findElementInternal(key);
+    elementData.setAnnotation( annotationMap );
+
+    // Copy
+    impl::ElementData data = elementData;
+
+    fireStateSchemaElementModified(key, data);
 }
 
 
@@ -145,7 +139,7 @@ ExposedModel::addMatrixElement( std::string matrixName, float const* matrixData 
 
    addMatrixHelper( matrixName, matrixData );
    impl::ElementData data = stateHash[matrixName];
-   lock.unlock();
+
    fireStateSchemaElementAdded(matrixName, data);
 }
 
@@ -163,7 +157,7 @@ ExposedModel::updateMatrixValue( std::string key, const float* matrixData ) {
    impl::ElementData before = elementData;
    addMatrixHelper( key, matrixData );
    impl::ElementData data = stateHash[key];
-   lock.unlock();
+
    if(data.getStringValue() != before.getStringValue())
    {
       fireStateElementModified(key, data);
@@ -201,7 +195,6 @@ ExposedModel::removeElement( std::string key ) {
    }
    impl::ElementData data = it->second;
    stateHash.erase( it );
-   lock.unlock();
    fireStateSchemaElementRemoved(key, data);
 }
 
@@ -274,14 +267,14 @@ void model::ExposedModel::addStateSchemaListener(
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(
       model::StateSchemaListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(listener);
 }
 
@@ -289,39 +282,39 @@ void model::ExposedModel::addStateSchemaListener(std::string key,
 
       model::StateSchemaListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateSchemaListenerHandler.addStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::removeStateSchemaListener(std::string key,
       model::StateSchemaListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateSchemaListenerHandler.removeStateSchemaListener(key, listener);
 }
 
 void model::ExposedModel::addStateListener(model::StateListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateListenerHandler.addStateListener(listener);
 }
 
 
 void model::ExposedModel::removeStateListener(model::StateListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateListenerHandler.removeStateListener(listener);
 }
 
 void model::ExposedModel::addStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateListenerHandler.addStateListener(key,    listener);
 }
 
 void model::ExposedModel::removeStateListener(std::string key, model::StateListener *listener)
 {
-   scoped_lock listenerLock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    m_stateListenerHandler.removeStateListener(key, listener);
 }
 
@@ -381,7 +374,7 @@ void model::ExposedModel::getFullState(std::vector<model::StateElement> &stateEl
 void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
                                                        const model::impl::ElementData &data)
 {
-   scoped_lock lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    model::StateSchemaElement element(key, data);
 
    m_stateSchemaListenerHandler.fireStateSchemaElementAdded(&element);
@@ -390,7 +383,7 @@ void model::ExposedModel::fireStateSchemaElementAdded(std::string key,
 void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
                                                          const model::impl::ElementData &data)
 {
-   scoped_lock lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementRemoved(&element);
 }
@@ -398,7 +391,7 @@ void model::ExposedModel::fireStateSchemaElementRemoved(std::string key,
 void model::ExposedModel::fireStateSchemaElementModified(std::string key,
                                                           const model::impl::ElementData &data)
 {
-   scoped_lock lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    model::StateSchemaElement element(key, data);
    m_stateSchemaListenerHandler.fireStateSchemaElementModified(&element);
 }
@@ -406,7 +399,7 @@ void model::ExposedModel::fireStateSchemaElementModified(std::string key,
 void model::ExposedModel::fireStateElementModified(std::string key,
                                                     const model::impl::ElementData &data)
 {
-   scoped_lock lock(m_listenerHandlersMutex);
+   scoped_lock lock(m_selfMutex);
    model::StateElement element(key, data);
    m_stateListenerHandler.fireStateElementModified(&element);
 }
@@ -537,14 +530,14 @@ void model::ExposedModel::makeDefaultGUILayout()
 
 void model::ExposedModel::holdStateEvents()
 {
-    scoped_lock lock(m_listenerHandlersMutex);
+    scoped_lock lock(m_selfMutex);
     holdEventCounter++;
    m_stateListenerHandler.holdEvents();
 }
 
 void model::ExposedModel::releaseStateEvents()
 {
-    scoped_lock lock(m_listenerHandlersMutex);
+    scoped_lock lock(m_selfMutex);
     holdEventCounter--;
     if(holdEventCounter <= 0) {
         holdEventCounter = 0;
