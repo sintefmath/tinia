@@ -179,8 +179,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     load: dojo.hitch(this, function (response, ioArgs) {
                         this._setImageFromText(response);
                     })
-
                 });
+                // console.log("url: " + url);
             }
         }));
 

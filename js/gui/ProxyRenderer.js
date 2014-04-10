@@ -58,7 +58,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "varying highp vec2 vTextureCoord;\n" +
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
-                "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" +
+                "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" + // blue
                 "    if ( depth > 0.99 ) {\n" +
                 "        // The depth should be 1 for fragments not rendered. It may be a problem that depth\n" +
                 "        // input is 'varying'.\n" +
@@ -123,7 +123,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.attachShader(this._splatProgram, splat_fs);
         this.gl.linkProgram(this._splatProgram);
         if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
-            alert("Unable to initialize the shader program.");
+            alert("Unable to initialize the shader program. (gl.LINK_STATUS not ok,)");
         }
 
         console.log("Constructor ended");
@@ -165,7 +165,7 @@ dojo.declare("gui.ProxyRenderer", null, {
      },
 
 
-        render: function(matrices) {
+    render: function(matrices) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         // ----------------------------------- Rendering splats -----------------------------------------
@@ -187,12 +187,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false,
-                                          this._depth_matrices.m_projection_inverse );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._depth_matrices.m_projection_inverse );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false,
-                                          this._depth_matrices.m_to_world );
+                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._depth_matrices.m_to_world );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
