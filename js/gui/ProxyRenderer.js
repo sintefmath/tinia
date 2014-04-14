@@ -149,19 +149,23 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
      setRGBimage: function(imageAsText) {
-         console.log("setRGBimage: Setting image, count = " + this._depthBufferCounter);
-         var image = new Image();
-         image.onload = dojo.hitch(this, function() {
-             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
-             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
-             this.gl.generateMipmap(this.gl.TEXTURE_2D);
-             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-             console.log("Updated texture (image)");
-         });
-         image.src = "data:image/png;base64," + imageAsText;
-         console.log("image set");
+         if (false) {
+             console.log("setRGBimage: Setting image, count = " + this._depthBufferCounter);
+             var image = new Image();
+             image.onload = dojo.hitch(this, function() {
+                 this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
+                 this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
+                 this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                 this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
+                 this.gl.generateMipmap(this.gl.TEXTURE_2D);
+                 this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+                 console.log("Updated texture (image)");
+             });
+             image.src = "data:image/png;base64," + imageAsText;
+             console.log("Image set");
+         } else {
+             console.log("Image not set. Currently, the rgb-loading overwrites the texture used for depth values. We need another texture for the rgb image in order to get proxy with proper colors.");
+         }
      },
 
 
@@ -197,8 +201,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             // GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
-            this.gl.enable(this.gl.POINT_SPRITE);
-            this.gl.enable(this.gl.VERTEX_PROGRAM_POINT_SIZE);
+            // this.gl.enable(this.gl.POINT_SPRITE);
+            // this.gl.enable(this.gl.VERTEX_PROGRAM_POINT_SIZE);
             this.gl.drawArrays(this.gl.POINTS, 0, this._splats*this._splats);
         }
 

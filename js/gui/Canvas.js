@@ -78,8 +78,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             "height": h
         });
 
-
-
         var viewer = this._modelLib.getValue(this._key);
         viewer.updateElement("width", w);
         viewer.updateElement("height", h);
@@ -177,11 +175,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        this._setImageFromText(response);
+                        var response_obj = eval( '(' + response + ')' );
+                        this._setImageFromText( response_obj.rgb, response_obj.depth );
                     })
                 });
                 // console.log("url: " + url);
             }
+
         }));
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function (xml) {
@@ -190,8 +190,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }));
 
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
+
             // Temporary sanity fix for firefox
-            this._setImageFromText(params.response);
+            // this._setImageFromText(params.response); // @@@ Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?
+
+            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
+                var response_obj = eval( '(' + params.response + ')' );
+                this._setImageFromText( response_obj.rgb, response_obj.depth );
+            } else {
+                console.log("This was not a snapshot. Why are we here at all?");
+            }
+
         }));
 
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
@@ -342,16 +351,18 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._loadingDiv.style.top = (-2 * this._height) + "px";
     },
 
-    _setImageFromText: function (response) {
+    _setImageFromText: function (response, response_depth) {
+        // What is this about?
         if (!response.substring(response.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
             response = response.substring(0, response.length - 1);
         }
+
         this._img.src = "data:image/png;base64," + response;
 
         // For now; the image received is a depth buffer disguised as rgb-image, we set the depth
         // buffer in the proxy object to this.
         if (this._proxyRenderer) {
-            this._proxyRenderer.setDepthBuffer(response);
+            this._proxyRenderer.setDepthBuffer(response_depth);
         }
 
         // And if we also had the rgbImage available at the same time, we could set it like this,
@@ -541,11 +552,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._imageLoading = false;
 
         if (this._loadImageAgain--) {
-
             this._loadImageStage2();
         } else {
-
         }
+
         this._showCorrect();
     },
 

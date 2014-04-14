@@ -19,7 +19,7 @@ QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
     connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
             SLOT(getImage(uint,uint,QString)));
     connect(this, SIGNAL(getGLDepthBuffer(uint,uint,QString)), this,
-            SLOT(getdepthBuffer(uint,uint,QString)));
+            SLOT(getDepthBuffer(uint,uint,QString)));
 }
 
 
@@ -33,8 +33,7 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
 }
 
 
-void OpenGLServerGrabber::getImageAsTextCommon(QTextStream &os, unsigned int width, unsigned int height, QString key,
-                                               const bool depthBuffer)
+void OpenGLServerGrabber::getImageAsTextCommon(QString &str, unsigned int width, unsigned int height, QString key, const bool depthBuffer)
 {
     m_mainMutex.lock();
     if (depthBuffer) {
@@ -47,7 +46,7 @@ void OpenGLServerGrabber::getImageAsTextCommon(QTextStream &os, unsigned int wid
         m_waitCondition.wait(&m_waitMutex);
     }
 
-	QImage img(m_buffer, width, height, QImage::Format_RGB888);
+    QImage img(m_buffer, width, height, QImage::Format_RGB888);
 
     // This is a temporary fix. The image is reflected through the horizontal
     // line y=height ((x, y) |--> (x, h-y) ).
@@ -56,13 +55,9 @@ void OpenGLServerGrabber::getImageAsTextCommon(QTextStream &os, unsigned int wid
                                   0, height);
     img = img.transformed(flipTransformation);
 
-
     QBuffer qBuffer;
-
     img.save(&qBuffer, "png");
-    os << httpHeader(getMimeType("file.txt"));
-    QString str(QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64());
-    os << "\r\n"<<str;
+    str = QString( QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64() );
 
     m_glImageIsReady = false;
     m_waitMutex.unlock();
@@ -71,18 +66,16 @@ void OpenGLServerGrabber::getImageAsTextCommon(QTextStream &os, unsigned int wid
 
 void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
 {
-    getImageAsTextCommon(os, width, height, key, false);
+    QString rgbStr;
+    getImageAsTextCommon(rgbStr, width, height, key, false);
+    QString depthStr;
+    getImageAsTextCommon(depthStr, width, height, key, true);
+    QString jsonWrappedImgPlusDepthString = "{ \"rgb\": \"" + rgbStr + "\", \"depth\": \"" + depthStr + "\" }";
+    os << httpHeader(getMimeType("file.txt")) << "\r\n" << jsonWrappedImgPlusDepthString;
 }
 
-void OpenGLServerGrabber::getDepthBufferAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
-{
-    getImageAsTextCommon(os, width, height, key, true);
-}
 
-
-void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height, QString key,
-                                         const bool depthBufferRequested)
-
+void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height, QString key, const bool depthBufferRequested)
 {
     tinia::jobcontroller::OpenGLJob* openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
     if(!openGLJob) {
@@ -134,13 +127,14 @@ void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height
 }
 
 
+// This is the slot for the signal OpenGLServerGrabber::getGLImage
 void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QString key)
 {
-//    getImageCommon(width, height, key, false);
-    getImageCommon(width, height, key, true); // Testing; replacing rgb with depth
+    getImageCommon(width, height, key, false);
 }
 
 
+// This is the slot for the signal OpenGLServerGrabber::getGLDepthBuffer
 void OpenGLServerGrabber::getDepthBuffer(unsigned int width, unsigned int height, QString key)
 {
     getImageCommon(width, height, key, true);

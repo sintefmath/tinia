@@ -42,7 +42,6 @@ void ServerThread::run()
         //Now we have the whole header
         QRegExp contentLengthExpression("Content-Length: (\\d+)\\s*\\r\\n");
 
-        
         if (contentLengthExpression.indexIn(request) != -1) {
             QString contentLengthGroup = contentLengthExpression.cap(1);
             int contentLength = contentLengthGroup.toInt();
@@ -53,7 +52,9 @@ void ServerThread::run()
                 request += socket.readAll();
             }
         }
+
         QTextStream os(&socket);
+
         if(isLongPoll(request)) {
             LongPollHandler handler(os, request, m_job->getExposedModel());
             handler.handle();
@@ -81,7 +82,7 @@ bool ServerThread::isLongPoll(const QString &request)
 }
 
 
-void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request, const bool depthBuffer)
+void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
 {
     boost::tuple<unsigned int, unsigned int,
             std::string> arguments =
@@ -91,27 +92,17 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request, const
     unsigned int width = arguments.get<0>();
     unsigned int height = arguments.get<1>();
     std::string key = arguments.get<2>();
-// @@@
-    //    if (depthBuffer) {
-//        m_grabber.getDepthBufferAsText(os, width, height, QString(key.c_str()));
-//    } else {
-        m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
-//    }
+    m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
 }
 
 
-bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
-                                 const QString& request)
+bool ServerThread::handleNonStatic(QTextStream &os, const QString& file, const QString& request)
 {
+    std::cout << "ServerThread::handleNonStatic: Somebody requesting '" << file.toStdString() << "'." << std::endl;
     try {
-        if(file == "/snapshot.txt") {
+        if (file == "/snapshot.txt") {
             updateState(os, request);
-            getSnapshotTxt(os, request, false);
-            return true;
-        }
-        else if (file == "/depthBuffer.txt") { // @@@
-            updateState(os, request);
-            getSnapshotTxt(os, request, true);
+            getSnapshotTxt(os, request);
             return true;
         }
         else if(file == "/getRenderList.xml") {

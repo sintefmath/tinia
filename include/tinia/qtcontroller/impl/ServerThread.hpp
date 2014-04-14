@@ -21,9 +21,8 @@ public:
     
 private:
 
-
     bool isLongPoll(const QString& request);
-    void getSnapshotTxt(QTextStream& os, const QString& request, const bool depthBuffer);
+    void getSnapshotTxt(QTextStream& os, const QString& request);
 
     /** Handles non-static content, if applicable.
      * @returns true if the file is non-static, false otherwise.
