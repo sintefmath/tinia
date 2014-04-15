@@ -20,9 +20,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
 
-                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);   st.y=1.0-st.y; \n" +
+                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);\n" +
+                "    st.y=1.0-st.y; \n" +
                 "    vTextureCoord = st;\n" +
-                "    gl_PointSize = 3.0;\n" +
+                "    gl_PointSize = 4.0;\n" +
 
 //                "    // 8-bit version. Remember to fix in depth-reading code also, if changed.\n" +
 //                "    depth = texture2D( uSampler, st ).r;\n" +
@@ -38,7 +39,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
                 "    // We may think of the depth texture as a grid of screen space points together with\n" +
                 "    // depths, which we will subsample in order to get a sparser set of 'splats'.\n" +
-                "    // I.e., we have given (x, y, z)_{s, i, j, b}, s=screen, j=x-coo, i=y-coo, b=before.\n" +
                 "    // First, we obtain ndc coordinates.\n" +
                 "    float x_ndc = aVertexPosition.x;\n" +
                 "    float y_ndc = aVertexPosition.y;\n" +
@@ -58,17 +58,25 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "varying highp vec2 vTextureCoord;\n" +
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
-                "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" + // blue
-                "    if ( depth > 0.99 ) {\n" +
+                "    // gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" + // blue
+
+                // Hmm. Even when this is disabled, we still don't get all splats rendered. Why is this so? Shouldn't it be necessary with the discard here?!
+                // Ah. The explanation is that the splats are really rendered, but with the background color, so they are not visible!
+                "    if ( depth > 0.999 ) {\n" +
                 "        // The depth should be 1 for fragments not rendered. It may be a problem that depth\n" +
                 "        // input is 'varying'.\n" +
                 "        discard;\n" +
-                "        // gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);\n" + // cyan
+                "        // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" + // white
+                "        // return;\n" +
                 "    }\n" +
-                "    if ( depth < 0.01 ) {\n" +
-                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
-                "    }\n" +
-                "    gl_FragColor = texture2D( rgbImage, vTextureCoord ).yzxw;\n" +
+
+                "    // Just to see if this ever happens...\n" +
+//                "    if ( depth < 0.01 ) {\n" +
+//                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
+//                "        return;\n" +
+//                "    }\n" +
+
+                "    gl_FragColor = texture2D( rgbImage, vTextureCoord );\n" +
                 "}\n";
 
 
@@ -89,6 +97,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
         this.depthTexture = this.gl.createTexture();
+        this.rgbTexture = this.gl.createTexture();
 
 
         this._splatVertexBuffer = this.gl.createBuffer();
@@ -144,28 +153,24 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("Updated texture (depth buffer)");
         });
         image.src = "data:image/png;base64," + depthBufferAsText;
-        console.log("Depth buffer set");
+        // console.log("Depth buffer set");
     },
 
 
      setRGBimage: function(imageAsText) {
-         if (false) {
-             console.log("setRGBimage: Setting image, count = " + this._depthBufferCounter);
-             var image = new Image();
-             image.onload = dojo.hitch(this, function() {
-                 this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
-                 this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-                 this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-                 this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
-                 this.gl.generateMipmap(this.gl.TEXTURE_2D);
-                 this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-                 console.log("Updated texture (image)");
-             });
-             image.src = "data:image/png;base64," + imageAsText;
-             console.log("Image set");
-         } else {
-             console.log("Image not set. Currently, the rgb-loading overwrites the texture used for depth values. We need another texture for the rgb image in order to get proxy with proper colors.");
-         }
+         console.log("setRGBimage: Setting image, count = " + this._depthBufferCounter);
+         var image = new Image();
+         image.onload = dojo.hitch(this, function() {
+             this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture);
+             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
+             this.gl.generateMipmap(this.gl.TEXTURE_2D);
+             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+             console.log("Updated texture (image)");
+         });
+         image.src = "data:image/png;base64," + imageAsText;
+         // console.log("Image set");
      },
 
 
@@ -180,9 +185,14 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.enableVertexAttribArray( vertexPositionAttribute );
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+
             this.gl.activeTexture(this.gl.TEXTURE0);
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
-            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 ); // this.gl.TEXTURE0);
+            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
+
+            this.gl.activeTexture(this.gl.TEXTURE1);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture);
+            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
 
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
