@@ -251,6 +251,7 @@ GUIBuilder::addTabLayout(model::gui::TabLayout *root, QWidget *parent)
             std::cerr << __FILE__ << '@' << __LINE__<< ": ERROR: child is not tab.\n";
         }
     }
+    tabWidget->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
    return tabWidget;
 }
 
