@@ -430,7 +430,7 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
         QVBoxLayout* wrapper_layout = new QVBoxLayout(wrapper);
         wrapper->setLayout( wrapper_layout );
         wrapper_layout->setSpacing( 0 );
-        wrapper->setContentsMargins( 0, 0, 0, 0 );
+        wrapper_layout->setContentsMargins( 0, 0, 0, 0 );
 
         wrapper->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         wrapper->layout()->addWidget(canvas );
