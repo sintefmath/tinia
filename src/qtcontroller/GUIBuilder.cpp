@@ -511,6 +511,9 @@ GUIBuilder::addChildren( model::gui::Container0D<model::gui::Element>*  containe
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
     model::gui::Element* child = container->child();
     QWidget* child_widget = buildGUI( child, widget );
     if( child_widget != NULL ) {
@@ -531,6 +534,10 @@ GUIBuilder::addChildren( model::gui::Container1D<model::gui::Element>*  containe
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
+
     for( size_t i=0; i<container->children(); i++ ) {
         model::gui::Element* child = container->child( i );
         if( child == NULL ) {
@@ -561,6 +568,10 @@ GUIBuilder::addChildren( model::gui::Container2D<model::gui::Element>* container
                          QWidget* widget,
                          QGridLayout* layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
+
     for(size_t row = 0; row < container->height(); row++) {
        for(size_t col = 0; col  < container->width(); col++) {
 
