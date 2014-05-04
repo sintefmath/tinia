@@ -64,13 +64,60 @@ void OpenGLServerGrabber::getImageAsTextCommon(QString &str, unsigned int width,
     m_mainMutex.unlock();
 }
 
+
 void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
 {
     QString rgbStr;
     getImageAsTextCommon(rgbStr, width, height, key, false);
     QString depthStr;
     getImageAsTextCommon(depthStr, width, height, key, true);
-    QString jsonWrappedImgPlusDepthString = "{ \"rgb\": \"" + rgbStr + "\", \"depth\": \"" + depthStr + "\" }";
+
+    // Is there something wrong with m_job->getExposedModel()?! Seems not to be returning meaningful data. (Or is it 'getElementValueAsString'?)
+    std::string tmp = m_job->getExposedModel()->getElementValueAsString( key.toStdString() );
+    std::cout << "tmp=" << tmp << std::endl;
+
+    tinia::model::Viewer viewer;
+    m_job->getExposedModel()->getElementValue( key.toStdString(), viewer );
+    //std::cout << "viewer.timestamp=" << viewer.timestamp << std::endl; // And this seems to be 0 all the time. Is that correct?
+    std::stringstream ss;
+    ss << viewer.modelviewMatrix[0] << " "
+                                    << viewer.modelviewMatrix[1] << " "
+                                    << viewer.modelviewMatrix[2] << " "
+                                    << viewer.modelviewMatrix[3] << " "
+                                    << viewer.modelviewMatrix[4] << " "
+                                    << viewer.modelviewMatrix[5] << " "
+                                    << viewer.modelviewMatrix[6] << " "
+                                    << viewer.modelviewMatrix[7] << " "
+                                    << viewer.modelviewMatrix[8] << " "
+                                    << viewer.modelviewMatrix[9] << " "
+                                    << viewer.modelviewMatrix[10] << " "
+                                    << viewer.modelviewMatrix[11] << " "
+                                    << viewer.modelviewMatrix[12] << " "
+                                    << viewer.modelviewMatrix[13] << " "
+                                    << viewer.modelviewMatrix[14];
+    std::cout << "viewer.modelView: " << ss.str() << std::endl;
+    QString viewStr( ss.str().c_str() );
+
+    std::stringstream ss2;
+    ss2 << viewer.projectionMatrix[0] << " "
+                                    << viewer.projectionMatrix[1] << " "
+                                    << viewer.projectionMatrix[2] << " "
+                                    << viewer.projectionMatrix[3] << " "
+                                    << viewer.projectionMatrix[4] << " "
+                                    << viewer.projectionMatrix[5] << " "
+                                    << viewer.projectionMatrix[6] << " "
+                                    << viewer.projectionMatrix[7] << " "
+                                    << viewer.projectionMatrix[8] << " "
+                                    << viewer.projectionMatrix[9] << " "
+                                    << viewer.projectionMatrix[10] << " "
+                                    << viewer.projectionMatrix[11] << " "
+                                    << viewer.projectionMatrix[12] << " "
+                                    << viewer.projectionMatrix[13] << " "
+                                    << viewer.projectionMatrix[14];
+    std::cout << "viewer.projection: " << ss2.str() << std::endl;
+    QString projStr( ss2.str().c_str() );
+
+    QString jsonWrappedImgPlusDepthString = "{ \"rgb\": \"" + rgbStr + "\", \"depth\": \"" + depthStr + "\", \"view\": \"" + viewStr+ "\", \"proj\": \"" + projStr + "\" }";
     os << httpHeader(getMimeType("file.txt")) << "\r\n" << jsonWrappedImgPlusDepthString;
 }
 

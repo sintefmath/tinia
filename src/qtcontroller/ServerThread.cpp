@@ -98,7 +98,7 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
 
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file, const QString& request)
 {
-    std::cout << "ServerThread::handleNonStatic: Somebody requesting '" << file.toStdString() << "'." << std::endl;
+    // std::cout << "ServerThread::handleNonStatic: Somebody requesting '" << file.toStdString() << "'." << std::endl;
     try {
         if (file == "/snapshot.txt") {
             updateState(os, request);

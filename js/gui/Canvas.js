@@ -176,7 +176,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
                         var response_obj = eval( '(' + response + ')' );
-                        this._setImageFromText( response_obj.rgb, response_obj.depth );
+                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })
                 });
                 // console.log("url: " + url);
@@ -196,7 +196,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 var response_obj = eval( '(' + params.response + ')' );
-                this._setImageFromText( response_obj.rgb, response_obj.depth );
+                this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
             }
@@ -351,31 +351,25 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._loadingDiv.style.top = (-2 * this._height) + "px";
     },
 
-    _setImageFromText: function (response, response_depth) {
+    _setImageFromText: function (response_rgb, response_depth, response_view, response_proj) {
         // What is this about?
-        if (!response.substring(response.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
-            response = response.substring(0, response.length - 1);
+        if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
+            response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
 
-        this._img.src = "data:image/png;base64," + response;
+        this._img.src = "data:image/png;base64," + response_rgb;
 
-        // For now; the image received is a depth buffer disguised as rgb-image, we set the depth
-        // buffer in the proxy object to this.
         if (this._proxyRenderer) {
+            this._proxyRenderer.setRGBimage(response_rgb);
             this._proxyRenderer.setDepthBuffer(response_depth);
-        }
-
-        // And if we also had the rgbImage available at the same time, we could set it like this,
-        // so that we could render the proxy with appropriate colours.
-        if (this._proxyRenderer) {
-            this._proxyRenderer.setRGBimage(response);
+            this._proxyRenderer.setViewMat(response_view, response_proj);
         }
 
         // This would show the image from the server, if it was the rgb-image.
         // When it is the depth buffer, it may look "funny".
         this._showCorrect();
 
-        return response;
+        return response_rgb;
     },
 
     _touchGestureBegin: function (event) {

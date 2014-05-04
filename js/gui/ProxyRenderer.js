@@ -174,6 +174,22 @@ dojo.declare("gui.ProxyRenderer", null, {
      },
 
 
+     setViewMat: function( viewMatAsText, projMatAsText ) {
+         console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
+         console.log("                      mat: " + viewMatAsText);
+         console.log("                 proj mat: " + projMatAsText);
+         console.log("     _depth_matrices.view: " + this._depth_matrices.m_from_world );
+         console.log("     _depth_matrices.proj: " + this._depth_matrices.m_projection );
+
+//         m_projection:         viewer.getElementValue("projection"),
+//         m_projection_inverse: mat4.inverse(mat4.create(viewer.getElementValue("projection"))),
+//         m_to_world:           mat4.inverse(mat4.create(viewer.getElementValue("modelview"))),
+//         m_from_world:         viewer.getElementValue("modelview")
+
+
+     },
+
+
     render: function(matrices) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
