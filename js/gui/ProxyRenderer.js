@@ -174,19 +174,34 @@ dojo.declare("gui.ProxyRenderer", null, {
      },
 
 
-     setViewMat: function( viewMatAsText, projMatAsText ) {
-         console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
-         console.log("                      mat: " + viewMatAsText);
-         console.log("                 proj mat: " + projMatAsText);
-         console.log("     _depth_matrices.view: " + this._depth_matrices.m_from_world );
-         console.log("     _depth_matrices.proj: " + this._depth_matrices.m_projection );
+    setViewMat: function( viewMatAsText, projMatAsText ) {
+        console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
+        console.log("                      mat: " + viewMatAsText);
+        console.log("                 proj mat: " + projMatAsText);
+        if (this._depth_matrices) {
 
-//         m_projection:         viewer.getElementValue("projection"),
-//         m_projection_inverse: mat4.inverse(mat4.create(viewer.getElementValue("projection"))),
-//         m_to_world:           mat4.inverse(mat4.create(viewer.getElementValue("modelview"))),
-//         m_from_world:         viewer.getElementValue("modelview")
+            // Don't understand why these don't work...?!
+            // console.log("     _depth_matrices.view: " + this._depth_matrices.m_from_world );
+            // console.log("     _depth_matrices.proj: " + this._depth_matrices.m_projection.toString() );
+            console.log("     _depth_matrices.view:" + mv );
+            console.log("     _depth_matrices.proj:" + pm );
 
+            // Cumbersome... but works...
+            var mv = " ";
+            var pm = " ";
+            var i;
+            for (i=0; i<16; i++) {
+                mv = mv + " " + this._depth_matrices.m_from_world[i];
+                pm = pm + " " + this._depth_matrices.m_projection[i];
+            }
 
+            // Overriding the current values with what was used for sure by the server when rgb and depth images were generated
+            this._depth_matrices.m_projection = projMatAsText.split(/ /);
+            this._depth_matrices.m_projection_inverse = mat4.inverse(mat4.create( this._depth_matrices.m_projection ));
+            this._depth_matrices.m_from_world = viewMatAsText.split(/ /);
+            this._depth_matrices.m_to_world = mat4.inverse(mat4.create( this._depth_matrices.m_from_world ));
+
+        }
      },
 
 

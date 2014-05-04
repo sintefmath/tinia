@@ -94,7 +94,8 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
                                     << viewer.modelviewMatrix[11] << " "
                                     << viewer.modelviewMatrix[12] << " "
                                     << viewer.modelviewMatrix[13] << " "
-                                    << viewer.modelviewMatrix[14];
+                                    << viewer.modelviewMatrix[14] << " "
+                                    << viewer.modelviewMatrix[15];
     std::cout << "viewer.modelView: " << ss.str() << std::endl;
     QString viewStr( ss.str().c_str() );
 
@@ -113,7 +114,8 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
                                     << viewer.projectionMatrix[11] << " "
                                     << viewer.projectionMatrix[12] << " "
                                     << viewer.projectionMatrix[13] << " "
-                                    << viewer.projectionMatrix[14];
+                                    << viewer.projectionMatrix[14] << " "
+                                    << viewer.projectionMatrix[15];
     std::cout << "viewer.projection: " << ss2.str() << std::endl;
     QString projStr( ss2.str().c_str() );
 
