@@ -475,11 +475,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
             this._getRenderList();*/
 			
-			this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
+            this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
 
 			this._render();
         } else {
-            console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quite the browser, and restart it.");
+            console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quit the browser, and restart it.");
         }
     },
 

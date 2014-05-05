@@ -5,7 +5,13 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this._depthBufferCounter = 0;
         this._subscriptionCounter = 0;
-        this._splats = 100;
+
+        // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
+        this._splats = 50;
+
+        // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
+        // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
+        this._splatOverlap = 1.2;
 
         this.gl = glContext;
 
@@ -17,13 +23,14 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "uniform mat4 depthPMinv;\n" +
                 "uniform mat4 depthMVinv;\n" +
                 "uniform sampler2D uSampler;\n" +
+                "uniform float splatSize;\n" +
                 "varying highp float depth;\n" +
                 "void main(void) {\n" +
 
                 "    vec2 st = 0.5*(aVertexPosition.xy+1.0);\n" +
                 "    st.y=1.0-st.y; \n" +
                 "    vTextureCoord = st;\n" +
-                "    gl_PointSize = 4.0;\n" +
+                "    gl_PointSize = splatSize;\n" +
 
 //                "    // 8-bit version. Remember to fix in depth-reading code also, if changed.\n" +
 //                "    depth = texture2D( uSampler, st ).r;\n" +
@@ -176,26 +183,31 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     setViewMat: function( viewMatAsText, projMatAsText ) {
         console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
-        console.log("                      mat: " + viewMatAsText);
+        console.log("                 view mat: " + viewMatAsText);
         console.log("                 proj mat: " + projMatAsText);
         if (this._depth_matrices) {
 
             // Don't understand why these don't work...?!
             // console.log("     _depth_matrices.view: " + this._depth_matrices.m_from_world );
             // console.log("     _depth_matrices.proj: " + this._depth_matrices.m_projection.toString() );
-            console.log("     _depth_matrices.view:" + mv );
-            console.log("     _depth_matrices.proj:" + pm );
 
             // Cumbersome... but works...
             var mv = " ";
             var pm = " ";
             var i;
             for (i=0; i<16; i++) {
-                mv = mv + " " + this._depth_matrices.m_from_world[i];
-                pm = pm + " " + this._depth_matrices.m_projection[i];
+                mv = mv + " " + this._depth_matrices.m_from_world[i]; // .toPrecision(5); // Why does this cause the code to "crash"?
+                pm = pm + " " + this._depth_matrices.m_projection[i]; // .toPrecision(5);
             }
+            console.log("     _depth_matrices.view:" + mv );
+            console.log("     _depth_matrices.proj:" + pm );
 
-            // Overriding the current values with what was used for sure by the server when rgb and depth images were generated
+            // Overriding the current values in _depth_matrices. These are not the current *client-side* values, but should have been
+            // set to the server-side values from when the depth buffer was generated. This was done by subscription to "/model/updateSendStart"
+            // above. Does that not produce the correct values?
+            // (Hmm. Could the problem be that the subscription "callback" is not triggered until some period of user interaction inactivity
+            // occurs, so that it does not get updated while the user manipulates the scene?)
+            // Now overriding with values passed along together with that actual rgb+depth buffers.
             this._depth_matrices.m_projection = projMatAsText.split(/ /);
             this._depth_matrices.m_projection_inverse = mat4.inverse(mat4.create( this._depth_matrices.m_projection ));
             this._depth_matrices.m_from_world = viewMatAsText.split(/ /);
@@ -236,6 +248,10 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._depth_matrices.m_to_world );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
+                var splatSize = Math.max(this.gl.canvas.width, this.gl.canvas.height) / this._splats * this._splatOverlap;
+                this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatSize"), splatSize );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
