@@ -7,11 +7,11 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._subscriptionCounter = 0;
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
-        this._splats = 50;
+        this._splats = 128;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
-        this._splatOverlap = 1.2;
+        this._splatOverlap = 1.4;
 
         this.gl = glContext;
 
@@ -82,6 +82,12 @@ dojo.declare("gui.ProxyRenderer", null, {
 //                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
 //                "        return;\n" +
 //                "    }\n" +
+
+                "    highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2\n" +
+                "    highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25\n" +
+                "                                              // radius squared for the smallest circle containing the 'square splat' is 0.5\n" +
+                "    if ( r_squared > 0.25 )\n" +
+                "        discard;\n" +
 
                 "    gl_FragColor = texture2D( rgbImage, vTextureCoord );\n" +
                 "}\n";
@@ -171,7 +177,7 @@ dojo.declare("gui.ProxyRenderer", null, {
              this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture);
              this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
              this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_LINEAR);
              this.gl.generateMipmap(this.gl.TEXTURE_2D);
              this.gl.bindTexture(this.gl.TEXTURE_2D, null);
              console.log("Updated texture (image)");
