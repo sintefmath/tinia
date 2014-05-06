@@ -11,7 +11,11 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
-        this._splatOverlap = 1.4;
+        this._splatOverlap = 2.0; // 1.4;
+
+        // the glPoints will be drawn as circular "sprites" if this is set.
+        this._roundedSplats = false;
+
 
         this.gl = glContext;
 
@@ -75,20 +79,25 @@ dojo.declare("gui.ProxyRenderer", null, {
                 "        discard;\n" +
                 "        // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" + // white
                 "        // return;\n" +
-                "    }\n" +
+                "    }\n";
 
-                "    // Just to see if this ever happens...\n" +
+//        splat_fs_src = splat_fs_src +
+//                "    // Just to see if this ever happens...\n" +
 //                "    if ( depth < 0.01 ) {\n" +
 //                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
 //                "        return;\n" +
-//                "    }\n" +
+//                "    }\n";
 
-                "    highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2\n" +
-                "    highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25\n" +
-                "                                              // radius squared for the smallest circle containing the 'square splat' is 0.5\n" +
-                "    if ( r_squared > 0.25 )\n" +
-                "        discard;\n" +
+        if (this._roundedSplats) {
+            splat_fs_src = splat_fs_src +
+                    "    highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2\n" +
+                    "    highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25\n" +
+                    "                                              // radius squared for the smallest circle containing the 'square splat' is 0.5\n" +
+                    "    if ( r_squared > 0.25 )\n" +
+                    "        discard;\n";
+        }
 
+        splat_fs_src = splat_fs_src +
                 "    gl_FragColor = texture2D( rgbImage, vTextureCoord );\n" +
                 "}\n";
 
