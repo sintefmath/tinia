@@ -7,7 +7,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._subscriptionCounter = 0;
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
-        this._splats = 128;
+        this._splats = 512;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
@@ -168,9 +168,9 @@ dojo.declare("gui.ProxyRenderer", null, {
         image.onload = dojo.hitch(this, function() {
             this.gl.bindTexture(this.gl.TEXTURE_2D, this.depthTexture);
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_NEAREST);
-            this.gl.generateMipmap(this.gl.TEXTURE_2D);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST); // _MIPMAP_NEAREST);
+            //this.gl.generateMipmap(this.gl.TEXTURE_2D);
             this.gl.bindTexture(this.gl.TEXTURE_2D, null);
             console.log("Updated texture (depth buffer)");
         });
@@ -185,9 +185,9 @@ dojo.declare("gui.ProxyRenderer", null, {
          image.onload = dojo.hitch(this, function() {
              this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture);
              this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_LINEAR);
-             this.gl.generateMipmap(this.gl.TEXTURE_2D);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEARES);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+             //this.gl.generateMipmap(this.gl.TEXTURE_2D);
              this.gl.bindTexture(this.gl.TEXTURE_2D, null);
              console.log("Updated texture (image)");
          });
@@ -197,9 +197,9 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     setViewMat: function( viewMatAsText, projMatAsText ) {
-        console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
-        console.log("                 view mat: " + viewMatAsText);
-        console.log("                 proj mat: " + projMatAsText);
+        console.log("proxyRendererPoints::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
+        console.log("                       view mat: " + viewMatAsText);
+        console.log("                       proj mat: " + projMatAsText);
         if (this._depth_matrices) {
 
             // Don't understand why these don't work...?!
