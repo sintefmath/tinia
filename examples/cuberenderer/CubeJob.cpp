@@ -63,7 +63,7 @@ void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
 
 bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
-    //usleep(200000);
+    usleep(200000);
 
     glEnable(GL_DEPTH_TEST);
 
