@@ -30,7 +30,7 @@ dojo.require("gui.ProxyRenderer");
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function (params) {
 
-        this._useAutoProxy = false;
+        this._useAutoProxy = true;
 
         if (!params.renderListURL) {
             params.renderListURL = "xml/getRenderList.xml";

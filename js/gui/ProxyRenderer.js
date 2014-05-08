@@ -7,100 +7,29 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._subscriptionCounter = 0;
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
-        this._splats = 512;
+        // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
+        this._splats_x = 16;
+        this._splats_y = 16;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
         this._splatOverlap = 2.0; // 1.4;
 
-        // the glPoints will be drawn as circular "sprites" if this is set.
-        this._roundedSplats = false;
-
 
         this.gl = glContext;
 
-        var splat_vs_src =
-                "attribute vec2 aVertexPosition;\n" +
-                "varying highp vec2 vTextureCoord;\n" + // Implicitly taken to be *output*?!
-                "uniform mat4 PM;\n" +
-                "uniform mat4 MV;\n" +
-                "uniform mat4 depthPMinv;\n" +
-                "uniform mat4 depthMVinv;\n" +
-                "uniform sampler2D uSampler;\n" +
-                "uniform float splatSize;\n" +
-                "varying highp float depth;\n" +
-                "void main(void) {\n" +
-
-                "    vec2 st = 0.5*(aVertexPosition.xy+1.0);\n" +
-                "    st.y=1.0-st.y; \n" +
-                "    vTextureCoord = st;\n" +
-                "    gl_PointSize = splatSize;\n" +
-
-//                "    // 8-bit version. Remember to fix in depth-reading code also, if changed.\n" +
-//                "    depth = texture2D( uSampler, st ).r;\n" +
-
-                "    // 16-bit version. Remember to fix in depth-reading code also, if changed.\n" +
-                "    depth = ( texture2D( uSampler, st ).r +\n" +
-                "              texture2D( uSampler, st ).g / 255.0 );\n" +
-
-                "    // 24-bit version. Remember to fix in depth-reading code also, if changed.\n" +
-//                "    depth = ( texture2D( uSampler, st ).r +\n" +
-//                "              texture2D( uSampler, st ).g / 255.0 +\n" +
-//                "              texture2D( uSampler, st ).b / (255.0*255.0) );\n" +
-
-                "    // We may think of the depth texture as a grid of screen space points together with\n" +
-                "    // depths, which we will subsample in order to get a sparser set of 'splats'.\n" +
-                "    // First, we obtain ndc coordinates.\n" +
-                "    float x_ndc = aVertexPosition.x;\n" +
-                "    float y_ndc = aVertexPosition.y;\n" +
-                "    float z_ndc = 2.0*depth - 1.0;\n" +
-
-                "    // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.\n" +
-                "    vec4 vert_eb = depthPMinv * vec4( x_ndc, y_ndc, z_ndc, 1.0 );\n" +
-                "    vec4 vert_wb = depthMVinv * vert_eb;\n" +
-
-                "    // Next, we apply the current transformation to get the proxy splat.\n" +
-                "    gl_Position = PM * MV * vert_wb;\n" +
-
-                "}\n";
-
-        var splat_fs_src =
-                "uniform sampler2D rgbImage;\n" +
-                "varying highp vec2 vTextureCoord;\n" +
-                "varying highp float depth;\n" +
-                "void main(void) {\n" +
-                "    // gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n" + // blue
-
-                // Hmm. Even when this is disabled, we still don't get all splats rendered. Why is this so? Shouldn't it be necessary with the discard here?!
-                // Ah. The explanation is that the splats are really rendered, but with the background color, so they are not visible!
-                "    if ( depth > 0.999 ) {\n" +
-                "        // The depth should be 1 for fragments not rendered. It may be a problem that depth\n" +
-                "        // input is 'varying'.\n" +
-                "        discard;\n" +
-                "        // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n" + // white
-                "        // return;\n" +
-                "    }\n";
-
-//        splat_fs_src = splat_fs_src +
-//                "    // Just to see if this ever happens...\n" +
-//                "    if ( depth < 0.01 ) {\n" +
-//                "        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n" + // yellow
-//                "        return;\n" +
-//                "    }\n";
-
-        if (this._roundedSplats) {
-            splat_fs_src = splat_fs_src +
-                    "    highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2\n" +
-                    "    highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25\n" +
-                    "                                              // radius squared for the smallest circle containing the 'square splat' is 0.5\n" +
-                    "    if ( r_squared > 0.25 )\n" +
-                    "        discard;\n";
-        }
-
-        splat_fs_src = splat_fs_src +
-                "    gl_FragColor = texture2D( rgbImage, vTextureCoord );\n" +
-                "}\n";
-
+        dojo.xhrGet( { url: "gui/autoProxy.fs",
+                        handleAs: "text",
+                        load: dojo.hitch(this, function(data, ioArgs) {
+                            this._splat_fs_src = data;
+                        })
+                    } );
+        dojo.xhrGet( { url: "gui/autoProxy.vs",
+                        handleAs: "text",
+                        load: dojo.hitch(this, function(data, ioArgs) {
+                            this._splat_vs_src = data;
+                        })
+                    } );
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
             this._subscriptionCounter++;
@@ -117,24 +46,31 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
         }));
 
-
         this.depthTexture = this.gl.createTexture();
         this.rgbTexture = this.gl.createTexture();
 
-
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
-        this._splatCoordinates = new Float32Array( this._splats*this._splats*2 );
-        for (i=0; i<this._splats; i++) {
-            for (j=0; j<this._splats; j++) {
-                this._splatCoordinates[(this._splats*i+j)*2     ] = (2.0*j)/this._splats - 1.0;
-                this._splatCoordinates[(this._splats*i+j)*2 + 1 ] = (2.0*i)/this._splats - 1.0;
+        this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
+        for (i=0; i<this._splats_y; i++) {
+            for (j=0; j<this._splats_x; j++) {
+                var u = (j+0.5)/this._splats_x;
+                var v = (i+0.5)/this._splats_y;
+                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
             }
         }
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
+        console.log("Constructor ended");
+    },
+
+
+    compileShaders: function() {
+        console.log("Shader source should now have been read from files, compiling and linking program...");
+
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-        this.gl.shaderSource(splat_fs, splat_fs_src);
+        this.gl.shaderSource(splat_fs, this._splat_fs_src);
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
             alert("An error occurred compiling the splat_fs: " + this.gl.getShaderInfoLog(splat_fs));
@@ -142,7 +78,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
 
         var splat_vs = this.gl.createShader(this.gl.VERTEX_SHADER);
-        this.gl.shaderSource(splat_vs, splat_vs_src);
+        this.gl.shaderSource(splat_vs, this._splat_vs_src);
         this.gl.compileShader(splat_vs);
         if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
             alert("An error occurred compiling the splat_vs: " + this.gl.getShaderInfoLog(splat_vs));
@@ -156,8 +92,6 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
             alert("Unable to initialize the shader program. (gl.LINK_STATUS not ok,)");
         }
-
-        console.log("Constructor ended");
     },
 
 
@@ -185,7 +119,7 @@ dojo.declare("gui.ProxyRenderer", null, {
          image.onload = dojo.hitch(this, function() {
              this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture);
              this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEARES);
+             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
              this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
              //this.gl.generateMipmap(this.gl.TEXTURE_2D);
              this.gl.bindTexture(this.gl.TEXTURE_2D, null);
@@ -197,9 +131,9 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     setViewMat: function( viewMatAsText, projMatAsText ) {
-        console.log("proxyRendererPoints::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
-        console.log("                       view mat: " + viewMatAsText);
-        console.log("                       proj mat: " + projMatAsText);
+        console.log("proxyRenderer::setViewMat: Setting view matrix from server, count = " + this._depthBufferCounter);
+        console.log("                 view mat: " + viewMatAsText);
+        console.log("                 proj mat: " + projMatAsText);
         if (this._depth_matrices) {
 
             // Don't understand why these don't work...?!
@@ -235,9 +169,11 @@ dojo.declare("gui.ProxyRenderer", null, {
     render: function(matrices) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-        // ----------------------------------- Rendering splats -----------------------------------------
+        if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
+            this.compileShaders();
+        }
 
-        if ( this._depth_matrices ) {
+        if ( (this._depth_matrices) && (this._splatProgram) ) {
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
             this.gl.enableVertexAttribArray( vertexPositionAttribute );
@@ -265,8 +201,23 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._depth_matrices.m_to_world );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
-                var splatSize = Math.max(this.gl.canvas.width, this.gl.canvas.height) / this._splats * this._splatOverlap;
+                var splatSizeX = this.gl.canvas.width  / this._splats_x;
+                var splatSizeY = this.gl.canvas.height / this._splats_y;
+                var splatSize = Math.max(splatSizeX, splatSizeY) * this._splatOverlap;
+                if ( Math.abs(splatSizeX-splatSizeY) > 0.001 ) {
+                    console.log("Viewport size and number of splats indicate that splats with non-unity aspect ratio has been requested!" +
+                                " x) " + splatSizeX + " y) " + splatSizeY + " used) " +splatSize);
+                }
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatSize"), splatSize );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "splats_x")) {
+                this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_x"), this._splats_x );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "splats_y")) {
+                this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_y"), this._splats_y );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "splatOverlap")) {
+                this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
             }
 
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -275,7 +226,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
             // this.gl.enable(this.gl.POINT_SPRITE);
             // this.gl.enable(this.gl.VERTEX_PROGRAM_POINT_SIZE);
-            this.gl.drawArrays(this.gl.POINTS, 0, this._splats*this._splats);
+            this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
         }
 
         // console.log("rendering");
