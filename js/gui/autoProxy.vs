@@ -32,9 +32,8 @@ void main(void)
 //               texture2D( uSampler, st ).g / 255.0 +
 //               texture2D( uSampler, st ).b / (255.0*255.0) );
 
-    // We may think of the depth texture as a grid of screen space points together with
-    // depths, which we will subsample in order to get a sparser set of 'splats'.
-    // First, we obtain ndc coordinates.
+    // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
+    // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
     float x_ndc = aVertexPosition.x;
     float y_ndc = aVertexPosition.y;
     float z_ndc = 2.0*depth - 1.0;

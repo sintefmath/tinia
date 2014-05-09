@@ -13,7 +13,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
-        this._splatOverlap = 2.0; // 1.4;
+        this._splatOverlap = 2.0; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
 
 
         this.gl = glContext;
@@ -167,13 +167,48 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     render: function(matrices) {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
             this.compileShaders();
         }
 
         if ( (this._depth_matrices) && (this._splatProgram) ) {
+
+            this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
+            // alpha=0 => snapshot visible in unset fragments, alpha=1 => "clear is opaque", i.e., no snapshot at all
+            // But only if rendering in shader with alpha=1?!
+            // And
+
+
+            // Strange... Blending disabled. Clearing done before proxy rendering. Then, ...
+
+            // clearColor with alpha=0, rendering proxy with alpha=1:
+            // snapShot lingers in un-re-rendered (by proxy geometry) parts of the image.
+            // But the background color specified is used around the snapShot fragments actually set, even though the
+            // snapShot itself should have another background (black)!
+
+            // clearColor with alpha=1, rendering proxy with alpha=1:
+            // More in line with expectations: no lingering snapShot at all.
+
+            // clearColor with alpha=1, rendering proxy with alpha=0.5:
+            // snapShot lingers not in un-re-rendered parts.
+            // But; lingers in re-rendered parts! As if blending was enabled.
+            // But if blending was being done, why does not the snapShot linger in un-re-rendered parts?! (because we cleared with alpha=1, and does not redraw with new alpha<1?)
+
+            // clearColor with alpha=0, rendering proxy with alpha=0.5:
+            // snapShot lingers in un-re-rendered parts.
+            // Also lingers in re-rendered parts! As if blending was enabled.
+            // In other words, both "effects" at the same time.
+
+
+
+
+            //            this.gl.enable(this.gl.BLEND);
+            this.gl.disable(this.gl.BLEND);
+//            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.SRC_ALPHA); // s-factor, d-factor
+//            this.gl.disable(this.gl.DEPTH_TEST);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
             this.gl.enableVertexAttribArray( vertexPositionAttribute );
@@ -220,12 +255,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
             }
 
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-            // GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
-            // this.gl.enable(this.gl.POINT_SPRITE);
-            // this.gl.enable(this.gl.VERTEX_PROGRAM_POINT_SIZE);
             this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
         }
 
