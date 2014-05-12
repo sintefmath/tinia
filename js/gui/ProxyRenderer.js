@@ -8,12 +8,15 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
-        this._splats_x = 16;
-        this._splats_y = 16;
+        this._splats_x = 32;
+        this._splats_y = 32;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
-        this._splatOverlap = 2.0; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
+        this._splatOverlap = 1.0; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
+
+        this._depthRingSize = 2;
+
 
 
         this.gl = glContext;
@@ -175,39 +178,44 @@ dojo.declare("gui.ProxyRenderer", null, {
         if ( (this._depth_matrices) && (this._splatProgram) ) {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
-            // alpha=0 => snapshot visible in unset fragments, alpha=1 => "clear is opaque", i.e., no snapshot at all
-            // But only if rendering in shader with alpha=1?!
-            // And
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-
-            // Strange... Blending disabled. Clearing done before proxy rendering. Then, ...
-
-            // clearColor with alpha=0, rendering proxy with alpha=1:
-            // snapShot lingers in un-re-rendered (by proxy geometry) parts of the image.
-            // But the background color specified is used around the snapShot fragments actually set, even though the
-            // snapShot itself should have another background (black)!
-
-            // clearColor with alpha=1, rendering proxy with alpha=1:
-            // More in line with expectations: no lingering snapShot at all.
-
-            // clearColor with alpha=1, rendering proxy with alpha=0.5:
-            // snapShot lingers not in un-re-rendered parts.
-            // But; lingers in re-rendered parts! As if blending was enabled.
-            // But if blending was being done, why does not the snapShot linger in un-re-rendered parts?! (because we cleared with alpha=1, and does not redraw with new alpha<1?)
-
-            // clearColor with alpha=0, rendering proxy with alpha=0.5:
-            // snapShot lingers in un-re-rendered parts.
-            // Also lingers in re-rendered parts! As if blending was enabled.
-            // In other words, both "effects" at the same time.
-
-
+            // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
+            //
+            // (Two different effects are observed with some settings: 1. snapshot is lingering behind proxy even when glClear is done,
+            // and 2. snapshot residuals are observed in cleared parts and redrawn (by proxy) parts.)
+            //
+            // clearColor A     Proxy rendered A    Result
+            // ------------------------------------------------------------------------------------
+            // 0                0                   snapShot lingers in un-re-rendered parts. (Seems less saturated, as if scaled with 0.5 perhaps)
+            //                                      New proxy seems to be blended with old image, get saturation in some places.
+            //
+            // 0                0.5                 snapShot lingers in un-re-rendered parts.
+            //                                      Also lingers in re-rendered parts! As if blending was enabled.
+            //                                      In other words, both "effects" at the same time.
+            //
+            // 0                1                   snapShot lingers in un-re-rendered (by proxy geometry) parts of the image.
+            //                                      But the background color specified is used around the snapShot fragments actually set, even though the
+            //                                      snapShot itself should have another background (black)!
+            //
+            // 1                0                   snapShot does not linger in un-re-rendered parts, here the clear-color is used
+            //                                      But; lingers in re-rendered parts! As if blending was enabled.
+            //                                      But if any sort of blending is being done, why does not the snapShot linger in un-re-rendered parts?!
+            //                                      (Why does the clear remove old snapshot from un-rendered parts but not those that are overdrawn with new proxy fragments?!)
+            //
+            // 1                0.5                 Sames as for proxy-alpha=1, but we get saturation in lesser extent (snapshot + proxy < 1 e.g. for snap-red + proxy-cyan)
+            //                                                                                                                                      (1, 0, 0)  + 0.5*(0, 1, 1) = (1, 0.5, 0.5)
+            //                                                                                                                      instead of      (1, 0, 0)  + 1.0*(0, 1, 1) = (1, 1, 1 ) it looks like...
+            //
+            // 1                1                   More in line with expectations: no lingering snapShot at all. Background cleared to selected color everywhere.
 
 
             //            this.gl.enable(this.gl.BLEND);
             this.gl.disable(this.gl.BLEND);
+
 //            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.SRC_ALPHA); // s-factor, d-factor
 //            this.gl.disable(this.gl.DEPTH_TEST);
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
 
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
