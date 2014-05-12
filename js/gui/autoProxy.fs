@@ -6,6 +6,7 @@ varying highp float depth;
 uniform highp float splats_x;
 uniform highp float splats_y;
 uniform highp float splatOverlap;
+uniform int splatSetIndex;
 
 
 
@@ -14,8 +15,11 @@ uniform highp float splatOverlap;
 //#define DEBUG_SHOW_CIRCULAR_COMPLEMENT
 //#define DEBUG_SHOW_NON_OVERLAP_SQUARE
 //#define DEBUG_SHOW_SPLAT_CENTER
+#define DEBUG_SPLAT_SET_COLOUR
 
 //#define DECAYING_SPLATS
+
+#define PI 3.1415926535
 
 
 
@@ -93,5 +97,31 @@ void main(void)
     if ( dot(c, c) <= 0.003 ) {
         gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
     }
+#endif
+
+#ifdef DEBUG_SPLAT_SET_COLOUR
+    highp float al = atan(-c.y, c.x);
+    if (splatSetIndex==0) {
+        if (! ((al>=0.0) && (al<0.5*PI)) ) discard;
+        gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
+    }
+    if (splatSetIndex==1) {
+        if (! ((al>=0.5*PI) && (al<PI)) ) discard;
+        gl_FragColor = vec4(0.0, 1.0, 0.0, src_alpha);
+    }
+    if (splatSetIndex==2) {
+        if (! ((al>=PI) && (al<1.5*PI)) ) discard;
+        gl_FragColor = vec4(0.0, 0.0, 1.0, src_alpha);
+    }
+    if (splatSetIndex==3) {
+        if (! ((al>=1.5*PI) && (al<2.0*PI)) ) discard;
+        gl_FragColor = vec4(1.0, 1.0, 0.0, src_alpha); // 3) yellow?
+    }
+    if (splatSetIndex==4)
+        gl_FragColor = vec4(0.0, 1.0, 1.0, src_alpha); // 4) cyan?
+    if (splatSetIndex==5)
+        gl_FragColor = vec4(1.0, 0.0, 1.0, src_alpha); // 5) magenta?
+    if (splatSetIndex==6)
+        gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
 #endif
 }

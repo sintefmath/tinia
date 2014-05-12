@@ -122,6 +122,8 @@ dojo.declare("gui.ProxyRenderer", null, {
     setDepthData: function(imageAsText, depthBufferAsText, viewMatAsText, projMatAsText) {
         this._depthBufferCounter++;
         console.log("setDepthBuffer: Setting buffer, count = " + this._depthBufferCounter);
+
+        this._depthRingCursor = (this._depthRingCursor + 1) % this._depthRingSize;
         this._proxyModelRing[this._depthRingCursor].setNotReady();
         this._proxyModelRing[this._depthRingCursor].setDepthBuffer(depthBufferAsText);
         this._proxyModelRing[this._depthRingCursor].setRGBimage(imageAsText);
@@ -136,7 +138,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.compileShaders();
         }
 
-        if ( (this._proxyModelRing[this._depthRingCursor].isReady()) && (this._splatProgram) ) {
+        if (this._splatProgram) {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -184,25 +186,11 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
 
-            this.gl.activeTexture(this.gl.TEXTURE0);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[this._depthRingCursor].depthTexture);
-            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
-
-            this.gl.activeTexture(this.gl.TEXTURE1);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[this._depthRingCursor].rgbTexture);
-            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
-
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "PM")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._proxyModelRing[this._depthRingCursor].projection_inverse );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
-                this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelRing[this._depthRingCursor].to_world );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
                 var splatSizeX = this.gl.canvas.width  / this._splats_x;
@@ -214,6 +202,9 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatSize"), splatSize );
             }
+            if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
+            }
             if (this.gl.getUniformLocation(this._splatProgram, "splats_x")) {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_x"), this._splats_x );
             }
@@ -224,10 +215,29 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
             }
 
-            this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
-            this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
-        }
+            for (i=0; i<this._depthRingSize; i++) {
+                if (this._proxyModelRing[i].isReady()) {
 
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[i].depthTexture);
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
+
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[i].rgbTexture);
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
+
+                    if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._proxyModelRing[i].projection_inverse );
+                    }
+                    if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelRing[i].to_world );
+                    }
+
+                    this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
+                    this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
+                }
+            } // end of loop over depth buffers
+        }
         // console.log("rendering");
     }
 
