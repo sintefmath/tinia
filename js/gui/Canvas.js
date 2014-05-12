@@ -358,19 +358,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
-
         this._img.src = "data:image/png;base64," + response_rgb;
-
         if (this._proxyRenderer) {
-            this._proxyRenderer.setRGBimage(response_rgb);
-            this._proxyRenderer.setDepthBuffer(response_depth);
-            this._proxyRenderer.setViewMat(response_view, response_proj);
+            this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
         }
-
         // This would show the image from the server, if it was the rgb-image.
         // When it is the depth buffer, it may look "funny".
         this._showCorrect();
-
         return response_rgb;
     },
 
