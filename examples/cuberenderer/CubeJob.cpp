@@ -42,16 +42,61 @@ CubeJob::CubeJob()
 {
 }
 
+
 bool CubeJob::init()
 {
     tinia::model::Viewer viewer;
     m_model->addElement("viewer", viewer);
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
+#if 0
     m_model->setGUILayout(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"),
                           tinia::model::gui::DESKTOP);
+#else
+
+    // Adding variables to the model
+    {
+        m_model->addElement<bool>( "debugmode", false );
+        m_model->addAnnotation("debugmode", "Color splats according to buffer index (0=red, g, b, y, c, m)");
+        m_model->addElement<bool>( "decaymode", false );
+        m_model->addAnnotation("decaymode", "Splats decaying from center");
+        m_model->addConstrainedElement<int>("x", 470, 0, 999);
+        m_model->addAnnotation("x", "x)");
+    }
+
+    // Setting up the mainGrid containing the GUI elements
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 1);
+    {
+        int row = 0;
+#if 0
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("x"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("x", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("x", true));
+        row++;
+#endif
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugmode"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decaymode"));
+        row++;
+        // More elements...
+    }
+
+    // Setting up root consisting of canvas + mainGrid
+    {
+        tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
+        {
+            tinia::model::gui::Canvas *canvas = new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox" );
+            rootLayout->addChild(canvas);
+        }
+        rootLayout->addChild(mainGrid);
+        m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
+    }
+
+#endif
+
     return true;
 }
+
 
 CubeJob::~CubeJob()
 {

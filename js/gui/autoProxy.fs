@@ -10,14 +10,16 @@ uniform int splatSetIndex;
 
 
 
+// For debugging
+uniform int debugSplatCol;
+uniform int decayMode;
+
 #define CIRCULAR_SPLATS
 
 //#define DEBUG_SHOW_CIRCULAR_COMPLEMENT
 //#define DEBUG_SHOW_NON_OVERLAP_SQUARE
 //#define DEBUG_SHOW_SPLAT_CENTER
 #define DEBUG_SPLAT_SET_COLOUR
-
-//#define DECAYING_SPLATS
 
 #define PI 3.1415926535
 
@@ -54,7 +56,7 @@ void main(void)
 
     // This is useful if blending is enabled with blend_func(0.5, 0.5) and depth testing disabled, and will
     // cause the accumulated color to not be less than 1
-    decay = decay * 10.0;
+    // decay = decay * 10.0;
     
 #if 0
     // Decay factor < 1.0 only outside of normal-sized splat
@@ -69,11 +71,10 @@ void main(void)
 
     // Adjusting for intra-splat texture coordinate
     highp vec2 tc = vTextureCoord + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
-#ifdef DECAYING_SPLATS
+    if (decayMode==0) {
+        decay = 1.0;
+    }
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
-#else
-    gl_FragColor = vec4(         texture2D( rgbImage, tc ).xyz, src_alpha );
-#endif
     
 #if defined(CIRCULAR_SPLATS) && defined(DEBUG_SHOW_CIRCULAR_COMPLEMENT)
     // To help visualizing the splats during testing/debugging, outside of circular splats padded with white to squares
@@ -100,28 +101,32 @@ void main(void)
 #endif
 
 #ifdef DEBUG_SPLAT_SET_COLOUR
-    highp float al = atan(-c.y, c.x);
-    if (splatSetIndex==0) {
-        if (! ((al>=0.0) && (al<0.5*PI)) ) discard;
-        gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
+    if (debugSplatCol>0) {
+        highp float al = atan(-c.y, c.x);
+        if (al<0.0)
+            al = al + 2.0*PI;
+        if (splatSetIndex==0) {
+            if (! ((al>=0.0) && (al<0.5*PI)) ) discard;
+            gl_FragColor = vec4(decay, 0.0, 0.0, src_alpha);
+        }
+        if (splatSetIndex==1) {
+            if (! ((al>=0.5*PI) && (al<PI)) ) discard;
+            gl_FragColor = vec4(0.0, decay, 0.0, src_alpha);
+        }
+        if (splatSetIndex==2) {
+            if (! ((al>=PI) && (al<1.5*PI)) ) discard;
+            gl_FragColor = vec4(0.0, 0.0, decay, src_alpha);
+        }
+        if (splatSetIndex==3) {
+            if (! ((al>=1.5*PI) && (al<2.0*PI)) ) discard;
+            gl_FragColor = vec4(decay, decay, 0.0, src_alpha); // 3) yellow?
+        }
+        if (splatSetIndex==4)
+            gl_FragColor = vec4(0.0, decay, decay, src_alpha); // 4) cyan?
+        if (splatSetIndex==5)
+            gl_FragColor = vec4(decay, 0.0, decay, src_alpha); // 5) magenta?
+        if (splatSetIndex==6)
+            gl_FragColor = vec4(decay, decay, decay, src_alpha);
     }
-    if (splatSetIndex==1) {
-        if (! ((al>=0.5*PI) && (al<PI)) ) discard;
-        gl_FragColor = vec4(0.0, 1.0, 0.0, src_alpha);
-    }
-    if (splatSetIndex==2) {
-        if (! ((al>=PI) && (al<1.5*PI)) ) discard;
-        gl_FragColor = vec4(0.0, 0.0, 1.0, src_alpha);
-    }
-    if (splatSetIndex==3) {
-        if (! ((al>=1.5*PI) && (al<2.0*PI)) ) discard;
-        gl_FragColor = vec4(1.0, 1.0, 0.0, src_alpha); // 3) yellow?
-    }
-    if (splatSetIndex==4)
-        gl_FragColor = vec4(0.0, 1.0, 1.0, src_alpha); // 4) cyan?
-    if (splatSetIndex==5)
-        gl_FragColor = vec4(1.0, 0.0, 1.0, src_alpha); // 5) magenta?
-    if (splatSetIndex==6)
-        gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
 #endif
 }

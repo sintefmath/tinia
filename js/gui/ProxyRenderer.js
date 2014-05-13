@@ -17,6 +17,8 @@
  */
 
 dojo.require("gui.ProxyModel");
+dojo.require("gui.ProxyModelCoverageGrid");
+dojo.require("gui.ProxyModelCoverageAngles");
 
 dojo.declare("gui.ProxyRenderer", null, {
 
@@ -25,20 +27,21 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
-        this._splats_x = 32;
-        this._splats_y = 32;
+        this._splats_x = 16;
+        this._splats_y = 16;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
         this._splatOverlap = 1.0; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
 
-        this._depthRingSize = 2;
+        this._depthRingSize = 4;
+
+        this._coverageGridSize = 10;
 
         // ---------------- End of configuration section -----------------
 
-        this._depthBufferCounter = 0;
-        this._subscriptionCounter = 0;
         this.gl = glContext;
+        this.exposedModel = exposedModel;
         this._depthRingCursor = 0;
 
         dojo.xhrGet( { url: "gui/autoProxy.fs",
@@ -55,8 +58,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                     } );
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
-            this._subscriptionCounter++;
-            console.log("Subscriber: Setting matrices, _subscriptionCounter: " + this._subscriptionCounter);
+            console.log("Subscriber: Setting matrices");
             var viewer = exposedModel.getElementValue(viewerKey);
             // These are matrices available when we set the depth texture. But are these the exact
             // matrices used by the server to produce the depth image? Or do they just coincide
@@ -72,6 +74,9 @@ dojo.declare("gui.ProxyRenderer", null, {
         for (i=0; i<this._depthRingSize; i++) {
             this._proxyModelRing[i] = new gui.ProxyModel(this.gl);
         }
+
+//        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
+        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize);
 
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
@@ -120,16 +125,15 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     setDepthData: function(imageAsText, depthBufferAsText, viewMatAsText, projMatAsText) {
-        this._depthBufferCounter++;
-        console.log("setDepthBuffer: Setting buffer, count = " + this._depthBufferCounter);
+        console.log("setDepthData: Considering setting buffer");
+
+        var tmpProxyModel = new gui.ProxyModel(this.gl);
+        tmpProxyModel.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
 
         this._depthRingCursor = (this._depthRingCursor + 1) % this._depthRingSize;
-        this._proxyModelRing[this._depthRingCursor].setNotReady();
-        this._proxyModelRing[this._depthRingCursor].setDepthBuffer(depthBufferAsText);
-        this._proxyModelRing[this._depthRingCursor].setRGBimage(imageAsText);
-        this._proxyModelRing[this._depthRingCursor].setMatrices(viewMatAsText, projMatAsText);
-        // console.log("Depth buffer set");
-     },
+
+        this._proxyModelRing[this._depthRingCursor] = tmpProxyModel;
+    },
 
 
     render: function(matrices) {
@@ -186,6 +190,14 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
 
+            var debugmode = this.exposedModel.getElementValue("debugmode");
+            if (this.gl.getUniformLocation(this._splatProgram, "debugSplatCol")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "debugSplatCol"), debugmode );
+            }
+            var decayMode = this.exposedModel.getElementValue("decaymode");
+            if (this.gl.getUniformLocation(this._splatProgram, "decayMode")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "decayMode"), decayMode );
+            }
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
             }
@@ -202,9 +214,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatSize"), splatSize );
             }
-            if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
-            }
             if (this.gl.getUniformLocation(this._splatProgram, "splats_x")) {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_x"), this._splats_x );
             }
@@ -214,26 +223,25 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "splatOverlap")) {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
             }
+            this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
             for (i=0; i<this._depthRingSize; i++) {
                 if (this._proxyModelRing[i].isReady()) {
-
+                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
+                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
+                    }
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[i].depthTexture);
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
-
                     this.gl.activeTexture(this.gl.TEXTURE1);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelRing[i].rgbTexture);
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
-
                     if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._proxyModelRing[i].projection_inverse );
                     }
                     if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelRing[i].to_world );
                     }
-
-                    this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             } // end of loop over depth buffers
