@@ -145,18 +145,73 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
     processDepthDataReplaceFarthestAway: function(model) {
         // console.log("processDepthDataReplaceFarthestAway: Considering adding new proxy model");
-        if ( model != 2 ) {
+        if ( model.state != 2 ) {
             throw "processDepthDataReplaceFarthestAway: Incomplete proxy model - cannot process this!";
         }
 
         // if there is an unused slot, add the new proxy model.
-        // If not, replace the one farthest away from it, with the new one.
-//        var slot = this._proxyModelCoverage.bestSlot(this._proxyModelBeingProcessed);
-//        // console.log("processDepthDataReplaceFarthestAway slot: " + slot);
-//        this._proxyModelRing[slot] = this._proxyModelBeingProcessed;
-//        this._proxyModelCoverage.update(this._proxyModelBeingProcessed, slot);
+        // If not, replace the one with (direction, scaling) farthest away from the new one.
 
-        model = new gui.ProxyModel(this._gl);
+        var addModel = false;
+
+        // For this strategy, the cursor is not really important, but we can use it to detect whether or not we have filled the ring so far
+        this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+        if ( this.proxyModelRing[this._depthRingCursor].state == 0 ) {
+            // The ring has not been filled, no need to find a model to throw out, we simply add the new one to the set
+            // console.log("processDepthDataReplaceFarthestAway: ring not full, inserting directly");
+            addModel = true;
+        } else {
+            var dir = vec3.create( [-model.to_world[8],
+                                    -model.to_world[9],
+                                    -model.to_world[10]] );
+            vec3.normalize(dir);
+            // console.log("processDepthDataReplaceOldestWhenDifferent: dir                  = " + dir[0] + " " + dir[1] + " " + dir[2]);
+            var dist = vec3.create( [-model.to_world[12],
+                                     -model.to_world[13],
+                                     -model.to_world[14]] );
+            var zoom = vec3.length(mostRecentlyAddedDist) / vec3.length(dist);
+            console.log("processDepthDataReplaceOldestWhenDifferent: zoom factor = " + zoom);
+
+            // We will now loop through the ring and find the one to throw out
+            var worst_indx = 0;
+            var worst_angle = 0.0;
+            var worst_zoom = 0.0;
+            for (i=0; i<this._ringSize; i++) {
+                // An assertion that should be removed when not debugging
+                if ( this.proxyModelRing[this._depthRingCursor].state != 2 ) {
+                    throw "processDepthDataReplaceOldestWhenDifferent: Incomplete proxy model added to ring.";
+                }
+
+//                // console.log("processDepthDataReplaceOldestWhenDifferent: There is a recently added model in slot " + this.__depthRingCursor + ", comparing directions...");
+//                var mostRecentlyAddedDir = vec3.create( [-this.proxyModelRing[this._depthRingCursor].to_world[8],
+//                                                         -this.proxyModelRing[this._depthRingCursor].to_world[9],
+//                                                         -this.proxyModelRing[this._depthRingCursor].to_world[10]] );
+//                vec3.normalize(mostRecentlyAddedDir);
+//                // console.log("processDepthDataReplaceOldestWhenDifferent: mostRecentlyAddedDir = " + mostRecentlyAddedDir[0] + " " + mostRecentlyAddedDir[1] + " " + mostRecentlyAddedDir[2]);
+//                var cosAngle = vec3.dot( mostRecentlyAddedDir, dir );
+//                console.log("processDepthDataReplaceOldestWhenDifferent: angle = " + Math.acos(Math.min(1.0, cosAngle))/3.1415926535*180.0 + " (cosAngle = " + cosAngle + ")");
+//                var mostRecentlyAddedDist = vec3.create( [-this.proxyModelRing[this._depthRingCursor].to_world[12],
+//                                                          -this.proxyModelRing[this._depthRingCursor].to_world[13],
+//                                                          -this.proxyModelRing[this._depthRingCursor].to_world[14]] );
+//                if ( (cosAngle<Math.cos(this._proxyModelReplacementAngle)) || (zoom>this._proxyModelReplacementZoom) ) {
+//                    addModel = true;
+//                }
+            }
+
+            // we have what we need. only replace if sufficiently bad
+            // set addModel if we are to add, and also set ringCurs to proper value
+
+        }
+
+        // Same as before. No! Should not set to the ring Cursor + 1. Should set to ringCursor, so the value gets correct for later usage.
+        if (addModel) {
+            this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+            this.proxyModelRing[this._depthRingCursor] = model;
+            console.log("processDepthDataReplaceOldestWhenDifferent: inserted into slot " + this._depthRingCursor);
+        } else {
+            // console.log("processDepthDataReplaceOldestWhenDifferent: not inserting model");
+        }
+
     },
 
 
