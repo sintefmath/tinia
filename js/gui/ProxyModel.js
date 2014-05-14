@@ -30,7 +30,7 @@ dojo.declare("gui.ProxyModel", null, {
         this.from_world         = mat4.create();
         this.to_world           = mat4.create();
         this.state              = 0; // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
-        console.log("ProxyModel constructor ended");
+        // console.log("ProxyModel constructor ended");
     },
 
 
@@ -63,7 +63,7 @@ dojo.declare("gui.ProxyModel", null, {
                 this.to_world           = mat4.inverse(mat4.create( this.from_world ));
 
                 this.state = 2;
-                console.log("setAll: Load process for image-as-text data complete.");
+                // console.log("setAll: Load process for image-as-text data complete.");
             });
             rgbImage.src = "data:image/png;base64," + imageAsText;
 

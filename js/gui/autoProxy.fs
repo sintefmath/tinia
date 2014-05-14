@@ -13,6 +13,7 @@ uniform int splatSetIndex;
 // For debugging
 uniform int debugSplatCol;
 uniform int decayMode;
+uniform int pieSplats;
 
 #define CIRCULAR_SPLATS
 
@@ -106,19 +107,23 @@ void main(void)
         if (al<0.0)
             al = al + 2.0*PI;
         if (splatSetIndex==0) {
-            if (! ((al>=0.0) && (al<0.5*PI)) ) discard;
+            if ( (pieSplats>0) && (! ((al>=0.0) && (al<0.5*PI)) ) )
+                discard;
             gl_FragColor = vec4(decay, 0.0, 0.0, src_alpha);
         }
         if (splatSetIndex==1) {
-            if (! ((al>=0.5*PI) && (al<PI)) ) discard;
+            if ( (pieSplats>0) && (! ((al>=0.5*PI) && (al<PI)) ) )
+                discard;
             gl_FragColor = vec4(0.0, decay, 0.0, src_alpha);
         }
         if (splatSetIndex==2) {
-            if (! ((al>=PI) && (al<1.5*PI)) ) discard;
+            if ( (pieSplats>0) && (! ((al>=PI) && (al<1.5*PI)) ) )
+                discard;
             gl_FragColor = vec4(0.0, 0.0, decay, src_alpha);
         }
         if (splatSetIndex==3) {
-            if (! ((al>=1.5*PI) && (al<2.0*PI)) ) discard;
+            if ( (pieSplats>0) && (! ((al>=1.5*PI) && (al<2.0*PI)) ) )
+                discard;
             gl_FragColor = vec4(decay, decay, 0.0, src_alpha); // 3) yellow?
         }
         if (splatSetIndex==4)
@@ -126,7 +131,13 @@ void main(void)
         if (splatSetIndex==5)
             gl_FragColor = vec4(decay, 0.0, decay, src_alpha); // 5) magenta?
         if (splatSetIndex==6)
-            gl_FragColor = vec4(decay, decay, decay, src_alpha);
+            gl_FragColor = vec4(0.5*decay, 0.0, 0.0, src_alpha);
+        if (splatSetIndex==7)
+            gl_FragColor = vec4(0.0, 0.5*decay, 0.0, src_alpha);
+        if (splatSetIndex==8)
+            gl_FragColor = vec4(0.0, 0.0, 0.5*decay, src_alpha);
+        if (splatSetIndex==9)
+            gl_FragColor = vec4(0.5*decay, 0.5*decay, 0.0, src_alpha);
     }
 #endif
 }
