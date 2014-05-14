@@ -23,43 +23,47 @@ dojo.provide("gui.ProxyModel");
 dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
 
-    constructor: function(glContext, ringSize) {
-        this.gl = glContext;
+    constructor: function(ringSize) {
+        console.log("ProxyModelCoverageAngles constructor: " + ringSize);
         this._direction = new Array(ringSize);
-        this._dirSet    = new Array(ringSize);
-        for (i=0; i<ringSize; i++) {
-            this._direction[i] = vec3.create([0,0,0]);
-            this._dirSet[i] = false;
-        }
+        this._ringSize = ringSize;
+        this._nextFreeSlot = 0;
         console.log("ProxyModelCoverageAngles constructor ended");
     },
 
 
-    findDirection: function(mv, pm) {
-//        var Mat4 mv_inv = inverse( mv );
-//        return -mv_inv[2];
-    },
-
-
-    addNewDirection: function(mv, pm, indx) {
-        this._direction[i] = findDirection(mv, pm);
-        this._dirSet[i]    = true;
-    },
-
-
-    newDirectionDistToCollection: function(mv, pm, splats) {
-        var newBinsFilled = 0;
-        for (i=0; i<splats.length; i++) {
-            var v = pm * mv * splats[i];
-            var bin_i = 0; // plane
-            var bin_j = 0; // row
-            var bin_k = 0; // column
-            if ( this._coverage[ (bin_i * this._gridSize + bin_j) * this._gridSize + bin_k ] > 0 ) {
-                newBinsFilled++;
+    // If there is a free slot, we return that.
+    // If not, the slot for the proxy model farthest away is returned.
+    // It is assumed that the caller will make use of the slot, i.e., it will be flagged as in use after this call.
+    bestSlot: function(model) {
+        console.log("bestSlot: nextFreeSlot=" + this._nextFreeSlot + " ringSize=" + this._ringSize);
+        if (this._nextFreeSlot<this._ringSize) {
+            this._nextFreeSlot++;
+            console.log("bestSlot: returning slot " + (this._nextFreeSlot-1));
+            return this._nextFreeSlot-1;
+        } else {
+            var dir   = vec3.create( [-model.to_world[8], -model.to_world[9], -model.to_world[10]] );
+            var bestAngle = vec3.dot( dir, this._direction[0] );
+            console.log("bestSlot: first angle: " + bestAngle);
+            var bestI = 0;
+            for (i=1; i<this._ringSize; i++) {
+                var cosAngle = vec3.dot( dir, this._direction[i] );
+                console.log("bestSlot: angle for i=" + i + ": " + cosAngle);
+                if (cosAngle<bestAngle) {
+                    bestAngle = cosAngle;
+                    bestI = i;
+                }
             }
+            return bestI;
         }
-        return newBinsFilled;
-    }
+    },
+
+
+    update: function(model, slot) {
+        var d = vec3.create( [-model.to_world[8], -model.to_world[9], -model.to_world[10]] );
+        console.log("update: Setting dir for slot i=" + slot + " to: " + d[0] + " " + d[1] + " " + d[2]);
+        this._direction[slot] = vec3.create( [-model.to_world[8], -model.to_world[9], -model.to_world[10]] );
+    },
 
 
 });

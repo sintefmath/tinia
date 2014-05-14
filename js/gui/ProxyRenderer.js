@@ -57,18 +57,22 @@ dojo.declare("gui.ProxyRenderer", null, {
                         })
                     } );
 
-        dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
-            console.log("Subscriber: Setting matrices");
-            var viewer = exposedModel.getElementValue(viewerKey);
-            // These are matrices available when we set the depth texture. But are these the exact
-            // matrices used by the server to produce the depth image? Or do they just coincide
-            // more or less in time? This was the first attempt. It does not look quite right, but what is really the problem?
-            // It becomes much better when we use the matrices passed along with the depth buffer itself, see method setViewMat below.
-            this._proxyModelRing[this._depthRingCursor].projection         = viewer.getElementValue("projection");
-            this._proxyModelRing[this._depthRingCursor].projection_inverse = mat4.inverse(mat4.create(viewer.getElementValue("projection")));
-            this._proxyModelRing[this._depthRingCursor].to_world           = mat4.inverse(mat4.create(viewer.getElementValue("modelview")));
-            this._proxyModelRing[this._depthRingCursor].from_world         = viewer.getElementValue("modelview");
-        }));
+        // 140514: For some reason, this does not seem to work as intended. This code should be removed.
+//        dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function(xml) {
+//            console.log("Subscriber: Setting matrices");
+//            var viewer = exposedModel.getElementValue(viewerKey);
+//            // These are matrices available when we set the depth texture. But are these the exact
+//            // matrices used by the server to produce the depth image? Or do they just coincide
+//            // more or less in time? This was the first attempt. It does not look quite right, but what is really the problem?
+//            // It becomes much better when we use the matrices passed along with the depth buffer itself, see method setViewMat below.
+//            this._proxyModelRing[this._depthRingCursor].projection         = viewer.getElementValue("projection");
+//            this._proxyModelRing[this._depthRingCursor].projection_inverse = mat4.inverse(mat4.create(viewer.getElementValue("projection")));
+//            this._proxyModelRing[this._depthRingCursor].to_world           = mat4.inverse(mat4.create(viewer.getElementValue("modelview")));
+//            this._proxyModelRing[this._depthRingCursor].from_world         = viewer.getElementValue("modelview");
+//        }));
+
+        // This solution amounts to a one-element cache/ring, and could be extended.
+        this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
         this._proxyModelRing = new Array(this._depthRingSize);
         for (i=0; i<this._depthRingSize; i++) {
@@ -76,7 +80,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
 
 //        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
-        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize);
+        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this._depthRingSize);
 
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
@@ -91,7 +95,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
-        console.log("Constructor ended");
+        console.log("ProxyRenderer constructor ended");
     },
 
 
@@ -125,14 +129,92 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     setDepthData: function(imageAsText, depthBufferAsText, viewMatAsText, projMatAsText) {
-        console.log("setDepthData: Considering setting buffer");
+        console.log("setDepthData: Starting load process for image-as-text data");
+        this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
+    },
 
-        var tmpProxyModel = new gui.ProxyModel(this.gl);
-        tmpProxyModel.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
 
+    // We cannot do this as part of setDepthData due to the asynchronous nature of the latter.
+    processDepthDataReplaceOldest: function() {
+        console.log("processDepthDataReplaceOldest: Considering adding new proxy model");
+        if ( this._proxyModelBeingProcessed.state != 2 ) {
+            throw "processDepthDataReplaceOldest: Incomplete proxy model - cannot process this!";
+        }
+
+        // Simply replacing the oldest proxy model with the new one.
         this._depthRingCursor = (this._depthRingCursor + 1) % this._depthRingSize;
+        this._proxyModelRing[this._depthRingCursor] = this._proxyModelBeingProcessed;
+        console.log("processDepthDataReplaceOldest: inserted into slot " + this._depthRingCursor);
 
-        this._proxyModelRing[this._depthRingCursor] = tmpProxyModel;
+        this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
+    },
+
+
+    // We cannot do this as part of setDepthData due to the asynchronous nature of the latter.
+    processDepthDataReplaceOldestWhenDifferent: function() {
+        console.log("processDepthDataReplaceOldestWhenDifferent: Considering adding new proxy model");
+        if ( this._proxyModelBeingProcessed.state != 2 ) {
+            throw "processDepthDataReplaceOldestWhenDifferent: Incomplete proxy model - cannot process this!";
+        }
+
+        // Skip if the new one is close to the most recently added. Otherwise, go for strategy processDepthDataReplaceOldest.
+        var addModel = false;
+        if ( this._proxyModelRing[this._depthRingCursor].state == 0 ) {
+            // There is not a "most recently added model", i.e., this is the first to be added, so we add it unconditionally
+            console.log("processDepthDataReplaceOldestWhenDifferent: No recently added model, adding one. cursor=" + this._depthRingCursor);
+            addModel = true;
+        } else {
+
+            console.log("processDepthDataReplaceOldestWhenDifferent: Most recently added model: " + JSON.stringify(this._proxyModelRing[this._depthRingCursor]));
+
+            // There is a "most recently added model", i.e., we can compare directions
+            if ( this._proxyModelRing[this._depthRingCursor].state != 2 ) {
+                throw "processDepthDataReplaceOldestWhenDifferent: Incomplete proxy model added to ring.";
+            }
+            console.log("processDepthDataReplaceOldestWhenDifferent: There is a recently added model in slot " + this._depthRingCursor + ", comparing directions...");
+            var mostRecentlyAddedDir = vec3.create( [-this._proxyModelRing[this._depthRingCursor].to_world[8],
+                                                     -this._proxyModelRing[this._depthRingCursor].to_world[9],
+                                                     -this._proxyModelRing[this._depthRingCursor].to_world[10]] );
+            vec3.normalize(mostRecentlyAddedDir);
+            console.log("processDepthDataReplaceOldestWhenDifferent: mostRecentlyAddedDir = " + mostRecentlyAddedDir[0] + " " + mostRecentlyAddedDir[1] + " " + mostRecentlyAddedDir[2]);
+            var dir = vec3.create( [-this._proxyModelBeingProcessed.to_world[8],
+                                    -this._proxyModelBeingProcessed.to_world[9],
+                                    -this._proxyModelBeingProcessed.to_world[10]] );
+            vec3.normalize(dir);
+            console.log("processDepthDataReplaceOldestWhenDifferent: dir                  = " + dir[0] + " " + dir[1] + " " + dir[2]);
+            var cosAngle = vec3.dot( mostRecentlyAddedDir, dir );
+            console.log("processDepthDataReplaceOldestWhenDifferent: angle = " + Math.acos(Math.min(1.0, cosAngle))/3.1415926535*180.0 + " (cosAngle = " + cosAngle + ")");
+            if ( cosAngle < Math.cos(3.1415/4.0) ) {
+                addModel = true;
+            }
+        }
+        if (addModel) {
+            this._depthRingCursor = (this._depthRingCursor + 1) % this._depthRingSize;
+            this._proxyModelRing[this._depthRingCursor] = this._proxyModelBeingProcessed;
+            console.log("processDepthDataReplaceOldestWhenDifferent: inserted into slot " + this._depthRingCursor);
+        } else {
+            console.log("processDepthDataReplaceOldestWhenDifferent: not inserting model");
+        }
+
+        this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
+    },
+
+
+    // We cannot do this as part of setDepthData due to the asynchronous nature of the latter.
+    processDepthDataReplaceFarthestAway: function() {
+        console.log("processDepthDataReplaceFarthestAway: Considering adding new proxy model");
+        if ( this._proxyModelBeingProcessed.state != 2 ) {
+            throw "processDepthDataReplaceFarthestAway: Incomplete proxy model - cannot process this!";
+        }
+
+        // if there is an unused slot, add the new proxy model.
+        // If not, replace the one farthest away from it, with the new one.
+        var slot = this._proxyModelCoverage.bestSlot(this._proxyModelBeingProcessed);
+        console.log("processDepthDataReplaceFarthestAway slot: " + slot);
+        this._proxyModelRing[slot] = this._proxyModelBeingProcessed;
+        this._proxyModelCoverage.update(this._proxyModelBeingProcessed, slot);
+
+        this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
     },
 
 
@@ -140,6 +222,10 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
             this.compileShaders();
+        }
+
+        if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
+            this.processDepthDataReplaceOldestWhenDifferent();
         }
 
         if (this._splatProgram) {
@@ -170,7 +256,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             //                                      But if any sort of blending is being done, why does not the snapShot linger in un-re-rendered parts?!
             //                                      (Why does the clear remove old snapshot from un-rendered parts but not those that are overdrawn with new proxy fragments?!)
             //
-            // 1                0.5                 Sames as for proxy-alpha=1, but we get saturation in lesser extent (snapshot + proxy < 1 e.g. for snap-red + proxy-cyan)
+            // 1                0.5                 Same as for proxy-alpha=1, but we get saturation in lesser extent (snapshot + proxy < 1 e.g. for snap-red + proxy-cyan)
             //                                                                                                                                      (1, 0, 0)  + 0.5*(0, 1, 1) = (1, 0.5, 0.5)
             //                                                                                                                      instead of      (1, 0, 0)  + 1.0*(0, 1, 1) = (1, 1, 1 ) it looks like...
             //
@@ -226,7 +312,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
             for (i=0; i<this._depthRingSize; i++) {
-                if (this._proxyModelRing[i].isReady()) {
+                if (this._proxyModelRing[i].state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
                     }

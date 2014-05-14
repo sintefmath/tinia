@@ -27,7 +27,7 @@ dojo.declare("gui.ProxyModelCoverageGrid", null, {
         for (i=0; i<gridSize*gridSize*gridSize; i++)
             this._coverage[i] = 0;
         this._subGrid = null;
-        console.log("Constructor ended");
+        console.log("ProxyModelCoverageGrid constructor ended");
     },
 
 
