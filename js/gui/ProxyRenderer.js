@@ -32,10 +32,12 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
-        this._splatOverlap = 0.7; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
+        this._splatOverlap = 0.5; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
 
-        this._depthRingSize = 8;
+        this._depthRingSize = 4;
         this._coverageGridSize = 10;
+        this._angleThreshold = (180.0/this._depthRingSize) / 180.0*3.1415926535; // Is this a sensible value? 180/#models degrees
+        this._zoomThreshold = 1.2;
 
         // ---------------- End of configuration section -----------------
 
@@ -59,7 +61,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
 //        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
-        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize);
+        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize, this._angleThreshold, this._zoomThreshold);
 
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
@@ -121,14 +123,16 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
             // this._proxyModelCoverage.processDepthDataReplaceOldest( this._proxyModelBeingProcessed );
-            this._proxyModelCoverage.processDepthDataReplaceOldestWhenDifferent( this._proxyModelBeingProcessed );
+            // this._proxyModelCoverage.processDepthDataReplaceOldestWhenDifferent( this._proxyModelBeingProcessed );
             // this._proxyModelCoverage.processDepthDataReplaceFarthestAway( this._proxyModelBeingProcessed );
+            this._proxyModelCoverage.processDepthDataOptimizeCoverage( this._proxyModelBeingProcessed, true, true );
             this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
         }
 
         if (this._splatProgram) {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
+            this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
             // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
@@ -233,6 +237,11 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             } // end of loop over depth buffers
+
+//            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
+//            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);
+//            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+//            this.gl.colorMask(this.gl.TRUE, this.gl.TRUE, this.gl.TRUE, this.gl.TRUE);
 
         }
         // console.log("rendering");

@@ -74,7 +74,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
 
     // Is there something wrong with m_job->getExposedModel()?! Seems not to be returning meaningful data. (Or is it 'getElementValueAsString'?)
     std::string tmp = m_job->getExposedModel()->getElementValueAsString( key.toStdString() );
-    std::cout << "tmp=" << tmp << std::endl;
+    //std::cout << "tmp=" << tmp << std::endl;
 
     tinia::model::Viewer viewer;
     m_job->getExposedModel()->getElementValue( key.toStdString(), viewer );
@@ -96,7 +96,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
                                     << viewer.modelviewMatrix[13] << " "
                                     << viewer.modelviewMatrix[14] << " "
                                     << viewer.modelviewMatrix[15];
-    std::cout << "viewer.modelView: " << ss.str() << std::endl;
+    //std::cout << "viewer.modelView: " << ss.str() << std::endl;
     QString viewStr( ss.str().c_str() );
 
     std::stringstream ss2;
@@ -116,7 +116,7 @@ void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, un
                                     << viewer.projectionMatrix[13] << " "
                                     << viewer.projectionMatrix[14] << " "
                                     << viewer.projectionMatrix[15];
-    std::cout << "viewer.projection: " << ss2.str() << std::endl;
+    //std::cout << "viewer.projection: " << ss2.str() << std::endl;
     QString projStr( ss2.str().c_str() );
 
     QString jsonWrappedImgPlusDepthString = "{ \"rgb\": \"" + rgbStr + "\", \"depth\": \"" + depthStr + "\", \"view\": \"" + viewStr+ "\", \"proj\": \"" + projStr + "\" }";
