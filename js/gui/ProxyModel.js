@@ -29,6 +29,8 @@ dojo.declare("gui.ProxyModel", null, {
         this.projection_inverse = mat4.create();
         this.from_world         = mat4.create();
         this.to_world           = mat4.create();
+        this.dir                = vec3.create();
+        this.dist               = 0;
         this.state              = 0; // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
         // console.log("ProxyModel constructor ended");
     },
@@ -61,6 +63,10 @@ dojo.declare("gui.ProxyModel", null, {
                 this.projection_inverse = mat4.inverse(mat4.create( this.projection ));
                 this.from_world         = viewMatAsText.split(/ /);
                 this.to_world           = mat4.inverse(mat4.create( this.from_world ));
+
+                this.dir = vec3.create( [-this.to_world[8], -this.to_world[9], -this.to_world[10]] );
+                vec3.normalize(this.dir); // Should probably already be normalized...
+                this.dist = vec3.length( vec3.create( [this.to_world[12], this.to_world[13], this.to_world[14]] ) );
 
                 this.state = 2;
                 // console.log("setAll: Load process for image-as-text data complete.");

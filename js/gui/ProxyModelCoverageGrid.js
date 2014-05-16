@@ -24,7 +24,7 @@ dojo.declare("gui.ProxyModelCoverageGrid", null, {
     constructor: function(glContext, gridSize) {
         this.gl = glContext;
         this._coverage = new Array(gridSize*gridSize*gridSize);
-        for (i=0; i<gridSize*gridSize*gridSize; i++)
+        for (var i=0; i<gridSize*gridSize*gridSize; i++)
             this._coverage[i] = 0;
         this._subGrid = null;
         console.log("ProxyModelCoverageGrid constructor ended");
@@ -34,7 +34,7 @@ dojo.declare("gui.ProxyModelCoverageGrid", null, {
     // Binning the splat set
     // To be GPU-ified!
     addNewSplatSet: function(mv, pm, splats, addOrRemove) {
-        for (i=0; i<splats.length; i++) {
+        for (var i=0; i<splats.length; i++) {
             var v = pm * mv * splats[i];
             var bin_i = 0; // plane
             var bin_j = 0; // row
@@ -48,7 +48,7 @@ dojo.declare("gui.ProxyModelCoverageGrid", null, {
     // To be GPU-ified!
     testNewSplatSet: function(mv, pm, splats) {
         var newBinsFilled = 0;
-        for (i=0; i<splats.length; i++) {
+        for (var i=0; i<splats.length; i++) {
             var v = pm * mv * splats[i];
             var bin_i = 0; // plane
             var bin_j = 0; // row

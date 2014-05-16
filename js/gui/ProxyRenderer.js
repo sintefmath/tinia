@@ -66,8 +66,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
         this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
-        for (i=0; i<this._splats_y; i++) {
-            for (j=0; j<this._splats_x; j++) {
+        for (var i=0; i<this._splats_y; i++) {
+            for (var j=0; j<this._splats_x; j++) {
                 var u = (j+0.5)/this._splats_x;
                 var v = (i+0.5)/this._splats_y;
                 this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
@@ -132,7 +132,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (this._splatProgram) {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
-            this.gl.clearColor(0.2, 0.2, 0.2, 0.9);
+            this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
             // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
@@ -217,7 +217,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
-            for (i=0; i<this._depthRingSize; i++) {
+            for (var i=0; i<this._depthRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
