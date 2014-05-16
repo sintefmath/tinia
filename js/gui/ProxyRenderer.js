@@ -37,7 +37,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._depthRingSize = 4;
         this._coverageGridSize = 10;
         this._angleThreshold = (180.0/this._depthRingSize) / 180.0*3.1415926535; // Is this a sensible value? 180/#models degrees
-        this._zoomThreshold = 1.2;
+        this._zoomThreshold = 1.1;
 
         // ---------------- End of configuration section -----------------
 
@@ -125,14 +125,14 @@ dojo.declare("gui.ProxyRenderer", null, {
             // this._proxyModelCoverage.processDepthDataReplaceOldest( this._proxyModelBeingProcessed );
             // this._proxyModelCoverage.processDepthDataReplaceOldestWhenDifferent( this._proxyModelBeingProcessed );
             // this._proxyModelCoverage.processDepthDataReplaceFarthestAway( this._proxyModelBeingProcessed );
-            this._proxyModelCoverage.processDepthDataOptimizeCoverage( this._proxyModelBeingProcessed, true, true );
+            this._proxyModelCoverage.processDepthDataOptimizeCoverage(this._proxyModelBeingProcessed);
             this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
         }
 
         if (this._splatProgram) {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
-            this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
+            this.gl.clearColor(0.2, 0.2, 0.2, 0.9);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
             // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
