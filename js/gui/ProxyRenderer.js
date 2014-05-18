@@ -227,6 +227,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
+            // Should combine these by putting the "most recent model" into the ring buffer...
             for (var i=0; i<this._depthRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
@@ -248,7 +249,29 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             } // end of loop over depth buffers
 
-//            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
+            if (this.exposedModel.getElementValue("alwaysShowMostRecent")) {
+                if (this._proxyModelCoverage.mostRecentModel.state==2) {
+                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
+                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), -1 );
+                    }
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.depthTexture);
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.rgbTexture);
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
+                    if (this.gl.getUniformLocation(this._splatProgram, "depthPMinv")) {
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthPMinv"), false, this._proxyModelCoverage.mostRecentModel.projection_inverse );
+                    }
+                    if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelCoverage.mostRecentModel.to_world );
+                    }
+                    this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
+                }
+            }
+
+
+            //            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
 //            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);
 //            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 //            this.gl.colorMask(this.gl.TRUE, this.gl.TRUE, this.gl.TRUE, this.gl.TRUE);

@@ -63,6 +63,8 @@ bool CubeJob::init()
         m_model->addAnnotation("variablesized", "Variable-sized splats");
         m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
         m_model->addAnnotation("overlap", "overlap)");
+        m_model->addElement<bool>( "alwaysShowMostRecent", false );
+        m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -82,6 +84,8 @@ bool CubeJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("overlap"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("overlap", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("overlap", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("alwaysShowMostRecent"));
         row++;
         // More elements...
     }

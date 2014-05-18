@@ -138,6 +138,11 @@ void main(void)
             gl_FragColor = vec4(0.0, 0.0, 0.5*decay, src_alpha);
         if (splatSetIndex==9)
             gl_FragColor = vec4(0.5*decay, 0.5*decay, 0.0, src_alpha);
+        if (splatSetIndex==-1)
+	    if ( r_squared > 0.16 )
+		gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+	    else
+		gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
     }
 #endif
 }

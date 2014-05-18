@@ -31,17 +31,11 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         for (var i=0; i<ringSize; i++) {
             this.proxyModelRing[i] = new gui.ProxyModel(this._gl);
         }
+        this.mostRecentModel = new gui.ProxyModel(this._gl);
         this._ringSize = ringSize;
         this._proxyModelReplacementAngle = angleThreshold;
         this._proxyModelReplacementZoom = zoomThreshold;
         console.log("ProxyModelCoverageAngles constructor ended");
-    },
-
-
-    // It is optionally added to the (ring) buffer, but always added to the "most recent model"
-    _addModel: function(model) {
-        this.proxyModelRing[this._depthRingCursor] = model;
-        this._mostRecentModel = model;
     },
 
 
@@ -53,7 +47,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
         // Simply replacing the oldest proxy model with the new one.
         this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
-        this._addModel(model);
+        this.proxyModelRing[this._depthRingCursor] = model;
         // console.log("processDepthDataReplaceOldest: inserted into slot " + this._depthRingCursor);
     },
 
@@ -89,7 +83,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         }
         if (addModel) {
             this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
-            this._addModel(model);
+            this.proxyModelRing[this._depthRingCursor] = model;
             console.log("processDepthDataReplaceOldestWhenDifferent: inserted into slot " + this._depthRingCursor);
         } else {
             // console.log("processDepthDataReplaceOldestWhenDifferent: not inserting model");
@@ -144,7 +138,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         }
 
         if (addModel) {
-            this._addModel(model);
+            this.proxyModelRing[this._depthRingCursor] = model;
             console.log("processDepthDataReplaceFarthestAway: inserted into slot " + this._depthRingCursor);
         } else {
             // console.log("processDepthDataReplaceFarthestAway: not inserting model");
@@ -180,6 +174,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         if ( model.state != 2 ) {
             alert("processDepthDataOptimizeCoverage: Incomplete proxy model - cannot process this!");
         }
+        this.mostRecentModel = model;
 
         var addModel = false;
 
@@ -246,7 +241,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         }
 
         if (addModel) {
-            this._addModel(model);
+            this.proxyModelRing[this._depthRingCursor] = model;
             console.log("processDepthDataOptimizeCoverage: inserted into slot " + this._depthRingCursor);
         } else {
             console.log("processDepthDataOptimizeCoverage: not inserting model");
