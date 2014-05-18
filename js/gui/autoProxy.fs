@@ -14,8 +14,8 @@ uniform int splatSetIndex;
 uniform int debugSplatCol;
 uniform int decayMode;
 uniform int pieSplats;
+uniform int roundSplats;
 
-#define CIRCULAR_SPLATS
 
 //#define DEBUG_SHOW_CIRCULAR_COMPLEMENT
 //#define DEBUG_SHOW_NON_OVERLAP_SQUARE
@@ -44,8 +44,8 @@ void main(void)
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
     
-#if defined(CIRCULAR_SPLATS) && !defined(DEBUG_SHOW_CIRCULAR_COMPLEMENT)
-    if ( r_squared > 0.25 ) {
+#ifndef DEBUG_SHOW_CIRCULAR_COMPLEMENT
+    if ( (roundSplats>0) && (r_squared>0.25) ) {
         discard;
     }
 #endif
@@ -77,9 +77,9 @@ void main(void)
     }
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
     
-#if defined(CIRCULAR_SPLATS) && defined(DEBUG_SHOW_CIRCULAR_COMPLEMENT)
+#ifdef DEBUG_SHOW_CIRCULAR_COMPLEMENT
     // To help visualizing the splats during testing/debugging, outside of circular splats padded with white to squares
-    if ( r_squared > 0.25 ) {
+    if ( (roundSplats>0) && (r_squared>0.25) ) {
         gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
     }
 #endif

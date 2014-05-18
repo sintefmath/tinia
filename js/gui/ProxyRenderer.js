@@ -33,6 +33,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
         this._splatOverlap = 0.5; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
+        // Overriding with slider!!!
 
         this._depthRingSize = 4;
         this._coverageGridSize = 10;
@@ -63,6 +64,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 //        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
         this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize, this._angleThreshold, this._zoomThreshold);
 
+        // We don't really need this buffer, VS should be able to compute coordinates from gl_VertexID! @@@ fix this
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
         this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
@@ -171,6 +173,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 //            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.SRC_ALPHA); // s-factor, d-factor
 //            this.gl.disable(this.gl.DEPTH_TEST);
 
+            this.gl.enable(this.gl.DEPTH_TEST);
 
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
@@ -178,17 +181,20 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
 
-            var debugmode = this.exposedModel.getElementValue("debugmode");
             if (this.gl.getUniformLocation(this._splatProgram, "debugSplatCol")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "debugSplatCol"), debugmode );
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "debugSplatCol"), this.exposedModel.getElementValue("debugmode") );
             }
-            var decayMode = this.exposedModel.getElementValue("decaymode");
             if (this.gl.getUniformLocation(this._splatProgram, "decayMode")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "decayMode"), decayMode );
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "decayMode"), this.exposedModel.getElementValue("decaymode") );
             }
-            var pieSplats = this.exposedModel.getElementValue("piesplats");
             if (this.gl.getUniformLocation(this._splatProgram, "pieSplats")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "pieSplats"), pieSplats );
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "pieSplats"), this.exposedModel.getElementValue("piesplats") );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "roundSplats")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "roundSplats"), this.exposedModel.getElementValue("roundsplats") );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "variableSized")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "variableSized"), this.exposedModel.getElementValue("variablesized") );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
@@ -196,6 +202,10 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "PM")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
+
+            var ol = this.exposedModel.getElementValue("overlap") / 100.0;
+            this._splatOverlap = ol;
+
             if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
                 var splatSizeX = this.gl.canvas.width  / this._splats_x;
                 var splatSizeY = this.gl.canvas.height / this._splats_y;

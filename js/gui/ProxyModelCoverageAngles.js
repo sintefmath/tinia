@@ -176,7 +176,6 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
     // One drawback with this strategy is that it may take very long before old models are replaced, unless the appropriate flag is set
 
     processDepthDataOptimizeCoverage: function(model) {
-        console.clear();
         // An assertion that should be removed when not debugging
         if ( model.state != 2 ) {
             alert("processDepthDataOptimizeCoverage: Incomplete proxy model - cannot process this!");
@@ -192,48 +191,58 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         } else {
             // console.log("processDepthDataOptimizeCoverage: dir                  = " + model.dir[0] + " " + model.dir[1] + " " + model.dir[2]);
 
-            // Checking if we can improve the buffer by replacing an older model
-            var minNorm = 1.0 + 4.0*this._ringSize * this._ringSize; // Should be larger than any possible sum. This makes sure some 'best_i' will always be found.
+            // Can we improve the coverage with respect to angles?
+            var minNorm = 1e99;
             var best_i = -1;
             for (var i=0; i<this._ringSize; i++) {
                 var temporaryReplacedModel = this.proxyModelRing[i];
                 this.proxyModelRing[i] = model;
                 var norm = this._coverageNorm();
                 this.proxyModelRing[i] = temporaryReplacedModel;
-                console.log("  processDepthDataOptimizeCoverage: norm[" + i + "]        = " + norm);
+                // console.log("  processDepthDataOptimizeCoverage: norm[" + i + "]        = " + norm);
                 if ( norm < minNorm ) {
                     best_i = i;
                     minNorm = norm;
-                    addModel = true;
                 }
             }
-
             var oldNorm = this._coverageNorm();
             console.log("processDepthDataOptimizeCoverage: old coverage = " + oldNorm + ", new coverage = " + minNorm);
-
-            if ( minNorm > 0.999*oldNorm ) {
+            if ( minNorm > 0.9*oldNorm ) {
                 if ( minNorm < oldNorm ) {
                     console.log("  Improvement, but not by more than 10%, so we do not add the model after all.");
+                } else {
+                    console.log("  No improvement, we do not add the model.");
                 }
-                addModel = false;
+                best_i = -1;
             } else {
                 console.log("  Improvement by more than 10%, replacing old model");
             }
 
-            if ( !addModel ) { // If we are not to change model after considering all angles, we check if we are to override the decision due to zooming
-                var zoom = this.proxyModelRing[best_i].dist / model.dist;
+            // Add due to zooming? We let "angle-optimization" override "zoom-optimization".
+            if ( best_i < 0 ) {
+                // Checking if we can improve the buffer by replacing an older model
+                var minNorm = 0.0;
+                for (var i=0; i<this._ringSize; i++) {
+                    var zoom = this.proxyModelRing[i].dist / model.dist;
+                    // console.log("  processDepthDataOptimizeCoverage: zoom[" + i + "]        = " + zoom);
+                    if ( zoom > minNorm ) {
+                        best_i = i;
+                        minNorm = zoom;
+                    }
+                }
                 console.log("Not adding model for rotation. For zooming? old_dist: " + this.proxyModelRing[best_i].dist + ", new dist: " + model.dist + ", zoom = " + zoom);
                 if ( zoom > this._proxyModelReplacementZoom ) {
                     console.log("  Yes, adding due to zooming")
-                    addModel = true;
                 } else {
-                    console.log("  No, not, adding");
+                    console.log("  No, not, adding, zoom not large enough");
+                    best_i = -1;
                 }
             }
-
-            if (addModel) {
+            if ( best_i >= 0 ) {
                 this._depthRingCursor = best_i;
+                addModel = true;
             }
+
         }
 
         if (addModel) {

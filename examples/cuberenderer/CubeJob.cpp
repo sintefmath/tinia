@@ -49,11 +49,6 @@ bool CubeJob::init()
     m_model->addElement("viewer", viewer);
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
-#if 0
-    m_model->setGUILayout(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"),
-                          tinia::model::gui::DESKTOP);
-#else
-
     // Adding variables to the model
     {
         m_model->addElement<bool>( "debugmode", true );
@@ -62,25 +57,31 @@ bool CubeJob::init()
         m_model->addAnnotation("decaymode", "Splats decaying from center");
         m_model->addElement<bool>( "piesplats", false );
         m_model->addAnnotation("piesplats", "Pie-chart-splats");
-        m_model->addConstrainedElement<int>("x", 470, 0, 999);
-        m_model->addAnnotation("x", "x)");
+        m_model->addElement<bool>( "roundsplats", true );
+        m_model->addAnnotation("roundsplats", "Circular splats");
+        m_model->addElement<bool>( "variablesized", false );
+        m_model->addAnnotation("variablesized", "Variable-sized splats");
+        m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
+        m_model->addAnnotation("overlap", "overlap)");
     }
 
     // Setting up the mainGrid containing the GUI elements
-    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 1);
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 3);
     {
         int row = 0;
-#if 0
-        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("x"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Label("x", false));
-        mainGrid->setChild(row, 2, new tinia::model::gui::Label("x", true));
-        row++;
-#endif
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugmode"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decaymode"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("piesplats"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundsplats"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("variablesized"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("overlap"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("overlap", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("overlap", true));
         row++;
         // More elements...
     }
@@ -95,8 +96,6 @@ bool CubeJob::init()
         rootLayout->addChild(mainGrid);
         m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
     }
-
-#endif
 
     return true;
 }
