@@ -33,12 +33,12 @@ void main(void)
     // Hmm. Even when this is disabled, we still don't get all splats rendered. Why is this so? Shouldn't it be
     // necessary with the discard here?!  Ah. The explanation is that the splats are really rendered, but with the
     // background color, so they are not visible!
-    if ( depth > 0.999 ) {
-        // The depth should be 1 for fragments not rendered. It may be a problem that depth input is 'varying'.
-        discard;
-        // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // white
-        // return;
-    }
+//     if ( depth > 0.999 ) {
+//         // The depth should be 1 for fragments not rendered. It may be a problem that depth input is 'varying'.
+//         // discard;
+//         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+//         return;
+//     }
 
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25

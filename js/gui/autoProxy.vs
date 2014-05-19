@@ -33,6 +33,12 @@ void main(void)
 //               texture2D( uSampler, st ).g / 255.0 +
 //               texture2D( uSampler, st ).b / (255.0*255.0) );
 
+    if ( depth > 0.999 ) {
+        // The depth should be 1 for fragments not rendered. It may be a problem that depth input is 'varying'.
+        gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+        return;
+    }
+    
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
     float x_ndc = aVertexPosition.x;
