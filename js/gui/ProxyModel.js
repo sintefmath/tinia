@@ -22,36 +22,43 @@ dojo.declare("gui.ProxyModel", null, {
 
 
     constructor: function(glContext) {
+//        var t0 = Date.now();
         this._gl                = glContext;
         this.depthTexture       = this._gl.createTexture();
         this.rgbTexture         = this._gl.createTexture();
-        this.projection         = mat4.create();
-        this.projection_inverse = mat4.create();
-        this.from_world         = mat4.create();
-        this.to_world           = mat4.create();
-        this.dir                = vec3.create();
-        this.dist               = 0;
+//        this.projection         = mat4.create();
+//        this.projection_inverse = mat4.create();
+//        this.from_world         = mat4.create();
+//        this.to_world           = mat4.create();
+//        this.dir                = vec3.create();
+//        this.dist               = 0;
         this.state              = 0; // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
         // console.log("ProxyModel constructor ended");
+//        console.log("constructor time: " + (Date.now()-t0));
     },
 
 
     setAll: function(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText) {
+        // var t0 = Date.now();
         if ( this.state == 1 ) {
             throw "Trying to set data for a proxy model being processed!";
         }
         this.state = 1;
+
         var image = new Image();
         image.onload = dojo.hitch(this, function() {
+            // var t1 = Date.now();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
             this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, image);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST); // _MIPMAP_NEAREST);
             //this._gl.generateMipmap(this._gl.TEXTURE_2D);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
+            // t1 = Date.now()-t1;
 
             var rgbImage = new Image();
             rgbImage.onload = dojo.hitch(this, function() {
+                // var t2 = Date.now();
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
                 this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, rgbImage);
                 this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
@@ -70,6 +77,9 @@ dojo.declare("gui.ProxyModel", null, {
 
                 this.state = 2;
                 // console.log("setAll: Load process for image-as-text data complete.");
+                // t2 = Date.now() - t2;
+                // t0 = Date.now() - t0;
+                // console.log("setAll time since start: " + t0 + ", time loading depth: " + t1 + ", time loading rgb: " + t2);
             });
             rgbImage.src = "data:image/png;base64," + imageAsText;
 

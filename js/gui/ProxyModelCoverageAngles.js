@@ -149,6 +149,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
     // Calculating the coverage norm for the whole ring.
     _coverageNorm: function() {
+        // var t0 = Date.now();
         var totalCosAngleSum = 0.0;
         for (var i=0; i<this._ringSize; i++) {
             if ( this.proxyModelRing[i].state == 2 ) {
@@ -160,6 +161,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
                 }
             }
         }
+        // console.log("_coverageNorm time: " + (Date.now()-t0));
         return totalCosAngleSum;
     },
 
@@ -170,6 +172,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
     // One drawback with this strategy is that it may take very long before old models are replaced, unless the appropriate flag is set
 
     processDepthDataOptimizeCoverage: function(model) {
+        // var t0 = Date.now();
         // An assertion that should be removed when not debugging
         if ( model.state != 2 ) {
             alert("processDepthDataOptimizeCoverage: Incomplete proxy model - cannot process this!");
@@ -201,16 +204,16 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
                 }
             }
             var oldNorm = this._coverageNorm();
-            console.log("processDepthDataOptimizeCoverage: old coverage = " + oldNorm + ", new coverage = " + minNorm);
+            // console.log("processDepthDataOptimizeCoverage: old coverage = " + oldNorm + ", new coverage = " + minNorm);
             if ( minNorm > 0.9*oldNorm ) {
                 if ( minNorm < oldNorm ) {
-                    console.log("  Improvement, but not by more than 10%, so we do not add the model after all.");
+                    // console.log("  Improvement, but not by more than 10%, so we do not add the model after all.");
                 } else {
-                    console.log("  No improvement, we do not add the model.");
+                    // console.log("  No improvement, we do not add the model.");
                 }
                 best_i = -1;
             } else {
-                console.log("  Improvement by more than 10%, replacing old model");
+                // console.log("  Improvement by more than 10%, replacing old model");
             }
 
             // Add due to zooming? We let "angle-optimization" override "zoom-optimization".
@@ -225,11 +228,11 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
                         minNorm = zoom;
                     }
                 }
-                console.log("Not adding model for rotation. For zooming? old_dist: " + this.proxyModelRing[best_i].dist + ", new dist: " + model.dist + ", zoom = " + zoom);
+                // console.log("Not adding model for rotation. For zooming? old_dist: " + this.proxyModelRing[best_i].dist + ", new dist: " + model.dist + ", zoom = " + zoom);
                 if ( zoom > this._proxyModelReplacementZoom ) {
-                    console.log("  Yes, adding due to zooming")
+                    // console.log("  Yes, adding due to zooming")
                 } else {
-                    console.log("  No, not, adding, zoom not large enough");
+                    // console.log("  No, not, adding, zoom not large enough");
                     best_i = -1;
                 }
             }
@@ -242,11 +245,12 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
         if (addModel) {
             this.proxyModelRing[this._depthRingCursor] = model;
-            console.log("processDepthDataOptimizeCoverage: inserted into slot " + this._depthRingCursor);
+            // console.log("processDepthDataOptimizeCoverage: inserted into slot " + this._depthRingCursor);
         } else {
-            console.log("processDepthDataOptimizeCoverage: not inserting model");
+            // console.log("processDepthDataOptimizeCoverage: not inserting model");
         }
 
+        // console.log("processDepthDataOptimizeCoverage time: " + (Date.now()-t0));
     }
 
 

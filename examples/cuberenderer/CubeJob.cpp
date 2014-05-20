@@ -51,13 +51,13 @@ bool CubeJob::init()
 
     // Adding variables to the model
     {
-        m_model->addElement<bool>( "debugmode", true );
+        m_model->addElement<bool>( "debugmode", false );
         m_model->addAnnotation("debugmode", "Color splats according to buffer index (0=red, g, b, y, c, m)");
-        m_model->addElement<bool>( "decaymode", true );
+        m_model->addElement<bool>( "decaymode", false );
         m_model->addAnnotation("decaymode", "Splats decaying from center");
         m_model->addElement<bool>( "piesplats", false );
         m_model->addAnnotation("piesplats", "Pie-chart-splats");
-        m_model->addElement<bool>( "roundsplats", true );
+        m_model->addElement<bool>( "roundsplats", false );
         m_model->addAnnotation("roundsplats", "Circular splats");
         m_model->addElement<bool>( "variablesized", false );
         m_model->addAnnotation("variablesized", "Variable-sized splats");
@@ -65,6 +65,10 @@ bool CubeJob::init()
         m_model->addAnnotation("overlap", "overlap)");
         m_model->addElement<bool>( "alwaysShowMostRecent", false );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
+        m_model->addElement<bool>( "mostRecentOffset", false );
+        m_model->addAnnotation("mostRecentOffset", "Always show most recent proxy model with an offset in front");
+        m_model->addElement<bool>( "transpBackground", false );
+        m_model->addAnnotation("transpBackground", "bckgrnd in rgbTexture transp");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -86,6 +90,10 @@ bool CubeJob::init()
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("overlap", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("alwaysShowMostRecent"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("mostRecentOffset"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("transpBackground"));
         row++;
         // More elements...
     }
@@ -116,6 +124,7 @@ void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
 bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
     usleep(200000);
+    //usleep(10000);
 
     glEnable(GL_DEPTH_TEST);
 

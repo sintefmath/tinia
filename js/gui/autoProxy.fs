@@ -15,7 +15,7 @@ uniform int debugSplatCol;
 uniform int decayMode;
 uniform int pieSplats;
 uniform int roundSplats;
-
+uniform int transpBackground;
 
 //#define DEBUG_SHOW_CIRCULAR_COMPLEMENT
 //#define DEBUG_SHOW_NON_OVERLAP_SQUARE
@@ -77,6 +77,16 @@ void main(void)
     }
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
     
+
+
+    if ( transpBackground > 0 ) {
+        if ( texture2D( rgbImage, tc ).rgb == vec3(0.0) ) {
+            discard;
+        }
+    }
+    
+
+
 #ifdef DEBUG_SHOW_CIRCULAR_COMPLEMENT
     // To help visualizing the splats during testing/debugging, outside of circular splats padded with white to squares
     if ( (roundSplats>0) && (r_squared>0.25) ) {
@@ -143,6 +153,12 @@ void main(void)
 		gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
 	    else
 		gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
+    } else {
+        if (splatSetIndex==-1)
+            if ( ( r_squared > 0.16 ) && ( r_squared < 0.25 ) )
+                gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+            else
+                gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
     }
 #endif
 }

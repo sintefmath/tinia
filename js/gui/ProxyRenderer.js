@@ -36,7 +36,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         // Overriding with slider!!!
 
         this._depthRingSize = 4;
-        this._coverageGridSize = 10;
+        // this._coverageGridSize = 10;
         this._angleThreshold = (180.0/this._depthRingSize) / 180.0*3.1415926535; // Is this a sensible value? 180/#models degrees
         this._zoomThreshold = 1.1;
 
@@ -113,11 +113,16 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     setDepthData: function(imageAsText, depthBufferAsText, viewMatAsText, projMatAsText) {
         // console.log("setDepthData: Starting load process for image-as-text data");
-        this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
+        if (this._proxyModelBeingProcessed.state!=0) {
+            console.log("A depth buffer is already in the pipeline, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
+        } else {
+            this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
+        }
     },
 
 
     render: function(matrices) {
+        // var t0 = Date.now();
 
         if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
             this.compileShaders();
@@ -195,6 +200,9 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             if (this.gl.getUniformLocation(this._splatProgram, "variableSized")) {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "variableSized"), this.exposedModel.getElementValue("variablesized") );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "transpBackground")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "transpBackground"), this.exposedModel.getElementValue("transpBackground") );
             }
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
@@ -277,7 +285,9 @@ dojo.declare("gui.ProxyRenderer", null, {
 //            this.gl.colorMask(this.gl.TRUE, this.gl.TRUE, this.gl.TRUE, this.gl.TRUE);
 
         }
-        // console.log("rendering");
+        // if ( Date.now() - t0 > 3 ) {
+        //     console.log("render time: " + (Date.now()-t0));
+        // }
     }
 
 });
