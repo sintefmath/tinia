@@ -148,26 +148,13 @@ void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height
 
     if (depthBufferRequested) {
         glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
-#if 1
-        // @@@ We record touched fragments in the blue channel, and use r+g as a 16 bit fixed point depth
-        std::vector<unsigned char> tmp(width*height*3);
-        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, &(tmp[0]) );
-        for(unsigned i = 0; i < width*height; i++) {
-            float value = ((float*)m_buffer)[i];
-            m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
-            m_buffer[3*i + 1] = value*255;
-            m_buffer[3*i + 2] = 255 * ( (tmp[3*i]!=0) || (tmp[3*i+1]!=0) || (tmp[3*i+2]!=0) );
-        }
-#else
         // Depth encoded as 24 bit fixed point values.
         for(unsigned i = 0; i < width*height; i++) {
             float value = ((float*)m_buffer)[i];
-            // 24
             m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
             m_buffer[3*i + 1] = value*255;         value -= m_buffer[3*i +1] * 255.0;
             m_buffer[3*i + 2] = value*255;
         }
-#endif
     } else {
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
     }

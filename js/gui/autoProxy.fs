@@ -66,10 +66,10 @@ void main(void)
 
     // Discarding fragments that would look up depth and color outside the rendered scene
     if ( transpBackground > 0 ) {
-        // 16-bit version. Remember to fix in depth-reading code also, if changed.
         highp float depth2 = ( texture2D( uSampler, tc ).r +
-                               texture2D( uSampler, tc ).g / 255.0 );
-        if ( depth2 > 0.999 )
+                               texture2D( uSampler, tc ).g / 255.0 +
+                               texture2D( uSampler, tc ).b / (255.0*255.0) );
+        if ( depth2 > 0.9999 )
             discard;
     }
 
@@ -149,8 +149,6 @@ void main(void)
         if (splatSetIndex==-1)
             if ( ( r_squared > 0.16 ) && ( r_squared < 0.25 ) )
                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
-            else
-                gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
     }
 #endif
 }

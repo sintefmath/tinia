@@ -21,19 +21,11 @@ void main(void)
     st.y=1.0-st.y; 
     vTextureCoord = st;
 
-    // 8-bit version. Remember to fix in depth-reading code also, if changed.
-//     depth = texture2D( uSampler, st ).r;
-
-    // 16-bit version. Remember to fix in depth-reading code also, if changed.
     depth = ( texture2D( uSampler, st ).r +
-              texture2D( uSampler, st ).g / 255.0 );
+              texture2D( uSampler, st ).g / 255.0 +
+              texture2D( uSampler, st ).b / (255.0*255.0) );
     
-    // 24-bit version. Remember to fix in depth-reading code also, if changed.
-//     depth = ( texture2D( uSampler, st ).r +
-//               texture2D( uSampler, st ).g / 255.0 +
-//               texture2D( uSampler, st ).b / (255.0*255.0) );
-
-    if ( depth > 0.999 ) {
+    if ( depth > 0.9999 ) {
         // The depth should be 1 for fragments not rendered. It may be a problem that depth input is 'varying'.
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
@@ -61,10 +53,17 @@ void main(void)
 	st_dy.y = 1.0-st_dy.y; 
 
 	// 16-bit version. Remember to fix in depth-reading code also, if changed.
-	float depth_dx = ( texture2D( uSampler, st_dx ).r +
-			   texture2D( uSampler, st_dx ).g / 255.0 );
-	float depth_dy = ( texture2D( uSampler, st_dy ).r +
-			   texture2D( uSampler, st_dy ).g / 255.0 );
+// 	float depth_dx = ( texture2D( uSampler, st_dx ).r +
+// 			   texture2D( uSampler, st_dx ).g / 255.0 );
+// 	float depth_dy = ( texture2D( uSampler, st_dy ).r +
+// 			   texture2D( uSampler, st_dy ).g / 255.0 );
+        // 24-bit version. Remember to fix in depth-reading code also, if changed.
+        float depth_dx = ( texture2D( uSampler, st_dx ).r +
+                           texture2D( uSampler, st_dx ).g / 255.0 +
+                           texture2D( uSampler, st_dx ).b / (255.0*255.0) );
+        float depth_dy = ( texture2D( uSampler, st_dy ).r +
+                           texture2D( uSampler, st_dy ).g / 255.0 +
+                           texture2D( uSampler, st_dy ).b / (255.0*255.0) );
 	
 	depth_dx = depth;
 	depth_dy = depth;
