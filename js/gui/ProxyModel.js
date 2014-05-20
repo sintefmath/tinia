@@ -39,7 +39,8 @@ dojo.declare("gui.ProxyModel", null, {
 
 
     setAll: function(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText) {
-        // var t0 = Date.now();
+        console.log("setAll: starting");
+        var t0 = Date.now();
         if ( this.state == 1 ) {
             throw "Trying to set data for a proxy model being processed!";
         }
@@ -47,18 +48,21 @@ dojo.declare("gui.ProxyModel", null, {
 
         var image = new Image();
         image.onload = dojo.hitch(this, function() {
-            // var t1 = Date.now();
+            var t1 = Date.now();
+            console.log("setAll: Got depth");
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
             this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, image);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST); // _MIPMAP_NEAREST);
             //this._gl.generateMipmap(this._gl.TEXTURE_2D);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-            // t1 = Date.now()-t1;
+            t1 = Date.now()-t1;
+            console.log("setAll: Depth done");
 
             var rgbImage = new Image();
             rgbImage.onload = dojo.hitch(this, function() {
-                // var t2 = Date.now();
+                var t2 = Date.now();
+                console.log("setAll: Got rgb");
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
                 this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, rgbImage);
                 this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
@@ -76,15 +80,17 @@ dojo.declare("gui.ProxyModel", null, {
                 this.dist = vec3.length( vec3.create( [this.to_world[12], this.to_world[13], this.to_world[14]] ) );
 
                 this.state = 2;
-                // console.log("setAll: Load process for image-as-text data complete.");
-                // t2 = Date.now() - t2;
-                // t0 = Date.now() - t0;
-                // console.log("setAll time since start: " + t0 + ", time loading depth: " + t1 + ", time loading rgb: " + t2);
+                console.log("setAll: Load process for image-as-text data complete.");
+                t2 = Date.now() - t2;
+                t0 = Date.now() - t0;
+                console.log("setAll time since start: " + t0 + ", time loading depth: " + t1 + ", time loading rgb: " + t2);
             });
             rgbImage.src = "data:image/png;base64," + imageAsText;
+            console.log("a");
 
         });
         image.src = "data:image/png;base64," + depthBufferAsText;
+        console.log("b");
     }
 
 

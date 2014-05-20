@@ -118,12 +118,12 @@ dojo.declare("gui.ProxyRenderer", null, {
         } else {
             this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
         }
+        // console.log("setDepthData: done");
     },
 
 
     render: function(matrices) {
         // var t0 = Date.now();
-
         if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
             this.compileShaders();
         }
