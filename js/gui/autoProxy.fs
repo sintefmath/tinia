@@ -1,4 +1,5 @@
 uniform sampler2D rgbImage;
+uniform sampler2D uSampler;
 
 varying highp vec2 vTextureCoord;
 varying highp float depth;
@@ -30,16 +31,6 @@ void main(void)
 {
     highp float src_alpha = 1.0;
     
-    // Hmm. Even when this is disabled, we still don't get all splats rendered. Why is this so? Shouldn't it be
-    // necessary with the discard here?!  Ah. The explanation is that the splats are really rendered, but with the
-    // background color, so they are not visible!
-//     if ( depth > 0.999 ) {
-//         // The depth should be 1 for fragments not rendered. It may be a problem that depth input is 'varying'.
-//         // discard;
-//         gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-//         return;
-//     }
-
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
@@ -72,20 +63,21 @@ void main(void)
 
     // Adjusting for intra-splat texture coordinate
     highp vec2 tc = vTextureCoord + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
+
+    // Discarding fragments that would look up depth and color outside the rendered scene
+    if ( transpBackground > 0 ) {
+        // 16-bit version. Remember to fix in depth-reading code also, if changed.
+        highp float depth2 = ( texture2D( uSampler, tc ).r +
+                               texture2D( uSampler, tc ).g / 255.0 );
+        if ( depth2 > 0.999 )
+            discard;
+    }
+
     if (decayMode==0) {
         decay = 1.0;
     }
+
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
-    
-
-
-    if ( transpBackground > 0 ) {
-        if ( texture2D( rgbImage, tc ).rgb == vec3(0.0) ) {
-            discard;
-        }
-    }
-    
-
 
 #ifdef DEBUG_SHOW_CIRCULAR_COMPLEMENT
     // To help visualizing the splats during testing/debugging, outside of circular splats padded with white to squares
