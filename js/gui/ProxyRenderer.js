@@ -230,6 +230,12 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "splatOverlap")) {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
             }
+            if (this.gl.getUniformLocation(this._splatProgram, "vp_width")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_width"), this.gl.canvas.width );
+            }
+            if (this.gl.getUniformLocation(this._splatProgram, "vp_height")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_height"), this.gl.canvas.height );
+            }
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
             // Should combine these by putting the "most recent model" into the ring buffer...
