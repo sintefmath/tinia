@@ -14,7 +14,6 @@ uniform int splatSetIndex;
 // For debugging
 uniform int debugSplatCol;
 uniform int decayMode;
-uniform int pieSplats;
 uniform int roundSplats;
 uniform int transpBackground;
 
@@ -109,23 +108,15 @@ void main(void)
         if (al<0.0)
             al = al + 2.0*PI;
         if (splatSetIndex==0) {
-            if ( (pieSplats>0) && (! ((al>=0.0) && (al<0.5*PI)) ) )
-                discard;
             gl_FragColor = vec4(decay, 0.0, 0.0, src_alpha);
         }
         if (splatSetIndex==1) {
-            if ( (pieSplats>0) && (! ((al>=0.5*PI) && (al<PI)) ) )
-                discard;
             gl_FragColor = vec4(0.0, decay, 0.0, src_alpha);
         }
         if (splatSetIndex==2) {
-            if ( (pieSplats>0) && (! ((al>=PI) && (al<1.5*PI)) ) )
-                discard;
             gl_FragColor = vec4(0.0, 0.0, decay, src_alpha);
         }
         if (splatSetIndex==3) {
-            if ( (pieSplats>0) && (! ((al>=1.5*PI) && (al<2.0*PI)) ) )
-                discard;
             gl_FragColor = vec4(decay, decay, 0.0, src_alpha); // 3) yellow?
         }
         if (splatSetIndex==4)

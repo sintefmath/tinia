@@ -192,9 +192,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "decayMode")) {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "decayMode"), this.exposedModel.getElementValue("decaymode") );
             }
-            if (this.gl.getUniformLocation(this._splatProgram, "pieSplats")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "pieSplats"), this.exposedModel.getElementValue("piesplats") );
-            }
             if (this.gl.getUniformLocation(this._splatProgram, "roundSplats")) {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "roundSplats"), this.exposedModel.getElementValue("roundsplats") );
             }

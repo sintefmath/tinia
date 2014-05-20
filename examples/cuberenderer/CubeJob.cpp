@@ -55,8 +55,6 @@ bool CubeJob::init()
         m_model->addAnnotation("debugmode", "Color splats according to buffer index (0=red, g, b, y, c, m)");
         m_model->addElement<bool>( "decaymode", false );
         m_model->addAnnotation("decaymode", "Splats decaying from center");
-        m_model->addElement<bool>( "piesplats", false );
-        m_model->addAnnotation("piesplats", "Pie-chart-splats");
         m_model->addElement<bool>( "roundsplats", false );
         m_model->addAnnotation("roundsplats", "Circular splats");
         m_model->addElement<bool>( "variablesized", false );
@@ -78,8 +76,6 @@ bool CubeJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugmode"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decaymode"));
-        row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("piesplats"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundsplats"));
         row++;
