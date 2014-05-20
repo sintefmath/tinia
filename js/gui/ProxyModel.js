@@ -26,13 +26,13 @@ dojo.declare("gui.ProxyModel", null, {
         this._gl                = glContext;
         this.depthTexture       = this._gl.createTexture();
         this.rgbTexture         = this._gl.createTexture();
-//        this.projection         = mat4.create();
-//        this.projection_inverse = mat4.create();
-//        this.from_world         = mat4.create();
-//        this.to_world           = mat4.create();
-//        this.dir                = vec3.create();
-//        this.dist               = 0;
-        this.state              = 0; // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
+        this.projection         = null;
+        this.projection_inverse = null;
+        this.from_world         = null;     // The "view" matrix
+        this.to_world           = null;     // And its inverse
+        this.dir                = null;     // Direction in which the camera points
+        this.dist               = null;     // Distance from camera to the origin
+        this.state              = 0;        // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
         // console.log("ProxyModel constructor ended");
 //        console.log("constructor time: " + (Date.now()-t0));
     },
