@@ -63,11 +63,11 @@ bool CubeJob::init()
         m_model->addAnnotation("variablesized", "Variable-sized splats");
         m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
         m_model->addAnnotation("overlap", "overlap)");
-        m_model->addElement<bool>( "alwaysShowMostRecent", false );
+        m_model->addElement<bool>( "alwaysShowMostRecent", true );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addElement<bool>( "mostRecentOffset", false );
+        m_model->addElement<bool>( "mostRecentOffset", true );
         m_model->addAnnotation("mostRecentOffset", "Always show most recent proxy model with an offset in front");
-        m_model->addElement<bool>( "transpBackground", false );
+        m_model->addElement<bool>( "transpBackground", true );
         m_model->addAnnotation("transpBackground", "bckgrnd in rgbTexture transp");
     }
 

@@ -257,6 +257,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             } // end of loop over depth buffers
 
+            if ( this.exposedModel.getElementValue("mostRecentOffset") > 0 ) {
+                this.gl.disable(this.gl.DEPTH_TEST);
+            }
+
             if (this.exposedModel.getElementValue("alwaysShowMostRecent")) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
