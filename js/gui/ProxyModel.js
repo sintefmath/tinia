@@ -22,7 +22,6 @@ dojo.declare("gui.ProxyModel", null, {
 
 
     constructor: function(glContext) {
-//        var t0 = Date.now();
         this._gl                = glContext;
         this.depthTexture       = this._gl.createTexture();
         this.rgbTexture         = this._gl.createTexture();
@@ -33,13 +32,11 @@ dojo.declare("gui.ProxyModel", null, {
         this.dir                = null;     // Direction in which the camera points
         this.dist               = null;     // Distance from camera to the origin
         this.state              = 0;        // 0) loading of data not started, object is not in use, 1) loading going on, 2) loading done, ready for use
-        // console.log("ProxyModel constructor ended");
-//        console.log("constructor time: " + (Date.now()-t0));
     },
 
 
     setAll: function(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText) {
-        // var t0 = Date.now();
+        var t0_total = Date.now(), t0_depth, t0_rgb;
         if ( this.state == 1 ) {
             throw "Trying to set data for a proxy model being processed!";
         }
@@ -47,42 +44,39 @@ dojo.declare("gui.ProxyModel", null, {
 
         var image = new Image();
         image.onload = dojo.hitch(this, function() {
-            // var t1 = Date.now();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
             this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, image);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST); // _MIPMAP_NEAREST);
             //this._gl.generateMipmap(this._gl.TEXTURE_2D);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-            // t1 = Date.now()-t1;
+            t0_depth = Date.now() - t0_depth;
 
             var rgbImage = new Image();
             rgbImage.onload = dojo.hitch(this, function() {
-                // var t2 = Date.now();
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
-                this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, rgbImage);
+                this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, rgbImage);
                 this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
                 this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST);
                 //this._gl.generateMipmap(this._gl.TEXTURE_2D);
                 this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-
                 this.projection         = projMatAsText.split(/ /);
                 this.projection_inverse = mat4.inverse(mat4.create( this.projection ));
                 this.from_world         = viewMatAsText.split(/ /);
                 this.to_world           = mat4.inverse(mat4.create( this.from_world ));
-
                 this.dir = vec3.create( [-this.to_world[8], -this.to_world[9], -this.to_world[10]] );
                 vec3.normalize(this.dir); // Should probably already be normalized...
                 this.dist = vec3.length( vec3.create( [this.to_world[12], this.to_world[13], this.to_world[14]] ) );
-
                 this.state = 2;
-                // t2 = Date.now() - t2;
-                // t0 = Date.now() - t0;
-                // console.log("setAll time since start: " + t0 + ", time loading depth: " + t1 + ", time loading rgb: " + t2);
+                t0_rgb = Date.now() - t0_rgb;
+                t0_total = Date.now() - t0_total;
+                // console.log("ProxyModel.setAll() timings: Total: " + t0_total + ", time loading depth: " + t0_depth + ", time loading rgb: " + t0_rgb);
             });
+            t0_rgb = Date.now();
             rgbImage.src = "data:image/png;base64," + imageAsText;
 
         });
+        t0_depth = Date.now();
         image.src = "data:image/png;base64," + depthBufferAsText;
     }
 

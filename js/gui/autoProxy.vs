@@ -17,6 +17,7 @@ uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex2;
 uniform int mostRecentOffset;
+uniform int splatSizeLimiting;
 
 varying highp float depth;
 
@@ -55,11 +56,16 @@ void main(void)
     vec4 vert_wb = depthMVinv * vert_eb;
     
     // Next, we apply the current transformation to get the proxy splat.
-    gl_Position = PM * MV * vert_wb;
     vec4 pos = PM * MV * vert_wb;
+    gl_Position = pos;
 
     if ( variableSized > 0 ) {
 #if 0
+        // We sample the depths for next splat in x-direction (*_dx) and y-direction (*_dy), and will use the screen space
+        // difference between splats to determine appropriate (screen space) splat sizes.
+        // This doesn't work as it should, but I can't see the bug here... We get fine results just reusing the same depth, though.
+        // Hmm. Is it the "length(scr_coo_dx-scr_coo)" instead of "abs(scr_coo_dx.x-scr_coo.x)" etc. that is the cause?
+        // Is the problem maybe that very large splats simply look very "wrong"?
 	vec2 st_dx = 0.5*( vec2(aVertexPosition.x+2.0/splats_x, aVertexPosition.y) + 1.0 );
 	vec2 st_dy = 0.5*( vec2(aVertexPosition.x, aVertexPosition.y+2.0/splats_y) + 1.0 );
 	st_dx.y = 1.0-st_dx.y; 
@@ -104,9 +110,15 @@ void main(void)
 	vec2 scr_coo_dx = pos_dx.xy * vec2(vp_width, vp_height) / 2.0 / pos_dx.w;
 	vec2 scr_coo_dy = pos_dy.xy * vec2(vp_width, vp_height) / 2.0 / pos_dy.w;
 
-	float ss = splatOverlap*max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
+        float ss = max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
+	//float ss = max( abs(scr_coo_dx.x-scr_coo.x), abs(scr_coo_dy.y-scr_coo.y) );
 
-        gl_PointSize = max( ss, 5.0);
+        // Putting an upper limit on the size, equal to an expansion of 3 (no splat larger than 3 times dist between splats)
+        if ( splatSizeLimiting > 0 ) {
+            ss = min( ss, 3.0*max(float(vp_width)/splats_x, float(vp_height)/splats_y) );
+        }
+        
+        gl_PointSize = max( splatOverlap * ss, 1.0);
     } else {
         gl_PointSize = splatSize;
     }

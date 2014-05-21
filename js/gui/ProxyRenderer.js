@@ -204,6 +204,9 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "PM")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
+            if (this.gl.getUniformLocation(this._splatProgram, "splatSizeLimiting")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSizeLimiting"), this.exposedModel.getElementValue("splatSizeLimiting") );
+            }
 
             if ( this.exposedModel.getElementValue("resetAllModels") ) {
                 console.log("reset trykket");

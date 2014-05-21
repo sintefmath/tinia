@@ -71,6 +71,8 @@ bool CubeJob::init()
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
         m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
+        m_model->addElement<bool>( "splatSizeLimiting", false );
+        m_model->addAnnotation("splatSizeLimiting", "Var splat size limiting");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -100,6 +102,8 @@ bool CubeJob::init()
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("splats", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatSizeLimiting"));
         row++;
         // More elements...
     }
