@@ -27,15 +27,19 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
-        this._splats_x = 16;
-        this._splats_y = 16;
+        this._splats_x = 0; // 16;
+        this._splats_y = 0; // 16;
+        // Overriding with slider!!!
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
         this._splatOverlap = 0.5; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
         // Overriding with slider!!!
 
-        this._depthRingSize = 4;
+        this._lock = false; // for debugging
+        this._lock2 = false; // for debugging
+
+        this._depthRingSize = 5;
         // this._coverageGridSize = 10;
         this._angleThreshold = (180.0/this._depthRingSize) / 180.0*3.1415926535; // Is this a sensible value? 180/#models degrees
         this._zoomThreshold = 1.1;
@@ -63,20 +67,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 //        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
         this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize, this._angleThreshold, this._zoomThreshold);
-
-        // We don't really need this buffer, VS should be able to compute coordinates from gl_VertexID! @@@ fix this
-        this._splatVertexBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
-        this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
-        for (var i=0; i<this._splats_y; i++) {
-            for (var j=0; j<this._splats_x; j++) {
-                var u = (j+0.5)/this._splats_x;
-                var v = (i+0.5)/this._splats_y;
-                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
-                this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
-            }
-        }
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
         console.log("ProxyRenderer constructor ended");
     },
@@ -116,7 +106,11 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (this._proxyModelBeingProcessed.state!=0) {
             console.log("A depth buffer is already in the pipeline, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
         } else {
-            this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
+            if (!this._lock2) {
+                this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
+            }
+            if (this._lock)
+                this._lock2 = true;
         }
         // console.log("setDepthData: done");
     },
@@ -201,6 +195,9 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "transpBackground")) {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "transpBackground"), this.exposedModel.getElementValue("transpBackground") );
             }
+            if (this.gl.getUniformLocation(this._splatProgram, "mostRecentOffset")) {
+                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "mostRecentOffset"), this.exposedModel.getElementValue("mostRecentOffset") );
+            }
             if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
             }
@@ -208,8 +205,36 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             }
 
+            if ( this.exposedModel.getElementValue("resetAllModels") ) {
+                console.log("reset trykket");
+                this.exposedModel.updateElement("resetAllModels", false);
+                for (var i=0; i<this._depthRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
+                    this._lock = true;
+                }
+            }
+
             var ol = this.exposedModel.getElementValue("overlap") / 100.0;
             this._splatOverlap = ol;
+            var splats = this.exposedModel.getElementValue("splats");
+            if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
+                this._splats_x = splats;
+                this._splats_y = splats;
+                // We must (re-)initialize the vertex buffer!
+                //this.gl.bindBuffer(this.gl.ARRAY_BUFFER, 0);
+                this._splatVertexBuffer = this.gl.createBuffer();
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+                this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
+                for (var i=0; i<this._splats_y; i++) {
+                    for (var j=0; j<this._splats_x; j++) {
+                        var u = (j+0.5)/this._splats_x;
+                        var v = (i+0.5)/this._splats_y;
+                        this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                        this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
+                    }
+                }
+                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
+            }
 
             if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
                 var splatSizeX = this.gl.canvas.width  / this._splats_x;
@@ -244,6 +269,9 @@ dojo.declare("gui.ProxyRenderer", null, {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
                     }
+                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2")) {
+                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2"), i );
+                    }
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.proxyModelRing[i].depthTexture);
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
@@ -260,14 +288,13 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             } // end of loop over depth buffers
 
-            if ( this.exposedModel.getElementValue("mostRecentOffset") > 0 ) {
-                this.gl.disable(this.gl.DEPTH_TEST);
-            }
-
             if (this.exposedModel.getElementValue("alwaysShowMostRecent")) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), -1 );
+                    }
+                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2")) {
+                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2"), -1 );
                     }
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.depthTexture);
@@ -284,7 +311,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
-
 
             //            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
 //            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);

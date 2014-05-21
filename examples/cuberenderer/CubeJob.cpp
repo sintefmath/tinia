@@ -51,22 +51,26 @@ bool CubeJob::init()
 
     // Adding variables to the model
     {
-        m_model->addElement<bool>( "debugmode", false );
+        m_model->addElement<bool>( "debugmode", true );
         m_model->addAnnotation("debugmode", "Color splats according to buffer index (0=red, g, b, y, c, m)");
-        m_model->addElement<bool>( "decaymode", false );
+        m_model->addElement<bool>( "decaymode", true );
         m_model->addAnnotation("decaymode", "Splats decaying from center");
-        m_model->addElement<bool>( "roundsplats", false );
+        m_model->addElement<bool>( "roundsplats", true );
         m_model->addAnnotation("roundsplats", "Circular splats");
         m_model->addElement<bool>( "variablesized", false );
         m_model->addAnnotation("variablesized", "Variable-sized splats");
         m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
-        m_model->addAnnotation("overlap", "overlap)");
-        m_model->addElement<bool>( "alwaysShowMostRecent", true );
+        m_model->addAnnotation("overlap", "Overlap factor)");
+        m_model->addElement<bool>( "alwaysShowMostRecent", false );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addElement<bool>( "mostRecentOffset", true );
+        m_model->addElement<bool>( "mostRecentOffset", false );
         m_model->addAnnotation("mostRecentOffset", "Always show most recent proxy model with an offset in front");
         m_model->addElement<bool>( "transpBackground", true );
         m_model->addAnnotation("transpBackground", "bckgrnd in rgbTexture transp");
+        m_model->addConstrainedElement<int>("splats", 32, 2, 512);
+        m_model->addAnnotation("splats", "Number of splats)");
+        m_model->addElement<bool>( "resetAllModels", false );
+        m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -90,6 +94,12 @@ bool CubeJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("mostRecentOffset"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("transpBackground"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("splats"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("splats", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("splats", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
         row++;
         // More elements...
     }
@@ -119,7 +129,7 @@ void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
 
 bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
-    usleep(200000);
+    //usleep(200000);
     //usleep(10000);
 
     glEnable(GL_DEPTH_TEST);

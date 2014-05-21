@@ -9,20 +9,13 @@ uniform highp float splats_y;
 uniform highp float splatOverlap;
 uniform int splatSetIndex;
 
-
+#define PI 3.1415926535
 
 // For debugging
 uniform int debugSplatCol;
 uniform int decayMode;
 uniform int roundSplats;
 uniform int transpBackground;
-
-//#define DEBUG_SHOW_CIRCULAR_COMPLEMENT
-//#define DEBUG_SHOW_NON_OVERLAP_SQUARE
-//#define DEBUG_SHOW_SPLAT_CENTER
-#define DEBUG_SPLAT_SET_COLOUR
-
-#define PI 3.1415926535
 
 
 
@@ -33,12 +26,10 @@ void main(void)
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
-    
-#ifndef DEBUG_SHOW_CIRCULAR_COMPLEMENT
+
     if ( (roundSplats>0) && (r_squared>0.25) ) {
         discard;
     }
-#endif
 
     // Decay factor = 1.0 in splat center, tending toward 0 at circular rim.
     // In the distance sqrt(2*(0.5/overlap)^2), i.e., r_squared=2*(0.5/overlap)^2, we get decay=0.25,
@@ -78,31 +69,6 @@ void main(void)
 
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
 
-#ifdef DEBUG_SHOW_CIRCULAR_COMPLEMENT
-    // To help visualizing the splats during testing/debugging, outside of circular splats padded with white to squares
-    if ( (roundSplats>0) && (r_squared>0.25) ) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-    }
-#endif
-    
-#ifdef DEBUG_SHOW_NON_OVERLAP_SQUARE
-    // To help visualizing the splats during testing/debugging. Rendering a frame around the 'non-overlap-part' of the splat.
-    if ( ( abs(abs(c.x*splatOverlap)-0.5) < 0.05 ) && (abs(c.y*splatOverlap)<=0.5) ) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-    }
-    if ( ( abs(abs(c.y*splatOverlap)-0.5) < 0.05 ) && (abs(c.x*splatOverlap)<=0.5) ) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-    }
-#endif
-
-#ifdef DEBUG_SHOW_SPLAT_CENTER
-    // To help visualizing the splats during testing/debugging. Rendering a white dot in the center of the splat
-    if ( dot(c, c) <= 0.003 ) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
-    }
-#endif
-
-#ifdef DEBUG_SPLAT_SET_COLOUR
     if (debugSplatCol>0) {
         highp float al = atan(-c.y, c.x);
         if (al<0.0)
@@ -137,9 +103,8 @@ void main(void)
 	    else
 		gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
     } else {
-        if (splatSetIndex==-1)
-            if ( ( r_squared > 0.16 ) && ( r_squared < 0.25 ) )
-                gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+//         if (splatSetIndex==-1)
+//             if ( ( r_squared > 0.2 ) && ( r_squared < 0.25 ) )
+//                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
-#endif
 }

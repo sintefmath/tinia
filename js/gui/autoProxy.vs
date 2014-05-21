@@ -8,12 +8,15 @@ uniform mat4 depthPMinv;
 uniform mat4 depthMVinv;
 uniform sampler2D uSampler;
 uniform float splatSize;
+uniform float splatOverlap;
 
 uniform int variableSized;
 uniform float splats_x;
 uniform float splats_y;
 uniform int vp_width;
 uniform int vp_height;
+uniform int splatSetIndex2;
+uniform int mostRecentOffset;
 
 varying highp float depth;
 
@@ -25,15 +28,22 @@ void main(void)
     st.y=1.0-st.y; 
     vTextureCoord = st;
 
+    // With a 1024^2 canvas and 512^2 splats, there are no artifacts to be seen from using 16 bits for the depth. (But 8 is crap.)
+    // Now using all 24 bits, since we do send them from the server, currently.
     depth = ( texture2D( uSampler, st ).r +
               texture2D( uSampler, st ).g / 255.0 +
               texture2D( uSampler, st ).b / (255.0*255.0) );
+    
     if ( depth > 0.9999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
     }
     
+    if ( (splatSetIndex2==-1) && (mostRecentOffset>0) ) {
+	depth = depth - 0.01; // Moving the proxy model forward
+    }
+
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
     float x_ndc = aVertexPosition.x;
@@ -94,7 +104,7 @@ void main(void)
 	vec2 scr_coo_dx = pos_dx.xy * vec2(vp_width, vp_height) / 2.0 / pos_dx.w;
 	vec2 scr_coo_dy = pos_dy.xy * vec2(vp_width, vp_height) / 2.0 / pos_dy.w;
 
-	float ss = 1.0*max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
+	float ss = splatOverlap*max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
 
         gl_PointSize = max( ss, 5.0);
     } else {

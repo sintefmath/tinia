@@ -151,9 +151,10 @@ void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height
         // Depth encoded as 24 bit fixed point values.
         for(unsigned i = 0; i < width*height; i++) {
             float value = ((float*)m_buffer)[i];
-            m_buffer[3*i    ] = value*255;         value -= m_buffer[3*i   ] * 255.0;
-            m_buffer[3*i + 1] = value*255;         value -= m_buffer[3*i +1] * 255.0;
-            m_buffer[3*i + 2] = value*255;
+            for (unsigned j=0; j<3; j++) {
+                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                value = 255.0*value - floor(value*255.0);
+            }
         }
     } else {
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );

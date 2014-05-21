@@ -49,7 +49,7 @@ dojo.declare("gui.ProxyModel", null, {
         image.onload = dojo.hitch(this, function() {
             // var t1 = Date.now();
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
-            this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, image);
+            this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, image);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST); // _MIPMAP_NEAREST);
             //this._gl.generateMipmap(this._gl.TEXTURE_2D);
