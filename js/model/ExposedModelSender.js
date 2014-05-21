@@ -36,8 +36,16 @@ dojo.declare("model.ExposedModelSender", null, {
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function() {
             this._parsingUpdate = false;
         }));
+        
+        this._modelLib.addElementAccepter(dojo.hitch(this, this.accept));
     },
     
+    accept: function(key, value) {
+        if ( this._keys[key]) {
+            return false;
+        }
+        return true;
+    },
     
     
     update: function(key, value) {
@@ -93,6 +101,9 @@ dojo.declare("model.ExposedModelSender", null, {
             this._send(xmlBuild);
         } else {
             this._updateInProgress = false;
+            
+            // Reset keys we have seen.
+            this._keys = {};
             dojo.publish("/model/updateSendComplete", [{"response": response, "ioArgs" : ioArgs}]);
         }
     },

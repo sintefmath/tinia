@@ -323,7 +323,7 @@ dojo.declare("model.StateParser", model.XMLHelper, {
             for(var i = 0; i < xmlElement.childNodes.length; i++) {
                 if(xmlElement.childNodes[i].data) {
                     var value = dojo.trim(xmlElement.childNodes[i].data);
-                    parent.updateElement(nodeName, value);
+                    parent.passiveUpdateElement(nodeName, value);
                 }
             }
         }
@@ -339,7 +339,7 @@ dojo.declare("model.StateParser", model.XMLHelper, {
     updateListElement: function(parent, xmlElement, nodeName) {
         var listUnparsed = xmlElement.firstChild.data;
         var list = listUnparsed.split(" ");
-        parent.updateElement(nodeName, list);
+        parent.passiveUpdateElement(nodeName, list);
     }
     
     
