@@ -68,6 +68,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 //        this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize);
         this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(this.gl, this._depthRingSize, this._angleThreshold, this._zoomThreshold);
 
+        var db = this.gl.getParameter(this.gl.DEPTH_BITS);
+        console.log("Depth bits: " + db);
         console.log("ProxyRenderer constructor ended");
     },
 
@@ -75,11 +77,14 @@ dojo.declare("gui.ProxyRenderer", null, {
     compileShaders: function() {
         console.log("Shader source should now have been read from files, compiling and linking program...");
 
+        var available_extensions = this.gl.getSupportedExtensions();
+        console.log("extensions: " + JSON.stringify(available_extensions));
+
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         this.gl.shaderSource(splat_fs, this._splat_fs_src);
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the splat_fs: " + this.gl.getShaderInfoLog(splat_fs));
+            alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
             return null;
         }
 
@@ -87,7 +92,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.shaderSource(splat_vs, this._splat_vs_src);
         this.gl.compileShader(splat_vs);
         if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the splat_vs: " + this.gl.getShaderInfoLog(splat_vs));
+            alert("An error occurred compiling the splat_vs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_vs));
             return null;
         }
 
@@ -96,7 +101,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.attachShader(this._splatProgram, splat_fs);
         this.gl.linkProgram(this._splatProgram);
         if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
-            alert("Unable to initialize the shader program. (gl.LINK_STATUS not ok,)");
+            alert("Unable to initialize the shader program: " + this.gl.LINK_STATUS + ": " + this.gl.getProgramInfoLog(this._splatProgram));
         }
     },
 

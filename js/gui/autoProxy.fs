@@ -1,3 +1,29 @@
+#extension EXT_frag_depth : enable
+#extension GL_EXT_frag_depth : enable
+#extension WEBKIT_EXT_frag_depth : enable
+#extension WEBKIT_GL_EXT_frag_depth : enable
+
+// #extension ANGLE_instanced_arrays : enable
+// #extension EXT_texture_filter_anisotropic : enable
+// #extension WEBKIT_EXT_texture_filter_anisotropic : enable
+// #extension OES_element_index_uint : enable
+// #extension OES_standard_derivatives : enable
+// #extension OES_texture_float : enable
+// #extension OES_texture_float_linear : enable
+// #extension OES_texture_half_float : enable
+// #extension OES_texture_half_float_linear : enable
+// #extension OES_vertex_array_object : enable
+// #extension WEBGL_compressed_texture_s3tc : enable
+// #extension WEBKIT_WEBGL_compressed_texture_s3tc : enable
+// #extension WEBGL_depth_texture : enable
+// #extension WEBKIT_WEBGL_depth_texture : enable
+// #extension WEBGL_draw_buffers : enable
+// #extension WEBGL_lose_context : enable
+// #extension WEBKIT_WEBGL_lose_context : enable
+// #extension WEBGL_debug_renderer_info : enable
+
+
+
 uniform sampler2D rgbImage;
 uniform sampler2D uSampler;
 
@@ -107,4 +133,14 @@ void main(void)
 //             if ( ( r_squared > 0.2 ) && ( r_squared < 0.25 ) )
 //                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
+    
+
+    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+
+interface EXT_frag_depth {
+    };
+
+    gl_FragDepthEXT = 1.0;
+    
+
 }

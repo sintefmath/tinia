@@ -42,7 +42,12 @@ void main(void)
     }
     
     if ( (splatSetIndex2==-1) && (mostRecentOffset>0) ) {
-	depth = depth - 0.01; // Moving the proxy model forward
+        // Moving the most recent proxy model forward.
+        // The problem with this is that splats are large, and "coplanar with the viewport", so that the amount of shifting must be rather large to 
+        // produce the desired effect on regions for which the gemetry is not "coplanar with the newport"...
+        // (Would it be feasible to adjust all fragments intra-splat for more accurate depths? This could perhaps solve the problem.)
+        // (Unfortunately, WebGL doesn't support gl_FragDepth.)
+	depth = depth - 1.0/32767.0; // We probably have 24 bits of depth...
     }
 
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
