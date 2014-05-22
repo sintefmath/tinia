@@ -1,7 +1,7 @@
-#extension EXT_frag_depth : enable
+// #extension EXT_frag_depth : enable
 #extension GL_EXT_frag_depth : enable
-#extension WEBKIT_EXT_frag_depth : enable
-#extension WEBKIT_GL_EXT_frag_depth : enable
+// #extension WEBKIT_EXT_frag_depth : enable
+// #extension WEBKIT_GL_EXT_frag_depth : enable
 
 // #extension ANGLE_instanced_arrays : enable
 // #extension EXT_texture_filter_anisotropic : enable
@@ -135,12 +135,8 @@ void main(void)
     }
     
 
-    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
 
-interface EXT_frag_depth {
-    };
-
-    gl_FragDepthEXT = 1.0;
+    //    gl_FragDepthEXT = 1.0;
     
 
 }
