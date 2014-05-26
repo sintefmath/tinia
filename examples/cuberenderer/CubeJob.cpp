@@ -79,10 +79,10 @@ bool CubeJob::init()
         m_model->addAnnotation("ignoreIntraSplatTexCoo", "Ignore intra-splat texcoo");
         m_model->addElement<bool>( "splatOutline", true );
         m_model->addAnnotation("splatOutline", "Square splat outline");
-        m_model->addElement<bool>( "adjustTCwithFactorFromVS", false );
-        m_model->addAnnotation("adjustTCwithFactorFromVS", "Adjust tc in FS with factor from VS");
-        m_model->addElement<bool>( "differentiationTestFlag", false );
-        m_model->addAnnotation("differentiationTestFlag", "differentiationTestFlag");
+//        m_model->addElement<bool>( "adjustTCwithFactorFromVS", false );
+//        m_model->addAnnotation("adjustTCwithFactorFromVS", "Adjust tc in FS with factor from VS");
+//        m_model->addElement<bool>( "differentiationTestFlag", false );
+//        m_model->addAnnotation("differentiationTestFlag", "differentiationTestFlag");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -122,10 +122,10 @@ bool CubeJob::init()
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("adjustTCwithFactorFromVS"));
-        row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("differentiationTestFlag"));
-        row++;
+//        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("adjustTCwithFactorFromVS"));
+//        row++;
+//        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("differentiationTestFlag"));
+//        row++;
         // More elements...
     }
 

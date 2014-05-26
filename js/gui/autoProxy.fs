@@ -3,7 +3,7 @@
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 
-varying highp vec2 vTextureCoord;
+varying highp vec2 texCoo;
 varying highp float depth;
 varying highp vec2 vertPos;
 varying highp vec4 glpos; // debugging
@@ -19,10 +19,10 @@ uniform highp mat4 depthMVinv;
 
 uniform highp float splats_x;
 uniform highp float splats_y;
-uniform highp float splatSize;
 uniform highp float splatOverlap;
 uniform highp int splatSetIndex;
 uniform highp int mostRecentOffset;
+uniform highp int screenSpaceSized;
 
 #define PI 3.1415926535
 
@@ -34,7 +34,7 @@ uniform int transpBackground;
 uniform int fragDepthTest;
 uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
-uniform highp int adjustTCwithFactorFromVS;
+// uniform highp int adjustTCwithFactorFromVS;
 
 
 
@@ -56,30 +56,16 @@ void main(void)
     // which corresponds to the maximum "depth-disabled accumulated splat value" of 1.0 for a regular grid of splats.
     highp float decay = exp(splatOverlap*splatOverlap*log(1.0/16.0)*r_squared);
 
-    // This is useful if blending is enabled with blend_func(0.5, 0.5) and depth testing disabled, and will
-    // cause the accumulated color to not be less than 1
-    // decay = decay * 10.0;
-    
-    // Decay factor < 1.0 only outside of normal-sized splat
-    if (false) {
-        highp vec2 c2 = splatOverlap*c;   // c in splatOverlap*[-0.5, 0.5]^2, [-0.5, 0.5]^2 is the 'non-overlap' part
-        highp float r_squared2 = dot(c2, c2);
-        decay = exp(-1.0*r_squared2);
-        if ( (abs(c2.x)<=0.5) && (abs(c2.y)<=0.5) ) {
-            // We are inside the non-overlap part
-            decay = 1.0;
-        }
-    }
-
     // Adjusting for intra-splat texture coordinate
     // Hmm. But is this really correct? Shouldn't this be done between the "un-projection" and the new transformation?!
     // Note that it should be correct if the proxy model's view is the same as the current view!
-    highp vec2 tc = vTextureCoord + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
-    //    highp vec2 tc = vTextureCoord + vec2( c.x/splats_x, c.y/splats_y );
-    if (adjustTCwithFactorFromVS>0)
-	tc = vTextureCoord + vec2( c.x/splats_x/ssFactor.x/splats_x*splatOverlap, c.y/splats_y/ssFactor.y/splats_y*splatOverlap );
+    highp vec2 tc;
+    // if (screenSpaceSized>0)
+    //     tc = texCoo + vec2( c.x/splats_x*splatOverlap/ssFactor.x/splats_x, c.y/splats_y*splatOverlap/ssFactor.y/splats_y );
+    // else
+        tc = texCoo + vec2( c.x/splats_x*splatOverlap/ssFactor.x, c.y/splats_y*splatOverlap/ssFactor.y );
     if (ignoreIntraSplatTexCoo>0) 
-	tc = vTextureCoord;
+	tc = texCoo;
 
     // Discarding fragments that would look up depth and color outside the rendered scene
     // Note that this will remove parts of primitives containing "background pixels" from the rgb texture, it will not cause these
@@ -87,14 +73,16 @@ void main(void)
     // Note also that this will not remove parts of primitives that are rotated outside of the correct geometry.
     // That is impossible to do, we do not have the necessary information. What we can do, is to adjust the fragment depth, which we
     // do below.
-    if (transpBackground>0) {
-        highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
-        if ( intra_splat_depth > 0.9999 )
-            discard;
-        if (splatSetIndex==-1)
-            clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+    if (!(fragDepthTest>0)) {
+        if (transpBackground>0) {
+            highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
+            if ( intra_splat_depth > 0.9999 )
+                discard;
+            if (splatSetIndex==-1) // If this is "the most recent proxy model", it should be brought some amount toward the front
+                clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        }
     }
-
+    
     if (decayMode==0) {
         decay = 1.0;
     }
@@ -126,18 +114,14 @@ void main(void)
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
     
-
-    // if (fragDepthTest>0) {
+    // if (fragDepthTest>0)
     //     gl_FragDepthEXT = 0.5;
-    // }
-
-    //    gl_FragColor = vec4(depth, vTextureCoord, src_alpha);
+    //    gl_FragColor = vec4(depth, texCoo, src_alpha);
     
     if (fragDepthTest>0) {
 
         // gl_FragColor = vec4(0.0, 0.0, abs(gl_FragCoord.z-depth)*10.0, src_alpha);
 	// Verifies that we understand in the vs how depth is computed
-
 
         // Re-computing the window coordinates with the idea to see how z_window is computed, and then modify this, or
         // use it to discard fragments. Or both, really. We want to discard fragments outside the silhouette, if
@@ -147,50 +131,36 @@ void main(void)
         // We have (x, y, z)_ndc = (x_c/w_c, y_c/w_c, z_c/w_c) and then window coordinates:
         // (x, y, z)_window = (0.5*p_x*x_ndc + o_x, 0.5*p_y*y_ndc + o_y, 0.5*(f-n)*z_ndc + 0.5*(n+f)).
 
-        
-        
-        highp float new_depth = ( texture2D( depthImg, vTextureCoord ).r +
-                                  texture2D( depthImg, vTextureCoord ).g / 255.0 +
-                                  texture2D( depthImg, vTextureCoord ).b / (255.0*255.0) );
-        // Should be < 1.0, should have been discarded in the VS otherwise.
-        if (splatSetIndex==-1) {
+        highp float new_depth = texture2D(depthImg, texCoo).r + (texture2D(depthImg, texCoo).g + texture2D(depthImg, texCoo).b/255.0)/255.0;
+        if (splatSetIndex==-1) // If this is "the most recent proxy model", it should be brought some amount toward the front
             new_depth = clamp(new_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        }
         
-        highp float x_ndc = vertPos.x;
-        highp float y_ndc = vertPos.y;
-        highp float z_ndc = 2.0*new_depth - 1.0;
-        // gl_FragColor = vec4(ndc_to_fs-vec3(x_ndc, y_ndc, z_ndc), src_alpha); // Checked
-
-        highp vec4 vert_eb = depthPMinv * vec4( x_ndc, y_ndc, z_ndc, 1.0 );
-        // gl_FragColor = vec4((vert_eb-vert_eb_to_fs).xyz, src_alpha); // ok
-
+        highp vec3 ndc = vec3(vertPos.xy, 2.0*new_depth-1.0);
+        // gl_FragColor = vec4(ndc_to_fs-ndc, src_alpha); // Checked
+        
+        highp vec4 vert_eb = depthPMinv * vec4(ndc, 1.0);
+        // gl_FragColor = vec4((vert_eb-vert_eb_to_fs).xyz, src_alpha); // Checked
+        
         highp vec4 vert_wb = depthMVinv * vert_eb;
         // gl_FragColor = vec4((vert_wb-vert_wb_to_fs).xyz, src_alpha);
-	// Mostly ok, but some odd primitives. Truncation/conversion artefacts?
-
+	// Mostly ok, but some odd primitives. Truncation/conversion artefacts? (not on Fangorn?)
+        
         highp vec4 pos = PM * MV * vert_wb;
-        // gl_FragColor = vec4((pos-glpos).xyz, src_alpha); // Mostly ok, but some odd primitives. Truncation/conversion artefacts?
-
-
+        // gl_FragColor = vec4((pos-glpos).xyz, src_alpha); // Mostly ok, but some odd primitives. Truncation/conversion artefacts? (not on Fangorn?)
+        
         // Now with intra-splat position:
+        tc = texCoo + vec2( c.x/splats_x*splatOverlap/ssFactor.x, c.y/splats_y*splatOverlap/ssFactor.y );
+        
 
-        tc = vTextureCoord + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
 
-        highp float intra_splat_depth = ( texture2D( depthImg, tc ).r +
-                                          texture2D( depthImg, tc ).g / 255.0 +
-                                          texture2D( depthImg, tc ).b / (255.0*255.0) );
-        if (splatSetIndex==-1) {
+        highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg,tc).b/255.0)/255.0;
+        if (splatSetIndex==-1)
 	    intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        }
         // gl_FragColor = vec4(abs(intra_splat_depth-new_depth), 0.0, 0.0, src_alpha); // tja?
         
 
-
-
-
         // Adjusting for intra-splat texture coordinate
-        // highp vec2 tc = vTextureCoord + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
+        // highp vec2 tc = texCoo + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
 
         // Since the relation between vertex and texture coordinate is: s = 0.5*(x+1), and s_i = s+c.x/splats_x*overlap, we get
         // s_i = 0.5*(x_i + 1) <=> x_i = 2*s_i - 1 = 2s + 2c.x/splats_x*overlap - 1.
@@ -201,7 +171,7 @@ void main(void)
         highp float z_ndc_is = 2.0*intra_splat_depth - 1.0;
 
         if (false) {
-            highp float d = length( vec3(x_ndc_is, y_ndc_is, z_ndc_is) - vec3(x_ndc, y_ndc, z_ndc) );
+            highp float d = length( vec3(x_ndc_is, y_ndc_is, z_ndc_is) - ndc );
             // Should be zero in the center of splats, but what about the rim? How do we normalize this length?  If we
             // let y_ndc_i = y_ndc and z_ndc_i = z_ndc, we see that the distance should be 1.0/splats_x*splatOverlap,
             // cf. the comment (*) above.

@@ -212,8 +212,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "fragDepthTest");
             this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo");
             this._setUniform1i(this._splatProgram, "splatOutline");
-            this._setUniform1i(this._splatProgram, "adjustTCwithFactorFromVS");
-            this._setUniform1i(this._splatProgram, "differentiationTestFlag");
+//            this._setUniform1i(this._splatProgram, "adjustTCwithFactorFromVS");
+//            this._setUniform1i(this._splatProgram, "differentiationTestFlag");
 
             if ( this.exposedModel.getElementValue("resetAllModels") ) {
                 console.log("reset trykket");
@@ -247,16 +247,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
             }
 
-            if (this.gl.getUniformLocation(this._splatProgram, "splatSize")) {
-                var splatSizeX = this.gl.canvas.width  / this._splats_x;
-                var splatSizeY = this.gl.canvas.height / this._splats_y;
-                var splatSize = Math.max(splatSizeX, splatSizeY) * this._splatOverlap;
-                if ( Math.abs(splatSizeX-splatSizeY) > 0.001 ) {
-                    console.log("Viewport size and number of splats indicate that splats with non-unity aspect ratio has been requested!" +
-                                " x) " + splatSizeX + " y) " + splatSizeY + " used) " +splatSize);
-                }
-                this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatSize"), splatSize );
-            }
             if (this.gl.getUniformLocation(this._splatProgram, "splats_x")) {
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_x"), this._splats_x );
             }
