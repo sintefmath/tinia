@@ -45,8 +45,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 1024;
-        this._height = 1024;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
         this._snapshotURL = params.snapshotURL;
 
@@ -578,10 +578,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
         }
-        else {
-            dojo.style(this._img, "z-index", "2");
-            this._img.style.zIndex = "2";
-        }
+//        else {
+//            dojo.style(this._img, "z-index", "2");
+//            this._img.style.zIndex = "2";
+//        }
 
         if (this._loadingDiv) {
             if (this._imageLoading && !this._active) {

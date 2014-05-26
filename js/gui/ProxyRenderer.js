@@ -80,10 +80,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         var available_extensions = this.gl.getSupportedExtensions();
         console.log("extensions: " + JSON.stringify(available_extensions));
 
-        var frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
-        console.log("frag_depth_ext = " + frag_depth_ext);
-
-//        alert("qqq   " + frag_depth_ext);
+//        var frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
+//        console.log("frag_depth_ext = " + frag_depth_ext);
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         this.gl.shaderSource(splat_fs, this._splat_fs_src);
@@ -117,12 +115,22 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("A depth buffer is already in the pipeline, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
         } else {
             if (!this._lock2) {
+                // lock2 not set, we shall update the ring buffer as usual
                 this._proxyModelBeingProcessed.setAll(depthBufferAsText, imageAsText, viewMatAsText, projMatAsText);
             }
-            if (this._lock)
+            if (this._lock) {
+                // All models have been reset and we just inserted a proxy model in the ring buffer, after this, we shall not insert any more, hence we set lock2.
                 this._lock2 = true;
+            }
         }
         // console.log("setDepthData: done");
+    },
+
+
+    _setUniform1i: function(prog, name) {
+        if (this.gl.getUniformLocation(prog, name)) {
+            this.gl.uniform1i( this.gl.getUniformLocation(prog, name), this.exposedModel.getElementValue(name) );
+        }
     },
 
 
@@ -190,33 +198,22 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
 
-            if (this.gl.getUniformLocation(this._splatProgram, "debugSplatCol")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "debugSplatCol"), this.exposedModel.getElementValue("debugmode") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "decayMode")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "decayMode"), this.exposedModel.getElementValue("decaymode") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "roundSplats")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "roundSplats"), this.exposedModel.getElementValue("roundsplats") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "variableSized")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "variableSized"), this.exposedModel.getElementValue("variablesized") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "transpBackground")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "transpBackground"), this.exposedModel.getElementValue("transpBackground") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "mostRecentOffset")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "mostRecentOffset"), this.exposedModel.getElementValue("mostRecentOffset") );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "MV")) {
+            this._setUniform1i(this._splatProgram, "debugSplatCol");
+            this._setUniform1i(this._splatProgram, "decayMode");
+            this._setUniform1i(this._splatProgram, "roundSplats");
+            this._setUniform1i(this._splatProgram, "screenSpaceSized");
+            this._setUniform1i(this._splatProgram, "transpBackground");
+            this._setUniform1i(this._splatProgram, "mostRecentOffset");
+            if (this.gl.getUniformLocation(this._splatProgram, "MV"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "PM")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "PM"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "splatSizeLimiting")) {
-                this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSizeLimiting"), this.exposedModel.getElementValue("splatSizeLimiting") );
-            }
+            this._setUniform1i(this._splatProgram, "splatSizeLimiting");
+            this._setUniform1i(this._splatProgram, "fragDepthTest");
+            this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo");
+            this._setUniform1i(this._splatProgram, "splatOutline");
+            this._setUniform1i(this._splatProgram, "adjustTCwithFactorFromVS");
+            this._setUniform1i(this._splatProgram, "differentiationTestFlag");
 
             if ( this.exposedModel.getElementValue("resetAllModels") ) {
                 console.log("reset trykket");
@@ -224,6 +221,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 for (var i=0; i<this._depthRingSize; i++) {
                     this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
                     this._lock = true;
+                    this._lock2 = false;
                 }
             }
 
@@ -282,12 +280,9 @@ dojo.declare("gui.ProxyRenderer", null, {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), i );
                     }
-                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2")) {
-                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2"), i );
-                    }
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.proxyModelRing[i].depthTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "depthImg"), 0 );
                     this.gl.activeTexture(this.gl.TEXTURE1);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.proxyModelRing[i].rgbTexture);
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
@@ -306,12 +301,9 @@ dojo.declare("gui.ProxyRenderer", null, {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
                         this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex"), -1 );
                     }
-                    if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2")) {
-                        this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "splatSetIndex2"), -1 );
-                    }
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.depthTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "uSampler"), 0 );
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "depthImg"), 0 );
                     this.gl.activeTexture(this.gl.TEXTURE1);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.rgbTexture);
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );

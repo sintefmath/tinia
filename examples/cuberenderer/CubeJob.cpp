@@ -51,49 +51,60 @@ bool CubeJob::init()
 
     // Adding variables to the model
     {
-        m_model->addElement<bool>( "debugmode", true );
-        m_model->addAnnotation("debugmode", "Color splats according to buffer index (0=red, g, b, y, c, m)");
-        m_model->addElement<bool>( "decaymode", true );
-        m_model->addAnnotation("decaymode", "Splats decaying from center");
-        m_model->addElement<bool>( "roundsplats", true );
-        m_model->addAnnotation("roundsplats", "Circular splats");
-        m_model->addElement<bool>( "variablesized", false );
-        m_model->addAnnotation("variablesized", "Variable-sized splats");
+        m_model->addElement<bool>( "debugSplatCol", false );
+        m_model->addAnnotation("debugSplatCol", "Index coloring (r, g, b, y, c, m)");
+        m_model->addElement<bool>( "decayMode", false );
+        m_model->addAnnotation("decayMode", "Splats decaying from center");
+        m_model->addElement<bool>( "roundSplats", false );
+        m_model->addAnnotation("roundSplats", "Circular splats");
+        m_model->addElement<bool>( "screenSpaceSized", true );
+        m_model->addAnnotation("screenSpaceSized", "Screen-space-sized splats");
         m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
         m_model->addAnnotation("overlap", "Overlap factor)");
         m_model->addElement<bool>( "alwaysShowMostRecent", false );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addElement<bool>( "mostRecentOffset", false );
-        m_model->addAnnotation("mostRecentOffset", "Always show most recent proxy model with an offset in front");
-        m_model->addElement<bool>( "transpBackground", true );
-        m_model->addAnnotation("transpBackground", "bckgrnd in rgbTexture transp");
-        m_model->addConstrainedElement<int>("splats", 32, 2, 512);
+        m_model->addConstrainedElement<int>("mostRecentOffset", 0, 0, 100);
+        m_model->addAnnotation("mostRecentOffset", "Offset (%%))");
+        m_model->addElement<bool>( "transpBackground", false );
+        m_model->addAnnotation("transpBackground", "Background in rgbTexture made transparent");
+        m_model->addConstrainedElement<int>("splats", 16, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
         m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
         m_model->addElement<bool>( "splatSizeLimiting", false );
-        m_model->addAnnotation("splatSizeLimiting", "Var splat size limiting");
+        m_model->addAnnotation("splatSizeLimiting", "Splat size clamping (x3)");
+        m_model->addElement<bool>( "fragDepthTest", false );
+        m_model->addAnnotation("fragDepthTest", "fragDepthTest");
+        m_model->addElement<bool>( "ignoreIntraSplatTexCoo", false );
+        m_model->addAnnotation("ignoreIntraSplatTexCoo", "Ignore intra-splat texcoo");
+        m_model->addElement<bool>( "splatOutline", true );
+        m_model->addAnnotation("splatOutline", "Square splat outline");
+        m_model->addElement<bool>( "adjustTCwithFactorFromVS", false );
+        m_model->addAnnotation("adjustTCwithFactorFromVS", "Adjust tc in FS with factor from VS");
+        m_model->addElement<bool>( "differentiationTestFlag", false );
+        m_model->addAnnotation("differentiationTestFlag", "differentiationTestFlag");
     }
 
     // Setting up the mainGrid containing the GUI elements
-    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 3);
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
     {
         int row = 0;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugmode"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugSplatCol"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decaymode"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decayMode"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundsplats"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundSplats"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("variablesized"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("screenSpaceSized"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("overlap"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("overlap", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("overlap", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("alwaysShowMostRecent"));
-        row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("mostRecentOffset"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::HorizontalSlider("mostRecentOffset"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("mostRecentOffset", false));
+        mainGrid->setChild(row, 3, new tinia::model::gui::Label("mostRecentOffset", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("transpBackground"));
         row++;
@@ -104,6 +115,16 @@ bool CubeJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatSizeLimiting"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("fragDepthTest"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ignoreIntraSplatTexCoo"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("adjustTCwithFactorFromVS"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("differentiationTestFlag"));
         row++;
         // More elements...
     }
