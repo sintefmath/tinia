@@ -351,7 +351,7 @@ QWidget*
 GUIBuilder::addElementGroup(model::gui::ElementGroup *root, QWidget *parent)
 {
     QGroupBox* widget = new QGroupBox( parent );
-    widget->setFlat( true );
+    //widget->setFlat( true );
 
     const std::string key = root->key();
     if( root->showLabel() && !root->key().empty() ) {
