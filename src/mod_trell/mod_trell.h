@@ -30,8 +30,6 @@
 #include "apr_time.h"
 
 
-
-
 /** Trell configuration structure.
   *
   * Elements set in httpd.conf.
@@ -107,9 +105,9 @@ typedef struct mod_trell_dispatch_info
     int                  m_height;
     char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
     char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
-    char                 m_requestname[TRELL_REQUESTNAME_MAXLENGTH+1];
-    char                 m_key[TRELL_KEYID_MAXLENGTH+1];
-    char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH+1];
+    char                 m_key[TRELL_KEYID_MAXLENGTH];
+    char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
+    char*                m_static_path;
     apr_time_t           m_entry;
     apr_time_t           m_exit;
     apr_time_t           m_png_entry;
@@ -265,7 +263,7 @@ trell_handle_get_script( trell_sconf_t*          sconf,
   * -- If messenger buffer is too small, return HTTP_INSUFFICIENT_STORAGE.
   * -- If message post fails, return HTTP_INTERNAL_SERVER.
   * - Unlock and close connection to job, if fails return HTTP_INTERNAL_SERVER_ERROR.
-  * - If succeeds, return OK. (Defined by Apache.)
+  * - If succeeds, return HTTP_NO_CONTENT.
   */
 int
 trell_handle_update_state( trell_sconf_t*          sconf,
