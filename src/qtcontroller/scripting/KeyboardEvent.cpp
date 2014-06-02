@@ -32,6 +32,12 @@ int KeyboardEvent::key()
     return m_event.key();
 }
 
+int KeyboardEvent::keyCode()
+{
+    return m_event.key();
+}
+
+
 } // namespace scripting
 } // namespace qtcontroller
 } // namespace tinia
