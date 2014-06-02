@@ -443,7 +443,6 @@ private:
    typedef boost::recursive_mutex mutex_type;
    typedef mutex_type::scoped_lock scoped_lock;
    mutable mutex_type m_selfMutex;
-   mutable mutex_type m_listenerHandlersMutex;
 
    mutex_type& getExposedModelMutex();
 
@@ -488,15 +487,13 @@ template<typename T>
 void
 ExposedModel::addElement( std::string key, T value, const std::string annotation ) {
 
-   impl::ElementData data;
-   {
-      scoped_lock lock(m_selfMutex);
-      data = addElementInternal(key, value);
-   }
-   if( !annotation.empty() ) {
-       addAnnotation( key, annotation );
-   }
-   fireStateSchemaElementAdded(key, data);
+    scoped_lock lock(m_selfMutex);
+
+    impl::ElementData data = addElementInternal(key, value);
+    if( !annotation.empty() ) {
+        addAnnotation( key, annotation );
+    }
+    fireStateSchemaElementAdded(key, data);
 }
 
 
@@ -505,29 +502,26 @@ void
 ExposedModel::addConstrainedElement( std::string key, T value, T minConstraint, T maxConstraint, const std::string annotation ) {
     impl::checkBounds(value, minConstraint, maxConstraint);
 
+    scoped_lock lock(m_selfMutex);
+    impl::ElementData& elementData = addElementInternal(key, value);
 
-   impl::ElementData data;
-   { // Lock scope
-      scoped_lock lock(m_selfMutex);
-      impl::ElementData& elementData = addElementInternal(key, value);
+    {
+        std::stringstream ss;
+        ss << minConstraint;
+        elementData.setMinConstraint( ss.str() );
+    }
 
-      {
-         std::stringstream ss;
-         ss << minConstraint;
-         elementData.setMinConstraint( ss.str() );
-      }
+    {
+        std::stringstream ss;
+        ss << maxConstraint;
+        elementData.setMaxConstraint( ss.str() );
+    }
+    // Copy
+    impl::ElementData data = elementData;
 
-      {
-         std::stringstream ss;
-         ss << maxConstraint;
-         elementData.setMaxConstraint( ss.str() );
-      }
-      // Copy
-      data = elementData;
-   }
-   addAnnotation( key, annotation );
+    addAnnotation( key, annotation );
 
-   fireStateSchemaElementAdded(key, data);
+    fireStateSchemaElementAdded(key, data);
 }
 
 template<class T, class TContainer>
@@ -556,17 +550,15 @@ ExposedModel::updateRestrictions(std::string key, T value, InputIterator begin,
        restrictionStrings.insert( s );
     }
 
-    // The copy given to the listener outside the lock.
-    impl::ElementData data;
-    {
-       std::string stringValue = boost::lexical_cast<std::string>(value);
-       scoped_lock lock(m_selfMutex);
-       impl::ElementData& elementData = findElementInternal(key);
-       elementData.setRestrictionSet( restrictionStrings );
-       elementData.setStringValue(stringValue);
 
-       data = elementData;
-    }
+    std::string stringValue = boost::lexical_cast<std::string>(value);
+    scoped_lock lock(m_selfMutex);
+    impl::ElementData& elementData = findElementInternal(key);
+    elementData.setRestrictionSet( restrictionStrings );
+    elementData.setStringValue(stringValue);
+
+    impl::ElementData data = elementData;
+
     fireStateSchemaElementModified(key, data);
     fireStateElementModified(key, data);
 }
@@ -595,15 +587,13 @@ ExposedModel::addElementWithRestriction( std::string key, T value, InputIterator
       restrictionStrings.insert( s );
    }
 
-   // The copy given to the listener outside the lock.
-   impl::ElementData data;
-   {
-      scoped_lock lock(m_selfMutex);
-      impl::ElementData& elementData = addElementInternal(key, value);
-      elementData.setRestrictionSet( restrictionStrings );
 
-      data = elementData;
-   }
+   scoped_lock lock(m_selfMutex);
+   impl::ElementData& elementData = addElementInternal(key, value);
+   elementData.setRestrictionSet( restrictionStrings );
+
+   impl::ElementData data = elementData;
+
    fireStateSchemaElementAdded(key, data);
 }
 
@@ -673,34 +663,30 @@ ExposedModel::updateElementHelper( std::string key, impl::ElementData& elementDa
 template<typename T>
 void
 ExposedModel::updateElement( std::string key, T value ) {
-
-   impl::ElementData data;
-   std::string stringValueBeforeUpdate;
-   {// Lock block
-      scoped_lock lock(m_selfMutex);
+    scoped_lock lock(m_selfMutex);
 
 
 
-      std::string myType = impl::TypeToXSDType<T>::getTypename();
-      impl::ElementData& elementData = findElementInternal(key);
-      std::string storedType = elementData.getXSDType();
+    std::string myType = impl::TypeToXSDType<T>::getTypename();
+    impl::ElementData& elementData = findElementInternal(key);
+    std::string storedType = elementData.getXSDType();
 
-      if ( storedType != myType ) {
-          throw TypeException(myType, storedType);
-      }
-      stringValueBeforeUpdate = elementData.getStringValue();
-      updateElementHelper( key, elementData, value );
+    if ( storedType != myType ) {
+        throw TypeException(myType, storedType);
+    }
+    std::string stringValueBeforeUpdate = elementData.getStringValue();
+    updateElementHelper( key, elementData, value );
 
-      incrementRevisionNumber( elementData );
-      data = elementData;
-   }
+    incrementRevisionNumber( elementData );
+    impl::ElementData data = elementData;
 
-   // Only fire listeners when we have to (in the case of complex values, we fire
-   // the event no matter what).
-   if(stringValueBeforeUpdate != data.getStringValue() || data.isComplexType())
-   {
-      fireStateElementModified(key, data);
-   }
+
+    // Only fire listeners when we have to (in the case of complex values, we fire
+    // the event no matter what).
+    if(stringValueBeforeUpdate != data.getStringValue() || data.isComplexType())
+    {
+        fireStateElementModified(key, data);
+    }
 
 }
 
@@ -745,7 +731,8 @@ impl::ElementData& model::ExposedModel::addElementInternal(std::string key,
 template<class InputIterator>
 void
 ExposedModel::addAnnotation( std::string key, const InputIterator& begin, const InputIterator& end ) {
-   using std::string;
+    scoped_lock lock(m_selfMutex);
+    using std::string;
    std::map<std::string, std::string> annotationMap;
 
    for(InputIterator it = begin; it !=  end; ++it) {
@@ -781,39 +768,39 @@ ExposedModel::updateConstraints( std::string key, T value, T minValue, T maxValu
     impl::ElementData data;
     bool emitChange = false;
     bool emitValueChange = false;
-    { // Lock block
-        scoped_lock lock(m_selfMutex);
 
-        impl::ElementData& elementData = findElementInternal(key);
+    scoped_lock lock(m_selfMutex);
 
-        {
-            std::stringstream ss;
-            ss << minValue;
-            if( ss.str() != elementData.getMinConstraint() ) {
-                emitChange = true;
-            }
-            elementData.setMinConstraint(ss.str());
+    impl::ElementData& elementData = findElementInternal(key);
+
+    {
+        std::stringstream ss;
+        ss << minValue;
+        if( ss.str() != elementData.getMinConstraint() ) {
+            emitChange = true;
         }
-        {
-            std::stringstream ss;
-            ss << maxValue;
-            if( ss.str() != elementData.getMaxConstraint() ) {
-                emitChange = true;
-            }
-            elementData.setMaxConstraint(ss.str());
-        }
-        {
-            std::stringstream ss;
-            ss << value;
-            if( ss.str() != elementData.getStringValue()) {
-                emitValueChange = true;
-            }
-            elementData.setStringValue(ss.str());
-        }
-        if( emitChange || emitValueChange ) {
-            data = elementData;
-        }
+        elementData.setMinConstraint(ss.str());
     }
+    {
+        std::stringstream ss;
+        ss << maxValue;
+        if( ss.str() != elementData.getMaxConstraint() ) {
+            emitChange = true;
+        }
+        elementData.setMaxConstraint(ss.str());
+    }
+    {
+        std::stringstream ss;
+        ss << value;
+        if( ss.str() != elementData.getStringValue()) {
+            emitValueChange = true;
+        }
+        elementData.setStringValue(ss.str());
+    }
+    if( emitChange || emitValueChange ) {
+        data = elementData;
+    }
+
 
     if(emitChange) {
         fireStateSchemaElementModified( key, data );
