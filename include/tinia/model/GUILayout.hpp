@@ -154,7 +154,8 @@ class Container0D
 {
 public:
     Container0D()
-        : m_child( NULL )
+        : m_child( NULL ),
+          m_pad_contents( true )
     {}
 
     ~Container0D()
@@ -167,9 +168,12 @@ public:
     void setChild( ChildType* child ) { if (m_child != NULL ) { delete m_child; } m_child = child; }
     ChildType* child() { return m_child; }
     const ChildType* child() const { return m_child; }
+    bool padContents() const { return m_pad_contents; }
+    void setPadContents( bool do_pad ) { m_pad_contents = do_pad; }
 
 private:
-    ChildType*    m_child;
+    ChildType*  m_child;
+    bool        m_pad_contents;
 };
 
 /** Interface for elements that contains a sequence of child elements. */
@@ -177,6 +181,10 @@ template<typename ChildType>
 class Container1D
 {
 public:
+    Container1D()
+        : m_pad_contents( true )
+    {}
+
     ~Container1D()
     {
         for( typename std::vector<ChildType*>::iterator it = m_children.begin(); it != m_children.end(); ++it ) {
@@ -188,9 +196,12 @@ public:
     const size_t children() const { return m_children.size(); }
     ChildType* child( size_t index ) { return m_children[ index ]; }
     const ChildType* child( size_t index ) const { return m_children[ index ]; }
+    bool padContents() const { return m_pad_contents; }
+    void setPadContents( bool do_pad ) { m_pad_contents = do_pad; }
 
 private:
-    std::vector<ChildType*>   m_children;
+    std::vector<ChildType*> m_children;
+    bool                    m_pad_contents;
 };
 
 /** Interface for elements that contains a grid of child elements. */
@@ -200,7 +211,8 @@ class Container2D
 public:
     Container2D( size_t height, size_t width )
         : m_width( width ),
-          m_height( height )
+          m_height( height ),
+          m_pad_contents( true )
     {
         m_children.resize( m_width*m_height, NULL );
     }
@@ -219,11 +231,14 @@ public:
     void setChild( size_t row, size_t col, ChildType* child ) { m_children[ index(row,col) ] = child; }
     ChildType* child( size_t row, size_t col ) { return m_children[ index( row, col ) ]; }
     const ChildType* child( size_t row, size_t col ) const { return m_children[ index( row, col ) ]; }
+    bool padContents() const { return m_pad_contents; }
+    void setPadContents( bool do_pad ) { m_pad_contents = do_pad; }
 
 private:
     size_t                  m_width;
     size_t                  m_height;
     std::vector<ChildType*> m_children;
+    bool                    m_pad_contents;
 
     const size_t index( const size_t row, const size_t col ) const { return row + col*m_height; }
 };

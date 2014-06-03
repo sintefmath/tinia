@@ -251,6 +251,7 @@ GUIBuilder::addTabLayout(model::gui::TabLayout *root, QWidget *parent)
             std::cerr << __FILE__ << '@' << __LINE__<< ": ERROR: child is not tab.\n";
         }
     }
+    tabWidget->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
    return tabWidget;
 }
 
@@ -350,7 +351,7 @@ QWidget*
 GUIBuilder::addElementGroup(model::gui::ElementGroup *root, QWidget *parent)
 {
     QGroupBox* widget = new QGroupBox( parent );
-    widget->setFlat( true );
+    //widget->setFlat( true );
 
     const std::string key = root->key();
     if( root->showLabel() && !root->key().empty() ) {
@@ -429,7 +430,7 @@ GUIBuilder::addCanvas(model::gui::Canvas *root, QWidget *parent )
         QVBoxLayout* wrapper_layout = new QVBoxLayout(wrapper);
         wrapper->setLayout( wrapper_layout );
         wrapper_layout->setSpacing( 0 );
-        wrapper->setContentsMargins( 0, 0, 0, 0 );
+        wrapper_layout->setContentsMargins( 0, 0, 0, 0 );
 
         wrapper->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         wrapper->layout()->addWidget(canvas );
@@ -510,6 +511,9 @@ GUIBuilder::addChildren( model::gui::Container0D<model::gui::Element>*  containe
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
     model::gui::Element* child = container->child();
     QWidget* child_widget = buildGUI( child, widget );
     if( child_widget != NULL ) {
@@ -530,6 +534,10 @@ GUIBuilder::addChildren( model::gui::Container1D<model::gui::Element>*  containe
                          QWidget*                                               widget,
                          QBoxLayout*                                            layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
+
     for( size_t i=0; i<container->children(); i++ ) {
         model::gui::Element* child = container->child( i );
         if( child == NULL ) {
@@ -560,6 +568,10 @@ GUIBuilder::addChildren( model::gui::Container2D<model::gui::Element>* container
                          QWidget* widget,
                          QGridLayout* layout )
 {
+    if( !container->padContents() ) {
+        layout->setContentsMargins( 0, 0, 0, 0 );
+    }
+
     for(size_t row = 0; row < container->height(); row++) {
        for(size_t col = 0; col  < container->width(); col++) {
 
