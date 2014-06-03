@@ -128,7 +128,7 @@ TrackBallManipulator.prototype = {
         near = Math.min( 0.01*far, Math.max( far, near+epsilon) );
         // create projection
         var w2, h2;
-        if( this.m_aspect > 1.0 ) {
+        if( this.m_aspect < 1.0 ) {
             w2 = Math.tan( 0.5*this.m_fov )*-near;
             h2 = w2/this.m_aspect;
         }
