@@ -127,7 +127,9 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
 {
 	tinia::model::ExposedModelLock lock(m_job->getExposedModel());
     std::string content = getPostContent(request).toStdString();
-    m_xmlHandler.updateState(content.c_str(), content.size());
+    if( !content.empty() ) {
+        m_xmlHandler.updateState(content.c_str(), content.size());
+    }
 }
 
 void ServerThread::getRenderList(QTextStream &os, const QString &request)
