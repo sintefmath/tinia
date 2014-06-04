@@ -302,6 +302,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_height"), this.gl.canvas.height );
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
+            var shader_time = Date.now();
             // Should combine these by putting the "most recent model" into the ring buffer...
             for (var i=0; i<this._depthRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
@@ -323,7 +324,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             } // end of loop over depth buffers
-
             if (this.exposedModel.getElementValue("alwaysShowMostRecent")) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
                     if (this.gl.getUniformLocation(this._splatProgram, "splatSetIndex")) {
@@ -344,6 +344,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
+            // console.log("Shader time: " + (Date.now()-shader_time));
 
             //            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
 //            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);

@@ -12,7 +12,6 @@ varying highp vec4 vert_wb_to_fs; // debugging
 varying highp vec4 vert_eb_to_fs; // debugging
 varying highp vec2 ssFactor;
 varying highp mat2 intraSplatTexCooTransform;
-varying highp vec2 st_e1, st_e2;
 
 uniform highp mat4 PM;
 uniform highp mat4 MV;
@@ -65,6 +64,8 @@ void main(void)
     tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
     if (!(ignoreIntraSplatTexCoo>0)) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
+	// Or should the flip here and a corresponding in the intraSplatTexCooTransform-generation be removed simultaneously?!
+	//tc = tc + (1.0/32.0)*vec2(c.x, c.y); // testing
     }
 
     // Discarding fragments that would look up depth and color outside the rendered scene
