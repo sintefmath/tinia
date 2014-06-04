@@ -22,12 +22,17 @@ public:
 
     void getImageAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
     
+    void getRenderListUpdateResponse( QTextStream& response,
+                                      const QString& request );
+    
 signals:
     void glImageReady();
     void getGLImage(unsigned int width, unsigned int height, QString key);
+    void signalGetRenderListUpdate( const QString& request );
 
 private slots:
     void getImage(unsigned int width, unsigned int height, QString key);
+    void getRenderListUpdate( const QString& request );
     void wakeListeners();
 
 private:
@@ -46,6 +51,7 @@ private:
     tinia::jobcontroller::Job* m_job;
     unsigned char* m_buffer;
     size_t          m_buffer_size;
+    QString         m_renderlist_update_xml;
     bool m_openglIsReady;
     unsigned int m_fbo;
     unsigned int m_renderbufferRGBA;

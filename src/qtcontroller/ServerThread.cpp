@@ -14,7 +14,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-ServerThread::ServerThread(ImageSource& grabber,
+ServerThread::ServerThread(OpenGLServerGrabber &grabber,
                            tinia::jobcontroller::Job* job,
                            int socket,
                            QObject *parent) :
@@ -132,6 +132,9 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
 
 void ServerThread::getRenderList(QTextStream &os, const QString &request)
 {
+#if 1
+    m_grabber.getRenderListUpdateResponse( os, request );
+#else    
     boost::tuple<std::string, unsigned int> params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
     os << httpHeader("application/xml") << "\r\n";
     tinia::jobcontroller::OpenGLJob* openglJob = dynamic_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
@@ -143,8 +146,8 @@ void ServerThread::getRenderList(QTextStream &os, const QString &request)
                                                          params.get<1>() );
             os << QString(list.c_str()) << "\n";
         }
-
     }
+#endif
 }
 
 void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &msg)

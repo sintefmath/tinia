@@ -39,7 +39,7 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, tinia::qtcontroller::ImageSource* imageSource, QObject *parent) :
+HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, tinia::qtcontroller::impl::OpenGLServerGrabber* imageSource, QObject *parent) :
     QTcpServer(parent), m_job(job),
     m_serverGrabber(imageSource)
 {
