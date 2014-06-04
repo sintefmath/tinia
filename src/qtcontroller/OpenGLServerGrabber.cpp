@@ -82,8 +82,12 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 
     openGLJob->renderFrame( "session", key.toStdString(), m_fbo, width, height );
 
+    // QImage requires scanline size to be a multiple of 32 bits.
+    size_t scanline_size = 4*((3*width+3)/4);
+    glPixelStorei( GL_PACK_ALIGNMENT, 4 );
+    
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = width*height*3;
+    size_t req_buffer_size = scanline_size*height*3;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -92,7 +96,6 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
         m_buffer = new unsigned char[m_buffer_size];
     }
     
-    glPixelStorei( GL_PACK_ALIGNMENT, 1 );
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
