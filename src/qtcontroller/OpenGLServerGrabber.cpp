@@ -10,7 +10,7 @@ namespace impl {
 
 OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
                                          QObject *parent) :
-QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
+    QObject(parent), m_glImageIsReady(false), m_job(job), m_buffer( NULL ), m_buffer_size(0), m_openglIsReady(false),
     m_width(500), m_height(500)
 {
     connect(this, SIGNAL(glImageReady()), this,
@@ -82,6 +82,16 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
 
     openGLJob->renderFrame( "session", key.toStdString(), m_fbo, width, height );
 
+    // make sure that buffer is large enough to hold raw image
+    size_t req_buffer_size = width*height*3;
+    if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
+        if( m_buffer != NULL ) {
+            delete m_buffer;
+        }
+        m_buffer_size = req_buffer_size;
+        m_buffer = new unsigned char[m_buffer_size];
+    }
+    
      glPixelStorei( GL_PACK_ALIGNMENT, 1 );
 
      glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );

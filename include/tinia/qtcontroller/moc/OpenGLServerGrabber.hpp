@@ -44,7 +44,8 @@ private:
     QWaitCondition m_waitCondition;
 
     tinia::jobcontroller::Job* m_job;
-    unsigned char m_buffer[5000000];
+    unsigned char* m_buffer;
+    size_t          m_buffer_size;
     bool m_openglIsReady;
     unsigned int m_fbo;
     unsigned int m_renderbufferRGBA;
