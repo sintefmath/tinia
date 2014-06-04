@@ -49,18 +49,15 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl = glContext;
         this.exposedModel = exposedModel;
 
-        dojo.xhrGet( { url: "gui/autoProxy.fs",
-                        handleAs: "text",
-                        load: dojo.hitch(this, function(data, ioArgs) {
-                            this._splat_fs_src = data;
-                        })
-                    } );
-        dojo.xhrGet( { url: "gui/autoProxy.vs",
-                        handleAs: "text",
-                        load: dojo.hitch(this, function(data, ioArgs) {
-                            this._splat_vs_src = data;
-                        })
-                    } );
+        this.exposedModel.addLocalListener("reloadShader", dojo.hitch(this, function(event) {
+            if(this.exposedModel.getElementValue("reloadShader")) {
+                this._loadShaders();
+            } else {
+                this.exposedModel.updateElement("reloadShader", false);
+            }
+        }));
+
+        this._loadShaders();
 
         // This solution amounts to a one-element cache/ring, and could be extended.
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
@@ -74,7 +71,36 @@ dojo.declare("gui.ProxyRenderer", null, {
     },
 
 
-    compileShaders: function() {
+   _loadShaders: function() {
+       var oneIsLoaded = false;
+       dojo.xhrGet( { url: "gui/autoProxy.fs",
+                       handleAs: "text",
+                       preventCache: true,
+                       load: dojo.hitch(this, function(data, ioArgs) {
+                           this._splat_fs_src = data;
+                           if (oneIsLoaded) {
+                               this._compileShaders();
+                           } else {
+                               oneIsLoaded = true;
+                           }
+                       })
+                   } );
+       dojo.xhrGet( { url: "gui/autoProxy.vs",
+                       handleAs: "text",
+                       preventCache: true,
+                       load: dojo.hitch(this, function(data, ioArgs) {
+                           this._splat_vs_src = data;
+                           if (oneIsLoaded) {
+                               this._compileShaders();
+                           } else {
+                               oneIsLoaded = true;
+                           }
+                       })
+                   } );
+   },
+
+
+    _compileShaders: function() {
         console.log("Shader source should now have been read from files, compiling and linking program...");
 
         var available_extensions = this.gl.getSupportedExtensions();
@@ -136,9 +162,6 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     render: function(matrices) {
         // var t0 = Date.now();
-        if ( (!this._splatProgram) && (this._splat_vs_src) && (this._splat_fs_src) ) {
-            this.compileShaders();
-        }
 
         if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
             // this._proxyModelCoverage.processDepthDataReplaceOldest( this._proxyModelBeingProcessed );
@@ -212,17 +235,37 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "fragDepthTest");
             this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo");
             this._setUniform1i(this._splatProgram, "splatOutline");
-//            this._setUniform1i(this._splatProgram, "adjustTCwithFactorFromVS");
-//            this._setUniform1i(this._splatProgram, "differentiationTestFlag");
-
             if ( this.exposedModel.getElementValue("resetAllModels") ) {
                 console.log("reset trykket");
                 this.exposedModel.updateElement("resetAllModels", false);
                 for (var i=0; i<this._depthRingSize; i++) {
                     this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
-                    this._lock = true;
-                    this._lock2 = false;
                 }
+                this._lock = true;
+                this._lock2 = false;
+            }
+            this._setUniform1i(this._splatProgram, "tcConst");
+            if ( this.exposedModel.getElementValue("linearDepth") ) {
+                for (var i=0; i<this._depthRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i]._setDepthSamplingMode(this.gl.LINEAR);
+                }
+                this._proxyModelCoverage.mostRecentModel._setDepthSamplingMode(this.gl.LINEAR);
+            } else {
+                for (var i=0; i<this._depthRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i]._setDepthSamplingMode(this.gl.NEAREST);
+                }
+                this._proxyModelCoverage.mostRecentModel._setDepthSamplingMode(this.gl.NEAREST);
+            }
+            if ( this.exposedModel.getElementValue("linearRGB") ) {
+                for (var i=0; i<this._depthRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i]._setRgbSamplingMode(this.gl.LINEAR);
+                }
+                this._proxyModelCoverage.mostRecentModel._setRgbSamplingMode(this.gl.LINEAR);
+            } else {
+                for (var i=0; i<this._depthRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i]._setRgbSamplingMode(this.gl.NEAREST);
+                }
+                this._proxyModelCoverage.mostRecentModel._setRgbSamplingMode(this.gl.NEAREST);
             }
 
             var ol = this.exposedModel.getElementValue("overlap") / 100.0;
@@ -247,21 +290,16 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
             }
 
-            if (this.gl.getUniformLocation(this._splatProgram, "splats_x")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "splats_x"))
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_x"), this._splats_x );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "splats_y")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "splats_y"))
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splats_y"), this._splats_y );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "splatOverlap")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "splatOverlap"))
                 this.gl.uniform1f( this.gl.getUniformLocation(this._splatProgram, "splatOverlap"), this._splatOverlap );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "vp_width")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "vp_width"))
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_width"), this.gl.canvas.width );
-            }
-            if (this.gl.getUniformLocation(this._splatProgram, "vp_height")) {
+            if (this.gl.getUniformLocation(this._splatProgram, "vp_height"))
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_height"), this.gl.canvas.height );
-            }
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
             // Should combine these by putting the "most recent model" into the ring buffer...

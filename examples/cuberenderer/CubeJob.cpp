@@ -57,9 +57,9 @@ bool CubeJob::init()
         m_model->addAnnotation("decayMode", "Splats decaying from center");
         m_model->addElement<bool>( "roundSplats", false );
         m_model->addAnnotation("roundSplats", "Circular splats");
-        m_model->addElement<bool>( "screenSpaceSized", true );
+        m_model->addElement<bool>( "screenSpaceSized", false );
         m_model->addAnnotation("screenSpaceSized", "Screen-space-sized splats");
-        m_model->addConstrainedElement<int>("overlap", 100, 1, 300);
+        m_model->addConstrainedElement<int>("overlap", 98, 1, 300);
         m_model->addAnnotation("overlap", "Overlap factor)");
         m_model->addElement<bool>( "alwaysShowMostRecent", false );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
@@ -67,7 +67,7 @@ bool CubeJob::init()
         m_model->addAnnotation("mostRecentOffset", "Offset (%%))");
         m_model->addElement<bool>( "transpBackground", false );
         m_model->addAnnotation("transpBackground", "Background in rgbTexture made transparent");
-        m_model->addConstrainedElement<int>("splats", 16, 2, 512);
+        m_model->addConstrainedElement<int>("splats", 32, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
         m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
@@ -79,10 +79,14 @@ bool CubeJob::init()
         m_model->addAnnotation("ignoreIntraSplatTexCoo", "Ignore intra-splat texcoo");
         m_model->addElement<bool>( "splatOutline", true );
         m_model->addAnnotation("splatOutline", "Square splat outline");
-//        m_model->addElement<bool>( "adjustTCwithFactorFromVS", false );
-//        m_model->addAnnotation("adjustTCwithFactorFromVS", "Adjust tc in FS with factor from VS");
-//        m_model->addElement<bool>( "differentiationTestFlag", false );
-//        m_model->addAnnotation("differentiationTestFlag", "differentiationTestFlag");
+        m_model->addConstrainedElement<int>("tcConst", 100, 0, 1000);
+        m_model->addAnnotation("tcConst", "tc const.)");
+        m_model->addElement<bool>( "reloadShader", false );
+        m_model->addAnnotation("reloadShader", "Reload shader");
+        m_model->addElement<bool>( "linearDepth", false );
+        m_model->addAnnotation("linearDepth", "linearDepth");
+        m_model->addElement<bool>( "linearRGB", true );
+        m_model->addAnnotation("linearRGB", "linearRGB");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -122,10 +126,15 @@ bool CubeJob::init()
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
         row++;
-//        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("adjustTCwithFactorFromVS"));
-//        row++;
-//        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("differentiationTestFlag"));
-//        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("tcConst"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("tcConst", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("tcConst", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("reloadShader"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("linearDepth"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("linearRGB"));
+        row++;
         // More elements...
     }
 
@@ -139,6 +148,30 @@ bool CubeJob::init()
         rootLayout->addChild(mainGrid);
         m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
     }
+
+    // Setting up texture
+    {
+        glGenTextures(1, &m_tex);
+        glBindTexture(GL_TEXTURE_2D, m_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        const int n=512;
+        std::vector<unsigned char> texData(n*n*3, 255);
+        for (int i=0; i<n; i+=(n/16)) {
+            for (int j=0; j<n; j++) {
+                texData[3*(i*n+j) + 0] = 0;
+                texData[3*(i*n+j) + 1] = 0;
+                texData[3*(i*n+j) + 2] = 0;
+                texData[3*(j*n+i) + 0] = 0;
+                texData[3*(j*n+i) + 1] = 0;
+                texData[3*(j*n+i) + 2] = 0;
+            }
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, n, n, 0, GL_RGB, GL_UNSIGNED_BYTE, &texData[0]);
+    }
+
 
     return true;
 }
@@ -155,7 +188,7 @@ void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
 bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
     //usleep(200000);
-    //usleep(10000);
+    // usleep(10000);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -171,61 +204,87 @@ bool CubeJob::renderFrame(const std::string &session, const std::string &key, un
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf( viewer.modelviewMatrix.data() );
 
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, m_tex);
+
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
+    glTexCoord2f(1, 1);
     glVertex3f(  0.5, -0.5, -0.5 );
+    glTexCoord2f(1, 0);
     glVertex3f(  0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 0);
     glVertex3f( -0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 1);
+    glVertex3f( -0.5, -0.5, -0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(  .0,  0.0,  1.0 );
+    glTexCoord2f(1, 1);
+    glVertex3f( 0.5, -0.5, -0.5 );
+    glTexCoord2f(1, 0);
+    glVertex3f( 0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 0);
+    glVertex3f( 0.5,  0.5,  0.5 );
+    glTexCoord2f(0, 1);
+    glVertex3f( 0.5, -0.5,  0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  0.5,  0.0 );
+    glTexCoord2f(1, 1);
+    glVertex3f( -0.5, -0.5,  0.5 );
+    glColor3f(   0.0,  1.0,  0.5 );
+    glTexCoord2f(1, 0);
+    glVertex3f( -0.5,  0.5,  0.5 );
+    glColor3f(   1.0,  0.0,  0.5 );
+    glTexCoord2f(0, 0);
+    glVertex3f( -0.5,  0.5, -0.5 );
+    glColor3f(   0.5,  0.0,  0.5 );
+    glTexCoord2f(0, 1);
     glVertex3f( -0.5, -0.5, -0.5 );
     glEnd();
 
     glBegin(GL_POLYGON);
     glColor3f(   0.0,  1.0, 0.0 );
+    glTexCoord2f(1, 1);
     glVertex3f(  0.5, -0.5, 0.5 );
+    glTexCoord2f(1, 0);
     glVertex3f(  0.5,  0.5, 0.5 );
+    glTexCoord2f(0, 0);
     glVertex3f( -0.5,  0.5, 0.5 );
+    glTexCoord2f(0, 1);
     glVertex3f( -0.5, -0.5, 0.5 );
     glEnd();
 
     glBegin(GL_POLYGON);
-    glColor3f(  .0,  0.0,  1.0 );
-    glVertex3f( 0.5, -0.5, -0.5 );
-    glVertex3f( 0.5,  0.5, -0.5 );
-    glVertex3f( 0.5,  0.5,  0.5 );
-    glVertex3f( 0.5, -0.5,  0.5 );
-    glEnd();
-
-    glBegin(GL_POLYGON);
-//    glColor3f(   1.0,  1.0,  0.0 );
-
-    glColor3f(   1.0,  0.5,  0.0 );
-    glVertex3f( -0.5, -0.5,  0.5 );
-
-    glColor3f(   0.0,  1.0,  0.5 );
-    glVertex3f( -0.5,  0.5,  0.5 );
-
-    glColor3f(   1.0,  0.0,  0.5 );
-    glVertex3f( -0.5,  0.5, -0.5 );
-
-    glColor3f(   0.5,  0.0,  0.5 );
-    glVertex3f( -0.5, -0.5, -0.5 );
-    glEnd();
-
-    glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0,  1.0 );
+    glTexCoord2f(1, 1);
     glVertex3f(  0.5,  0.5,  0.5 );
+    glTexCoord2f(1, 0);
     glVertex3f(  0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 0);
     glVertex3f( -0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 1);
     glVertex3f( -0.5,  0.5,  0.5 );
     glEnd();
 
     glBegin(GL_POLYGON);
     glColor3f(   0.0,  1.0,  1.0 );
+    glTexCoord2f(1, 1);
     glVertex3f(  0.5, -0.5, -0.5 );
+    glTexCoord2f(1, 0);
     glVertex3f(  0.5, -0.5,  0.5 );
+    glTexCoord2f(0, 0);
     glVertex3f( -0.5, -0.5,  0.5 );
+    glTexCoord2f(0, 1);
     glVertex3f( -0.5, -0.5, -0.5 );
     glEnd();
+
+    glDisable(GL_TEXTURE_2D);
+
     CHECK_GL;
 
     return true;

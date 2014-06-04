@@ -47,6 +47,7 @@ private:
     tinia::renderlist::DataBase     m_renderlist_db;
     GLuint                      m_gpgpu_quad_vertex_array;
     GLuint                      m_gpgpu_quad_buffer;
+    GLuint m_tex;
 };
 }
 }
