@@ -92,14 +92,12 @@ void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QStr
         m_buffer = new unsigned char[m_buffer_size];
     }
     
-     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+    glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
-
-
-
-     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-     emit glImageReady();
+    emit glImageReady();
 }
 
 void OpenGLServerGrabber::wakeListeners()
@@ -122,22 +120,60 @@ void OpenGLServerGrabber::setupOpenGL()
 
 void OpenGLServerGrabber::resize(unsigned int width, unsigned int height)
 {
-    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    // resize render buffers
+    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
     glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferRGBA );
     glRenderbufferStorage( GL_RENDERBUFFER, GL_RGBA, width, height );
-    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0,
-                               GL_RENDERBUFFER,
-                               m_renderbufferRGBA );
 
     glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferDepth );
     glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
     glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+
+    // set up framebuffer
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_RENDERBUFFER,
+                               m_renderbufferRGBA );
     glFramebufferRenderbuffer( GL_FRAMEBUFFER,
                                GL_DEPTH_ATTACHMENT,
                                GL_RENDERBUFFER,
                                m_renderbufferDepth );
+
+    // check for framebuffer completeness
+    GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+    if( status != GL_FRAMEBUFFER_COMPLETE ) {
+        std::cerr << "OpenGLServerGrabber::resize(width=" << width
+                  << ",height=" << height << "): Incomplete framebuffer: ";
+        switch( status ) {
+        case GL_FRAMEBUFFER_UNDEFINED:
+            std::cerr << "GL_FRAMEBUFFER_UNDEFINED";
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            std::cerr << "GL_FRAMEBUFFER_UNSUPPORTED";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
+            break;
+        default:
+            std::cerr << "<unknown status>"; break;
+        }
+        std::cerr << std::endl;
+    }
+    
     m_width = width;
     m_height = height;
 }
