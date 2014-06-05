@@ -22,6 +22,7 @@
 #include "tinia/qtcontroller/GUIBuilder.hpp"
 #include <tinia/qtcontroller/impl/script_utils.hpp>
 #include <tinia/qtcontroller/impl/ScriptEngine.hpp>
+#include <tinia/qtcontroller/moc/Invoker.hpp>
 #ifdef TINIA_HAVE_LIBXML
 #include <tinia/qtcontroller/moc/ServerController.hpp>
 #endif
@@ -46,7 +47,8 @@ namespace tinia {
 namespace qtcontroller {
 
 QTController::QTController()
-    : m_root_context(NULL),
+    : m_invoker( NULL ),
+      m_root_context(NULL),
       m_job(NULL),      
       m_perf_mode( false ),
       m_renderlist_mode( false )
@@ -117,8 +119,9 @@ int QTController::run(int argc, char **argv)
 
 
     m_app.reset(  new QApplication( argc, argv ) );
-
     m_main_window.reset( new QMainWindow() );
+    m_invoker = new impl::Invoker( m_main_window.get() );
+
     setupServerController();
 
     // Now we may init the script.
