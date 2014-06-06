@@ -22,17 +22,12 @@ public:
 
     void getImageAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
     
-    void getRenderListUpdateResponse( QTextStream& response,
-                                      const QString& request );
-    
 signals:
     void glImageReady();
     void getGLImage(unsigned int width, unsigned int height, QString key);
-    void signalGetRenderListUpdate( const QString& request );
 
 private slots:
     void getImage(unsigned int width, unsigned int height, QString key);
-    void getRenderListUpdate( const QString& request );
     void wakeListeners();
 
 private:

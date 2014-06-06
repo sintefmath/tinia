@@ -10,18 +10,74 @@
 #include "tinia/qtcontroller/moc/LongPollHandler.hpp"
 #include "tinia/model/ExposedModelLock.hpp"
 
+namespace {
+
+class RenderListFetcher : public QRunnable
+{
+public:
+    explicit RenderListFetcher( QTextStream& reply,
+                                const QString& request,
+                                tinia::jobcontroller::Job* job )
+        : m_reply( reply ),
+          m_request( request )
+    {
+        using namespace tinia::qtcontroller::impl;
+        
+        m_job = dynamic_cast<tinia::jobcontroller::OpenGLJob*>( job );
+        if( m_job == NULL ) {
+            throw std::invalid_argument("This is not an OpenGL job!");
+        }
+
+        m_params = parseGet<boost::tuple<std::string, unsigned int> >( decodeGetParameters(request),
+                                                                       "key timestamp" );
+    }
+    
+    ~RenderListFetcher()
+    {
+        using namespace tinia::qtcontroller::impl;
+
+        m_reply << httpHeader("application/xml") << "\r\n";
+        m_reply << m_update << "\n";
+    }
+    
+    void
+    run()
+    {
+        // runs as GUI thread
+        using namespace tinia::renderlist;
+        const DataBase* db = m_job->getRenderList( "session", m_params.get<0>() );
+        if(db) {
+            std::string list = getUpdateXML( db, ENCODING_JSON, m_params.get<1>() );
+            m_update = QString( list.c_str() );
+        }
+    }
+    
+protected:
+    QTextStream&                            m_reply;
+    const QString&                          m_request;
+    tinia::jobcontroller::OpenGLJob*        m_job;
+    boost::tuple<std::string, unsigned int> m_params;
+    QString                                 m_update;
+};
+
+
+}
+
+
 namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
 ServerThread::ServerThread(OpenGLServerGrabber &grabber,
+                           Invoker* mainthread_invoker,
                            tinia::jobcontroller::Job* job,
                            int socket,
                            QObject *parent) :
     m_socket(socket),
     m_xmlHandler(job->getExposedModel()),
     m_job(job),
-    m_grabber(grabber)
+    m_grabber(grabber),
+    m_mainthread_invoker(mainthread_invoker)
 {
 }
 
@@ -105,7 +161,8 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
             return true;
         }
         else if(file == "/getRenderList.xml") {
-            getRenderList(os, request);
+            RenderListFetcher functor( os, request, m_job );
+            m_mainthread_invoker->invokeInMainThread( &functor, true );
             return true;
         }
         else if(file =="/updateState.xml") {
@@ -132,25 +189,6 @@ void ServerThread::updateState(QTextStream &os, const QString &request)
     }
 }
 
-void ServerThread::getRenderList(QTextStream &os, const QString &request)
-{
-#if 1
-    m_grabber.getRenderListUpdateResponse( os, request );
-#else    
-    boost::tuple<std::string, unsigned int> params = parseGet<boost::tuple<std::string, unsigned int> > (decodeGetParameters(request), "key timestamp");
-    os << httpHeader("application/xml") << "\r\n";
-    tinia::jobcontroller::OpenGLJob* openglJob = dynamic_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
-    if(openglJob) {
-        const tinia::renderlist::DataBase* db = openglJob->getRenderList("session", params.get<0>());
-        if(db) {
-            std::string list = renderlist::getUpdateXML( db,
-                                                         renderlist::ENCODING_JSON,
-                                                         params.get<1>() );
-            os << QString(list.c_str()) << "\n";
-        }
-    }
-#endif
-}
 
 void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &msg)
 {

@@ -4,6 +4,7 @@
 #include "tinia/jobcontroller.hpp"
 #include "tinia/model/impl/xml/XMLHandler.hpp"
 #include "tinia/qtcontroller/moc/OpenGLServerGrabber.hpp"
+#include "tinia/qtcontroller/moc/Invoker.hpp"
 
 namespace tinia {
 namespace qtcontroller {
@@ -13,6 +14,7 @@ class ServerThread : public QRunnable
 {
 public:
     explicit ServerThread(OpenGLServerGrabber& grabber,
+                          Invoker* mainthread_invoker,
                           tinia::jobcontroller::Job* job,
                           int socket,
                           QObject *parent = 0);
@@ -33,8 +35,6 @@ private:
 
     void updateState(QTextStream& os, const QString& request);
 
-    void getRenderList(QTextStream& os, const QString& request);
-
     /** Writes the error code to the stream formated as HTTP requires,
      * with the optional message formated in HTML
      */
@@ -47,6 +47,7 @@ private:
     tinia::jobcontroller::Job* m_job;
 
     OpenGLServerGrabber& m_grabber;
+    Invoker*                            m_mainthread_invoker;
 };
 
 } // namespace impl

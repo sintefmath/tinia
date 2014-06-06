@@ -43,14 +43,15 @@ HTTPServer::HTTPServer( tinia::jobcontroller::Job* job,
                         QObject *parent)
     : QTcpServer(parent),
       m_job(job),
-      m_serverGrabber( new OpenGLServerGrabber(m_job, this ) )
+      m_serverGrabber( new OpenGLServerGrabber(m_job, this ) ),
+      m_mainthread_invoker( new Invoker( this ) )
 {
     listen(QHostAddress::Any, 8080);
 }
 
 void HTTPServer::incomingConnection(int socket)
 {
-    ServerThread* thread = new ServerThread(*m_serverGrabber, m_job, socket);
+    ServerThread* thread = new ServerThread(*m_serverGrabber, m_mainthread_invoker, m_job, socket);
 
     //connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 

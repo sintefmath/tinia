@@ -2,6 +2,7 @@
 
 #include "tinia/jobcontroller.hpp"
 #include "tinia/qtcontroller/moc/OpenGLServerGrabber.hpp"
+#include "tinia/qtcontroller/moc/Invoker.hpp"
 #include "tinia/model/impl/xml/XMLHandler.hpp"
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -26,6 +27,7 @@ public:
 private:
     tinia::jobcontroller::Job*  m_job;
     OpenGLServerGrabber*        m_serverGrabber;    // Lifetime managed by Qt child-parent
+    Invoker*                    m_mainthread_invoker;   // Lifetime managed by Qt child-parent.
 
 };
 

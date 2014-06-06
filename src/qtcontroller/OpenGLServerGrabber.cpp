@@ -19,9 +19,6 @@ OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
 
     connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
             SLOT(getImage(uint,uint,QString)));
-    
-    connect( this, SIGNAL(signalGetRenderListUpdate(QString)),
-             this, SLOT(getRenderListUpdate(QString)) );
 }
 
 OpenGLServerGrabber::~OpenGLServerGrabber()
@@ -31,56 +28,6 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
         glDeleteRenderbuffers(1, &m_renderbufferRGBA);
         glDeleteRenderbuffers(1, &m_renderbufferDepth);
     }
-}
-
-void OpenGLServerGrabber::getRenderListUpdateResponse( QTextStream& response,
-                                                       const QString& request )
-{
-    m_mainMutex.lock();
-
-    emit signalGetRenderListUpdate( request );
-
-    m_waitMutex.lock();
-    while(!m_glImageIsReady) {
-        m_waitCondition.wait(&m_waitMutex);
-    }
-
-    response << httpHeader("application/xml") << "\r\n";
-    response << m_renderlist_update_xml << "\n";
-
-    m_glImageIsReady = false;
-    m_waitMutex.unlock();
-    m_mainMutex.unlock();
-}
-
-void OpenGLServerGrabber::getRenderListUpdate( const QString& request )
-{
-    // runs as main thread
-    tinia::jobcontroller::OpenGLJob* openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
-    if(!openGLJob) {
-        throw std::invalid_argument("This is not an OpenGL job!");
-    }
-
-    typedef boost::tuple<std::string, unsigned int> params_t;    
-    params_t params = parseGet<params_t>( decodeGetParameters(request),
-                                          "key timestamp" );
-    const tinia::renderlist::DataBase* db = openGLJob->getRenderList( "session",
-                                                                      params.get<0>() );
-    if(db) {
-        std::string list = renderlist::getUpdateXML( db,
-                                                     renderlist::ENCODING_JSON,
-                                                     params.get<1>() );
-        m_renderlist_update_xml = QString(list.c_str());
-    }
-    else {
-        m_renderlist_update_xml.clear();
-    }
-
-    // notify waiting server thread that we are finished.
-    m_waitMutex.lock();
-    m_glImageIsReady = true;
-    m_waitCondition.wakeAll();
-    m_waitMutex.unlock();    
 }
 
 void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
