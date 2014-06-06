@@ -11,54 +11,53 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-class OpenGLServerGrabber : public QObject, public ImageSource
+class OpenGLServerGrabber : public QObject
 {
     Q_OBJECT
 public:
-    explicit OpenGLServerGrabber(tinia::jobcontroller::Job* job,
-                                 QObject *parent = 0);
+    explicit OpenGLServerGrabber( QObject *parent );
 
     ~OpenGLServerGrabber();
 
-    void getImageAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
+    /** Mutex that governs exclusive access to this object. */
+    QMutex*
+    exclusiveAccessMutex()
+    { return &m_mainMutex; }
     
-    void getRenderListUpdateResponse( QTextStream& response,
-                                      const QString& request );
+    /** Returns a pointer to the grabbed image.
+     *
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
+    const unsigned char*
+    imageBuffer() const
+    { return m_buffer; }
     
-signals:
-    void glImageReady();
-    void getGLImage(unsigned int width, unsigned int height, QString key);
-    void signalGetRenderListUpdate( const QString& request );
-
-private slots:
-    void getImage(unsigned int width, unsigned int height, QString key);
-    void getRenderListUpdate( const QString& request );
-    void wakeListeners();
-
+    /** Grabs an image of a view
+     *
+     * \note Must be invoked in the thread that holds the OpenGL context,
+     *       usually the main/GUI-thread.
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
+    void
+    grab( tinia::jobcontroller::OpenGLJob* job,
+          unsigned int width,
+          unsigned int height,
+          const std::string &key );
+    
+    
 private:
     void setupOpenGL();
     void resize(unsigned int width, unsigned int height);
-    bool m_glImageIsReady;
 
-    // We only want to grab one image at the time
-    QMutex m_mainMutex;
-
-    // This is for waiting. We let the event-loop take the image, and wait
-    // for it to finish.
-    QMutex m_waitMutex;
-    QWaitCondition m_waitCondition;
-
-    tinia::jobcontroller::Job* m_job;
-    unsigned char* m_buffer;
+    QMutex          m_mainMutex;
+    unsigned char*  m_buffer;
     size_t          m_buffer_size;
-    QString         m_renderlist_update_xml;
-    bool m_openglIsReady;
-    unsigned int m_fbo;
-    unsigned int m_renderbufferRGBA;
-    unsigned int m_renderbufferDepth;
-
-    unsigned int m_width;
-    unsigned int m_height;
+    bool            m_openglIsReady;
+    unsigned int    m_fbo;
+    unsigned int    m_renderbufferRGBA;
+    unsigned int    m_renderbufferDepth;
+    unsigned int    m_width;
+    unsigned int    m_height;
 };
 
 } // namespace impl
