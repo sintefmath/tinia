@@ -225,11 +225,10 @@ void main(void)
    
 
 
-
     // Simplifying...
     
     mat4 A = PM * MV * depthMVinv * depthPMinv;
-    vec4 Au = A * vec4( aVertexPosition.xy,                            2.0*sampled_depth - 1.0, 1.0 );
+    vec4 Au = A * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
     if (false) {
  	depth_dx = sampled_depth;
  	depth_dy = sampled_depth;
@@ -242,33 +241,14 @@ void main(void)
     st_e1 = vec2( 1.0/splats_x, 0.0 );
     st_e2 = vec2( 0.0, -1.0/splats_y );
 
-
     // Discarding splats that are not front-facing
-//     if ( cross( vec3(scr_dx, 0.0), vec3(scr_dy, 0.0) ).z < 0.0 ) {
-//  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-//   	return;
-//     }
-
     // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?
-    vec3 dx = normalize( vec3(scr_dx, 0.0) );
-    vec3 dy = normalize( vec3(scr_dy, 0.0) );
-    if ( cross(dx, dy).z < 0.5 ) {
- 	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-  	return;
-    }
-
-
-
-
-//     vec3 stdx = normalize( vec3(st_e1, 0.0) );
-//     vec3 stdy = normalize( vec3(st_e2, 0.0) );
-//     if ( cross(stdx, stdy).z > 0.0 ) {
-//  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-//   	return;
-//     }
-
-
-	
+    // vec3 dx = normalize( vec3(scr_dx, 0.0) );
+    // vec3 dy = normalize( vec3(scr_dy, 0.0) );
+    // if ( cross(dx, dy).z < 0.5 ) {
+    //     gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+    //     return;
+    // }
 
     // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to
     // which the screen space region with lower left corner 'scr_coo' and spanning vectors 'scr_coo_dx' and 'scr_coo_dy'

@@ -74,14 +74,12 @@ void main(void)
     // Note also that this will not remove parts of primitives that are rotated outside of the correct geometry.
     // That is impossible to do, we do not have the necessary information. What we can do, is to adjust the fragment depth, which we
     // do below.
-    if (!(fragDepthTest>0)) {
-        if (transpBackground>0) {
-            highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
-            if ( intra_splat_depth > 0.9999 )
-                discard;
-            if (splatSetIndex==-1) // If this is "the most recent proxy model", it should be brought some amount toward the front
-                clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        }
+    highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
+    if ( (transpBackground>0) && (intra_splat_depth>0.999) ) {
+        discard;
+    }
+    if (splatSetIndex==-1) { // If this is "the most recent proxy model", it should be brought some amount toward the front
+        clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
     }
     
     if (decayMode==0) {
@@ -121,6 +119,12 @@ void main(void)
     
     if (fragDepthTest>0) {
 
+        //----------------------------------------------------------------------------------------------------
+        // 
+        // Reconstructing vertex from intra-splat coordinates to obtain proper depth.
+        //
+        //----------------------------------------------------------------------------------------------------
+
         // gl_FragColor = vec4(0.0, 0.0, abs(gl_FragCoord.z-depth)*10.0, src_alpha);
 	// Verifies that we understand in the vs how depth is computed
 
@@ -132,45 +136,51 @@ void main(void)
         // We have (x, y, z)_ndc = (x_c/w_c, y_c/w_c, z_c/w_c) and then window coordinates:
         // (x, y, z)_window = (0.5*p_x*x_ndc + o_x, 0.5*p_y*y_ndc + o_y, 0.5*(f-n)*z_ndc + 0.5*(n+f)).
 
+
+        
+        // This is the depth for the vertex in the VS, i.e., not intra-splat depth.
         highp float new_depth = texture2D(depthImg, texCoo).r + (texture2D(depthImg, texCoo).g + texture2D(depthImg, texCoo).b/255.0)/255.0;
         if (splatSetIndex==-1) // If this is "the most recent proxy model", it should be brought some amount toward the front
             new_depth = clamp(new_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
         
-        highp vec3 ndc = vec3(vertPos.xy, 2.0*new_depth-1.0);
-        // gl_FragColor = vec4(ndc_to_fs-ndc, src_alpha); // Checked
+        //        highp float
+        new_depth = intra_splat_depth;
+        // gl_FragColor = vec4( 10.0*abs(new_depth-1.0) , 0.0, 0.0, src_alpha ); return; // ok
+        // This will not always catch those regions of splats that are outside the hull of the scene. Finding these regions is the purpose of the following.
+
+        // Er dette helt doedfoedt?!
+
+        // Note that it should not be necessary to recompute window coordinates, these should be available in gl_FragCoord!
+
+        highp vec3 ndc = vec3(vertPos.xy + (gl_PointCoord-0.5)*2.0/vec2(splats_x, splats_y)*splatOverlap, 2.0*new_depth-1.0);
+        // gl_FragColor = vec4(10.0*abs(ndc_to_fs-ndc), src_alpha); return; // Checked (Should be black in the center of the splats, at least)
         
         highp vec4 vert_eb = depthPMinv * vec4(ndc, 1.0);
-        // gl_FragColor = vec4((vert_eb-vert_eb_to_fs).xyz, src_alpha); // Checked
+        // gl_FragColor = vec4(( 10.0*abs(vert_eb-vert_eb_to_fs) ).xyz, src_alpha); return; // Checked
         
         highp vec4 vert_wb = depthMVinv * vert_eb;
-        // gl_FragColor = vec4((vert_wb-vert_wb_to_fs).xyz, src_alpha);
-	// Mostly ok, but some odd primitives. Truncation/conversion artefacts? (not on Fangorn?)
+        // gl_FragColor = vec4(( 10.0*abs(vert_wb-vert_wb_to_fs) ).xyz, src_alpha); return; // Checked
         
         highp vec4 pos = PM * MV * vert_wb;
-        // gl_FragColor = vec4((pos-glpos).xyz, src_alpha); // Mostly ok, but some odd primitives. Truncation/conversion artefacts? (not on Fangorn?)
+        // gl_FragColor = vec4(( 10.0*abs(pos-glpos) ).xyz, src_alpha); return; // Ok
+        // gl_FragColor = vec4( 10.0*length((pos-glpos).xyz), 0.0, 0.0, src_alpha); return; // Ok
         
-        // With intra-splat texture coordinate, we would look up the textures in this point:
-        tc = texCoo + vec2( c.x/splats_x*splatOverlap/ssFactor.x, c.y/splats_y*splatOverlap/ssFactor.y );
+        // highp vec2 scr_coo   = pos.xy   * vec2(vp_width, vp_height) / 2.0 / pos.w;
+        // highp vec2 glscr_coo = glpos.xy * vec2(vp_width, vp_height) / 2.0 / glpos.w;
+        // gl_FragColor = vec4( 0.1*length((scr_coo-glscr_coo).xy), 0.0, 0.0, src_alpha); return; // Ok, not a black spot in the middle due to no division with .w?
 
-        // However, now we want to do something different: This intra-splat point correspond to another vertex, in
-        // between those that the proxy model consists of, but not in an abvious way. (I.e., if the splat center is v,
-        // this other vertex is not (v.x + tc.x * const., ...), except for when the transformation is the identity.)
-
-        // Can we determine this vertex? If we can, we can send the new vertex through a copy of the "VS pipeline" here
-        // in the FS to obtain the texture coordinate for a splat having this point as center
-
-
-        // And this again correspond 
-
-
-        highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg,tc).b/255.0)/255.0;
-        if (splatSetIndex==-1)
-	    intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        // gl_FragColor = vec4(abs(intra_splat_depth-new_depth), 0.0, 0.0, src_alpha); // tja?
+        // Best we can do without the proper texture-coo transformation
+        if (false) {
+            highp vec2 tc2 = texCoo;
+            tc2 = tc2 + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+            tc2 = tc2 + c/vec2(splats_x, splats_y)*splatOverlap;
+            // intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
+            gl_FragColor = vec4( decay * texture2D( rgbImage, tc2 ).xyz, src_alpha );
+            return;
+        }
+        
         
 
-        // Adjusting for intra-splat texture coordinate
-        // highp vec2 tc = texCoo + vec2( c.x/splats_x*splatOverlap, c.y/splats_y*splatOverlap );
 
         // Since the relation between vertex and texture coordinate is: s = 0.5*(x+1), and s_i = s+c.x/splats_x*overlap, we get
         // s_i = 0.5*(x_i + 1) <=> x_i = 2*s_i - 1 = 2s + 2c.x/splats_x*overlap - 1.

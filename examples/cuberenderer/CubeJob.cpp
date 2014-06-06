@@ -66,7 +66,7 @@ bool CubeJob::init()
         m_model->addConstrainedElement<int>("mostRecentOffset", 0, 0, 100);
         m_model->addAnnotation("mostRecentOffset", "Offset (%%))");
         m_model->addElement<bool>( "transpBackground", false );
-        m_model->addAnnotation("transpBackground", "Background in rgbTexture made transparent");
+        m_model->addAnnotation("transpBackground", "Background in textures transp.");
         m_model->addConstrainedElement<int>("splats", 32, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );

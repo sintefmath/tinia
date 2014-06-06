@@ -25,6 +25,12 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     constructor: function(glContext, exposedModel, viewerKey) {
 
+        this._frameOutputCounter = 0;
+        this._frameMeasureCounter = 0;
+        this._frameOutputInterval = 100;
+        this._frameMeasureInterval = 10;
+        this._frameTime = 0.0;
+
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
         this._splats_x = 0; // 16;
@@ -302,7 +308,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "vp_height"), this.gl.canvas.height );
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
-            var shader_time = Date.now();
+            var t0 = performance.now();
             // Should combine these by putting the "most recent model" into the ring buffer...
             for (var i=0; i<this._depthRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
@@ -344,7 +350,19 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
-            // console.log("Shader time: " + (Date.now()-shader_time));
+            this.gl.flush();
+            if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
+                this._frameTime += performance.now() - t0;
+            }
+            this._frameMeasureCounter++;
+            this._frameOutputCounter++;
+            if ( this._frameOutputCounter == this._frameOutputInterval ) {
+                console.log("Average shader time: " + (this._frameTime/this._frameMeasureInterval) + " (" + (1000.0/(this._frameTime/this._frameMeasureInterval)) + " fps)");
+                this._frameOutputCounter = 0;
+                this._frameMeasureCounter = 0;
+                this._frameTime = 0.0;
+            }
+
 
             //            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
 //            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);
