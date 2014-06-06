@@ -19,7 +19,7 @@ public:
      * Takes control over imageSource
      */
     explicit HTTPServer(tinia::jobcontroller::Job*,
-        tinia::qtcontroller::ImageSource* imageSource,
+        tinia::qtcontroller::impl::OpenGLServerGrabber* imageSource,
         QObject *parent = 0);
 
     void incomingConnection(int socket);
@@ -27,7 +27,7 @@ public:
 private:
     tinia::jobcontroller::Job* m_job;
 
-    boost::scoped_ptr<tinia::qtcontroller::ImageSource> m_serverGrabber;
+    boost::scoped_ptr<tinia::qtcontroller::impl::OpenGLServerGrabber> m_serverGrabber;
 
 };
 

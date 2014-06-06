@@ -90,10 +90,26 @@ dojo.declare( "renderlist.RenderListParser", null, {
             store.setRevision( to_revision );
         },
 
+        _JSONparseNodeList:
+            function( nodelist ) {
+                var data;
+                var res;
+                for( var i=0; i<nodelist.length; i++) {
+                    data = (i==0?"":data) + nodelist[i].data;
+                }
+                try {
+                    res = JSON.parse( data );
+                }
+                catch( e ) {
+                    console.log( e + "\nwhile parsing\n" + data );
+                }
+                return res;
+            },
+
         float2:
             function( node ) {
                 if( node.firstChild ) {
-                    val = JSON.parse( node.firstChild.data );
+                    var val = this._JSONparseNodeList( node.childNodes );
                     if( !(val instanceof Array ) ) {
                         return null;
                     }
@@ -112,7 +128,7 @@ dojo.declare( "renderlist.RenderListParser", null, {
         float3:
             function( node ) {
                 if( node.firstChild ) {
-                    val = JSON.parse( node.firstChild.data );
+                    var val = this._JSONparseNodeList( node.childNodes );
                     if( !(val instanceof Array ) ) {
                         return null;
                     }
@@ -131,7 +147,7 @@ dojo.declare( "renderlist.RenderListParser", null, {
         float4:
             function( node ) {
                 if( node.firstChild ) {
-                    val = JSON.parse( node.firstChild.data );
+                    var val = this._JSONparseNodeList( node.childNodes );
                     if( !(val instanceof Array ) ) {
                         return null;
                     }
@@ -150,7 +166,7 @@ dojo.declare( "renderlist.RenderListParser", null, {
     float3x3:
         function( node ) {
             if( node.firstChild ) {
-                val = JSON.parse( node.firstChild.data );
+                var val = this._JSONparseNodeList( node.childNodes );
                 if( !(val instanceof Array ) ) {
                     return null;
                 }
@@ -169,7 +185,7 @@ dojo.declare( "renderlist.RenderListParser", null, {
     float4x4:
         function( node ) {
             if( node.firstChild ) {
-                val = JSON.parse( node.firstChild.data );
+                var val = this._JSONparseNodeList( node.childNodes );
                 if( !(val instanceof Array ) ) {
                     return null;
                 }
@@ -404,7 +420,7 @@ dojo.declare( "renderlist.RenderListParser", null, {
                 console.debug( "Node has no body" );
                 return;
             }
-            var body = JSON.parse( node.firstChild.data );
+            var body = this._JSONparseNodeList( node.childNodes );
             if( !(body instanceof Array) ) {
                 console.debug( "body doesn't evaluate to Array" );
                 return;
