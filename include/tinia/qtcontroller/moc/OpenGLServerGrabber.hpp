@@ -22,6 +22,32 @@ public:
 
     void getImageAsText(QTextStream& os, unsigned int width, unsigned int height, QString key);
     
+    /** Mutex that governs exclusive access to this object. */
+    QMutex*
+    exclusiveAccessMutex()
+    { return &m_mainMutex; }
+    
+    /** Returns a pointer to the grabbed image.
+     *
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
+    const unsigned char*
+    imageBuffer() const
+    { return m_buffer; }
+    
+    /** Grabs an image of a view
+     *
+     * \note Must be invoked in the thread that holds the OpenGL context,
+     *       usually the main/GUI-thread.
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
+    void
+    grab(tinia::jobcontroller::OpenGLJob* job,
+          unsigned int width,
+          unsigned int height,
+          const std::string &key );
+    
+    
 signals:
     void glImageReady();
     void getGLImage(unsigned int width, unsigned int height, QString key);
