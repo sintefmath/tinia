@@ -39,9 +39,11 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-HTTPServer::HTTPServer(tinia::jobcontroller::Job* job, tinia::qtcontroller::impl::OpenGLServerGrabber* imageSource, QObject *parent) :
-    QTcpServer(parent), m_job(job),
-    m_serverGrabber(imageSource)
+HTTPServer::HTTPServer( tinia::jobcontroller::Job* job,
+                        QObject *parent)
+    : QTcpServer(parent),
+      m_job(job),
+      m_serverGrabber( new OpenGLServerGrabber(m_job, this ) )
 {
     listen(QHostAddress::Any, 8080);
 }
