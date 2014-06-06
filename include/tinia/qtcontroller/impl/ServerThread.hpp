@@ -13,11 +13,10 @@ namespace impl {
 class ServerThread : public QRunnable
 {
 public:
-    explicit ServerThread(OpenGLServerGrabber& grabber,
+    explicit ServerThread(OpenGLServerGrabber* grabber,
                           Invoker* mainthread_invoker,
                           tinia::jobcontroller::Job* job,
-                          int socket,
-                          QObject *parent = 0);
+                          int socket );
 
     void run();
     
@@ -25,7 +24,6 @@ private:
 
 
     bool isLongPoll(const QString& request);
-    void getSnapshotTxt(QTextStream& os, const QString& request);
 
     /** Handles non-static content, if applicable.
      * @returns true if the file is non-static, false otherwise.
@@ -44,9 +42,8 @@ private:
     int m_socket;
 
     tinia::model::impl::xml::XMLHandler m_xmlHandler;
-    tinia::jobcontroller::Job* m_job;
-
-    OpenGLServerGrabber& m_grabber;
+    tinia::jobcontroller::Job*          m_job;
+    OpenGLServerGrabber*                m_grabber;
     Invoker*                            m_mainthread_invoker;
 };
 

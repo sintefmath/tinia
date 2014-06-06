@@ -143,11 +143,10 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-ServerThread::ServerThread(OpenGLServerGrabber &grabber,
+ServerThread::ServerThread(OpenGLServerGrabber* grabber,
                            Invoker* mainthread_invoker,
                            tinia::jobcontroller::Job* job,
-                           int socket,
-                           QObject *parent) :
+                           int socket ) :
     m_socket(socket),
     m_xmlHandler(job->getExposedModel()),
     m_job(job),
@@ -212,28 +211,15 @@ bool ServerThread::isLongPoll(const QString &request)
 }
 
 
-void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request)
-{
-    boost::tuple<unsigned int, unsigned int,
-            std::string> arguments =
-            parseGet<boost::tuple<unsigned int, unsigned int,
-            std::string> >(decodeGetParameters(request), "width height key");
 
-    unsigned int width = arguments.get<0>();
-    unsigned int height = arguments.get<1>();
-    std::string key = arguments.get<2>();
-
-    m_grabber.getImageAsText(os, width, height, QString(key.c_str()));
-}
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
                                  const QString& request)
 {
     try {
         if(file == "/snapshot.txt") {
             updateState(os, request);
-            SnapshotAsTextFetcher f( os, request, m_job, &m_grabber );
+            SnapshotAsTextFetcher f( os, request, m_job, m_grabber );
             m_mainthread_invoker->invokeInMainThread( &f, true );
-            //getSnapshotTxt(os, request);
             return true;
         }
         else if(file == "/getRenderList.xml") {
