@@ -256,6 +256,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _touchstart: function (event) {
         this._active = true;
+        this._touch_prev = event;
 
         // We need to add the relative placement informatoin to all touch events
         for(var i = 0; i < event.touches.length; ++i) {
@@ -280,6 +281,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _touchend: function (event) {
         this._active = false;
+        if( event.touches.length == 0 ) {
+            // Use last active position
+            event = this._touch_prev;
+        }
+
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();
@@ -303,6 +309,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _touchmove: function (event) {
+        this._touch_prev = event;
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();
