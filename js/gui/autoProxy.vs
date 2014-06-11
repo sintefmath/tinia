@@ -3,21 +3,14 @@
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
-varying highp float depth;                      // Should be equal to gl_FragCoord.z in the FS, so should not be necessary to pass on. Doing it now for debug purposes
+//varying highp float depth;                      // Should be equal to gl_FragCoord.z in the FS, so should not be necessary to pass on. Doing it now for debug purposes
 varying highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
-varying highp float sampled_depth_dx; // debugging
-varying highp float sampled_depth_dy; // debugging
 varying highp vec2 depth_e;                     // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
 varying highp float frag_depth;
 varying highp vec2 frag_depth_e;
 
 varying highp vec2 vertPos;
-varying highp vec4 glpos; // debugging
-varying highp vec3 ndc_to_fs; // debugging
-varying highp vec4 vert_wb_to_fs; // debugging
-varying highp vec4 vert_eb_to_fs; // debugging
-varying highp vec2 ssFactor;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
@@ -37,10 +30,6 @@ uniform int vp_height;
 uniform int splatSetIndex;
 uniform int mostRecentOffset;
 uniform int splatSizeLimiting;
-//uniform int testFlag;
-//uniform int differentiationTestFlag;
-uniform int fragDepthTest;
-uniform int tcConst;
 
 
 
@@ -88,21 +77,18 @@ void main(void)
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
     vec3 ndc = vec3( aVertexPosition.xy, 2.0*sampled_depth - 1.0 );
-    ndc_to_fs = ndc;
 
     // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.
     vec4 vert_eb = depthPMinv * vec4( ndc, 1.0 );
-    vert_eb_to_fs = vert_eb;
     vec4 vert_wb = depthMVinv * vert_eb;
-    vert_wb_to_fs = vert_wb;
 
     // Next, we apply the current transformation to get the proxy splat. (This is the vertex in clip coordinates.)
     vec4 pos = PM * MV * vert_wb;
     gl_Position = pos;
-    glpos = pos;
 
     float z_ndc = pos.z/pos.w;
-    depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
+    //depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
+    frag_depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
     // This is not the depth of the point on the original geometry, but the new depth for the splat transformed into
     // place.  (This value is equal to gl_FragCoord.z in the fragment shader. Note that this is constant over the
     // primitive, unless we modify it in the fragment shader. Doing this requires the GL_EXT_frag_depth extension
@@ -169,19 +155,13 @@ void main(void)
         float ss = (1.0/delta)*max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
         //float ss = max( abs(scr_coo_dx.x-scr_coo.x), abs(scr_coo_dy.y-scr_coo.y) );
 	
-        // Transferring the scale factors to the FS for intra-splat texture coordinate adjustment
-        // (The factors would be 1 for un-skewed splats, not taking splatOverlap into consideration here.)
-        ssFactor = (1.0/delta)*vec2( (scr_coo_dx.x-scr_coo.x)/splatSizeVec.x, (scr_coo_dy.y-scr_coo.y)/splatSizeVec.y  );
-	
         // Putting an upper limit on the size, equal to an expansion of 3 (no splat larger than 3 times dist between splats)
         if (splatSizeLimiting>0) {
             ss = min( ss, 3.0*splatSize );
-            ssFactor = min( ssFactor, vec2(3.0) );
         }
         
         gl_PointSize = max( splatOverlap * ss, 1.0); // Minimum splat size will be exactly 1 pixel wide splats.
     } else {
-        ssFactor = vec2(1.0); // Corresponding to just plain splats exactly covering the viewport if no transformation is done
         gl_PointSize = splatOverlap * splatSize;
     }
 
@@ -191,8 +171,6 @@ void main(void)
     //
     //----------------------------------------------------------------------------------------------------
 
-    float c = float(tcConst)/100.0; // [0, 10], default = 100/100 = 1.0 (for testing and debugging)
-    
     float delta = float(splats_x) / float(vp_width);
     // delta = 1.0;
     
@@ -255,12 +233,11 @@ void main(void)
     vec2 st_e2 = (1.0/delta)*(st_dy - st);
     
     // For interpolating the fragment's z-value in the FS
-    frag_depth = depth;
     float frag_depth_dx = pos_dx.z/pos_dx.w; // = ndc_dx.z?!
     frag_depth_dx = 0.5*( gl_DepthRange.diff*frag_depth_dx + gl_DepthRange.near + gl_DepthRange.far );
     float frag_depth_dy = pos_dy.z/pos_dy.w; // = ndc_dy.z?!
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
-    frag_depth_e = c * (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
+    frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
 
     
 
@@ -279,8 +256,6 @@ void main(void)
 
     depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
 
-    sampled_depth_dx = depth_dx;
-    sampled_depth_dy = depth_dy;
 
     // Discarding splats that are not front-facing
     // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?

@@ -181,6 +181,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
             this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
+            this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
             // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
@@ -213,13 +214,12 @@ dojo.declare("gui.ProxyRenderer", null, {
             // 1                1                   More in line with expectations: no lingering snapShot at all. Background cleared to selected color everywhere.
 
 
-            //            this.gl.enable(this.gl.BLEND);
-            this.gl.disable(this.gl.BLEND);
-
-//            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.SRC_ALPHA); // s-factor, d-factor
-//            this.gl.disable(this.gl.DEPTH_TEST);
-
             this.gl.enable(this.gl.DEPTH_TEST);
+
+            if (false) {
+                this.gl.enable(this.gl.BLEND);
+                this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
+            }
 
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
@@ -238,7 +238,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             if (this.gl.getUniformLocation(this._splatProgram, "PM"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
             this._setUniform1i(this._splatProgram, "splatSizeLimiting");
-            this._setUniform1i(this._splatProgram, "fragDepthTest");
             this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo");
             this._setUniform1i(this._splatProgram, "splatOutline");
             if ( this.exposedModel.getElementValue("resetAllModels") ) {
@@ -250,7 +249,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._lock = true;
                 this._lock2 = false;
             }
-            this._setUniform1i(this._splatProgram, "tcConst");
             if ( this.exposedModel.getElementValue("linearDepth") ) {
                 for (var i=0; i<this._depthRingSize; i++) {
                     this._proxyModelCoverage.proxyModelRing[i]._setDepthSamplingMode(this.gl.LINEAR);
@@ -350,24 +348,30 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
-            this.gl.flush();
-            if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
-                this._frameTime += performance.now() - t0;
-            }
-            this._frameMeasureCounter++;
-            this._frameOutputCounter++;
-            if ( this._frameOutputCounter == this._frameOutputInterval ) {
-                console.log("Average shader time: " + (this._frameTime/this._frameMeasureInterval) + " (" + (1000.0/(this._frameTime/this._frameMeasureInterval)) + " fps)");
-                this._frameOutputCounter = 0;
-                this._frameMeasureCounter = 0;
-                this._frameTime = 0.0;
-            }
+
+//            this.gl.flush();
+//            if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
+//                this._frameTime += performance.now() - t0;
+//            }
+//            this._frameMeasureCounter++;
+//            this._frameOutputCounter++;
+//            if ( this._frameOutputCounter == this._frameOutputInterval ) {
+//                console.log("Average shader time: " + (this._frameTime/this._frameMeasureInterval) + " (" + (1000.0/(this._frameTime/this._frameMeasureInterval)) + " fps)");
+//                this._frameOutputCounter = 0;
+//                this._frameMeasureCounter = 0;
+//                this._frameTime = 0.0;
+//            }
 
 
-            //            this.gl.colorMask(this.gl.FALSE, this.gl.FALSE, this.gl.FALSE, this.gl.TRUE);
-//            this.gl.clearColor(0.5, 0.0, 0.0, 0.5);
-//            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-//            this.gl.colorMask(this.gl.TRUE, this.gl.TRUE, this.gl.TRUE, this.gl.TRUE);
+            if (false) {
+                this.gl.colorMask(false, false, false, true);
+                this.gl.clearColor(1.0, 0.0, 0.0, 1.0);
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+                this.gl.colorMask(true, true, true, true);
+            }
+
+            this.gl.disable(this.gl.BLEND);
+
 
         }
         // if ( Date.now() - t0 > 3 ) {
