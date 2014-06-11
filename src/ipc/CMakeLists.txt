@@ -12,14 +12,16 @@ ADD_DEFINITIONS(-fPIC )
 ADD_LIBRARY( tiniaipc STATIC ${LIB_IPC_SRC} ${LIB_IPC_HEADERS})
 TARGET_LINK_LIBRARIES( tiniaipc ${RT} )
 
-#INSTALL( TARGETS trell
-#  LIBRARY DESTINATION lib
-#  COMPONENT libtrell
-#  PERMISSIONS WORLD_READ WORLD_EXECUTE OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE
-#)
+  install( DIRECTORY
+    "../../include/tinia/ipc/*.h"
+    DESTINATION include/tinia/ipc
+    COMPONENT tiniaipc)
 
-#INSTALL( FILES
-#  ${LIB_TRELL_HEADERS}
-#  DESTINATION include/tinia/trell
-#  COMPONENT libtrell-dev
-#)
+  install( TARGETS
+    tiniaipc
+    EXPORT TiniaTargets
+    LIBRARY
+    DESTINATION lib/ 
+    ARCHIVE DESTINATION lib/
+    COMPONENT tiniaipc )
+    
