@@ -331,6 +331,40 @@ DSRV.prototype = {
         this.m_manipulator.setStateNone( x, y );
         //this.pushMatrices();
     },
+
+    touchStartEvent: function (event)
+    {
+        if( event.touches.length == 1 ) {
+            event.button = this.ROTATE;
+            this.mousePressEvent(event);
+        }
+        else if( event.touches.length == 2 ) {
+            event.button = this.ZOOM;
+            this.mousePressEvent(event);
+        }
+    },
+    touchEndEvent: function (event)
+    {
+        if( event.touches.length == 1 ) {
+            event.button = this.ROTATE;
+            this.mouseReleaseEvent(event);
+        }
+        else if( event.touches.length == 2 ) {
+            event.button = this.ZOOM;
+            this.mouseReleaseEvent(event);
+        }
+    },
+    touchMoveEvent: function (event)
+    {
+        if( event.touches.length == 1 ) {
+            event.button = this.ROTATE;
+            this.mouseMoveEvent(event);
+        }
+        else if(event.touches.length == 2) {
+            event.button = this.ZOOM;
+            this.mouseMoveEvent(event);
+        }
+    },
     pushMatrices: function() {
         var viewer = this.m_model.getElementValue( this.m_key );
         viewer.updateElement( "modelview", this.m_manipulator.modelviewMatrix() );
