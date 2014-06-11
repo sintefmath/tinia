@@ -14,10 +14,11 @@ varying highp vec2 vertPos;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
-uniform mat4 PM;
-uniform mat4 MV;
-uniform mat4 depthPMinv;
-uniform mat4 depthMVinv;
+uniform highp mat4 PM;
+uniform highp mat4 MV;
+uniform highp mat4 depthPMinv;
+uniform highp mat4 depthMVinv;
+uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
 
 uniform sampler2D depthImg;
 uniform float splatOverlap;
@@ -79,11 +80,8 @@ void main(void)
     vec3 ndc = vec3( aVertexPosition.xy, 2.0*sampled_depth - 1.0 );
 
     // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.
-    vec4 vert_eb = depthPMinv * vec4( ndc, 1.0 );
-    vec4 vert_wb = depthMVinv * vert_eb;
-
     // Next, we apply the current transformation to get the proxy splat. (This is the vertex in clip coordinates.)
-    vec4 pos = PM * MV * vert_wb;
+    vec4 pos = projUnproj * vec4( ndc, 1.0 );
     gl_Position = pos;
 
     float z_ndc = pos.z/pos.w;
@@ -195,12 +193,10 @@ void main(void)
     if (depth_dx>0.999) {
         // Possible actions: Use the 'sampled_depth' value to get something more sensible. The primitive will be drawn,
         // but is it useful to draw an oddly textured splat? Another alternative is to discard the whole splat.
-	//depth_dx = sampled_depth;
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
  	return;
     }
     if (depth_dy>0.999) {
-	//depth_dy = sampled_depth;
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
  	return;
     }
@@ -211,51 +207,27 @@ void main(void)
     }
 #endif
     
-    vec3 ndc_dx     = vec3( aVertexPosition.x + delta*2.0/splats_x, aVertexPosition.y, 2.0*depth_dx - 1.0 );
-    vec3 ndc_dy     = vec3( aVertexPosition.x, aVertexPosition.y + delta*2.0/splats_y, 2.0*depth_dy - 1.0 );
-    vec4 vert_eb_dx = depthPMinv * vec4( ndc_dx, 1.0 ); // eye before
-    vec4 vert_eb_dy = depthPMinv * vec4( ndc_dy, 1.0 );
-    vec4 vert_wb_dx = depthMVinv * vert_eb_dx; // world before
-    vec4 vert_wb_dy = depthMVinv * vert_eb_dy;
-    vec4 pos_dx     = PM * MV * vert_wb_dx;
-    vec4 pos_dy     = PM * MV * vert_wb_dy;
-    
-    vec2 scr_coo    = pos.xy    * vec2(vp_width, vp_height) / 2.0 / pos.w;    // Splat_00
-    vec2 scr_coo_dx = pos_dx.xy * vec2(vp_width, vp_height) / 2.0 / pos_dx.w; // Splat_10
-    vec2 scr_coo_dy = pos_dy.xy * vec2(vp_width, vp_height) / 2.0 / pos_dy.w; // Splat_01
-    
-    // Difference of screen coordinates, in pixels
-    vec2 scr_dx = (1.0/delta)*(scr_coo_dx-scr_coo);
-    vec2 scr_dy = (1.0/delta)*(scr_coo_dy-scr_coo);
-    
-    // Difference of texture coordinates for adjacent splats, measured in texels.
-    vec2 st_e1 = (1.0/delta)*(st_dx - st);
-    vec2 st_e2 = (1.0/delta)*(st_dy - st);
+    vec4 pos_dx = projUnproj * vec4( aVertexPosition + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
+    vec4 pos_dy = projUnproj * vec4( aVertexPosition + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
     
     // For interpolating the fragment's z-value in the FS
-    float frag_depth_dx = pos_dx.z/pos_dx.w; // = ndc_dx.z?!
+    float frag_depth_dx = pos_dx.z/pos_dx.w;
     frag_depth_dx = 0.5*( gl_DepthRange.diff*frag_depth_dx + gl_DepthRange.near + gl_DepthRange.far );
-    float frag_depth_dy = pos_dy.z/pos_dy.w; // = ndc_dy.z?!
+    float frag_depth_dy = pos_dy.z/pos_dy.w;
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
     frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
-
     
-
-
-
-    // Simplifying...
-    
-    mat4 A = PM * MV * depthMVinv * depthPMinv;
-    vec4 Au = A * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
-    vec4 Adu = A * vec4( aVertexPosition.xy + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
-    vec4 Adv = A * vec4( aVertexPosition.xy + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
-    scr_dx = float(vp_width )/(2.0*delta) * ( Adu.xy/Adu.w - Au.xy/Au.w );
-    scr_dy = float(vp_height)/(2.0*delta) * ( Adv.xy/Adv.w - Au.xy/Au.w );
-    st_e1 = vec2( 1.0/splats_x, 0.0 );
-    st_e2 = vec2( 0.0, -1.0/splats_y );
+    vec4 Au  = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
+    vec4 Adu = projUnproj * vec4( aVertexPosition.xy + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
+    vec4 Adv = projUnproj * vec4( aVertexPosition.xy + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
+    // Difference of screen coordinates, in pixels:
+    vec2 scr_dx = float(vp_width )/(2.0*delta) * ( Adu.xy/Adu.w - Au.xy/Au.w );
+    vec2 scr_dy = float(vp_height)/(2.0*delta) * ( Adv.xy/Adv.w - Au.xy/Au.w );
+    // Difference of texture coordinates for adjacent splats, measured in texels:
+    vec2 st_e1 = vec2( 1.0/splats_x, 0.0 );
+    vec2 st_e2 = vec2( 0.0, -1.0/splats_y );
 
     depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
-
 
     // Discarding splats that are not front-facing
     // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?
@@ -266,22 +238,17 @@ void main(void)
         return;
     }
 
-
-
-    // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to
-    // which the screen space region with lower left corner 'scr_coo' and spanning vectors 'scr_coo_dx' and 'scr_coo_dy'
-    // should be mapped.
+    // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to which
+    // the screen space region with lower left corner 'pos.xy * vec2(vp_width, vp_height) / 2.0 / pos.w' and spanning
+    // vectors 'scr_dx' and 'scr_dy' should be mapped.
     
-    intraSplatTexCooTransform =
-	mat2( st_e1, st_e2 ) *                                 // This term maps the screen region "between the splats", given
-	                                                       // with coordinates in [0, 1]^2, to the corresponding texture region.
-
-	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
-	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
-	splatOverlap;                                          // this region.
-
     intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
 	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
 	splatOverlap;                                          // this region.
+
+    intraSplatTexCooTransform =
+	mat2( st_e1, st_e2 ) *                                 // This term maps the screen region "between the splats", given
+	                                                       // with coordinates in [0, 1]^2, to the corresponding texture region.
+	intraSplatTexCooTransform2;
 }

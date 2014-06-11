@@ -16,11 +16,6 @@ varying highp vec2 vertPos;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
-uniform highp mat4 PM;
-uniform highp mat4 MV;
-uniform highp mat4 depthPMinv;
-uniform highp mat4 depthMVinv;
-
 uniform highp float splats_x;
 uniform highp float splats_y;
 uniform highp float splatOverlap;
@@ -152,6 +147,9 @@ void main(void)
     if (splatSetIndex==-1) {
         planar_frag_depth = clamp(planar_frag_depth - 0.001, 0.0, 1.0);
     }
+
+    // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
+    //planar_frag_depth = clamp(planar_frag_depth - 0.001*float(splatSetIndex), 0.0, 1.0);
 
     if (!(ignoreIntraSplatTexCoo>0)) {
 	gl_FragDepthEXT = planar_frag_depth;

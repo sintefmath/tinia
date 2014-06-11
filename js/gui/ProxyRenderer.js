@@ -294,6 +294,14 @@ dojo.declare("gui.ProxyRenderer", null, {
                     if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelCoverage.proxyModelRing[i].to_world );
                     }
+                    if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
+                        var A = mat4.create();
+                        mat4.multiply( matrices.m_projection, matrices.m_from_world, A );
+                        var B = mat4.create();
+                        mat4.multiply( A, this._proxyModelCoverage.proxyModelRing[i].to_world, B);
+                        mat4.multiply( B, this._proxyModelCoverage.proxyModelRing[i].projection_inverse, A );
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "projUnproj"), false, A );
+                    }
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             } // end of loop over depth buffers
@@ -313,6 +321,14 @@ dojo.declare("gui.ProxyRenderer", null, {
                     }
                     if (this.gl.getUniformLocation(this._splatProgram, "depthMVinv")) {
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "depthMVinv"), false, this._proxyModelCoverage.mostRecentModel.to_world );
+                    }
+                    if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
+                        var A = mat4.create();
+                        mat4.multiply( matrices.m_projection, matrices.m_from_world, A );
+                        var B = mat4.create();
+                        mat4.multiply( A, this._proxyModelCoverage.mostRecentModel.to_world, B );
+                        mat4.multiply( B, this._proxyModelCoverage.mostRecentModel.projection_inverse, A );
+                        this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "projUnproj"), false, A );
                     }
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
