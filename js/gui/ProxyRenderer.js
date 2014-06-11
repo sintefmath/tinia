@@ -112,8 +112,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         var available_extensions = this.gl.getSupportedExtensions();
         console.log("extensions: " + JSON.stringify(available_extensions));
 
-//        var frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
-//        console.log("frag_depth_ext = " + frag_depth_ext);
+        var frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
+        console.log("frag_depth_ext = " + frag_depth_ext);
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         this.gl.shaderSource(splat_fs, this._splat_fs_src);

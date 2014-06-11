@@ -1,10 +1,20 @@
-//#extension GL_EXT_frag_depth : enable
+#extension GL_EXT_frag_depth : enable
+
+#define USE_FRAG_DEPTH_EXT
 
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 
 varying highp vec2 texCoo;
 varying highp float depth;
+varying highp float sampled_depth; // debugging (Splat-centered depth)
+varying highp float sampled_depth_dx; // debugging (Splat-centered depth for the (1,0)-splat)
+varying highp float sampled_depth_dy; // debugging (Splat-centered depth for the (1,0)-splat)
+varying highp vec2 depth_e; // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
+
+varying highp float frag_depth;
+varying highp vec2 frag_depth_e;
+
 varying highp vec2 vertPos;
 varying highp vec4 glpos; // debugging
 varying highp vec3 ndc_to_fs; // debugging
@@ -12,6 +22,7 @@ varying highp vec4 vert_wb_to_fs; // debugging
 varying highp vec4 vert_eb_to_fs; // debugging
 varying highp vec2 ssFactor;
 varying highp mat2 intraSplatTexCooTransform;
+varying highp mat2 intraSplatTexCooTransform2;
 
 uniform highp mat4 PM;
 uniform highp mat4 MV;
@@ -34,7 +45,7 @@ uniform int debugSplatCol;
 uniform int decayMode;
 uniform int roundSplats;
 uniform int transpBackground;
-uniform int fragDepthTest;
+uniform highp int fragDepthTest;
 uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
 // uniform highp int adjustTCwithFactorFromVS;
@@ -78,10 +89,26 @@ void main(void)
     if ( (transpBackground>0) && (intra_splat_depth>0.999) ) {
         discard;
     }
-    if (splatSetIndex==-1) { // If this is "the most recent proxy model", it should be brought some amount toward the front
+
+    // If this is "the most recent proxy model", it should be brought some amount toward the front. Note that this is
+    // not a very good solution for billboards, since it requires a very large offset to work properly. Possible
+    // solutions to this: 1) Use non-gl_Point-primitives that have "transformed fragments", or 2) set depths using the
+    // gl_FragDepth extension.
+#ifndef USE_FRAG_DEPTH_EXT
+    if (splatSetIndex==-1) {
         clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
     }
-    
+#endif
+
+    // If the assumed-locally-planar geometry and the measured intra-splat depth deviates too much, the intra-splat
+    // texture lookups will simply be wrong, so we might as well discard these fragments.
+    highp float planar_depth = sampled_depth + dot( depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
+    // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
+    // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
+    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+        discard;
+    }
+
     if (decayMode==0) {
         decay = 1.0;
     }
@@ -113,11 +140,9 @@ void main(void)
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
     
-    // if (fragDepthTest>0)
-    //     gl_FragDepthEXT = 0.5;
-    //    gl_FragColor = vec4(depth, texCoo, src_alpha);
-    
-    if (fragDepthTest>0) {
+   
+
+    if (false) { // (fragDepthTest>0) {
 
         //----------------------------------------------------------------------------------------------------
         // 
@@ -140,8 +165,10 @@ void main(void)
         
         // This is the depth for the vertex in the VS, i.e., not intra-splat depth.
         highp float new_depth = texture2D(depthImg, texCoo).r + (texture2D(depthImg, texCoo).g + texture2D(depthImg, texCoo).b/255.0)/255.0;
+#ifndef USE_FRAG_DEPTH_EXT
         if (splatSetIndex==-1) // If this is "the most recent proxy model", it should be brought some amount toward the front
             new_depth = clamp(new_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+#endif
         
         //        highp float
         new_depth = intra_splat_depth;
@@ -221,6 +248,45 @@ void main(void)
 	// extension GL_EXT_frag_depth.)
 
 
+    }
+
+
+
+
+    if (fragDepthTest>0) {
+
+        //----------------------------------------------------------------------------------------------------
+        // 
+        // Reconstructing vertex from intra-splat coordinates to obtain proper depth.
+        //
+        //----------------------------------------------------------------------------------------------------
+
+	// Verifies that we understand in the vs how depth is computed
+        // gl_FragColor = vec4(0.0, 0.0, abs(gl_FragCoord.z-depth)*100000.0, src_alpha);
+
+        // We have a more or less ok depth value in planar_depth, this should be the appropriate depth for the
+        // "depth-adjusted" billboard. We try to turn this into a depth fragment value.
+
+        // To obtain the fragment's z-value, we need the ndc for the point. An alternative is to bilinearly interpolate,
+        // with a 2x2 matrix from the VS, like we already do for 'planar_depth'. Trying this first. (What will be the
+        // relation between planar_depth and the new planar_frag_depth? Are they the same? A linear relation given by
+        // the near and far params?)
+
+        highp float planar_frag_depth = frag_depth + dot( frag_depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
+        
+        // Testing. Should give black in center. Then the interpolated z-frag is correct there. Should then be red
+        // farther away, and green closer.
+        // gl_FragColor = vec4(500.0*clamp(planar_frag_depth-depth, 0.0, 1.0), 500.0*clamp(depth-planar_frag_depth, 0.0, 1.0), 0.0, src_alpha); return;
+        
+        
+#ifdef USE_FRAG_DEPTH_EXT
+        if (splatSetIndex==-1) {
+            planar_frag_depth = clamp(planar_frag_depth - 0.001, 0.0, 1.0);
+        }
+#endif
+        
+        gl_FragDepthEXT = planar_frag_depth;
+        
     }
     
     

@@ -59,13 +59,13 @@ bool CubeJob::init()
         m_model->addAnnotation("roundSplats", "Circular splats");
         m_model->addElement<bool>( "screenSpaceSized", false );
         m_model->addAnnotation("screenSpaceSized", "Screen-space-sized splats");
-        m_model->addConstrainedElement<int>("overlap", 98, 1, 300);
+        m_model->addConstrainedElement<int>("overlap", 300, 1, 300);
         m_model->addAnnotation("overlap", "Overlap factor)");
-        m_model->addElement<bool>( "alwaysShowMostRecent", false );
+        m_model->addElement<bool>( "alwaysShowMostRecent", true );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addConstrainedElement<int>("mostRecentOffset", 0, 0, 100);
+        m_model->addConstrainedElement<int>("mostRecentOffset", 2, 0, 100);
         m_model->addAnnotation("mostRecentOffset", "Offset (%%))");
-        m_model->addElement<bool>( "transpBackground", false );
+        m_model->addElement<bool>( "transpBackground", true );
         m_model->addAnnotation("transpBackground", "Background in textures transp.");
         m_model->addConstrainedElement<int>("splats", 32, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
@@ -77,7 +77,7 @@ bool CubeJob::init()
         m_model->addAnnotation("fragDepthTest", "fragDepthTest");
         m_model->addElement<bool>( "ignoreIntraSplatTexCoo", false );
         m_model->addAnnotation("ignoreIntraSplatTexCoo", "Ignore intra-splat texcoo");
-        m_model->addElement<bool>( "splatOutline", true );
+        m_model->addElement<bool>( "splatOutline", false );
         m_model->addAnnotation("splatOutline", "Square splat outline");
         m_model->addConstrainedElement<int>("tcConst", 100, 0, 1000);
         m_model->addAnnotation("tcConst", "tc const.)");
@@ -149,30 +149,6 @@ bool CubeJob::init()
         m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
     }
 
-    // Setting up texture
-    {
-        glGenTextures(1, &m_tex);
-        glBindTexture(GL_TEXTURE_2D, m_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        const int n=512;
-        std::vector<unsigned char> texData(n*n*3, 255);
-        for (int i=0; i<n; i+=(n/16)) {
-            for (int j=0; j<n; j++) {
-                texData[3*(i*n+j) + 0] = 0;
-                texData[3*(i*n+j) + 1] = 0;
-                texData[3*(i*n+j) + 2] = 0;
-                texData[3*(j*n+i) + 0] = 0;
-                texData[3*(j*n+i) + 1] = 0;
-                texData[3*(j*n+i) + 2] = 0;
-            }
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, n, n, 0, GL_RGB, GL_UNSIGNED_BYTE, &texData[0]);
-    }
-
-
     return true;
 }
 
@@ -187,7 +163,40 @@ void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
 
 bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
-    //usleep(200000);
+    static bool firsttime = true;
+    if (firsttime) {
+        std::cout << "Setting up texture" << std::endl;
+        glGenTextures(1, &m_tex);
+        glBindTexture(GL_TEXTURE_2D, m_tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        const int n=512;
+        std::vector<unsigned char> texData(n*n*3, 255);
+        for (int i=0; i<n; i+=(n/16)) {
+            for (int j=0; j<n; j++) {
+                texData[3*(i*n+j) + 0] = 0;
+                texData[3*(i*n+j) + 1] = 0;
+                texData[3*(i*n+j) + 2] = 0;
+                texData[3*(j*n+i) + 0] = 0;
+                texData[3*(j*n+i) + 1] = 0;
+                texData[3*(j*n+i) + 2] = 0;
+            }
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+
+        glTexImage2D(GL_TEXTURE_2D,
+                     0, // mipmap level
+                     GL_RGB, n, n, 0, GL_RGB, GL_UNSIGNED_BYTE, &texData[0]);
+
+        //glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        firsttime = false;
+    }
+
+    // usleep(200000);
     // usleep(10000);
 
     glEnable(GL_DEPTH_TEST);

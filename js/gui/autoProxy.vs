@@ -1,7 +1,17 @@
+#define USE_FRAG_DEPTH_EXT
+
 attribute vec2 aVertexPosition;
 
-varying highp vec2 texCoo; // Implicitly taken to be *output*?!
-varying highp float depth;
+varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
+varying highp float depth;                      // Should be equal to gl_FragCoord.z in the FS, so should not be necessary to pass on. Doing it now for debug purposes
+varying highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
+varying highp float sampled_depth_dx; // debugging
+varying highp float sampled_depth_dy; // debugging
+varying highp vec2 depth_e;                     // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
+
+varying highp float frag_depth;
+varying highp vec2 frag_depth_e;
+
 varying highp vec2 vertPos;
 varying highp vec4 glpos; // debugging
 varying highp vec3 ndc_to_fs; // debugging
@@ -9,6 +19,7 @@ varying highp vec4 vert_wb_to_fs; // debugging
 varying highp vec4 vert_eb_to_fs; // debugging
 varying highp vec2 ssFactor;
 varying highp mat2 intraSplatTexCooTransform;
+varying highp mat2 intraSplatTexCooTransform2;
 
 uniform mat4 PM;
 uniform mat4 MV;
@@ -28,6 +39,7 @@ uniform int mostRecentOffset;
 uniform int splatSizeLimiting;
 //uniform int testFlag;
 //uniform int differentiationTestFlag;
+uniform int fragDepthTest;
 uniform int tcConst;
 
 
@@ -53,14 +65,15 @@ void main(void)
     // (But 8 is clearly too coarse.)
     // Now using all 24 bits, since we do send them from the server, currently.
     st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
-    float sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
+    sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
 
-    if ( sampled_depth > 0.9999 ) {
+    if ( sampled_depth > 0.999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
     }
     
+#ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
         // Moving the most recent proxy model forward.
         // The problem with this is that splats are large, and "coplanar with the viewport", so that the amount of
@@ -68,8 +81,9 @@ void main(void)
         // with the viewport"...
         // (Would it be feasible to adjust all fragments intra-splat for more accurate depths? This could perhaps solve the problem.)
         // (Unfortunately, WebGL doesn't support gl_FragDepth.)
-	sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
     }
+#endif
 
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
@@ -93,6 +107,7 @@ void main(void)
     // place.  (This value is equal to gl_FragCoord.z in the fragment shader. Note that this is constant over the
     // primitive, unless we modify it in the fragment shader. Doing this requires the GL_EXT_frag_depth extension
     // currently. (May 2014))
+    // 140611: Don't think this should be computed or used anywhere. Useful for debugging/testing. 
 
     vec2 splatSizeVec = vec2( float(vp_width)/float(splats_x), float(vp_height)/float(splats_y) );
     float splatSize = max( splatSizeVec.x, splatSizeVec.y );
@@ -118,9 +133,17 @@ void main(void)
         st_dy.y = 1.0-st_dy.y; 
         float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
         float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
+#ifndef USE_FRAG_DEPTH_EXT
+        if (splatSetIndex==-1) {
+            depth_dx = clamp(depth_dx - 0.001*float(mostRecentOffset), 0.0, 1.0);
+            depth_dy = clamp(depth_dy - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        }
+#endif
         // Note that we must have a way to avoid sampling the texture outside of any rendered depths, or, at least not use such values.
-        if (depth_dx>0.9999) depth_dx = sampled_depth;
-        if (depth_dy>0.9999) depth_dy = sampled_depth;
+        if (depth_dx>0.999)
+            depth_dx = sampled_depth;
+        if (depth_dy>0.999) 
+            depth_dy = sampled_depth;
 	
         // We may think of the depth texture as a grid of screen space points together with depths, which we will
         // subsample in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
@@ -171,7 +194,7 @@ void main(void)
     float c = float(tcConst)/100.0; // [0, 10], default = 100/100 = 1.0 (for testing and debugging)
     
     float delta = float(splats_x) / float(vp_width);
-    //delta = 1.0;
+    // delta = 1.0;
     
     // A value of 1.0 will cause the "next splat" to be used for the subsequent computations. If the number of splats is
     // smaller than the depth buffer size, this means that we will skip depth values in the computations. This also
@@ -192,6 +215,8 @@ void main(void)
     float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
     float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
     if (depth_dx>0.999) {
+        // Possible actions: Use the 'sampled_depth' value to get something more sensible. The primitive will be drawn,
+        // but is it useful to draw an oddly textured splat? Another alternative is to discard the whole splat.
 	//depth_dx = sampled_depth;
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
  	return;
@@ -201,6 +226,12 @@ void main(void)
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
  	return;
     }
+#ifndef USE_FRAG_DEPTH_EXT
+    if (splatSetIndex==-1) {
+        depth_dx = clamp(depth_dx - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        depth_dy = clamp(depth_dy - 0.001*float(mostRecentOffset), 0.0, 1.0);
+    }
+#endif
     
     vec3 ndc_dx     = vec3( aVertexPosition.x + delta*2.0/splats_x, aVertexPosition.y, 2.0*depth_dx - 1.0 );
     vec3 ndc_dy     = vec3( aVertexPosition.x, aVertexPosition.y + delta*2.0/splats_y, 2.0*depth_dy - 1.0 );
@@ -222,18 +253,23 @@ void main(void)
     // Difference of texture coordinates for adjacent splats, measured in texels.
     vec2 st_e1 = (1.0/delta)*(st_dx - st);
     vec2 st_e2 = (1.0/delta)*(st_dy - st);
-   
+    
+    // For interpolating the fragment's z-value in the FS
+    frag_depth = depth;
+    float frag_depth_dx = pos_dx.z/pos_dx.w; // = ndc_dx.z?!
+    frag_depth_dx = 0.5*( gl_DepthRange.diff*frag_depth_dx + gl_DepthRange.near + gl_DepthRange.far );
+    float frag_depth_dy = pos_dy.z/pos_dy.w; // = ndc_dy.z?!
+    frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
+    frag_depth_e = c * (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
+
+    
+
 
 
     // Simplifying...
     
     mat4 A = PM * MV * depthMVinv * depthPMinv;
     vec4 Au = A * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
-    if (false) {
- 	depth_dx = sampled_depth;
- 	depth_dy = sampled_depth;
-	// If we do this, delta can (not checked thoroughly) be eliminated below, but we don't get good results...
-    }
     vec4 Adu = A * vec4( aVertexPosition.xy + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
     vec4 Adv = A * vec4( aVertexPosition.xy + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
     scr_dx = float(vp_width )/(2.0*delta) * ( Adu.xy/Adu.w - Au.xy/Au.w );
@@ -241,14 +277,21 @@ void main(void)
     st_e1 = vec2( 1.0/splats_x, 0.0 );
     st_e2 = vec2( 0.0, -1.0/splats_y );
 
+    depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
+
+    sampled_depth_dx = depth_dx;
+    sampled_depth_dy = depth_dy;
+
     // Discarding splats that are not front-facing
     // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?
-    // vec3 dx = normalize( vec3(scr_dx, 0.0) );
-    // vec3 dy = normalize( vec3(scr_dy, 0.0) );
-    // if ( cross(dx, dy).z < 0.5 ) {
-    //     gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-    //     return;
-    // }
+    vec3 dx = normalize( vec3(scr_dx, 0.0) );
+    vec3 dy = normalize( vec3(scr_dy, 0.0) );
+    if ( cross(dx, dy).z < 0.1 ) {
+        gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+        return;
+    }
+
+
 
     // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to
     // which the screen space region with lower left corner 'scr_coo' and spanning vectors 'scr_coo_dx' and 'scr_coo_dy'
@@ -258,6 +301,11 @@ void main(void)
 	mat2( st_e1, st_e2 ) *                                 // This term maps the screen region "between the splats", given
 	                                                       // with coordinates in [0, 1]^2, to the corresponding texture region.
 
+	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
+	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
+	splatOverlap;                                          // this region.
+
+    intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
 	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
 	splatOverlap;                                          // this region.
