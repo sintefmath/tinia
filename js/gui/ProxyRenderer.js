@@ -25,11 +25,15 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     constructor: function(glContext, exposedModel, viewerKey) {
 
-        this._frameOutputCounter = 0;
-        this._frameMeasureCounter = 0;
-        this._frameOutputInterval = 100;
+        // --------------- Start of configuration section ----------------
+        this._frameOutputCounter   = 0;
+        this._frameMeasureCounter  = 0;
+        this._frameOutputInterval  = 100;
         this._frameMeasureInterval = 10;
-        this._frameTime = 0.0;
+
+        this._pausePerFrameInMilliseconds = 100;
+
+        this._useBlending = false;
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that as long as glPoints are square, the ratio between these numbers should ideally equal the aspect ratio of the viewport.)
@@ -42,15 +46,16 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._splatOverlap = 0.5; // 1.0) splats are "shoulder to shoulder", 2.0) edge of one circular splat passes through center of neighbour to side or above/below
         // Overriding with slider!!!
 
-        this._lock = false; // for debugging
-        this._lock2 = false; // for debugging
-
         this._depthRingSize = 5;
         // this._coverageGridSize = 10;
         this._angleThreshold = (180.0/this._depthRingSize) / 180.0*3.1415926535; // Is this a sensible value? 180/#models degrees
         this._zoomThreshold = 1.1;
 
         // ---------------- End of configuration section -----------------
+
+        this._frameTime = 0.0;
+        this._lock = false; // for debugging
+        this._lock2 = false; // for debugging
 
         this.gl = glContext;
         this.exposedModel = exposedModel;
@@ -166,8 +171,20 @@ dojo.declare("gui.ProxyRenderer", null, {
     },
 
 
+    // Adding a wrapper with an artificial pause in order to make sure the GPU fan doesn't spin up...
     render: function(matrices) {
-        // var t0 = Date.now();
+        if ( this._pausePerFrameInMilliseconds > 0 ) {
+            if (this._waitInProgress == true)
+                return;
+            this._matrices = matrices;
+            this._waitInProgress = true;
+            setTimeout( dojo.hitch(this, this.renderMain), this._pausePerFrameInMilliseconds);
+        }
+    },
+
+
+    renderMain: function() {
+        var matrices = this._matrices;
 
         if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
             // this._proxyModelCoverage.processDepthDataReplaceOldest( this._proxyModelBeingProcessed );
@@ -179,47 +196,15 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         if (this._splatProgram) {
 
-            this.gl.clearColor(0.2, 0.2, 0.2, 1.0);
-            this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
-            this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-            // Strange... Blending disabled. Clearing done before proxy rendering. Then, still, ...:
-            //
-            // (Two different effects are observed with some settings: 1. snapshot is lingering behind proxy even when glClear is done,
-            // and 2. snapshot residuals are observed in cleared parts and redrawn (by proxy) parts.)
-            //
-            // clearColor A     Proxy rendered A    Result
-            // ------------------------------------------------------------------------------------
-            // 0                0                   snapShot lingers in un-re-rendered parts. (Seems less saturated, as if distd with 0.5 perhaps)
-            //                                      New proxy seems to be blended with old image, get saturation in some places.
-            //
-            // 0                0.5                 snapShot lingers in un-re-rendered parts.
-            //                                      Also lingers in re-rendered parts! As if blending was enabled.
-            //                                      In other words, both "effects" at the same time.
-            //
-            // 0                1                   snapShot lingers in un-re-rendered (by proxy geometry) parts of the image.
-            //                                      But the background color specified is used around the snapShot fragments actually set, even though the
-            //                                      snapShot itself should have another background (black)!
-            //
-            // 1                0                   snapShot does not linger in un-re-rendered parts, here the clear-color is used
-            //                                      But; lingers in re-rendered parts! As if blending was enabled.
-            //                                      But if any sort of blending is being done, why does not the snapShot linger in un-re-rendered parts?!
-            //                                      (Why does the clear remove old snapshot from un-rendered parts but not those that are overdrawn with new proxy fragments?!)
-            //
-            // 1                0.5                 Same as for proxy-alpha=1, but we get saturation in lesser extent (snapshot + proxy < 1 e.g. for snap-red + proxy-cyan)
-            //                                                                                                                                      (1, 0, 0)  + 0.5*(0, 1, 1) = (1, 0.5, 0.5)
-            //                                                                                                                      instead of      (1, 0, 0)  + 1.0*(0, 1, 1) = (1, 1, 1 ) it looks like...
-            //
-            // 1                1                   More in line with expectations: no lingering snapShot at all. Background cleared to selected color everywhere.
-
-
-            this.gl.enable(this.gl.DEPTH_TEST);
-
-            if (false) {
+            if ( this._useBlending) {
+                this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
                 this.gl.enable(this.gl.BLEND);
                 this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
+            } else {
+                this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
             }
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this.gl.enable(this.gl.DEPTH_TEST);
 
             this.gl.useProgram(this._splatProgram);
             var vertexPositionAttribute = this.gl.getAttribLocation( this._splatProgram, "aVertexPosition" );
@@ -231,7 +216,13 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "decayMode");
             this._setUniform1i(this._splatProgram, "roundSplats");
             this._setUniform1i(this._splatProgram, "screenSpaceSized");
-            this._setUniform1i(this._splatProgram, "transpBackground");
+            if ( this._useBlending) {
+                if (this.gl.getUniformLocation(this._splatProgram, "useBlending")) {
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "useBlending"), 1 );
+                } else {
+                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "useBlending"), 0 );
+                }
+            }
             this._setUniform1i(this._splatProgram, "mostRecentOffset");
             if (this.gl.getUniformLocation(this._splatProgram, "MV"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
@@ -248,28 +239,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
                 this._lock = true;
                 this._lock2 = false;
-            }
-            if ( this.exposedModel.getElementValue("linearDepth") ) {
-                for (var i=0; i<this._depthRingSize; i++) {
-                    this._proxyModelCoverage.proxyModelRing[i]._setDepthSamplingMode(this.gl.LINEAR);
-                }
-                this._proxyModelCoverage.mostRecentModel._setDepthSamplingMode(this.gl.LINEAR);
-            } else {
-                for (var i=0; i<this._depthRingSize; i++) {
-                    this._proxyModelCoverage.proxyModelRing[i]._setDepthSamplingMode(this.gl.NEAREST);
-                }
-                this._proxyModelCoverage.mostRecentModel._setDepthSamplingMode(this.gl.NEAREST);
-            }
-            if ( this.exposedModel.getElementValue("linearRGB") ) {
-                for (var i=0; i<this._depthRingSize; i++) {
-                    this._proxyModelCoverage.proxyModelRing[i]._setRgbSamplingMode(this.gl.LINEAR);
-                }
-                this._proxyModelCoverage.mostRecentModel._setRgbSamplingMode(this.gl.LINEAR);
-            } else {
-                for (var i=0; i<this._depthRingSize; i++) {
-                    this._proxyModelCoverage.proxyModelRing[i]._setRgbSamplingMode(this.gl.NEAREST);
-                }
-                this._proxyModelCoverage.mostRecentModel._setRgbSamplingMode(this.gl.NEAREST);
             }
 
             var ol = this.exposedModel.getElementValue("overlap") / 100.0;
@@ -349,6 +318,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }
 
+            // Timing-stuff
 //            this.gl.flush();
 //            if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
 //                this._frameTime += performance.now() - t0;
@@ -362,21 +332,17 @@ dojo.declare("gui.ProxyRenderer", null, {
 //                this._frameTime = 0.0;
 //            }
 
-
-            if (false) {
+            if ( this._useBlending ) {
                 this.gl.colorMask(false, false, false, true);
                 this.gl.clearColor(1.0, 0.0, 0.0, 1.0);
                 this.gl.clear(this.gl.COLOR_BUFFER_BIT);
                 this.gl.colorMask(true, true, true, true);
+                this.gl.disable(this.gl.BLEND);
             }
 
-            this.gl.disable(this.gl.BLEND);
-
-
         }
-        // if ( Date.now() - t0 > 3 ) {
-        //     console.log("render time: " + (Date.now()-t0));
-        // }
+
+        this._waitInProgress = false;
     }
 
 });

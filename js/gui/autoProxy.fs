@@ -36,9 +36,9 @@ uniform highp int vp_height;
 uniform int debugSplatCol;
 uniform int decayMode;
 uniform int roundSplats;
-uniform int transpBackground;
 uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
+uniform int useBlending;
 // uniform highp int adjustTCwithFactorFromVS;
 
 
@@ -46,9 +46,11 @@ uniform int splatOutline;
 
 void main(void)
 {
-    highp float src_alpha = 0.1;
-    if (splatSetIndex==-1) {
-        src_alpha = 1.0;
+    highp float src_alpha = 1.0;
+    if (useBlending>0) {
+	src_alpha = 0.1;
+	if (splatSetIndex==-1)
+	    src_alpha = 1.0;
     }
     
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
@@ -69,8 +71,6 @@ void main(void)
     tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
     if (!(ignoreIntraSplatTexCoo>0)) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
-	// Or should the flip here and a corresponding in the intraSplatTexCooTransform-generation be removed simultaneously?!
-	//tc = tc + (1.0/32.0)*vec2(c.x, c.y); // testing
     }
 
     // Discarding fragments that would look up depth and color outside the rendered scene
@@ -80,7 +80,7 @@ void main(void)
     // That is impossible to do, we do not have the necessary information. What we can do, is to adjust the fragment depth, which we
     // do below.
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
-    if ( (transpBackground>0) && (intra_splat_depth>0.999) ) {
+    if ( intra_splat_depth > 0.999 ) {
         discard;
     }
 
@@ -90,7 +90,7 @@ void main(void)
     // gl_FragDepth extension.
 #ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
-        clamp(intra_splat_depth = intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
     }
 #endif
 
@@ -99,10 +99,12 @@ void main(void)
     highp float planar_depth = sampled_depth + dot( depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
-    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
-        discard;
+    if (!(ignoreIntraSplatTexCoo>0)) {
+	if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+	    discard;
+	}
     }
-
+    
     if (decayMode==0) {
         decay = 1.0;
     }
@@ -150,8 +152,12 @@ void main(void)
     if (splatSetIndex==-1) {
         planar_frag_depth = clamp(planar_frag_depth - 0.001, 0.0, 1.0);
     }
-    
-    gl_FragDepthEXT = planar_frag_depth;
+
+    if (!(ignoreIntraSplatTexCoo>0)) {
+	gl_FragDepthEXT = planar_frag_depth;
+    } else {
+	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
+    }
 #endif
     
     

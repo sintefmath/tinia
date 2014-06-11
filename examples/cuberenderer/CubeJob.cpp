@@ -65,8 +65,6 @@ bool CubeJob::init()
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
         m_model->addConstrainedElement<int>("mostRecentOffset", 2, 0, 100);
         m_model->addAnnotation("mostRecentOffset", "Offset (%%))");
-        m_model->addElement<bool>( "transpBackground", true );
-        m_model->addAnnotation("transpBackground", "Background in textures transp.");
         m_model->addConstrainedElement<int>("splats", 32, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
@@ -79,10 +77,6 @@ bool CubeJob::init()
         m_model->addAnnotation("splatOutline", "Square splat outline");
         m_model->addElement<bool>( "reloadShader", false );
         m_model->addAnnotation("reloadShader", "Reload shader");
-        m_model->addElement<bool>( "linearDepth", false );
-        m_model->addAnnotation("linearDepth", "linearDepth");
-        m_model->addElement<bool>( "linearRGB", true );
-        m_model->addAnnotation("linearRGB", "linearRGB");
     }
 
     // Setting up the mainGrid containing the GUI elements
@@ -96,6 +90,7 @@ bool CubeJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundSplats"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("screenSpaceSized"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("splatSizeLimiting"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("overlap"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("overlap", false));
@@ -106,24 +101,17 @@ bool CubeJob::init()
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("mostRecentOffset", false));
         mainGrid->setChild(row, 3, new tinia::model::gui::Label("mostRecentOffset", true));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("transpBackground"));
-        row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("splats"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("splats", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("splats", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatSizeLimiting"));
-        row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ignoreIntraSplatTexCoo"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("reloadShader"));
-        row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("linearDepth"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("linearRGB"));
         row++;
         // More elements...
     }

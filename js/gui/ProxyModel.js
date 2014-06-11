@@ -45,15 +45,17 @@ dojo.declare("gui.ProxyModel", null, {
         image.onload = dojo.hitch(this, function() {
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
             this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, image);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-            this._setDepthSamplingMode(this._gl.NEAREST);
 
             var rgbImage = new Image();
             rgbImage.onload = dojo.hitch(this, function() {
                 this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
                 this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, rgbImage);
+                this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
+                this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
                 this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-                this._setRgbSamplingMode(this._gl.NEAREST);
 
                 this.projection         = projMatAsText.split(/ /);
                 this.projection_inverse = mat4.inverse(mat4.create( this.projection ));
@@ -70,22 +72,6 @@ dojo.declare("gui.ProxyModel", null, {
 
         });
         image.src = "data:image/png;base64," + depthBufferAsText;
-    },
-
-
-    _setDepthSamplingMode: function(mode) {
-        this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
-        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, mode);
-        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, mode);
-        this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-    },
-
-
-    _setRgbSamplingMode: function(mode) {
-        this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
-        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, mode);
-        this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, mode);
-        this._gl.bindTexture(this._gl.TEXTURE_2D, null);
     },
 
 
