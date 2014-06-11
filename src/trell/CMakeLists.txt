@@ -8,9 +8,9 @@ SET( LIB_TRELL_SRC
 
 FILE( GLOB LIB_TRELL_HEADERS "../../include/tinia/trell/*.hpp" "../../include/tinia/trell/*.h" )
   
-
+FIND_PACKAGE(Threads)
 ADD_LIBRARY( tinia_trell ${LIB_TRELL_SRC} ${LIB_TRELL_HEADERS})
-TARGET_LINK_LIBRARIES( tinia_trell tiniaipc ${RT} tinia_renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} tinia_model tinia_modelxml tinia_jobcontroller)
+TARGET_LINK_LIBRARIES( tinia_trell tiniaipc ${RT} ${CMAKE_THREAD_LIBS_INIT} tinia_renderlist ${LIBXML2_LIBRARIES} ${LIB_APR} ${GLEW_LIBRARY} ${OPENGL_LIBRARY} tinia_model tinia_modelxml tinia_jobcontroller)
 
 INSTALL( TARGETS tinia_trell
   EXPORT TiniaTargets

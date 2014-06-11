@@ -136,13 +136,14 @@ IF(Tinia_SERVER)
     NAMES apr-1
     PATHS "/usr/lib/"
     )
+  FIND_PACKAGE( Threads )
 
   FIND_PATH(APR_INCLUDE_DIR "apr.h"
 HINTS   "/usr/include/apr-1.0"
         "/usr/include/apr-1"
         "apr-1/"
         "apr-1.0")
-    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${LIB_APR})
+    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIB_APR})
 ENDIF()
 
 SET(TINIA_EXTERNAL_INCLUDE_DIRS
@@ -162,6 +163,7 @@ include_directories( "./include"
 link_directories(
   ${Boost_LIBRARY_DIRS}
 )
+
 
 ADD_SUBDIRECTORY( "src/model" )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_model)
@@ -188,6 +190,10 @@ SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
   ADD_SUBDIRECTORY( "src/mod_trell" )
   ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
+
+# --- 
+SET( TINIA_LIBRARIES ${TINIA_LIBRARIES_FOR_CONFIG} )
+
 
 # Unit tests
 IF( Tinia_BUILD_UNIT_TESTS )
@@ -250,6 +256,9 @@ SET(CPACK_PACKAGE_VERSION ${version_number} )
 
 SET(TINIA_TARGETS_APPEND "")
 
+IF(Tinia_SERVER)
+    
+ENDIF(Tinia_SERVER)
 
 # This is for local build directory:
 IF(Tinia_DESKTOP)

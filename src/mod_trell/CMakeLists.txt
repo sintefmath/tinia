@@ -10,8 +10,9 @@ SET( MOD_TRELL_SRC
     "pass_reply_png.c"
 )
 
+FIND_PACKAGE(Threads)
 ADD_LIBRARY( mod_tinia_trell ${MOD_TRELL_SRC} )
-TARGET_LINK_LIBRARIES( mod_tinia_trell tiniaipc ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
+TARGET_LINK_LIBRARIES( mod_tinia_trell tiniaipc ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
 ADD_DEFINITIONS( -Wall )
 
 INSTALL( TARGETS mod_tinia_trell

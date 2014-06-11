@@ -29,8 +29,7 @@ IF(Tinia_SERVER)
     )
 
   TARGET_LINK_LIBRARIES(tutorial3_web
-    ${RT}
-    ${LIB_APR}
+    ${TINIA_LIBRARIES}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${Boost_LIBRARIES} 
