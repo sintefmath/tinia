@@ -335,33 +335,45 @@ DSRV.prototype = {
     touchStartEvent: function (event)
     {
         if( event.touches.length == 1 ) {
-            event.button = this.ROTATE;
+            event.button = 0;
             this.mousePressEvent(event);
         }
         else if( event.touches.length == 2 ) {
-            event.button = this.ZOOM;
+            event.button = 2;
+            this.mousePressEvent(event);
+        }
+        else if( event.touches.length == 3 ) {
+            event.button = 1;
             this.mousePressEvent(event);
         }
     },
     touchEndEvent: function (event)
     {
         if( event.touches.length == 1 ) {
-            event.button = this.ROTATE;
+            event.button = 0;
             this.mouseReleaseEvent(event);
         }
         else if( event.touches.length == 2 ) {
-            event.button = this.ZOOM;
+            event.button = 2;
+            this.mouseReleaseEvent(event);
+        }
+        else if( event.touches.length == 3 ) {
+            event.button = 1;
             this.mouseReleaseEvent(event);
         }
     },
     touchMoveEvent: function (event)
     {
         if( event.touches.length == 1 ) {
-            event.button = this.ROTATE;
+            event.button = 0;
             this.mouseMoveEvent(event);
         }
         else if(event.touches.length == 2) {
-            event.button = this.ZOOM;
+            event.button = 2;
+            this.mouseMoveEvent(event);
+        }
+        else if(event.touches.length == 3) {
+            event.button = 1;
             this.mouseMoveEvent(event);
         }
     },
