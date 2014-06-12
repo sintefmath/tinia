@@ -312,9 +312,9 @@ cleanup:
                 goto done;
             }
 
-            int msec = 1<<(5*it);
+            int msec = 1<<(15*it);
             fprintf( stderr, "FIXTURE: %d threads still alive, waiting %d milliseconds.\n",
-                     msec, (int)m_threads.size() );
+                     (int)m_threads.size(), msec  );
             usleep( msec );
             if( it != 0 ) {
                 fprintf( stderr, "FIXTURE: Cancelling threads and retrying to join them.\n" );
