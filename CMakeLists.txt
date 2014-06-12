@@ -164,7 +164,6 @@ link_directories(
   ${Boost_LIBRARY_DIRS}
 )
 
-
 ADD_SUBDIRECTORY( "src/model" )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_model)
 IF(LIBXML2_FOUND)
@@ -191,7 +190,7 @@ SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
   ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
 
-# --- 
+# --- The rest are built as applications using tinia ---------------------------
 SET( TINIA_LIBRARIES ${TINIA_LIBRARIES_FOR_CONFIG} )
 
 
@@ -256,9 +255,6 @@ SET(CPACK_PACKAGE_VERSION ${version_number} )
 
 SET(TINIA_TARGETS_APPEND "")
 
-IF(Tinia_SERVER)
-    
-ENDIF(Tinia_SERVER)
 
 # This is for local build directory:
 IF(Tinia_DESKTOP)
