@@ -31,6 +31,12 @@
     obj->setErrorFromThread( o.str() );                                     \
     } } while(0)
 
+#define FAIL_MISERABLY_UNLESS( a ) do { if(!(a) ) {                             \
+    fprintf( stderr, "Failed misrably at %s@%d: %s\n", __FILE__, __LINE__, #a );\
+    *((int*)0xDEADBEEF) = 42;                                                   \
+    } } while(0)
+
+
 struct SendRecvFixtureBase
 {
 
@@ -298,7 +304,7 @@ cleanup:
         BOOST_REQUIRE( pthread_cond_destroy( &m_server_runs_cond ) == 0 );
         BOOST_REQUIRE( pthread_cond_destroy( &m_clients_initialized_cond ) == 0 );
         BOOST_REQUIRE( pthread_cond_destroy( &m_clients_exited_cond) == 0 );
-        BOOST_REQUIRE( pthread_mutex_destroy( &lock ) == 0 );
+        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
         if( !m_error_from_thread.empty() ) {
             fprintf( stderr, "Error from thread: %s\n", m_error_from_thread.c_str() );
