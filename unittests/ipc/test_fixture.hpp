@@ -19,9 +19,19 @@
 #include <ctime>
 #include <cstdarg>
 #include <iostream>
+#include <sstream>
 #include <boost/test/unit_test.hpp>
 #include <tinia/ipc/ipc_msg.h>
 #include "../../src/ipc/ipc_msg_internal.h"
+
+
+#define NOT_MAIN_THREAD_REQUIRE( obj, a ) do { if(!(a)){                    \
+    std::stringstream o;                                                    \
+    o << (#a) << " failed at " << __FILE__ << '@' << __LINE__;              \
+    pthread_mutex_lock( &obj->lock );                                       \
+    obj->m_error_from_thread = o.str();                                     \
+    pthread_mutex_unlock( &obj->lock );                                     \
+    } } while(0)
 
 struct SendRecvFixtureBase
 {
@@ -48,7 +58,7 @@ struct SendRecvFixtureBase
     pthread_cond_t          m_clients_initialized_cond;
     int                     m_clients_exited;
     pthread_cond_t          m_clients_exited_cond;
-    
+    std::string             m_error_from_thread;
     
     virtual
     int
@@ -108,8 +118,7 @@ struct SendRecvFixtureBase
         
         BOOST_REQUIRE( pthread_mutexattr_init( &mutex_attr) == 0 );
         BOOST_REQUIRE( pthread_mutexattr_settype( &mutex_attr, PTHREAD_MUTEX_ERRORCHECK ) == 0 );
-
-        
+        BOOST_REQUIRE( pthread_mutexattr_settype( &mutex_attr, PTHREAD_MUTEX_RECURSIVE ) == 0 );
         
         BOOST_REQUIRE( pthread_mutex_init( &lock, &mutex_attr ) == 0 );
 
@@ -230,6 +239,11 @@ cleanup:
         BOOST_REQUIRE( pthread_cond_destroy( &m_clients_exited_cond) == 0 );
         BOOST_REQUIRE( pthread_mutex_destroy( &lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
+        if( !m_error_from_thread.empty() ) {
+            fprintf( stderr, "Error from thread: %s\n", m_error_from_thread.c_str() );
+            BOOST_REQUIRE( m_error_from_thread.empty() );
+        }
+
         fprintf( stderr, "test end.\n" );
     }
 
@@ -241,7 +255,7 @@ cleanup:
             const char* msg, ... )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)data;
-        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+        pthread_mutex_lock( &that->lock );
         char buf[1024];
         va_list args;
         va_start( args, msg );
@@ -259,7 +273,7 @@ cleanup:
             std::cerr << ' ';
         }
         std::cerr << buf << std::endl;
-        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0 );
+        pthread_mutex_unlock( &that->lock );
     }
     
     
@@ -329,12 +343,12 @@ cleanup:
     server_periodic( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
         if( that->m_server_runs_flag == 0 ) {
             that->m_server_runs_flag = 1;
-            BOOST_REQUIRE( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
-        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0 );
         return 0;
     }
     
@@ -349,12 +363,12 @@ cleanup:
                                                   logger,
                                                   arg );
         {
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
-            BOOST_REQUIRE( server != NULL );
-            BOOST_REQUIRE( server->shmem_base != NULL );
-            BOOST_REQUIRE( server->shmem_header_ptr != NULL );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
+            NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
+            NOT_MAIN_THREAD_REQUIRE( that, server->shmem_header_ptr != NULL );
             that->m_server = server;
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         // run server mainloop
         //std::cerr << __LINE__ << ": A\n";
@@ -365,17 +379,17 @@ cleanup:
         //std::cerr << __LINE__ << ": B\n";
         // teardown server
         {
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
-            BOOST_CHECK( rc == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
             that->m_server = NULL;
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         rc = ipc_msg_server_delete( server );
         {
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
-            BOOST_CHECK( rc == 0 );
-            BOOST_REQUIRE( pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         return NULL;
     }
@@ -434,55 +448,55 @@ cleanup:
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
         
-        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
         that->m_clients_initialized++;
         if( that->m_clients_initialized == that->m_clients ) {
             // last client to finish init
-            BOOST_REQUIRE( pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
         }
-        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
 
         tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
         rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
         {
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
-            BOOST_REQUIRE( rc == 0 );
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         do {
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
             int timeout = that->m_clients_should_longpoll ? 2 : 0;
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
 
             rc = tinia_ipc_msg_client_sendrecv( client,
                                           client_producer, that,
                                           client_consumer, that,
                                           timeout );
             
-            BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
             if( that->m_failure_is_an_option ) {
-                BOOST_REQUIRE_GE( rc, -1 );
+                NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
             }
             else {
-                BOOST_REQUIRE_EQUAL( rc, 0 );
+                NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
             }
-            BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         } while(0);
         rc = tinia_ipc_msg_client_release( client );
-        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
-        BOOST_REQUIRE( rc == 0 );
-        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         
         free( client );
         
         // notify that we have finished
-        BOOST_REQUIRE( pthread_mutex_lock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
         that->m_clients_exited++;
         if( that->m_clients_exited == that->m_clients ) {
             // last client to finish init
-            BOOST_REQUIRE( pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
         }
-        BOOST_REQUIRE( pthread_mutex_unlock( &that->lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         return NULL;
     }
 

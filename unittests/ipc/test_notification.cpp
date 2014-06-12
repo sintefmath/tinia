@@ -88,9 +88,9 @@ struct NotificationFixture
                     const size_t buffer_size,
                     const int part )
     {
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
         int flag = m_flag;
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         *((int*)buffer) = flag;
         *buffer_bytes = sizeof(flag);
         *more = 0;
@@ -116,18 +116,18 @@ struct NotificationFixture
                     const int more ) 
     {
         if( *((int*)buffer) == 0 ) {
-            BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
             m_longpolling_clients++;
             if( m_longpolling_clients == m_clients ) {
-                BOOST_REQUIRE( pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
+                NOT_MAIN_THREAD_REQUIRE( this, pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
             }
-            BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
             return 1;
         }
         else {
-            BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
             m_clients_that_got_flag++;
-            BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         }
         return 0;
     }                                        

@@ -46,9 +46,9 @@ struct SendRecvFixture : public SendRecvFixtureBase
         if( part == 0 ) {
             // first
         }
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
         m_server_bytes_received += buffer_bytes;
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         if( more == 0 ) {
             // last
         }
@@ -63,9 +63,9 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
         size_t bytes_to_send = m_server_bytes_to_send;
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         
         size_t sent = part*buffer_size;
         if( sent < bytes_to_send ) {
@@ -92,9 +92,9 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
         size_t bytes_to_send = m_client_bytes_to_send;
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         
         size_t sent = part*buffer_size;
         if( sent < bytes_to_send ) {
@@ -123,9 +123,9 @@ struct SendRecvFixture : public SendRecvFixtureBase
         if( part == 0 ) {
             // first
         }
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
         m_client_bytes_received += buffer_bytes;
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0  );
+        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         if( more == 0 ) {
             // last
         }
