@@ -278,10 +278,9 @@ function DSRV( params ) {
     if( this.m_bbox_key ) {
         this.m_model.addLocalListener( this.m_bbox_key,
                                        tinia.hitch( this,
-                                                    function( key, viewer )
+                                                    function( key, bb )
         {
-            var bbox_str = viewer.getElementValue( key );
-            this.setBoundingBox( bbox_str );
+            this.setBoundingBox( bb );
         } ) );
         this.setBoundingBox( this.m_model.getElementValue( this.m_bbox_key ) );
     }
