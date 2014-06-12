@@ -55,16 +55,14 @@ struct ErrorInduceFixture
                     const int part,
                     const int more )
     {
-        int ret = 0;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
+        Locker locker( this );
         m_server_consumer_invocations++;
         if( m_fail_func & SERVER_CONSUMER ) {
             if( part == m_fail_part ) {
-                ret = -1;
+                return -1;
             }
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
-        return ret;
+        return 0;
     }
     
     int
@@ -75,14 +73,15 @@ struct ErrorInduceFixture
                     const int part )
     {
         int ret = 0;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        m_server_producer_invocations++;
-        if( m_fail_func & SERVER_PRODUCER ) {
-            if( part == m_fail_part ) {
-                ret = -1;
+        {
+            Locker locker( this );
+            m_server_producer_invocations++;
+            if( m_fail_func & SERVER_PRODUCER ) {
+                if( part == m_fail_part ) {
+                    ret = -1;
+                }
             }
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         if( part < 2 ) {
             *more = 1;
         }
@@ -101,14 +100,15 @@ struct ErrorInduceFixture
                     const int part )
     {
         int ret = 0;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        m_client_producer_invocations++;
-        if( m_fail_func & CLIENT_PRODUCER ) {
-            if( part == m_fail_part ) {
-                ret = -1;
+        {
+            Locker lcoker( this );
+            m_client_producer_invocations++;
+            if( m_fail_func & CLIENT_PRODUCER ) {
+                if( part == m_fail_part ) {
+                    ret = -1;
+                }
             }
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         
         if( part < 2 ) {
             *more = 1;
@@ -127,17 +127,14 @@ struct ErrorInduceFixture
                     const int part,
                     const int more ) 
     {
-        int ret = 0;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
+        Locker locker( this );
         m_client_consumer_invocations++;
         if( m_fail_func & CLIENT_CONSUMER ) {
             if( part == m_fail_part ) {
-                ret = -1;
+                return -1;
             }
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
-        
-        return ret;
+        return 0;
     }                                        
     
 };

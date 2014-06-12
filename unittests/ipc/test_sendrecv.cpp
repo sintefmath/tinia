@@ -46,9 +46,10 @@ struct SendRecvFixture : public SendRecvFixtureBase
         if( part == 0 ) {
             // first
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        m_server_bytes_received += buffer_bytes;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
+        {
+            Locker locker( this );
+            m_server_bytes_received += buffer_bytes;
+        }
         if( more == 0 ) {
             // last
         }
@@ -63,9 +64,11 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        size_t bytes_to_send = m_server_bytes_to_send;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
+        size_t bytes_to_send;
+        {
+            Locker Locker( this );
+            bytes_to_send = m_server_bytes_to_send;
+        }
         
         size_t sent = part*buffer_size;
         if( sent < bytes_to_send ) {
@@ -92,9 +95,11 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        size_t bytes_to_send = m_client_bytes_to_send;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
+        size_t bytes_to_send;
+        {
+            Locker locker( this );
+            bytes_to_send = m_client_bytes_to_send;
+        }
         
         size_t sent = part*buffer_size;
         if( sent < bytes_to_send ) {
@@ -123,9 +128,10 @@ struct SendRecvFixture : public SendRecvFixtureBase
         if( part == 0 ) {
             // first
         }
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
-        m_client_bytes_received += buffer_bytes;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
+        {
+            Locker locker( this );
+            m_client_bytes_received += buffer_bytes;
+        }
         if( more == 0 ) {
             // last
         }

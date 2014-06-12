@@ -46,6 +46,8 @@ struct NotificationFixture
     int
     inner()
     {
+        // assuming that lock is held.
+
         struct timespec timeout;
         clock_gettime( CLOCK_REALTIME, &timeout );
         timeout.tv_sec += 10;
@@ -88,9 +90,8 @@ struct NotificationFixture
                     const size_t buffer_size,
                     const int part )
     {
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
+        Locker locker( this );
         int flag = m_flag;
-        NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         *((int*)buffer) = flag;
         *buffer_bytes = sizeof(flag);
         *more = 0;
@@ -116,18 +117,16 @@ struct NotificationFixture
                     const int more ) 
     {
         if( *((int*)buffer) == 0 ) {
-            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
+            Locker locker( this );
             m_longpolling_clients++;
             if( m_longpolling_clients == m_clients ) {
                 NOT_MAIN_THREAD_REQUIRE( this, pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
             }
-            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
             return 1;
         }
         else {
-            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_lock( &lock ) == 0 );
+            Locker locker( this );
             m_clients_that_got_flag++;
-            NOT_MAIN_THREAD_REQUIRE( this, pthread_mutex_unlock( &lock ) == 0  );
         }
         return 0;
     }                                        
