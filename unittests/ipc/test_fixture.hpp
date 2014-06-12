@@ -28,13 +28,65 @@
 #define NOT_MAIN_THREAD_REQUIRE( obj, a ) do { if(!(a)){                    \
     std::stringstream o;                                                    \
     o << (#a) << " failed at " << __FILE__ << '@' << __LINE__;              \
-    pthread_mutex_lock( &obj->lock );                                       \
-    obj->m_error_from_thread = o.str();                                     \
-    pthread_mutex_unlock( &obj->lock );                                     \
+    obj->setErrorFromThread( o.str() );                                     \
     } } while(0)
 
 struct SendRecvFixtureBase
 {
+
+    // RAII-locker for fixture
+    class Locker
+    {
+    public:
+        explicit Locker( SendRecvFixtureBase* that )
+            : m_that( that ),
+              m_locked( false )
+        {
+            lock();
+        }
+
+        ~Locker()
+        {
+            if( m_locked ) {
+                unlock();
+            }
+        }
+
+        void
+        lock()
+        {
+            if( m_locked ) {
+                fprintf( stderr, "Locker::lock: Locker already locked\n" );
+                *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
+            }
+
+            int rv = pthread_mutex_lock( &m_that->lock );
+            if( rv != 0 ) {
+                fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
+            }
+            m_locked = true;
+        }
+
+        void
+        unlock()
+        {
+            if( !m_locked ) {
+                fprintf( stderr, "Locker::lock: Locker not locked\n" );
+                *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
+            }
+
+            int rv = pthread_mutex_unlock( &m_that->lock );
+            if( rv != 0 ) {
+                fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
+            }
+            m_locked = false;
+        }
+
+    protected:
+        SendRecvFixtureBase*    m_that;
+        bool                    m_locked;
+    };
+
 
     SendRecvFixtureBase()
         : m_server( NULL ),
@@ -60,6 +112,13 @@ struct SendRecvFixtureBase
     pthread_cond_t          m_clients_exited_cond;
     std::string             m_error_from_thread;
     
+    void
+    setErrorFromThread( const std::string& error )
+    {
+        Locker locker( this );
+        m_error_from_thread = error;
+    }
+
     virtual
     int
     clientProducer( int* more,
@@ -129,7 +188,7 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_mutexattr_destroy( &mutex_attr) == 0 );
 
         // wait for server to be up and running.
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
+        Locker locker( this );
         m_server = NULL;
         m_threads.resize( m_threads.size()+1 );
 
@@ -194,10 +253,12 @@ struct SendRecvFixtureBase
         fprintf( stderr, "%s@%d: %d clients have exited.\n", __FILE__, __LINE__, m_clients_exited );
         // kill server
         BOOST_REQUIRE( m_server != NULL );
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
+
+        locker.unlock();
         rc = ipc_msg_server_mainloop_break( m_server );
-        BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
         BOOST_REQUIRE( rc == 0 );
+
+        locker.lock();
         
         // wait for server thread to finsh
         while( m_server != NULL ) {
@@ -210,7 +271,7 @@ struct SendRecvFixtureBase
                 goto hung;
             }
         }
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0);
+        locker.unlock();
         goto cleanup;
 hung:
         ipc_msg_server_mainloop_break( m_server );
@@ -221,7 +282,7 @@ hung:
         for( auto it=m_threads.begin(); it!=m_threads.end(); ++it ) {
             pthread_cancel( *it );
         }
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
+        locker.unlock();
 
 cleanup:
         for( size_t i=0; i<m_threads.size(); i++ ) {
@@ -255,7 +316,7 @@ cleanup:
             const char* msg, ... )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)data;
-        pthread_mutex_lock( &that->lock );
+        Locker locker( that );
         char buf[1024];
         va_list args;
         va_start( args, msg );
@@ -273,7 +334,6 @@ cleanup:
             std::cerr << ' ';
         }
         std::cerr << buf << std::endl;
-        pthread_mutex_unlock( &that->lock );
     }
     
     
@@ -343,12 +403,12 @@ cleanup:
     server_periodic( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+
+        Locker locker( that );
         if( that->m_server_runs_flag == 0 ) {
             that->m_server_runs_flag = 1;
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0 );
         return 0;
     }
     
@@ -363,12 +423,11 @@ cleanup:
                                                   logger,
                                                   arg );
         {
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+            Locker locker( that );
             NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_header_ptr != NULL );
             that->m_server = server;
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         // run server mainloop
         //std::cerr << __LINE__ << ": A\n";
@@ -376,20 +435,21 @@ cleanup:
                                           server_periodic, that,
                                           server_input_handler, that,
                                           server_output_handler, that );
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-        if( rc < -1 ) { // Worse than a soft-error.
+        if( rc < -1 ) { // Serious error.
             fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
-            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
         }
-        that->m_server = NULL;
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
+        {
+            Locker locker( that );
+            that->m_server = NULL;
+        }
 
         rc = ipc_msg_server_delete( server );
+        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+
         {
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            Locker locker( that );
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
         return NULL;
     }
@@ -448,55 +508,56 @@ cleanup:
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
         
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-        that->m_clients_initialized++;
-        if( that->m_clients_initialized == that->m_clients ) {
-            // last client to finish init
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
+        {
+            Locker locker( that );
+            that->m_clients_initialized++;
+            if( that->m_clients_initialized == that->m_clients ) {
+                // last client to finish init
+                NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
+            }
         }
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
 
         tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
         rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
-        {
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
-        }
+        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+
         do {
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-            int timeout = that->m_clients_should_longpoll ? 2 : 0;
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
+            int timeout;
+            bool failure_is_an_option;
+            {
+                Locker locker( that );
+                timeout = that->m_clients_should_longpoll ? 2 : 0;
+                failure_is_an_option = that->m_failure_is_an_option;
+            }
 
             rc = tinia_ipc_msg_client_sendrecv( client,
                                           client_producer, that,
                                           client_consumer, that,
                                           timeout );
             
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-            if( that->m_failure_is_an_option ) {
+            if( failure_is_an_option ) {
                 NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
             }
             else {
                 NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
             }
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
+
         } while(0);
+
         rc = tinia_ipc_msg_client_release( client );
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
-        
         free( client );
         
         // notify that we have finished
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
-        that->m_clients_exited++;
-        if( that->m_clients_exited == that->m_clients ) {
-            // last client to finish init
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
+        {
+            Locker locker( that );
+            that->m_clients_exited++;
+            if( that->m_clients_exited == that->m_clients ) {
+                // last client to finish init
+                NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
+            }
         }
-        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
+
         return NULL;
     }
 
