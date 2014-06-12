@@ -376,14 +376,14 @@ cleanup:
                                           server_periodic, that,
                                           server_input_handler, that,
                                           server_output_handler, that );
-        //std::cerr << __LINE__ << ": B\n";
-        // teardown server
-        {
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
+        if( rc < -1 ) { // Worse than a soft-error.
+            fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
             NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-            that->m_server = NULL;
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
         }
+        that->m_server = NULL;
+        NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_unlock( &that->lock ) == 0  );
+
         rc = ipc_msg_server_delete( server );
         {
             NOT_MAIN_THREAD_REQUIRE( that, pthread_mutex_lock( &that->lock ) == 0 );
