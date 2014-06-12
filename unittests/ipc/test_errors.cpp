@@ -138,6 +138,7 @@ struct ErrorInduceFixture
     }                                        
     
 };
+
 BOOST_FIXTURE_TEST_CASE( ClientProducerFirst, ErrorInduceFixture )
 {    
     m_fail_func = CLIENT_PRODUCER;

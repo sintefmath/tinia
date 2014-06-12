@@ -20,6 +20,7 @@
 #include <cstdarg>
 #include <iostream>
 #include <sstream>
+#include <sys/time.h>
 #include <boost/test/unit_test.hpp>
 #include <tinia/ipc/ipc_msg.h>
 #include "../../src/ipc/ipc_msg_internal.h"
@@ -101,7 +102,8 @@ struct SendRecvFixtureBase
           m_clients( 1 ),
           m_clients_should_longpoll( 0 ),
           m_clients_initialized( 0 ),
-          m_clients_exited( 0 )
+          m_clients_exited( 0 ),
+          m_jitter(1000)
     {}
     
     std::vector<pthread_t>  m_threads;
@@ -117,6 +119,7 @@ struct SendRecvFixtureBase
     int                     m_clients_exited;
     pthread_cond_t          m_clients_exited_cond;
     std::string             m_error_from_thread;
+    int                     m_jitter;
     
     void
     setErrorFromThread( const std::string& error )
@@ -432,6 +435,13 @@ done:
     server_periodic( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
+        unsigned int seed = 0;
+        if( that->m_jitter ) {
+            seed = get_random_seed();
+            int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
+            usleep( time );
+        }
+
 
         Locker locker( that );
         if( that->m_server_runs_flag == 0 ) {
@@ -446,6 +456,7 @@ done:
     server_thread_func( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
+
 
         // setup server
         tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
@@ -483,7 +494,24 @@ done:
         return NULL;
     }
     
- 
+    static
+    unsigned int
+    get_random_seed()
+    {
+/*
+        unsigned int ret;
+        FILE* urandom = fopen( "/dev/urandom", "r" );
+        if( fread( &ret, sizeof(ret), 1, urandom ) != sizeof(ret) ) {
+            fprintf( stderr, "Failed reading /dev/urandom.\n" );
+        }
+        fclose( urandom );
+        return ret;
+*/
+        struct timeval t;
+        gettimeofday( &t, NULL );
+        return (unsigned int)t.tv_usec + (unsigned int)pthread_self();
+    }
+
     
     static
     int
@@ -537,6 +565,13 @@ done:
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
         
+        unsigned int seed = 0;
+        if( that->m_jitter ) {
+            seed = get_random_seed();
+            int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
+            usleep( time );
+        }
+
         {
             Locker locker( that );
             that->m_clients_initialized++;
@@ -551,6 +586,12 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         do {
+            if( that->m_jitter ) {
+                seed = get_random_seed();
+                int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
+                usleep( time );
+            }
+
             int timeout;
             bool failure_is_an_option;
             {
