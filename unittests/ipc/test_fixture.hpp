@@ -256,7 +256,7 @@ struct SendRecvFixtureBase
                 goto hung;
             }
         }
-        fprintf( stderr, "%s@%d: %d clients have exited.\n", __FILE__, __LINE__, m_clients_exited );
+
         // kill server
         BOOST_REQUIRE( m_server != NULL );
 
@@ -281,25 +281,48 @@ struct SendRecvFixtureBase
         goto cleanup;
 hung:
         ipc_msg_server_mainloop_break( m_server );
-        sleep(1);
+        usleep( 100000 );
 
         // invariants:
         // - m_shared_lock locked.
-        for( auto it=m_threads.begin(); it!=m_threads.end(); ++it ) {
-            pthread_cancel( *it );
+        for( size_t i=0; i<m_threads.size(); i++ ) {
+            pthread_cancel( m_threads[i] );
         }
         locker.unlock();
 
 cleanup:
-        for( size_t i=0; i<m_threads.size(); i++ ) {
-            void* tmp;
-            if( pthread_tryjoin_np( m_threads[i], &tmp ) == 0 ) {
-                //std::cerr << "joined thread "<< i<< ".\n";
+
+        for( int it=0; it<3; it++) {
+
+            std::vector<pthread_t> unterminated;
+            for( size_t i=0; i<m_threads.size(); i++ ) {
+                void* tmp;
+                if( pthread_tryjoin_np( m_threads[i], &tmp ) != 0 ) {
+                    unterminated.push_back( m_threads[i] );
+                }
             }
-            else {
-                //std::cerr << "thread "<< i<< " is still busy.\n";
+            m_threads.swap( unterminated );
+            if( m_threads.empty() ) {
+                if( it != 0 ) {
+                    fprintf( stderr, "FIXTURE: All threads joined.\n" );
+                }
+                goto done;
+            }
+
+            int msec = 1<<(5*it);
+            fprintf( stderr, "FIXTURE: %d threads still alive, waiting %d milliseconds.\n",
+                     msec, (int)m_threads.size() );
+            usleep( msec );
+            if( it != 0 ) {
+                fprintf( stderr, "FIXTURE: Cancelling threads and retrying to join them.\n" );
+                for( size_t i=0; i<m_threads.size(); i++ ) {
+                    pthread_cancel( m_threads[i] );
+                }
             }
         }
+        FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
+done:
+        BOOST_REQUIRE( m_threads.empty() );
         //std::cerr << "done.\n";
         BOOST_REQUIRE( pthread_cond_destroy( &m_server_runs_cond ) == 0 );
         BOOST_REQUIRE( pthread_cond_destroy( &m_clients_initialized_cond ) == 0 );
@@ -307,11 +330,11 @@ cleanup:
         FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
         if( !m_error_from_thread.empty() ) {
-            fprintf( stderr, "Error from thread: %s\n", m_error_from_thread.c_str() );
+            fprintf( stderr, "FIXTURE: Error from thread: %s\n", m_error_from_thread.c_str() );
             BOOST_REQUIRE( m_error_from_thread.empty() );
         }
 
-        fprintf( stderr, "test end.\n" );
+        fprintf( stderr, "FIXTURE: Test end.\n" );
     }
 
     static
