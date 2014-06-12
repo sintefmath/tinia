@@ -154,6 +154,9 @@ void main(void)
         //float ss = max( abs(scr_coo_dx.x-scr_coo.x), abs(scr_coo_dy.y-scr_coo.y) );
 	
         // Putting an upper limit on the size, equal to an expansion of 3 (no splat larger than 3 times dist between splats)
+
+        // NB! @@@ Should probably rather discard it, since texturing will be totally distorted!
+        
         if (splatSizeLimiting>0) {
             ss = min( ss, 3.0*splatSize );
         }
@@ -207,6 +210,8 @@ void main(void)
     }
 #endif
     
+    // NB!!! @@@ these look a lot like the Adu, Au, ... stuff below. Should be able to reuse some computations
+
     vec4 pos_dx = projUnproj * vec4( aVertexPosition + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
     vec4 pos_dy = projUnproj * vec4( aVertexPosition + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
     
@@ -229,11 +234,30 @@ void main(void)
 
     depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
 
-    // Discarding splats that are not front-facing
+    // Discarding splats that are not front-facing.
     // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?
-    vec3 dx = normalize( vec3(scr_dx, 0.0) );
-    vec3 dy = normalize( vec3(scr_dy, 0.0) );
-    if ( cross(dx, dy).z < 0.1 ) {
+    // vec3 dx = normalize( vec3(scr_dx, 0.0) );
+    // vec3 dy = normalize( vec3(scr_dy, 0.0) );
+    // if ( cross(dx, dy).z < 0.2 ) {
+    //     gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+    //     return;
+    // }
+
+
+    // This will discard all splats not facing forward
+    vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
+    vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
+    if ( cross(dx, dy).z < 0.0 ) {
+        gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+        return;
+    }
+
+    // Can we discard splats that were "built" with a direction very much different from the one we view it with?  (This
+    // does not take into account perspective. How can we fix this?)
+    mat4 tmp = MV * depthMVinv;
+    vec3 dir = vec3( -tmp[2][0], -tmp[2][1], -tmp[2][2] );
+    dir = normalize(dir);
+    if ( dir.z > 0.0 ) { // What is a good theshold here? Started with -0.6, even that is sometimes not strict enough. But it removes too much. Trying 0...
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
     }

@@ -31,7 +31,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._frameOutputInterval  = 100;
         this._frameMeasureInterval = 10;
 
-        this._pausePerFrameInMilliseconds = 100;
+        this._pausePerFrameInMilliseconds = 10; // 100; // (Useful for GPU fans that we don't want to spin up too much... :-) )
 
         this._useBlending = false;
 

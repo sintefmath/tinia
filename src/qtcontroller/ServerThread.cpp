@@ -164,7 +164,7 @@ QString ServerThread::getStaticContent(const QString &uri)
 
     //QString fullPath = ":jvascript/" + uri;
     // Hack to get the client to re-read files from disk when we ask for it:
-    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140415/tinia/js/" + uri;
+    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

@@ -9,6 +9,13 @@ varying highp vec2 texCoo;
 varying highp float sampled_depth; // debugging (Splat-centered depth)
 varying highp vec2 depth_e; // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
+// Temporary for debugging:
+uniform highp mat4 PM;
+uniform highp mat4 MV;
+uniform highp mat4 depthPMinv;
+uniform highp mat4 depthMVinv;
+uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
+
 varying highp float frag_depth;
 varying highp vec2 frag_depth_e;
 
@@ -35,6 +42,138 @@ uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
 uniform int useBlending;
 // uniform highp int adjustTCwithFactorFromVS;
+
+
+
+
+#if 0
+// gluInverse from some version of Mesa?
+highp mat4 inv4(highp mat4 m)
+{
+    highp mat4 inv;
+    highp float det;
+    
+    inv[0][0] = m[1][1]  * m[2][2] * m[3][3] - 
+                m[1][1]  * m[2][3] * m[3][2] - 
+                m[2][1]  * m[1][2]  * m[3][3] + 
+                m[2][1]  * m[1][3]  * m[3][2] +
+                m[3][1] * m[1][2]  * m[2][3] - 
+                m[3][1] * m[1][3]  * m[2][2];
+
+    inv[1][0] = -m[1][0]  * m[2][2] * m[3][3] + 
+                 m[1][0]  * m[2][3] * m[3][2] + 
+                 m[2][0]  * m[1][2]  * m[3][3] - 
+                 m[2][0]  * m[1][3]  * m[3][2] - 
+                 m[3][0] * m[1][2]  * m[2][3] + 
+                 m[3][0] * m[1][3]  * m[2][2];
+
+    inv[2][0] = m[1][0]  * m[2][1] * m[3][3] - 
+                m[1][0]  * m[2][3] * m[3][1] - 
+                m[2][0]  * m[1][1] * m[3][3] + 
+                m[2][0]  * m[1][3] * m[3][1] + 
+                m[3][0] * m[1][1] * m[2][3] - 
+                m[3][0] * m[1][3] * m[2][1];
+
+    inv[3][0] = -m[1][0]  * m[2][1] * m[3][2] + 
+                 m[1][0]  * m[2][2] * m[3][1] +
+                 m[2][0]  * m[1][1] * m[3][2] - 
+                 m[2][0]  * m[1][2] * m[3][1] - 
+                 m[3][0] * m[1][1] * m[2][2] + 
+                 m[3][0] * m[1][2] * m[2][1];
+
+    inv[0][1] = -m[0][1]  * m[2][2] * m[3][3] + 
+                 m[0][1]  * m[2][3] * m[3][2] + 
+                 m[2][1]  * m[0][2] * m[3][3] - 
+                 m[2][1]  * m[0][3] * m[3][2] - 
+                 m[3][1] * m[0][2] * m[2][3] + 
+                 m[3][1] * m[0][3] * m[2][2];
+
+    inv[1][1] = m[0][0]  * m[2][2] * m[3][3] - 
+                m[0][0]  * m[2][3] * m[3][2] - 
+                m[2][0]  * m[0][2] * m[3][3] + 
+                m[2][0]  * m[0][3] * m[3][2] + 
+                m[3][0] * m[0][2] * m[2][3] - 
+                m[3][0] * m[0][3] * m[2][2];
+
+    inv[2][1] = -m[0][0]  * m[2][1] * m[3][3] + 
+                 m[0][0]  * m[2][3] * m[3][1] + 
+                 m[2][0]  * m[0][1] * m[3][3] - 
+                 m[2][0]  * m[0][3] * m[3][1] - 
+                 m[3][0] * m[0][1] * m[2][3] + 
+                 m[3][0] * m[0][3] * m[2][1];
+
+    inv[3][1] = m[0][0]  * m[2][1] * m[3][2] - 
+                m[0][0]  * m[2][2] * m[3][1] - 
+                m[2][0]  * m[0][1] * m[3][2] + 
+                m[2][0]  * m[0][2] * m[3][1] + 
+                m[3][0] * m[0][1] * m[2][2] - 
+                m[3][0] * m[0][2] * m[2][1];
+
+    inv[0][2] = m[0][1]  * m[1][2] * m[3][3] - 
+                m[0][1]  * m[1][3] * m[3][2] - 
+                m[1][1]  * m[0][2] * m[3][3] + 
+                m[1][1]  * m[0][3] * m[3][2] + 
+                m[3][1] * m[0][2] * m[1][3] - 
+                m[3][1] * m[0][3] * m[1][2];
+
+    inv[1][2] = -m[0][0]  * m[1][2] * m[3][3] + 
+                 m[0][0]  * m[1][3] * m[3][2] + 
+                 m[1][0]  * m[0][2] * m[3][3] - 
+                 m[1][0]  * m[0][3] * m[3][2] - 
+                 m[3][0] * m[0][2] * m[1][3] + 
+                 m[3][0] * m[0][3] * m[1][2];
+
+    inv[2][2] = m[0][0]  * m[1][1] * m[3][3] - 
+                m[0][0]  * m[1][3] * m[3][1] - 
+                m[1][0]  * m[0][1] * m[3][3] + 
+                m[1][0]  * m[0][3] * m[3][1] + 
+                m[3][0] * m[0][1] * m[1][3] - 
+                m[3][0] * m[0][3] * m[1][1];
+
+    inv[3][2] = -m[0][0]  * m[1][1] * m[3][2] + 
+                 m[0][0]  * m[1][2] * m[3][1] + 
+                 m[1][0]  * m[0][1] * m[3][2] - 
+                 m[1][0]  * m[0][2] * m[3][1] - 
+                 m[3][0] * m[0][1] * m[1][2] + 
+                 m[3][0] * m[0][2] * m[1][1];
+
+    inv[0][3] = -m[0][1] * m[1][2] * m[2][3] + 
+                 m[0][1] * m[1][3] * m[2][2] + 
+                 m[1][1] * m[0][2] * m[2][3] - 
+                 m[1][1] * m[0][3] * m[2][2] - 
+                 m[2][1] * m[0][2] * m[1][3] + 
+                 m[2][1] * m[0][3] * m[1][2];
+
+    inv[1][3] = m[0][0] * m[1][2] * m[2][3] - 
+                m[0][0] * m[1][3] * m[2][2] - 
+                m[1][0] * m[0][2] * m[2][3] + 
+                m[1][0] * m[0][3] * m[2][2] + 
+                m[2][0] * m[0][2] * m[1][3] - 
+                m[2][0] * m[0][3] * m[1][2];
+
+    inv[2][3] = -m[0][0] * m[1][1] * m[2][3] + 
+                 m[0][0] * m[1][3] * m[2][1] + 
+                 m[1][0] * m[0][1] * m[2][3] - 
+                 m[1][0] * m[0][3] * m[2][1] - 
+                 m[2][0] * m[0][1] * m[1][3] + 
+                 m[2][0] * m[0][3] * m[1][1];
+
+    inv[3][3] = m[0][0] * m[1][1] * m[2][2] - 
+                m[0][0] * m[1][2] * m[2][1] - 
+                m[1][0] * m[0][1] * m[2][2] + 
+                m[1][0] * m[0][2] * m[2][1] + 
+                m[2][0] * m[0][1] * m[1][2] - 
+                m[2][0] * m[0][2] * m[1][1];
+
+    det = m[0][0] * inv[0][0] + m[0][1] * inv[1][0] + m[0][2] * inv[2][0] + m[0][3] * inv[3][0];
+
+    // if (det == 0.0)
+    //     return false;
+    // return true;
+
+    return (1.0/det) * inv;
+}
+#endif
 
 
 
@@ -68,12 +207,11 @@ void main(void)
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
     }
 
-    // Discarding fragments that would look up depth and color outside the rendered scene
-    // Note that this will remove parts of primitives containing "background pixels" from the rgb texture, it will not cause these
-    // to be replaced by other parts of the geometry, these are simply not available in the proxy model.
-    // Note also that this will not remove parts of primitives that are rotated outside of the correct geometry.
-    // That is impossible to do, we do not have the necessary information. What we can do, is to adjust the fragment depth, which we
-    // do below.
+    // Discarding fragments that would look up depth and color outside the rendered scene Note that this will remove
+    // parts of primitives containing "background pixels" from the rgb texture, it will not cause these to be replaced
+    // by other parts of the geometry, these are simply not available in the proxy model.  Note also that this will not
+    // remove parts of primitives that are rotated outside of the correct geometry.  That is impossible to do, we do not
+    // have the necessary information.
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
     if ( intra_splat_depth > 0.999 ) {
         discard;
@@ -90,7 +228,12 @@ void main(void)
 #endif
 
     // If the assumed-locally-planar geometry and the measured intra-splat depth deviates too much, the intra-splat
-    // texture lookups will simply be wrong, so we might as well discard these fragments.
+    // texture lookups will simply be wrong, so we might as well discard these fragments. Note that this is not a sure
+    // proof way of detecting all splat fragments that are outside the "good" region, only that if this test comes out
+    // true, we certainly should discard the fragment. (Where this is insufficient, is probably in cases where the
+    // intra_splat_depth gets sampled from a "wrong" location still in the planar region, thus causing a failure to
+    // produce a depth deviation signalling a fragment to be discarded. Maybe this is more prone to happen for
+    // geometries with large planar parts?!)
     highp float planar_depth = sampled_depth + dot( depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
@@ -106,6 +249,7 @@ void main(void)
 
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
 
+    //------------------------------ Debug-stuff ------------------------------
     if (debugSplatCol>0) {
         if (splatSetIndex==0)  gl_FragColor = vec4(decay, 0.0, 0.0, src_alpha);
         if (splatSetIndex==1)  gl_FragColor = vec4(0.0, decay, 0.0, src_alpha);
@@ -125,13 +269,13 @@ void main(void)
 	//             if ( ( r_squared > 0.2 ) && ( r_squared < 0.25 ) )
 	//                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
-
     if (splatOutline>0) {
 	highp float tmp = 0.5-0.0015*float(splats_x)/splatOverlap;
 	if ( (c.x<-tmp) || (c.x>tmp) || (c.y<-tmp) || (c.y>tmp) )
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
-    
+    //----------------------------------------------------------------------
+
 #ifdef USE_FRAG_DEPTH_EXT
     // With the help of 'frag_depth', 'frag_depth_e', 'intraSplatTexCooTransform2' and the intra-splat coordinates 'c',
     // we can interpolate the appropriate depth buffer value for the planar part of the splat. If the gl_FragDepthEXT
@@ -149,14 +293,12 @@ void main(void)
     }
 
     // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
-    //planar_frag_depth = clamp(planar_frag_depth - 0.001*float(splatSetIndex), 0.0, 1.0);
-
+    // if (splatSetIndex>=0) planar_frag_depth = clamp(planar_frag_depth + 0.001*float(splatSetIndex), 0.0, 1.0);
+        
     if (!(ignoreIntraSplatTexCoo>0)) {
 	gl_FragDepthEXT = planar_frag_depth;
     } else {
 	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
     }
 #endif
-    
-    
 }
