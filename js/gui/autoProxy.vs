@@ -3,7 +3,6 @@
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
-//varying highp float depth;                      // Should be equal to gl_FragCoord.z in the FS, so should not be necessary to pass on. Doing it now for debug purposes
 varying highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
 varying highp vec2 depth_e;                     // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
@@ -39,6 +38,7 @@ uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
 const int mostRecentProxyModelOffset = 7;
+varying highp float splat_i, splat_j;
 
 
 
@@ -54,6 +54,9 @@ mat2 invrs(mat2 tmp)
 
 void main(void)
 {
+    splat_j = floor( (0.5*aVertexPosition.x+1.0)*splats_x ); // For debugging
+    splat_i = floor( (0.5*aVertexPosition.y+1.0)*splats_y );
+
     vec2 st = 0.5*(aVertexPosition.xy+1.0); // From [-1, 1] to [0, 1]
     st.y = 1.0-st.y;
     texCoo = st;
@@ -184,8 +187,8 @@ void main(void)
 
     // Can we discard splats that were "recorded" with a direction very much different from the one we view it with?
     // (This does not take into account perspective. How can we fix this? It does not work very well without this. Or, maybe
-    // there is something else wrong with this?!)
-#if 1
+    // there is something else wrong?!)
+#if 0
     mat4 tmp = MV * depthMVinv;
     vec3 dir = vec3( -tmp[2][0], -tmp[2][1], -tmp[2][2] );
     dir = normalize(dir);
@@ -202,12 +205,11 @@ void main(void)
     //----------------------------------------------------------------------------------------------------
 
     if (screenSpaceSized>0) {
+
         // We have already sampled the depths for the adjacent splats in the x-direction (*_dx) and y-direction (*_dy),
         // and will use the screen space difference between these adjacent splats to determine an appropriate (screen
         // space) splat size.
-        
-        actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * splatOverlap;
-        
+        //
         // It makes sense to limit the splat size, for if splats get very large, it means that a very small portion of
         // the textures (both depth and RGB) will be expanded a lot on screen, which will likely not look particularly
         // nice. Instead of clamping the size, we simply discard these potentially large splats, because a splat with
@@ -219,16 +221,35 @@ void main(void)
         //
         // We combine discarding of very large splats with a reduction of the size of "just large" splats.
 
-        if ( actualSplatOverlap > 5.0 ) {
-            // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside the
-            // splats, and tricky to crop them along the scene silhouettes. Pros: Better coverage
-            gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-            return;
+        if ( splatSetIndex >= 0 ) {
+            // The "ordinary" proxy model splat sets
+            
+            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 1.5; // splatOverlap;
+            //actualSplatOverlap = max( length(scr_dx), length(scr_dy) )/1.41 / splatSize * 1.0; // splatOverlap;
+            // It is probably not important to have this as large as 2.0. Using 1.0 seems to leave unnecessary gaps. Maybe 1.5 is an ok compromise.
+
+            if ( actualSplatOverlap > 10.0 ) {
+                // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside
+                // the splats, and tricky to crop them along the scene silhouettes. Also, danger of those "bad and
+                // large" splats shadowing better and smaller ones. Not easy to handle the last one. (Maybe with a
+                // multi-pass algorithm.) Pros: Better coverage
+                gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+                return;
+            }
+            // We restrict the size of these splats to avoid "silhouette overshooting". We need at 2.0 to get nice
+            // silhouettes when MV*MV_depth_inv == id, which is only relevant for the "most recent proxy", so we treat this specially below.
+            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 1.5);
+        } else {
+            // Special values for the "most recent splat set".
+
+            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.0;
+
+            if ( actualSplatOverlap > 3.0 ) { // It is not likely that these get very large.
+                gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+                return;
+            }
+            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0); // Need at least 2.0 for the "most recent", >= the one in the test above is meaningless.
         }
-        // We need at least 2.0 below to get nice edges for the "most recent proxy", i.e., one that has MV*MV_depth_inv
-        // = id.  Smaller values would give less "silhouette overshooting", but at the same time, larger gaps in the
-        // silhouette for the "most recent proxy model". Possible improvement: Special treatment of "most recent"!
-        actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0);
     } else {
         actualSplatOverlap = splatOverlap;
     }

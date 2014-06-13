@@ -63,7 +63,7 @@ bool CubeJob::init()
         m_model->addAnnotation("overlap", "Overlap factor)");
         m_model->addElement<bool>( "alwaysShowMostRecent", true );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addConstrainedElement<int>("splats", 32, 2, 512);
+        m_model->addConstrainedElement<int>("splats", 64, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
         m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");

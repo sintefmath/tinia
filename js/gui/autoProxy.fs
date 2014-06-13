@@ -41,6 +41,7 @@ uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
 uniform int useBlending;
 const int mostRecentProxyModelOffset = 7;
+varying highp float splat_i, splat_j;
 
 
 
@@ -48,7 +49,8 @@ const int mostRecentProxyModelOffset = 7;
 void main(void)
 {
     // if (splatSetIndex!=-1) discard; // Only showing "the most recent proxy model"
-    // if ((splatSetIndex!=-1) && (splatSetIndex!=0) ) discard; // Only showing "the most recent proxy model"
+    // if ((splatSetIndex!=-1) && (splatSetIndex!=0) ) discard;
+    // if (splatSetIndex>0) discard;
 
     highp float src_alpha = 1.0;
     if (useBlending>0) {
@@ -177,4 +179,13 @@ void main(void)
 	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
     }
 #endif
+
+    // To identify particular splats during debugging
+    // if (    ( abs(splat_i-43.0) < 0.5 )   &&    ( abs(splat_j-43.0) < 0.5 )    )
+    //     gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+    // if (    ( abs(splat_i-42.0) < 0.5 )   &&    ( abs(splat_j-43.0) < 0.5 )    )
+    //     gl_FragColor = vec4(0.0, 1.0, 0.0, src_alpha);
+    // if (    ( abs(splat_i-43.0) < 0.5 )   &&    ( abs(splat_j-44.0) < 0.5 )    )
+    //     gl_FragColor = vec4(0.0, 0.0, 1.0, src_alpha);
+
 }
