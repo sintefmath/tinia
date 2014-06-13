@@ -77,93 +77,6 @@ tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, co
 
 //trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
-// path is /component[/jobid/sessionid]/action?args
-//
-// action is one of:
-// - rpc.xml
-// - getExposedModelUpdate.xml
-// - updateState.xml
-// - snapshot.png
-// - snapshot.txt
-// - getRenderList.xml
-// - getScript.js
-// args is some of
-// - revision=ddddd
-// - width=dddd
-// - height=dddd
-// 
-
-/** Dechipher r->path_info to determine what to do. */
-static int
-tinia_parse_path( trell_dispatch_info_t* dispatch_info, request_rec *r )
-{
-    
-    char* debug1 = "";
-    char* debug2 = "";
-    //char* debug3 = "";
-    
-    // --- set up tokenizer for r->path_info
-    if( r->path_info == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: No path.", r->handler );
-        return HTTP_BAD_REQUEST;
-    }
-    char* path_info = apr_pstrdup( r->pool, r->path_info );
-    char* state;
-    char* tok = apr_strtok( path_info, "/", &state );
-
-    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path: %s", r->handler, path_info );
-    
-    // --- get component -------------------------------------------------------
-    if( tok == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: No component.", r->handler );
-        return HTTP_BAD_REQUEST;
-    }
-    else if( apr_strnatcmp( tok, "job" ) == 0) {
-        debug1 = "job";
-        
-        dispatch_info->m_component = TRELL_COMPONENT_JOB;
-
-        // if job, then next token is the job id
-        tok = apr_strtok( path_info, "/", &state );
-        if( tinia_check_and_copy( dispatch_info->m_jobid, tok, TINIA_IPC_JOBID_MAXLENGTH, r, "jobid" ) != 0 ) {
-            return HTTP_BAD_REQUEST;
-        }
-        debug2 = apr_pstrdup( r->pool, tok );
-        
-        // followed by the session id
-        tok = apr_strtok( path_info, "/", &state );
-        if( tinia_check_and_copy( dispatch_info->m_sessionid, tok, TRELL_SESSIONID_MAXLENGTH, r, "jobid"  ) != 0 ) {
-            return HTTP_BAD_REQUEST;
-        }
-//        debug3 = apr_pstrdup( r->pool, tok );
-    }
-    else if( apr_strnatcmp( tok, "master" ) == 0 ) {
-        debug1 = "master";
-        dispatch_info->m_component = TRELL_COMPONENT_MASTER;
-    }
-    else if( apr_strnatcmp( tok, "mod" ) == 0 ) {
-        debug1 = "mod";
-        dispatch_info->m_component = TRELL_COMPONENT_OPS;
-    }
-    else {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: Unrecognized component '%s'.",
-                       r->handler, tok );
-        return HTTP_BAD_REQUEST;
-    }
-
-    //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: path={ '%s', '%s', '%s' }.",
-    //               r->handler, debug1, debug2, debug3  );
-    
-    // --- get action ----------------------------------------------------------
-
-//    rok = apr_strtok()
-
-
-
-    
-    return APR_SUCCESS;    
-}
-
 
 
 /** Apache's entry-point to mod_trell. */
@@ -189,8 +102,6 @@ static int trell_handler_body(request_rec *r)
     int code;
     trell_dispatch_info_t* dispatch_info = apr_pcalloc( r->pool, sizeof(*dispatch_info) );
 
-    code = tinia_parse_path( dispatch_info, r );
-    
     code = trell_decode_path_info( dispatch_info, r );
     if( code != OK ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,

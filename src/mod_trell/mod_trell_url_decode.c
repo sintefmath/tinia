@@ -203,6 +203,22 @@ trell_hash_atoi( request_rec* r,
     return 1;
 }
 
+// path is /component[/jobid/sessionid]/action?args
+//
+// action is one of:
+// - rpc.xml
+// - getExposedModelUpdate.xml
+// - updateState.xml
+// - snapshot.png
+// - snapshot.txt
+// - getRenderList.xml
+// - getScript.js
+// args is some of
+// - revision=ddddd
+// - width=dddd
+// - height=dddd
+//
+
 
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
@@ -221,7 +237,6 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 
     int i;
     int o = -1;
-    char* p = r->path_info;
 
     if( r->path_info == NULL ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
@@ -263,7 +278,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     if( dispatch_info->m_component == TRELL_COMPONENT_JOB ) {
         if( trell_check_and_copy_id( r, component, "job id", dispatch_info->m_jobid,
                                      (o < path_items->nelts ? APR_ARRAY_IDX( path_items, o, char*) : NULL ),
-                                     TRELL_JOBID_MAXLENGTH-1 ) == 0 )
+                                     TINIA_IPC_JOBID_MAXLENGTH-1 ) == 0 )
         {
             return HTTP_BAD_REQUEST;
         }
@@ -338,6 +353,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot.png ----------------------------------------------------
     else if( strcmp( request, "snapshot.png" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_base64 = 0;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0)
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0)
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_height, form, "height", 1 ) == 0) )
