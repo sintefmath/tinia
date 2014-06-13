@@ -21,7 +21,16 @@ uniform highp mat4 depthMVinv;
 uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
 
 uniform sampler2D depthImg;
-uniform float splatOverlap;
+uniform float splatOverlap;                     // Makes little sense in having this much larger than one if we use screenSpaceSized splats. 
+                                                // We need 2 for coverage at all times, for consider this case:
+                                                //
+                                                //         +---+   +---+
+                                                //         | * |   | * |
+                                                //         +---+---+---+
+                                                //             | * |  
+                                                //             +---+  ...       (* denotes splat centers)
+                                                //
+varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 
 uniform int screenSpaceSized;
 uniform float splats_x;
@@ -29,8 +38,7 @@ uniform float splats_y;
 uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
-uniform int mostRecentOffset;
-uniform int splatSizeLimiting;
+const int mostRecentProxyModelOffset = 7;
 
 
 
@@ -71,17 +79,15 @@ void main(void)
         // with the viewport"...
         // (Would it be feasible to adjust all fragments intra-splat for more accurate depths? This could perhaps solve the problem.)
         // (Unfortunately, WebGL doesn't support gl_FragDepth.)
-        sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
     }
 #endif
 
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
-    vec3 ndc = vec3( aVertexPosition.xy, 2.0*sampled_depth - 1.0 );
-
     // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.
     // Next, we apply the current transformation to get the proxy splat. (This is the vertex in clip coordinates.)
-    vec4 pos = projUnproj * vec4( ndc, 1.0 );
+    vec4 pos = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
     gl_Position = pos;
 
     float z_ndc = pos.z/pos.w;
@@ -95,76 +101,6 @@ void main(void)
 
     vec2 splatSizeVec = vec2( float(vp_width)/float(splats_x), float(vp_height)/float(splats_y) );
     float splatSize = max( splatSizeVec.x, splatSizeVec.y );
-
-    // Finally, setting the pointSize:
-    if (screenSpaceSized>0) {
-        // We sample the depths for next splat in x-direction (*_dx) and y-direction (*_dy), and will use the screen space
-        // difference between splats to determine appropriate (screen space) splat sizes.
-        // This doesn't work as it should, but I can't see the bug here... We get fine results just reusing the same depth, though.
-        // Hmm. Is it the "length(scr_coo_dx-scr_coo)" instead of "abs(scr_coo_dx.x-scr_coo.x)" etc. that is the cause?
-        // Is the problem maybe that very large splats simply look very "wrong"?
-
-	// dette er egentlig numerisk derivasjon, og det er ikke noedvendig aa gaa saa langt ut. Om vi gaar kortere ut
-	// blir det mindre sannsynlig av vi treffer noe med dybde ikke satt, dvs. dybde==1...!
-
-        float delta = 0.1;
-        // The value 1.0 means that we go to the "next" splat in each direction.
-        // We should probably make this, i.e., the amount added to aVertexPosition below, independent of the number of splats.
-	
-        vec2 st_dx = 0.5*( vec2(aVertexPosition.x+delta*2.0/splats_x, aVertexPosition.y) + 1.0 );
-        vec2 st_dy = 0.5*( vec2(aVertexPosition.x, aVertexPosition.y+delta*2.0/splats_y) + 1.0 );
-        st_dx.y = 1.0-st_dx.y; 
-        st_dy.y = 1.0-st_dy.y; 
-        float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
-        float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
-#ifndef USE_FRAG_DEPTH_EXT
-        if (splatSetIndex==-1) {
-            depth_dx = clamp(depth_dx - 0.001*float(mostRecentOffset), 0.0, 1.0);
-            depth_dy = clamp(depth_dy - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        }
-#endif
-        // Note that we must have a way to avoid sampling the texture outside of any rendered depths, or, at least not use such values.
-        if (depth_dx>0.999)
-            depth_dx = sampled_depth;
-        if (depth_dy>0.999) 
-            depth_dy = sampled_depth;
-	
-        // We may think of the depth texture as a grid of screen space points together with depths, which we will
-        // subsample in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
-        vec3 ndc_dx = vec3( aVertexPosition.x + delta*2.0/splats_x, aVertexPosition.y, 2.0*depth_dx - 1.0 );
-        vec3 ndc_dy = vec3( aVertexPosition.x, aVertexPosition.y + delta*2.0/splats_y, 2.0*depth_dy - 1.0 );
-	
-        // We have (x, y, z, 1)_{ndc, before}, and backtrace to world space 'before' for this point.
-        vec4 vert_eb_dx = depthPMinv * vec4( ndc_dx, 1.0 );
-        vec4 vert_eb_dy = depthPMinv * vec4( ndc_dy, 1.0 );
-        vec4 vert_wb_dx = depthMVinv * vert_eb_dx;
-        vec4 vert_wb_dy = depthMVinv * vert_eb_dy;
-	
-        // Next, we apply the current transformation to get the proxy splat.
-        vec4 pos_dx = PM * MV * vert_wb_dx;
-        vec4 pos_dy = PM * MV * vert_wb_dy;
-	
-        vec2 scr_coo    = pos.xy    * vec2(vp_width, vp_height) / 2.0 / pos.w;
-        vec2 scr_coo_dx = pos_dx.xy * vec2(vp_width, vp_height) / 2.0 / pos_dx.w;
-        vec2 scr_coo_dy = pos_dy.xy * vec2(vp_width, vp_height) / 2.0 / pos_dy.w;
-
-        // This ("ss") is to replace splatSize, both are measured in pixels, and describe a real splat's size.a
-        // Which of these two to use?!
-        float ss = (1.0/delta)*max( length(scr_coo_dx-scr_coo), length(scr_coo_dy-scr_coo) );
-        //float ss = max( abs(scr_coo_dx.x-scr_coo.x), abs(scr_coo_dy.y-scr_coo.y) );
-	
-        // Putting an upper limit on the size, equal to an expansion of 3 (no splat larger than 3 times dist between splats)
-
-        // NB! @@@ Should probably rather discard it, since texturing will be totally distorted!
-        
-        if (splatSizeLimiting>0) {
-            ss = min( ss, 3.0*splatSize );
-        }
-        
-        gl_PointSize = max( splatOverlap * ss, 1.0); // Minimum splat size will be exactly 1 pixel wide splats.
-    } else {
-        gl_PointSize = splatOverlap * splatSize;
-    }
 
     //----------------------------------------------------------------------------------------------------
     //
@@ -205,13 +141,11 @@ void main(void)
     }
 #ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
-        depth_dx = clamp(depth_dx - 0.001*float(mostRecentOffset), 0.0, 1.0);
-        depth_dy = clamp(depth_dy - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        depth_dx = clamp(depth_dx - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+        depth_dy = clamp(depth_dy - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
     }
 #endif
     
-    // NB!!! @@@ these look a lot like the Adu, Au, ... stuff below. Should be able to reuse some computations
-
     vec4 pos_dx = projUnproj * vec4( aVertexPosition + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
     vec4 pos_dy = projUnproj * vec4( aVertexPosition + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
     
@@ -222,12 +156,9 @@ void main(void)
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
     frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
     
-    vec4 Au  = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
-    vec4 Adu = projUnproj * vec4( aVertexPosition.xy + vec2(delta*2.0/splats_x, 0.0), 2.0*depth_dx - 1.0, 1.0 );
-    vec4 Adv = projUnproj * vec4( aVertexPosition.xy + vec2(0.0, delta*2.0/splats_y), 2.0*depth_dy - 1.0, 1.0 );
     // Difference of screen coordinates, in pixels:
-    vec2 scr_dx = float(vp_width )/(2.0*delta) * ( Adu.xy/Adu.w - Au.xy/Au.w );
-    vec2 scr_dy = float(vp_height)/(2.0*delta) * ( Adv.xy/Adv.w - Au.xy/Au.w );
+    vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w );
+    vec2 scr_dy = float(vp_height)/(2.0*delta) * ( pos_dy.xy/pos_dy.w - pos.xy/pos.w );
     // Difference of texture coordinates for adjacent splats, measured in texels:
     vec2 st_e1 = vec2( 1.0/splats_x, 0.0 );
     vec2 st_e2 = vec2( 0.0, -1.0/splats_y );
@@ -243,7 +174,6 @@ void main(void)
     //     return;
     // }
 
-
     // This will discard all splats not facing forward
     vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
     vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
@@ -252,8 +182,10 @@ void main(void)
         return;
     }
 
-    // Can we discard splats that were "built" with a direction very much different from the one we view it with?  (This
-    // does not take into account perspective. How can we fix this?)
+    // Can we discard splats that were "recorded" with a direction very much different from the one we view it with?
+    // (This does not take into account perspective. How can we fix this? It does not work very well without this. Or, maybe
+    // there is something else wrong with this?!)
+#if 1
     mat4 tmp = MV * depthMVinv;
     vec3 dir = vec3( -tmp[2][0], -tmp[2][1], -tmp[2][2] );
     dir = normalize(dir);
@@ -261,6 +193,52 @@ void main(void)
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
     }
+#endif
+    
+    //----------------------------------------------------------------------------------------------------
+    //
+    // Setting the size of splats
+    //
+    //----------------------------------------------------------------------------------------------------
+
+    if (screenSpaceSized>0) {
+        // We have already sampled the depths for the adjacent splats in the x-direction (*_dx) and y-direction (*_dy),
+        // and will use the screen space difference between these adjacent splats to determine an appropriate (screen
+        // space) splat size.
+        
+        actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * splatOverlap;
+        
+        // It makes sense to limit the splat size, for if splats get very large, it means that a very small portion of
+        // the textures (both depth and RGB) will be expanded a lot on screen, which will likely not look particularly
+        // nice. Instead of clamping the size, we simply discard these potentially large splats, because a splat with
+        // very blurred texture does not look any better being cropped...
+        //
+        // And to take this even further, it may also make sense to take the overlap factor into consideration. As the
+        // overlap factor gets larger, there is less necessity for keeping these overly large splats, and they also tend
+        // to evade our other measures for removing "outside silhouette" fragments.
+        //
+        // We combine discarding of very large splats with a reduction of the size of "just large" splats.
+
+        if ( actualSplatOverlap > 5.0 ) {
+            // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside the
+            // splats, and tricky to crop them along the scene silhouettes. Pros: Better coverage
+            gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+            return;
+        }
+        // We need at least 2.0 below to get nice edges for the "most recent proxy", i.e., one that has MV*MV_depth_inv
+        // = id.  Smaller values would give less "silhouette overshooting", but at the same time, larger gaps in the
+        // silhouette for the "most recent proxy model". Possible improvement: Special treatment of "most recent"!
+        actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0);
+    } else {
+        actualSplatOverlap = splatOverlap;
+    }
+    gl_PointSize = actualSplatOverlap * splatSize;
+
+    //----------------------------------------------------------------------------------------------------
+    //
+    // Finalizing the texture transformations to be used in the FS
+    //
+    //----------------------------------------------------------------------------------------------------
 
     // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to which
     // the screen space region with lower left corner 'pos.xy * vec2(vp_width, vp_height) / 2.0 / pos.w' and spanning
@@ -269,7 +247,7 @@ void main(void)
     intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
 	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
-	splatOverlap;                                          // this region.
+	actualSplatOverlap;                                          // this region.
 
     intraSplatTexCooTransform =
 	mat2( st_e1, st_e2 ) *                                 // This term maps the screen region "between the splats", given

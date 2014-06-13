@@ -31,7 +31,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._frameOutputInterval  = 100;
         this._frameMeasureInterval = 10;
 
-        this._pausePerFrameInMilliseconds = 10; // 100; // (Useful for GPU fans that we don't want to spin up too much... :-) )
+        this._pausePerFrameInMilliseconds = 0; // 100; // (Useful for GPU fans that we don't want to spin up too much... :-) )
 
         this._useBlending = false;
 
@@ -179,6 +179,9 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._matrices = matrices;
             this._waitInProgress = true;
             setTimeout( dojo.hitch(this, this.renderMain), this._pausePerFrameInMilliseconds);
+        } else {
+            this._matrices = matrices;
+            this.renderMain();
         }
     },
 
@@ -223,12 +226,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "useBlending"), 0 );
                 }
             }
-            this._setUniform1i(this._splatProgram, "mostRecentOffset");
             if (this.gl.getUniformLocation(this._splatProgram, "MV"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "MV"), false, matrices.m_from_world );
             if (this.gl.getUniformLocation(this._splatProgram, "PM"))
                 this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "PM"), false, matrices.m_projection );
-            this._setUniform1i(this._splatProgram, "splatSizeLimiting");
             this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo");
             this._setUniform1i(this._splatProgram, "splatOutline");
             if ( this.exposedModel.getElementValue("resetAllModels") ) {

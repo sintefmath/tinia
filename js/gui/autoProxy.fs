@@ -25,9 +25,8 @@ varying highp mat2 intraSplatTexCooTransform2;
 
 uniform highp float splats_x;
 uniform highp float splats_y;
-uniform highp float splatOverlap;
+varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 uniform highp int splatSetIndex;
-uniform highp int mostRecentOffset;
 uniform highp int screenSpaceSized;
 uniform highp int vp_width;
 uniform highp int vp_height;
@@ -41,145 +40,16 @@ uniform int roundSplats;
 uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
 uniform int useBlending;
-// uniform highp int adjustTCwithFactorFromVS;
-
-
-
-
-#if 0
-// gluInverse from some version of Mesa?
-highp mat4 inv4(highp mat4 m)
-{
-    highp mat4 inv;
-    highp float det;
-    
-    inv[0][0] = m[1][1]  * m[2][2] * m[3][3] - 
-                m[1][1]  * m[2][3] * m[3][2] - 
-                m[2][1]  * m[1][2]  * m[3][3] + 
-                m[2][1]  * m[1][3]  * m[3][2] +
-                m[3][1] * m[1][2]  * m[2][3] - 
-                m[3][1] * m[1][3]  * m[2][2];
-
-    inv[1][0] = -m[1][0]  * m[2][2] * m[3][3] + 
-                 m[1][0]  * m[2][3] * m[3][2] + 
-                 m[2][0]  * m[1][2]  * m[3][3] - 
-                 m[2][0]  * m[1][3]  * m[3][2] - 
-                 m[3][0] * m[1][2]  * m[2][3] + 
-                 m[3][0] * m[1][3]  * m[2][2];
-
-    inv[2][0] = m[1][0]  * m[2][1] * m[3][3] - 
-                m[1][0]  * m[2][3] * m[3][1] - 
-                m[2][0]  * m[1][1] * m[3][3] + 
-                m[2][0]  * m[1][3] * m[3][1] + 
-                m[3][0] * m[1][1] * m[2][3] - 
-                m[3][0] * m[1][3] * m[2][1];
-
-    inv[3][0] = -m[1][0]  * m[2][1] * m[3][2] + 
-                 m[1][0]  * m[2][2] * m[3][1] +
-                 m[2][0]  * m[1][1] * m[3][2] - 
-                 m[2][0]  * m[1][2] * m[3][1] - 
-                 m[3][0] * m[1][1] * m[2][2] + 
-                 m[3][0] * m[1][2] * m[2][1];
-
-    inv[0][1] = -m[0][1]  * m[2][2] * m[3][3] + 
-                 m[0][1]  * m[2][3] * m[3][2] + 
-                 m[2][1]  * m[0][2] * m[3][3] - 
-                 m[2][1]  * m[0][3] * m[3][2] - 
-                 m[3][1] * m[0][2] * m[2][3] + 
-                 m[3][1] * m[0][3] * m[2][2];
-
-    inv[1][1] = m[0][0]  * m[2][2] * m[3][3] - 
-                m[0][0]  * m[2][3] * m[3][2] - 
-                m[2][0]  * m[0][2] * m[3][3] + 
-                m[2][0]  * m[0][3] * m[3][2] + 
-                m[3][0] * m[0][2] * m[2][3] - 
-                m[3][0] * m[0][3] * m[2][2];
-
-    inv[2][1] = -m[0][0]  * m[2][1] * m[3][3] + 
-                 m[0][0]  * m[2][3] * m[3][1] + 
-                 m[2][0]  * m[0][1] * m[3][3] - 
-                 m[2][0]  * m[0][3] * m[3][1] - 
-                 m[3][0] * m[0][1] * m[2][3] + 
-                 m[3][0] * m[0][3] * m[2][1];
-
-    inv[3][1] = m[0][0]  * m[2][1] * m[3][2] - 
-                m[0][0]  * m[2][2] * m[3][1] - 
-                m[2][0]  * m[0][1] * m[3][2] + 
-                m[2][0]  * m[0][2] * m[3][1] + 
-                m[3][0] * m[0][1] * m[2][2] - 
-                m[3][0] * m[0][2] * m[2][1];
-
-    inv[0][2] = m[0][1]  * m[1][2] * m[3][3] - 
-                m[0][1]  * m[1][3] * m[3][2] - 
-                m[1][1]  * m[0][2] * m[3][3] + 
-                m[1][1]  * m[0][3] * m[3][2] + 
-                m[3][1] * m[0][2] * m[1][3] - 
-                m[3][1] * m[0][3] * m[1][2];
-
-    inv[1][2] = -m[0][0]  * m[1][2] * m[3][3] + 
-                 m[0][0]  * m[1][3] * m[3][2] + 
-                 m[1][0]  * m[0][2] * m[3][3] - 
-                 m[1][0]  * m[0][3] * m[3][2] - 
-                 m[3][0] * m[0][2] * m[1][3] + 
-                 m[3][0] * m[0][3] * m[1][2];
-
-    inv[2][2] = m[0][0]  * m[1][1] * m[3][3] - 
-                m[0][0]  * m[1][3] * m[3][1] - 
-                m[1][0]  * m[0][1] * m[3][3] + 
-                m[1][0]  * m[0][3] * m[3][1] + 
-                m[3][0] * m[0][1] * m[1][3] - 
-                m[3][0] * m[0][3] * m[1][1];
-
-    inv[3][2] = -m[0][0]  * m[1][1] * m[3][2] + 
-                 m[0][0]  * m[1][2] * m[3][1] + 
-                 m[1][0]  * m[0][1] * m[3][2] - 
-                 m[1][0]  * m[0][2] * m[3][1] - 
-                 m[3][0] * m[0][1] * m[1][2] + 
-                 m[3][0] * m[0][2] * m[1][1];
-
-    inv[0][3] = -m[0][1] * m[1][2] * m[2][3] + 
-                 m[0][1] * m[1][3] * m[2][2] + 
-                 m[1][1] * m[0][2] * m[2][3] - 
-                 m[1][1] * m[0][3] * m[2][2] - 
-                 m[2][1] * m[0][2] * m[1][3] + 
-                 m[2][1] * m[0][3] * m[1][2];
-
-    inv[1][3] = m[0][0] * m[1][2] * m[2][3] - 
-                m[0][0] * m[1][3] * m[2][2] - 
-                m[1][0] * m[0][2] * m[2][3] + 
-                m[1][0] * m[0][3] * m[2][2] + 
-                m[2][0] * m[0][2] * m[1][3] - 
-                m[2][0] * m[0][3] * m[1][2];
-
-    inv[2][3] = -m[0][0] * m[1][1] * m[2][3] + 
-                 m[0][0] * m[1][3] * m[2][1] + 
-                 m[1][0] * m[0][1] * m[2][3] - 
-                 m[1][0] * m[0][3] * m[2][1] - 
-                 m[2][0] * m[0][1] * m[1][3] + 
-                 m[2][0] * m[0][3] * m[1][1];
-
-    inv[3][3] = m[0][0] * m[1][1] * m[2][2] - 
-                m[0][0] * m[1][2] * m[2][1] - 
-                m[1][0] * m[0][1] * m[2][2] + 
-                m[1][0] * m[0][2] * m[2][1] + 
-                m[2][0] * m[0][1] * m[1][2] - 
-                m[2][0] * m[0][2] * m[1][1];
-
-    det = m[0][0] * inv[0][0] + m[0][1] * inv[1][0] + m[0][2] * inv[2][0] + m[0][3] * inv[3][0];
-
-    // if (det == 0.0)
-    //     return false;
-    // return true;
-
-    return (1.0/det) * inv;
-}
-#endif
+const int mostRecentProxyModelOffset = 7;
 
 
 
 
 void main(void)
 {
+    // if (splatSetIndex!=-1) discard; // Only showing "the most recent proxy model"
+    // if ((splatSetIndex!=-1) && (splatSetIndex!=0) ) discard; // Only showing "the most recent proxy model"
+
     highp float src_alpha = 1.0;
     if (useBlending>0) {
 	src_alpha = 0.1;
@@ -198,7 +68,7 @@ void main(void)
     // Decay factor = 1.0 in splat center, tending toward 0 at circular rim.
     // In the distance sqrt(2*(0.5/overlap)^2), i.e., r_squared=2*(0.5/overlap)^2, we get decay=0.25,
     // which corresponds to the maximum "depth-disabled accumulated splat value" of 1.0 for a regular grid of splats.
-    highp float decay = exp(splatOverlap*splatOverlap*log(1.0/16.0)*r_squared);
+    highp float decay = exp(actualSplatOverlap*actualSplatOverlap*log(1.0/16.0)*r_squared);
 
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
@@ -223,7 +93,7 @@ void main(void)
     // gl_FragDepth extension.
 #ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
-        intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentOffset), 0.0, 1.0);
+        intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
     }
 #endif
 
@@ -238,9 +108,9 @@ void main(void)
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
     if (!(ignoreIntraSplatTexCoo>0)) {
-	if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
-	    discard;
-	}
+        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+            discard;
+        }
     }
     
     if (decayMode==0) {
@@ -261,8 +131,14 @@ void main(void)
         if (splatSetIndex==7)  gl_FragColor = vec4(0.0, 0.5*decay, 0.0, src_alpha);
         if (splatSetIndex==8)  gl_FragColor = vec4(0.0, 0.0, 0.5*decay, src_alpha);
         if (splatSetIndex==9)  gl_FragColor = vec4(0.5*decay, 0.5*decay, 0.0, src_alpha);
-        if (splatSetIndex==-1)
-	    if ( r_squared > 0.16 ) gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha); else gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
+        if (splatSetIndex==-1) {
+	    //if ( r_squared > 0.16 ) gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha); else gl_FragColor = vec4(1.0, 0.0, 0.0, src_alpha);
+            highp float x = floor(0.1*(gl_FragCoord.x + 1.0) * float(vp_width) + 0.5);
+            x = x-2.0*floor(x/2.0);
+            highp float r = 0.0;
+            if ( x > 0.5 ) r = 1.0;
+	    if ( r_squared > 0.16 ) gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha); else gl_FragColor = vec4(r, 0.0, 0.0, src_alpha);
+        }
     } else {
         // To visualize the "most recent proxy model" even when not in debug-colour-mode:
 	//         if (splatSetIndex==-1)
@@ -270,7 +146,7 @@ void main(void)
 	//                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
     if (splatOutline>0) {
-	highp float tmp = 0.5-0.0015*float(splats_x)/splatOverlap;
+	highp float tmp = 0.5-0.0015*float(splats_x)/actualSplatOverlap;
 	if ( (c.x<-tmp) || (c.x>tmp) || (c.y<-tmp) || (c.y>tmp) )
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
@@ -289,7 +165,7 @@ void main(void)
     // gl_FragColor = vec4(500.0*clamp(planar_frag_depth-depth, 0.0, 1.0), 500.0*clamp(depth-planar_frag_depth, 0.0, 1.0), 0.0, src_alpha); return;
     
     if (splatSetIndex==-1) {
-        planar_frag_depth = clamp(planar_frag_depth - 0.001, 0.0, 1.0);
+        planar_frag_depth = clamp(planar_frag_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
     }
 
     // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
