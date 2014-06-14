@@ -632,12 +632,12 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
     char errnobuf[256];
     int rc, ret = 0;
 
-    // --- we're the mainloop thread -------------------------------------------
     if( pthread_equal( pthread_self(), server->thread_id ) != 0  ) {
-
 #ifdef TRACE
         server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread." );
 #endif
+        // --- we're the mainloop thread -------------------------------------------
+
         // --- signal notification condition (linked to transaction lock) ------
         rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
         if( rc != 0 ) {
@@ -648,16 +648,48 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
         }
 
     }
-    // --- we're not the mainloop thread ---------------------------------------
-    // we must lock the transaction lock to avoid that the notification
-    // appears afeter a client has requested the status, but before it has
-    // managed to start listening.
     else {
-
 #ifdef TRACE
         server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread." );
 #endif
-
+        // --- we're not the mainloop thread -----------------------------------
+        //
+        // Preferably, we should lock the transaction lock, to avoid that the
+        // notification appears right after a client has requested the status,
+        // but before it has managed to start listening. I.e., clients may miss
+        // longpolling updates and hang around until timeout.
+        //
+        // However, with the current implementation of exposed model, locking
+        // the transaction lock may lead to the following deadlock:
+        //
+        // Non-mainloop job thread:
+        // - updating a value
+        // - triggering a notify via an exposed-model listener:
+        //   - it has the exposedmodel lock
+        //   - waits on the transaction lock (in order to signal condition)
+        //
+        // Apache mod_trell thread interacting with an ipc client:
+        // - queries for updates
+        //   - has the transaction lock
+        //   - has sent the request to the ipc server
+        //   - waits on a reply from the server
+        //
+        // IPCController mainloop thread running an ipc server:
+        // - got a query for updates from client:
+        //   - waits on exposed model lock (in order to check for updates).
+        //
+        // The optimal fix for this is to make sure that this function is not
+        // invoked while holding the exposed model lock.
+#if 1
+        // --- signal notification condition (linked to transaction lock) --
+        rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
+        if( rc != 0 ) {
+            server->logger_f( server->logger_d, 0, who,
+                              "pthread_cond_broadcast( notification_event ) failed: %s",
+                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+            ret = -2;
+        }
+#else
         // --- lock transaction lock -------------------------------------------
         struct timespec timeout;
         if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
@@ -696,6 +728,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
                 }
             }
         }
+#endif
     }
     
     return ret;
