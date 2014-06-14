@@ -392,9 +392,9 @@ IPCController::sendHeartBeat()
     
     tinia_msg_t reply;
     size_t reply_actual;
-    
+#ifdef DEBUG
     m_logger_callback( m_logger_data, 2, func.c_str(), "Sending heartbeat to '%s'.", m_master_id.c_str() );
-    
+#endif
     if( ipc_msg_client_sendrecv_buffered_by_name( m_master_id.c_str(),
                                                   m_logger_callback, m_logger_data,
                                                   reinterpret_cast<const char*>(&query), sizeof(query),

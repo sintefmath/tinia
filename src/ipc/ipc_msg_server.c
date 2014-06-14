@@ -96,7 +96,7 @@ ipc_msg_server_create(const char*       jobid,
     server->shmem_payload_ptr = MAP_FAILED;
     server->shmem_payload_size = 0;
     
-    size_t minimum_size = TINIA_IPC_MSG_PART_MIN_BYTES;
+    size_t requested_payload_size = 8*1024*1024;   //TINIA_IPC_MSG_PART_MIN_BYTES;
     if( ipc_msg_fake_shmem != 0 ) {
         
         rc = pthread_mutex_lock( &ipc_msg_fake_shmem_lock );
@@ -108,7 +108,7 @@ ipc_msg_server_create(const char*       jobid,
         }
         else {
             
-            ipc_msg_fake_shmem_size = ((minimum_size+server->shmem_header_size+page_size-1)/page_size)*page_size;
+            ipc_msg_fake_shmem_size = ((requested_payload_size+server->shmem_header_size+page_size-1)/page_size)*page_size;
             ipc_msg_fake_shmem_ptr = malloc( ipc_msg_fake_shmem_size );
             if( ipc_msg_fake_shmem_ptr == NULL ) {
                 server->logger_f( server->logger_d, 0, who,
@@ -149,10 +149,10 @@ ipc_msg_server_create(const char*       jobid,
         }
         
         // --- set size of shared memory segment -----------------------------------
-        if( ftruncate( fd, minimum_size+server->shmem_header_size ) != 0 ) {
+        if( ftruncate( fd, requested_payload_size+server->shmem_header_size ) != 0 ) {
             server->logger_f( server->logger_d, 0, who,
                               "Failed to set shared memory size to %ld: %s",
-                              (minimum_size+server->shmem_header_size),
+                              (requested_payload_size+server->shmem_header_size),
                               ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
             close( fd );
             ipc_msg_server_delete( server );
@@ -170,7 +170,7 @@ ipc_msg_server_create(const char*       jobid,
             return NULL;
         }
         server->shmem_total_size = fstat_buf.st_size;
-        if( server->shmem_total_size < minimum_size+server->shmem_header_size ) {
+        if( server->shmem_total_size < requested_payload_size+server->shmem_header_size ) {
             // shouldn't happen
             server->logger_f( server->logger_d, 0, who,
                               "shmem size is less than requested!" );
@@ -633,7 +633,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
     int rc, ret = 0;
 
     if( pthread_equal( pthread_self(), server->thread_id ) != 0  ) {
-#ifdef TRACE
+#ifdef DEBUG
         server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread." );
 #endif
         // --- we're the mainloop thread -------------------------------------------
@@ -649,7 +649,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 
     }
     else {
-#ifdef TRACE
+#ifdef DEBUG
         server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread." );
 #endif
         // --- we're not the mainloop thread -----------------------------------

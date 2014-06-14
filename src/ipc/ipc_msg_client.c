@@ -324,8 +324,9 @@ ipc_msg_client_send( char* errnobuf,
         }
     }
     
+#ifdef TRACE
     client->logger_f( client->logger_d, 2, who, "Sent %d parts to %s.", part, client->shmem_name );
-    
+#endif
     return ret;
 }
 
@@ -408,7 +409,9 @@ ipc_msg_client_recv( char* errnobuf,
             break;
         }
     }
+#ifdef TRACE
     client->logger_f( client->logger_d, 2, who, "Received %d parts from %s.", part+1, client->shmem_name );
+#endif
     if( ret == 0 ) {
         ret = do_wait_on_notification;
     }

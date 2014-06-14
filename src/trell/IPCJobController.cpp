@@ -194,15 +194,19 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                                      session,
                                      revision ) )
         {
+#ifdef DEBUG
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Queried for policy, returning updates (has_revision=%d).", revision );
+#endif
             tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
             reply->msg.type = TRELL_MESSAGE_XML;
             return result_size + sizeof(tinia_msg_xml_t);
         }
         else {
+#ifdef DEBUG
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Queried for policy, no updates available (has_revision=%d).", revision );
+#endif
             msg->type = TRELL_MESSAGE_OK;
             return sizeof(tinia_msg_t);
         }
@@ -237,8 +241,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             }
             else if( onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
                                      format, w, h, session, key ) ) {
+#ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok." );
+#endif
                 tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
                 reply->msg.type     = TRELL_MESSAGE_IMAGE;
                 reply->width        = w;
@@ -275,8 +281,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         {
             tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
             reply->msg.type = TRELL_MESSAGE_XML;
+#ifdef DEBUG
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Queried for renderlist, ok." );
+#endif
             return result_size + sizeof(tinia_msg_xml_t);
         }
         else {
@@ -299,14 +307,16 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         {
             //volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
             msg->type = TRELL_MESSAGE_OK;
+#ifdef DEBUG
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Update state, ok (msg_size=%d).", msg_size );
+#endif
             return sizeof(tinia_msg_t);
         }
         else {
             //volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
             msg->type = TRELL_MESSAGE_ERROR;
-            m_logger_callback( m_logger_data, 2, package.c_str(),
+            m_logger_callback( m_logger_data, 0, package.c_str(),
                                "Update state, failure." );
             return sizeof(tinia_msg_t);
         }
@@ -322,8 +332,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                            (char*)msg + sizeof(tinia_msg_script_t),
                            buf_size - sizeof(tinia_msg_script_t) ) )
         {
+#ifdef DEBUG
             m_logger_callback( m_logger_data, 2, package.c_str(),
                                "Queried for scripts, ok (result_size=%ld).", result_size );
+#endif
             tinia_msg_script_t* reply = (tinia_msg_script_t*)msg;
             reply->msg.type = TRELL_MESSAGE_SCRIPT;
             return sizeof(tinia_msg_script_t) + result_size;
