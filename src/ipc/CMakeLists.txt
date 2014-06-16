@@ -13,8 +13,8 @@ ADD_LIBRARY( tiniaipc STATIC ${LIB_IPC_SRC} ${LIB_IPC_HEADERS})
 TARGET_LINK_LIBRARIES( tiniaipc ${RT} )
 
   install( DIRECTORY
-    "../../include/tinia/ipc/*.h"
-    DESTINATION include/tinia/ipc
+    "../../include/tinia/ipc"
+    DESTINATION include/tinia/
     COMPONENT tiniaipc)
 
   install( TARGETS
