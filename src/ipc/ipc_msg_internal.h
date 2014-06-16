@@ -90,6 +90,7 @@ typedef struct {
      */
     pthread_cond_t      notification_event;
 
+
     /** True when a server is listening. */
     int                 mainloop_running;
 
@@ -137,6 +138,18 @@ struct tinia_ipc_msg_server_struct {
     size_t              shmem_header_size;
     void*               shmem_payload_ptr;
     size_t              shmem_payload_size;
+
+    /** True if a thread has failed to notify clients.
+     *
+     * To avoid leaky notifications (situations where clients may miss updates
+     * and wait until timeout unecessary), we require that the transaction lock
+     * is held when notifying. However, we can get deadlocks between a client
+     * and the thread that invokes notifications w.r.t the transaction lock and
+     * the exposed model mutex. To fix this, when failing to grab the
+     * transaction lock, we set this flag and defer the notification until the
+     * mainloop polls this value.
+     */
+    volatile int        deferred_notification_event;
 };
 
 // === CLIENT AND SERVER COMMON API ============================================

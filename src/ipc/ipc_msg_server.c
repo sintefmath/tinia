@@ -95,6 +95,7 @@ ipc_msg_server_create(const char*       jobid,
     server->shmem_header_size = ((sizeof(tinia_ipc_msg_header_t)+page_size-1)/page_size)*page_size; // multiple of page size
     server->shmem_payload_ptr = MAP_FAILED;
     server->shmem_payload_size = 0;
+    server->deferred_notification_event = 0;
     
     size_t requested_payload_size = 8*1024*1024;   //TINIA_IPC_MSG_PART_MIN_BYTES;
     if( ipc_msg_fake_shmem != 0 ) {
@@ -634,7 +635,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 
     if( pthread_equal( pthread_self(), server->thread_id ) != 0  ) {
 #ifdef DEBUG
-        server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread." );
+        server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread, has lock and signaling." );
 #endif
         // --- we're the mainloop thread -------------------------------------------
 
@@ -649,88 +650,47 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 
     }
     else {
+        // --- try to lock transaction lock ------------------------------------
+        rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
+        if( rc == EBUSY ) {
 #ifdef DEBUG
-        server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread." );
+            server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread, lock busy, deferring" );
 #endif
-        // --- we're not the mainloop thread -----------------------------------
-        //
-        // Preferably, we should lock the transaction lock, to avoid that the
-        // notification appears right after a client has requested the status,
-        // but before it has managed to start listening. I.e., clients may miss
-        // longpolling updates and hang around until timeout.
-        //
-        // However, with the current implementation of exposed model, locking
-        // the transaction lock may lead to the following deadlock:
-        //
-        // Non-mainloop job thread:
-        // - updating a value
-        // - triggering a notify via an exposed-model listener:
-        //   - it has the exposedmodel lock
-        //   - waits on the transaction lock (in order to signal condition)
-        //
-        // Apache mod_trell thread interacting with an ipc client:
-        // - queries for updates
-        //   - has the transaction lock
-        //   - has sent the request to the ipc server
-        //   - waits on a reply from the server
-        //
-        // IPCController mainloop thread running an ipc server:
-        // - got a query for updates from client:
-        //   - waits on exposed model lock (in order to check for updates).
-        //
-        // The optimal fix for this is to make sure that this function is not
-        // invoked while holding the exposed model lock.
-#if 1
-        // --- signal notification condition (linked to transaction lock) --
-        rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
-        if( rc != 0 ) {
-            server->logger_f( server->logger_d, 0, who,
-                              "pthread_cond_broadcast( notification_event ) failed: %s",
-                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-            ret = -2;
+            // someone is interacting with the server, defer signaling until
+            // main thread can handle it.
+            server->deferred_notification_event = 1;
         }
-#else
-        // --- lock transaction lock -------------------------------------------
-        struct timespec timeout;
-        if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
+        else if (rc != 0 ) {
             server->logger_f( server->logger_d, 0, who,
-                              "clock_gettime( CLOCK_REALTIME ): %s",
-                              ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
-            ret = -2;
+                              "pthread_mutex_timedlock( transaction_lock ) failed: %s",
+                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+            ret = -2;  
         }
         else {
-            timeout.tv_sec += 1;
-            rc = pthread_mutex_timedlock( &server->shmem_header_ptr->transaction_lock,
-                                          &timeout );
+#ifdef DEBUG
+            server->logger_f( server->logger_d, 2, who,
+                              "Invoked from non-mainloop thread, got lock, signaling" );
+#endif
+
+            // --- signal notification condition (linked to transaction lock) --
+            rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
-                                  "pthread_mutex_timedlock( transaction_lock ) failed: %s",
+                                  "pthread_cond_broadcast( notification_event ) failed: %s",
                                   ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
                 ret = -2;
             }
-            else {
-                // --- signal notification condition (linked to transaction lock) --
-                rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
-                if( rc != 0 ) {
-                    server->logger_f( server->logger_d, 0, who,
-                                      "pthread_cond_broadcast( notification_event ) failed: %s",
-                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                    ret = -2;
-                }
-                
-                // --- unlock transaction lock -------------------------------------
-                rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
-                if( rc != 0 ) {
-                    server->logger_f( server->logger_d, 0, who,
-                                      "pthread_mutex_unlock( transaction_lock ) failed: %s",
-                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                    ret = -2;
-                }
+            
+            // --- unlock transaction lock -------------------------------------
+            rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
+            if( rc != 0 ) {
+                server->logger_f( server->logger_d, 0, who,
+                                  "pthread_mutex_unlock( transaction_lock ) failed: %s",
+                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                ret = -2;
             }
         }
-#endif
     }
-    
     return ret;
 }
 
@@ -904,17 +864,77 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
     // --- wait for a server event -----------------------------------------
     server->shmem_header_ptr->server_event_predicate = 0;
     do {
-        rc = pthread_cond_timedwait( &server->shmem_header_ptr->server_event,
-                                     &server->shmem_header_ptr->operation_lock,
-                                     periodic_timeout );
-        // --- timeout, invoke periodic function & update timeout ----------
-        if( rc == ETIMEDOUT ) {
+        // --- Determine current time ------------------------------------------
+        struct timespec timeout;
+        if( clock_gettime( CLOCK_REALTIME, &timeout ) != 0 ) {
+            server->logger_f( server->logger_d, 0, who,
+                              "clock_gettime( CLOCK_REALTIME ): %s",
+                              ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
+            return -2;
+        }
+        
+
+        // --- Handle deferred notification events -----------------------------
+        if( server->deferred_notification_event ) {
+            rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
+            if( rc == EBUSY ) {
+#ifdef DEBUG
+                    server->logger_f( server->logger_d, 2, who,
+                                      "Tried to deliver deferred notification event, but lock busy.",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+#endif
+            }
+            else if( rc != 0 ) {
+                server->logger_f( server->logger_d, 0, who,
+                                  "pthread_mutex_timedlock( transaction_lock ) failed: %s",
+                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                return -2;  
+            }
+            else {
+                int ret = 0;
+
+                rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
+                if( rc == 0 ) {
+#ifdef DEBUG
+                    server->logger_f( server->logger_d, 2, who,
+                                      "Successfully delivered deferred notification event.",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+#endif
+                    server->deferred_notification_event = 0;
+                }
+                else {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "pthread_cond_broadcast( notification_event ) failed: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                    ret = -2;
+                }
+
+                rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
+                if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "pthread_mutex_unlock( transaction_lock ) failed: %s",
+                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                    ret = -2;
+                }
+                if( ret != 0 ) {
+                    return ret;
+                }
+            }
+        }
+
+        // --- Check if it is time for a periodic function invocation ----------
+        if( (periodic_timeout->tv_sec < timeout.tv_sec )
+                || ( (periodic_timeout->tv_sec == timeout.tv_sec)
+                     && (periodic_timeout->tv_nsec < timeout.tv_nsec ) ) )
+        {
             rc = periodic( periodic_data );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
                                   "periodic func returned: %d", rc );
                 return -2;
             }
+            
+            // determine next time we want to invoke the periodic function
             rc = clock_gettime( CLOCK_REALTIME, periodic_timeout );
             if( rc != 0 ) {
                 server->logger_f( server->logger_d, 0, who,
@@ -924,7 +944,22 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
             }
             periodic_timeout->tv_sec += 3;
         }
-        // --- error, bail out ---------------------------------------------
+
+        // --- Set timer for one tenth of a second -----------------------------
+        timeout.tv_nsec += 100000000L;
+        while( timeout.tv_nsec > 1000000000L ) {
+            timeout.tv_nsec -= 1000000000L;
+            timeout.tv_sec += 1;
+        }
+        
+        // --- sleep a bit -----------------------------------------------------
+        rc = pthread_cond_timedwait( &server->shmem_header_ptr->server_event,
+                                     &server->shmem_header_ptr->operation_lock,
+                                     periodic_timeout );
+        if( rc == ETIMEDOUT ) {
+            // timeout expected and not an error
+        }
+        // --- error, bail out -------------------------------------------------
         else if( rc != 0 ) {
             server->logger_f( server->logger_d, 0, who,
                               "pthread_cond_timedwait( server_event) failed: %s",
