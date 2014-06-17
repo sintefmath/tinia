@@ -64,15 +64,26 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // ---------------- End of configuration section -----------------
 
-
-        this._frameOutputCounter   = 0;
-        this._frameMeasureCounter  = 0;
-        this._frameTime = 0.0;
-        this._lock = false; // for debugging
-        this._lock2 = false; // for debugging
-
         this.gl = glContext;
         this.exposedModel = exposedModel;
+
+        if ( (this.exposedModel.hasKey("autoProxyDebugging")) && (this.exposedModel.getElementValue("autoProxyDebugging")) ) {
+            this._debugging = true;
+            this._frameOutputCounter   = 0;
+            this._frameMeasureCounter  = 0;
+            this._frameTime = 0.0;
+            this._lock = false; // for debugging
+            this._lock2 = false; // for debugging
+        } else {
+            this._debugging = false;
+            // @@@ fjerne de under
+            this._frameOutputCounter   = 0;
+            this._frameMeasureCounter  = 0;
+            this._frameTime = 0.0;
+            this._lock = false; // for debugging
+            this._lock2 = false; // for debugging
+        }
+
         this._splatVertexBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
         this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
@@ -86,6 +97,11 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
+        this._loadShaders();
+
+        // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
+        // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
+        // these.
         this.exposedModel.addLocalListener("reloadShader", dojo.hitch(this, function(event) {
             if(this.exposedModel.getElementValue("reloadShader")) {
                 this._loadShaders();
@@ -93,11 +109,6 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.exposedModel.updateElement("reloadShader", false);
             }
         }));
-        this._loadShaders();
-
-        // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
-        // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
-        // these.
         this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
             this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent");
         }) );
@@ -180,6 +191,11 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     _compileShaders: function() {
         console.log("Shader source should now have been read from files, compiling and linking program...");
+
+        if ( this._debugging ) {
+            this._splat_vs_src = "#define DEBUG\n" + this._splat_vs_src;
+            this._splat_fs_src = "#define DEBUG\n" + this._splat_fs_src;
+        }
 
         var available_extensions = this.gl.getSupportedExtensions();
         console.log("extensions: " + JSON.stringify(available_extensions));

@@ -23,11 +23,11 @@
 #include "tinia/model/StateListener.hpp"
 namespace tinia {
 namespace example {
-class CubeJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
+class APCJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
 {
 public:
-    CubeJob();
-    ~CubeJob();
+    APCJob();
+    ~APCJob();
     void stateElementModified(tinia::model::StateElement *stateElement);
     bool init();
     bool renderFrame(const std::string &session, const std::string &key,
@@ -47,6 +47,7 @@ private:
     tinia::renderlist::DataBase     m_renderlist_db;
     GLuint                      m_gpgpu_quad_vertex_array;
     GLuint                      m_gpgpu_quad_buffer;
+    GLuint m_tex;
 };
 }
 }
