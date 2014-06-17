@@ -312,8 +312,8 @@ cleanup:
                 goto done;
             }
 
-            int msec = 1<<(15*it);
-            fprintf( stderr, "FIXTURE: %d threads still alive, waiting %d milliseconds.\n",
+            int msec = 1<<(10*it);
+            fprintf( stderr, "FIXTURE: %d threads still alive, waiting %d microseconds.\n",
                      (int)m_threads.size(), msec  );
             usleep( msec );
             if( it != 0 ) {
