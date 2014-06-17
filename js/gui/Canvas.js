@@ -45,8 +45,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 1024;
-        this._height = 1024;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
         this._snapshotURL = params.snapshotURL;
 
@@ -177,6 +177,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
+                        console.log("response updateParsed = " + response);
                         var response_obj = eval( '(' + response + ')' );
                         this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })
@@ -198,7 +199,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 var response_obj = eval( '(' + params.response + ')' );
-                this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+                if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
             }
@@ -268,6 +270,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _touchstart: function (event) {
         this._active = true;
+        this._touch_prev = event;
 
         // We need to add the relative placement informatoin to all touch events
         for(var i = 0; i < event.touches.length; ++i) {
@@ -292,6 +295,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _touchend: function (event) {
         this._active = false;
+        if( event.touches.length == 0 ) {
+            // Use last active position
+            event = this._touch_prev;
+        }
+
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();
@@ -315,6 +323,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _touchmove: function (event) {
+        this._touch_prev = event;
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();

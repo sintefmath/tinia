@@ -42,6 +42,7 @@ namespace jobcontroller {
 namespace qtcontroller {
     namespace impl {
         class ServerController;
+        class Invoker;
     }
     class GUIBuilder;
 
@@ -84,7 +85,7 @@ private:
     boost::scoped_ptr<QApplication>          m_app;
     boost::scoped_ptr<QMainWindow>           m_main_window;
 
-
+    impl::Invoker*                          m_invoker;  // Lifetime managed by qt parent-child machinery.
     impl::ServerController* m_serverController; // Lifetime managed by qt parent-child machinery.
     QToolBar* m_toolBar; // Lifetime managed by qt parent-child machinery.
 

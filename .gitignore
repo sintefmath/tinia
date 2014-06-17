@@ -76,8 +76,9 @@ tinia.sln
 *.rc
 *.cache
 
+
+
+/js/nbproject/private/
+
 # Config settings for Qt Creator
 CMakeLists.txt.user.*
-
-# Kjetil's stuff
-/js/nbproject/private/

@@ -3,23 +3,21 @@
 #include <QImage>
 #include <QBuffer>
 #include <tinia/qtcontroller/impl/http_utils.hpp>
+#include "tinia/renderlist.hpp"
 
 namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
 
-OpenGLServerGrabber::OpenGLServerGrabber(tinia::jobcontroller::Job* job,
-                                         QObject *parent) :
-QObject(parent), m_glImageIsReady(false), m_job(job), m_openglIsReady(false),
-    m_width(500), m_height(500)
+OpenGLServerGrabber::OpenGLServerGrabber( tinia::jobcontroller::Job* job,
+                                          QObject *parent)
+    : QObject(parent),
+      m_job(job),
+      m_openglIsReady(false),
+      m_width(500),
+      m_height(500)
 {
-    connect(this, SIGNAL(glImageReady()), this,
-            SLOT(wakeListeners()));
-    connect(this, SIGNAL(getGLImage(uint,uint,QString)), this,
-            SLOT(getImage(uint,uint,QString)));
-    connect(this, SIGNAL(getGLDepthBuffer(uint,uint,QString)), this,
-            SLOT(getDepthBuffer(uint,uint,QString)));
 }
 
 
@@ -33,158 +31,89 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
 }
 
 
-void OpenGLServerGrabber::getImageAsTextCommon(QString &str, unsigned int width, unsigned int height, QString key, const bool depthBuffer)
+void
+OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
+                              unsigned int width,
+                              unsigned int height,
+                              const std::string& key)
 {
-    m_mainMutex.lock();
-    if (depthBuffer) {
-        emit getGLDepthBuffer(width, height, key);
-    } else {
-        emit getGLImage(width, height, key);
-    }
-    m_waitMutex.lock();
-    while(!m_glImageIsReady) {
-        m_waitCondition.wait(&m_waitMutex);
-    }
-
-    QImage img(m_buffer, width, height, QImage::Format_RGB888);
-
-    // This is a temporary fix. The image is reflected through the horizontal
-    // line y=height ((x, y) |--> (x, h-y) ).
-    QTransform flipTransformation(1, 0,
-                                  0, -1,
-                                  0, height);
-    img = img.transformed(flipTransformation);
-
-    QBuffer qBuffer;
-    img.save(&qBuffer, "png");
-    str = QString( QByteArray(qBuffer.data(), int(qBuffer.size())).toBase64() );
-
-    m_glImageIsReady = false;
-    m_waitMutex.unlock();
-    m_mainMutex.unlock();
-}
-
-
-void OpenGLServerGrabber::getImageAsText(QTextStream &os, unsigned int width, unsigned int height, QString key)
-{
-    QString rgbStr;
-    getImageAsTextCommon(rgbStr, width, height, key, false);
-    QString depthStr;
-    getImageAsTextCommon(depthStr, width, height, key, true);
-
-    // Is there something wrong with m_job->getExposedModel()?! Seems not to be returning meaningful data. (Or is it 'getElementValueAsString'?)
-    std::string tmp = m_job->getExposedModel()->getElementValueAsString( key.toStdString() );
-    //std::cout << "tmp=" << tmp << std::endl;
-
-    tinia::model::Viewer viewer;
-    m_job->getExposedModel()->getElementValue( key.toStdString(), viewer );
-    //std::cout << "viewer.timestamp=" << viewer.timestamp << std::endl; // And this seems to be 0 all the time. Is that correct?
-    std::stringstream ss;
-    ss << viewer.modelviewMatrix[0] << " "
-                                    << viewer.modelviewMatrix[1] << " "
-                                    << viewer.modelviewMatrix[2] << " "
-                                    << viewer.modelviewMatrix[3] << " "
-                                    << viewer.modelviewMatrix[4] << " "
-                                    << viewer.modelviewMatrix[5] << " "
-                                    << viewer.modelviewMatrix[6] << " "
-                                    << viewer.modelviewMatrix[7] << " "
-                                    << viewer.modelviewMatrix[8] << " "
-                                    << viewer.modelviewMatrix[9] << " "
-                                    << viewer.modelviewMatrix[10] << " "
-                                    << viewer.modelviewMatrix[11] << " "
-                                    << viewer.modelviewMatrix[12] << " "
-                                    << viewer.modelviewMatrix[13] << " "
-                                    << viewer.modelviewMatrix[14] << " "
-                                    << viewer.modelviewMatrix[15];
-    //std::cout << "viewer.modelView: " << ss.str() << std::endl;
-    QString viewStr( ss.str().c_str() );
-
-    std::stringstream ss2;
-    ss2 << viewer.projectionMatrix[0] << " "
-                                    << viewer.projectionMatrix[1] << " "
-                                    << viewer.projectionMatrix[2] << " "
-                                    << viewer.projectionMatrix[3] << " "
-                                    << viewer.projectionMatrix[4] << " "
-                                    << viewer.projectionMatrix[5] << " "
-                                    << viewer.projectionMatrix[6] << " "
-                                    << viewer.projectionMatrix[7] << " "
-                                    << viewer.projectionMatrix[8] << " "
-                                    << viewer.projectionMatrix[9] << " "
-                                    << viewer.projectionMatrix[10] << " "
-                                    << viewer.projectionMatrix[11] << " "
-                                    << viewer.projectionMatrix[12] << " "
-                                    << viewer.projectionMatrix[13] << " "
-                                    << viewer.projectionMatrix[14] << " "
-                                    << viewer.projectionMatrix[15];
-    //std::cout << "viewer.projection: " << ss2.str() << std::endl;
-    QString projStr( ss2.str().c_str() );
-
-    QString jsonWrappedImgPlusDepthString = "{ \"rgb\": \"" + rgbStr + "\", \"depth\": \"" + depthStr + "\", \"view\": \"" + viewStr+ "\", \"proj\": \"" + projStr + "\" }";
-    os << httpHeader(getMimeType("file.txt")) << "\r\n" << jsonWrappedImgPlusDepthString;
-}
-
-
-void OpenGLServerGrabber::getImageCommon(unsigned int width, unsigned int height, QString key, const bool depthBufferRequested)
-{
-    tinia::jobcontroller::OpenGLJob* openGLJob = static_cast<tinia::jobcontroller::OpenGLJob*>(m_job);
-    if(!openGLJob) {
-        throw std::invalid_argument("This is not an OpenGL job!");
-    }
-    if(!m_openglIsReady) {
+    if( !m_openglIsReady ) {
         setupOpenGL();
     }
-
-    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
-
     if(m_width != width || m_height != height) {
         resize(width, height);
     }
 
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glViewport( 0, 0, width, height );
+    job->renderFrame( "session", key, m_fbo, width, height );
 
-    openGLJob->renderFrame( "session", key.toStdString(), m_fbo, width, height );
+    // QImage requires scanline size to be a multiple of 32 bits.
+    size_t scanline_size = 4*((3*width+3)/4);
+    glPixelStorei( GL_PACK_ALIGNMENT, 4 );
 
-    glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-
-    if (depthBufferRequested) {
-        glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
-        // Depth encoded as 24 bit fixed point values.
-        for(unsigned i = 0; i < width*height; i++) {
-            float value = ((float*)m_buffer)[i];
-            for (unsigned j=0; j<3; j++) {
-                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
-                value = 255.0*value - floor(value*255.0);
-            }
+    // make sure that buffer is large enough to hold raw image
+    size_t req_buffer_size = scanline_size*height*4; // @@@ 3 should be enough, but 4 seem to avoid a bug connected to the resizing of the buffer... (?!)
+    if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
+        if( m_buffer != NULL ) {
+            delete m_buffer;
         }
-    } else {
-        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
+        m_buffer_size = req_buffer_size;
+        m_buffer = new unsigned char[m_buffer_size];
+    }
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void
+OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
+                                unsigned int width,
+                                unsigned int height,
+                                const std::string& key)
+{
+    if( !m_openglIsReady ) {
+        setupOpenGL();
+    }
+    if(m_width != width || m_height != height) {
+        resize(width, height);
+    }
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glViewport( 0, 0, width, height );
+    job->renderFrame( "session", key, m_fbo, width, height );
+
+    // QImage requires scanline size to be a multiple of 32 bits.
+    size_t scanline_size = 4*width;
+    glPixelStorei( GL_PACK_ALIGNMENT, 1 ); // 4 and 1 equally good, in this case?
+
+    // make sure that buffer is large enough to hold raw image
+    size_t req_buffer_size = scanline_size*height*4;
+    if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
+        if( m_buffer != NULL ) {
+            delete m_buffer;
+        }
+        m_buffer_size = req_buffer_size;
+        m_buffer = new unsigned char[m_buffer_size];
+    }
+
+    assert( sizeof(GL_FLOAT) == 4 );
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
+    // Depth encoded as 24 bit fixed point values.
+    for(size_t i=0; i<width*height; i++) {
+        float value = ((float*)m_buffer)[i];
+        for (size_t j=0; j<3; j++) {
+            ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+            value = 255.0*value - floor(value*255.0);
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    emit glImageReady();
 }
 
-
-// This is the slot for the signal OpenGLServerGrabber::getGLImage
-void OpenGLServerGrabber::getImage(unsigned int width, unsigned int height, QString key)
-{
-    getImageCommon(width, height, key, false);
-}
-
-
-// This is the slot for the signal OpenGLServerGrabber::getGLDepthBuffer
-void OpenGLServerGrabber::getDepthBuffer(unsigned int width, unsigned int height, QString key)
-{
-    getImageCommon(width, height, key, true);
-}
-
-
-void OpenGLServerGrabber::wakeListeners()
-{
-    m_waitMutex.lock();
-    m_glImageIsReady = true;
-    m_waitCondition.wakeAll();
-    m_waitMutex.unlock();
-}
 
 void OpenGLServerGrabber::setupOpenGL()
 {
@@ -196,27 +125,67 @@ void OpenGLServerGrabber::setupOpenGL()
     m_openglIsReady = true;
 }
 
+
 void OpenGLServerGrabber::resize(unsigned int width, unsigned int height)
 {
-    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    // resize render buffers
+    glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+
     glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferRGBA );
     glRenderbufferStorage( GL_RENDERBUFFER, GL_RGBA, width, height );
-    glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0,
-                               GL_RENDERBUFFER,
-                               m_renderbufferRGBA );
 
     glBindRenderbuffer( GL_RENDERBUFFER, m_renderbufferDepth );
     glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
     glBindRenderbuffer( GL_RENDERBUFFER, 0 );
+
+    // set up framebuffer
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glFramebufferRenderbuffer( GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_RENDERBUFFER,
+                               m_renderbufferRGBA );
     glFramebufferRenderbuffer( GL_FRAMEBUFFER,
                                GL_DEPTH_ATTACHMENT,
                                GL_RENDERBUFFER,
                                m_renderbufferDepth );
+
+    // check for framebuffer completeness
+    GLenum status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+    if( status != GL_FRAMEBUFFER_COMPLETE ) {
+        std::cerr << "OpenGLServerGrabber::resize(width=" << width
+                  << ",height=" << height << "): Incomplete framebuffer: ";
+        switch( status ) {
+        case GL_FRAMEBUFFER_UNDEFINED:
+            std::cerr << "GL_FRAMEBUFFER_UNDEFINED";
+            break;
+        case GL_FRAMEBUFFER_UNSUPPORTED:
+            std::cerr << "GL_FRAMEBUFFER_UNSUPPORTED";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";
+            break;
+        case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            std::cerr << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE";
+            break;
+        default:
+            std::cerr << "<unknown status>"; break;
+        }
+        std::cerr << std::endl;
+    }
+    
     m_width = width;
     m_height = height;
 }
+
 
 } // namespace impl
 } // namespace qtcontroller
