@@ -955,7 +955,7 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
         // --- sleep a bit -----------------------------------------------------
         rc = pthread_cond_timedwait( &server->shmem_header_ptr->server_event,
                                      &server->shmem_header_ptr->operation_lock,
-                                     periodic_timeout );
+                                     &timeout );
         if( rc == ETIMEDOUT ) {
             // timeout expected and not an error
         }
