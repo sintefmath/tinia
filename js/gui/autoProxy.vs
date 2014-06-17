@@ -1,8 +1,10 @@
 // To do:
-// - Split shaders in two sets, one for the "most recent proxy" and one for the others, to avoid if-tests
-// - Check that the "discard" hack really is the best way to do this
-// - Background colour in ProxyRenderer.js should be set to whatever the application is using
+//
+// - Split shaders in two sets, one for the "most recent proxy" and one for the others, to avoid if-tests.
+// - Check that the "discard" hack really is the best way to do this.
+// - Background colour in ProxyRenderer.js should be set to whatever the application is using.
 // - Texture size 2^n-restriction should be lifted. Also, in connection with this, resizing code might need revisiting...
+// - ExposedModel elements controlling autoProxy should have names prefixed with something reserved.
 
 #define USE_FRAG_DEPTH_EXT
 

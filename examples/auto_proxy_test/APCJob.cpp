@@ -51,7 +51,9 @@ bool APCJob::init()
 
     // Adding variables to the model
     {
-        m_model->addElement<bool>( "autoProxyDebugging", true ); // Should not be modified through the GUI.
+        m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false".
+        m_model->addElement<bool>( "useAutoProxy", true );          // This turns on the new autoProxy
+
         m_model->addElement<bool>( "debugSplatCol", false );
         m_model->addAnnotation("debugSplatCol", "Index coloring (r, g, b, y, c, m)");
         m_model->addElement<bool>( "decayMode", false );
@@ -167,8 +169,8 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
         firsttime = false;
     }
 
-    // usleep(200000);
-    // usleep(10000);
+    // Simulated high latency
+    usleep(200000);
 
     glEnable(GL_DEPTH_TEST);
 

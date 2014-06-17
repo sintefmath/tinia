@@ -30,8 +30,6 @@ dojo.require("gui.ProxyRenderer");
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function (params) {
 
-        this._useAutoProxy = true;
-
         if (!params.renderListURL) {
             params.renderListURL = "xml/getRenderList.xml";
         }
@@ -475,18 +473,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._gl = WebGLUtils.setupWebGL(this._canvas);
         console.log("_startGL");
         if (this._gl) {
-
-            if (!this._useAutoProxy) {
-                // old proxy geometry
+            if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+                this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
+            } else {
                 this._render_list_store = new renderlist.RenderListStore(this._gl);
                 this._render_list_parser = new renderlist.RenderListParser();
                 this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
                 this._getRenderList();
-            } else {
-                // new proxy geometry
-                this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
             }
-
 			this._render();
         } else {
             console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quit the browser, and restart it.");
@@ -528,10 +522,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             m_from_world: viewer.getElementValue("modelview")
         }
 
-        if (!this._useAutoProxy) {
-            this._render_list_renderer.render(this._render_list_store, view_coord_sys);
-        } else {
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
             this._proxyRenderer.render(view_coord_sys);
+        } else {
+            this._render_list_renderer.render(this._render_list_store, view_coord_sys);
         }
 
     },
