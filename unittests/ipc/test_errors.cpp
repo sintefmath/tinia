@@ -39,6 +39,7 @@ struct ErrorInduceFixture
     void
     run()
     {
+        fprintf( stderr, "Test errors.\n" );
         ipc_msg_fake_shmem = 1;
         m_clients = 1;
         m_failure_is_an_option = 1;

@@ -32,6 +32,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
     void
     run()
     {
+        fprintf( stderr, "Test sendrecv.\n" );
         m_client_bytes_received = 0;
         m_server_bytes_received = 0;
         SendRecvFixtureBase::run();

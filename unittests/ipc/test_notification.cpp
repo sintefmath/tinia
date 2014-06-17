@@ -39,6 +39,7 @@ struct NotificationFixture
     void
     run()
     {
+        fprintf( stderr, "Test notification.\n" );
         m_clients_should_longpoll = 1;
         SendRecvFixtureBase::run();
     }
