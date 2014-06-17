@@ -31,7 +31,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         // This is not yet implemented.
         this._useBlending = false;
 
-        this._backgroundCol = vec3.createFrom(1.0, 1.0, 1.0);
+        // Currently this is not set to any value used by the application
+        this._backgroundCol = vec3.createFrom(0.0, 0.0, 0.0);
 
         // The most recent proxy model will always be shown, and with a small depth offset to force it in front
         this._alwaysShowMostRecent = true;
@@ -55,7 +56,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         // --- For debugging, start
         this._frameOutputInterval         = 100;
         this._frameMeasureInterval        = 10;
-        this._pausePerFrameInMilliseconds = 0; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
+        this._pausePerFrameInMilliseconds = 100; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
         this._debugSplatCol               = 0;
         this._decayMode                   = 0;
         this._roundSplats                 = 0;
@@ -332,8 +333,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo", this._ignoreIntraSplatTexCoo);
             this._setUniform1i(this._splatProgram, "splatOutline", this._splatOutline);
             this._setUniform1i(this._splatProgram, "useBlending", this._useBlending ? 1 : 0);
-            this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
-            this._setUniformMatrix4fv(this._splatProgram, "PM", matrices.m_projection);
+//            this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
+//            this._setUniformMatrix4fv(this._splatProgram, "PM", matrices.m_projection);
             if ( (this._debugging) && (this.exposedModel.hasKey("resetAllModels")) && (this.exposedModel.getElementValue("resetAllModels")) ) {
                 this.exposedModel.updateElement("resetAllModels", false);
                 for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
@@ -350,7 +351,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
-
+            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "depthImg"), 0 );
+            this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
 
             var t0 = performance.now();
             for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
@@ -358,12 +360,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", i);
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.proxyModelRing[i].depthTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "depthImg"), 0 );
                     this.gl.activeTexture(this.gl.TEXTURE1);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.proxyModelRing[i].rgbTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
-                    this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.proxyModelRing[i].projection_inverse);
-                    this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.proxyModelRing[i].to_world);
+//                    this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.proxyModelRing[i].projection_inverse);
+//                    this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.proxyModelRing[i].to_world);
                     if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
                         // Could this be simplified?
                         var A = mat4.create();
@@ -381,12 +381,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", -1);
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.depthTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "depthImg"), 0 );
                     this.gl.activeTexture(this.gl.TEXTURE1);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this._proxyModelCoverage.mostRecentModel.rgbTexture);
-                    this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
-                    this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.mostRecentModel.projection_inverse);
-                    this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.mostRecentModel.to_world);
+//                    this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.mostRecentModel.projection_inverse);
+//                    this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.mostRecentModel.to_world);
                     if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
                         // Could this be simplified?
                         var A = mat4.create();

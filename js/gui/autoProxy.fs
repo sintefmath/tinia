@@ -6,24 +6,14 @@ uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 
 varying highp vec2 texCoo;
-varying highp float sampled_depth; // debugging (Splat-centered depth)
-varying highp vec2 depth_e; // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
-
-// Temporary for debugging:
-uniform highp mat4 PM;
-uniform highp mat4 MV;
-uniform highp mat4 depthPMinv;
-uniform highp mat4 depthMVinv;
-uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
+varying highp float sampled_depth;      // Splat-centered depth
+varying highp vec2 depth_e;             // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
 varying highp float frag_depth;
 varying highp vec2 frag_depth_e;
 
-varying highp vec2 vertPos;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
-
-varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 
 uniform highp float splats_x;
 uniform highp float splats_y;
@@ -35,15 +25,18 @@ uniform highp vec3 backgroundCol;
 
 #define PI 3.1415926535
 
-// For debugging
+#ifdef DEBUG
+varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 uniform int debugSplatCol;
 uniform int decayMode;
 uniform int roundSplats;
 uniform int ignoreIntraSplatTexCoo;
 uniform int splatOutline;
+varying highp float splat_i, splat_j;
+#endif
+
 uniform int useBlending;
 const int mostRecentProxyModelOffset = 7;
-varying highp float splat_i, splat_j;
 
 
 
@@ -62,24 +55,29 @@ void main(void)
     }
     
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
+
+#ifdef DEBUG
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
-
     if ( (roundSplats>0) && (r_squared>0.25) ) {
         discard;
     }
-
     // Decay factor = 1.0 in splat center, tending toward 0 at circular rim.
     // In the distance sqrt(2*(0.5/overlap)^2), i.e., r_squared=2*(0.5/overlap)^2, we get decay=0.25,
     // which corresponds to the maximum "depth-disabled accumulated splat value" of 1.0 for a regular grid of splats.
     highp float decay = exp(actualSplatOverlap*actualSplatOverlap*log(1.0/16.0)*r_squared);
+#endif
 
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
     tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#ifdef DEBUG
     if (!(ignoreIntraSplatTexCoo>0)) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
     }
+#else
+    tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
+#endif
 
     // Discarding fragments that would look up depth and color outside the rendered scene Note that this will remove
     // parts of primitives containing "background pixels" from the rgb texture, it will not cause these to be replaced
@@ -118,19 +116,16 @@ void main(void)
     highp float planar_depth = sampled_depth + dot( depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
+
+#ifdef DEBUG
     if (!(ignoreIntraSplatTexCoo>0)) {
-        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) // Values chosen by using the visualization above
             discard;
-        }
     }
-    
     if (decayMode==0) {
         decay = 1.0;
     }
-
     gl_FragColor = vec4( decay * texture2D( rgbImage, tc ).xyz, src_alpha );
-
-    //------------------------------ Debug-stuff ------------------------------
     if (debugSplatCol>0) {
         if (splatSetIndex==0)  gl_FragColor = vec4(decay, 0.0, 0.0, src_alpha);
         if (splatSetIndex==1)  gl_FragColor = vec4(0.0, decay, 0.0, src_alpha);
@@ -161,8 +156,13 @@ void main(void)
 	if ( (c.x<-tmp) || (c.x>tmp) || (c.y<-tmp) || (c.y>tmp) )
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
-    //----------------------------------------------------------------------
-
+#else
+    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+	discard;
+    }
+    gl_FragColor = vec4( texture2D( rgbImage, tc ).xyz, src_alpha );
+#endif
+    
 #ifdef USE_FRAG_DEPTH_EXT
     // With the help of 'frag_depth', 'frag_depth_e', 'intraSplatTexCooTransform2' and the intra-splat coordinates 'c',
     // we can interpolate the appropriate depth buffer value for the planar part of the splat. If the gl_FragDepthEXT
@@ -181,15 +181,20 @@ void main(void)
 
     // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
     // if (splatSetIndex>=0) planar_frag_depth = clamp(planar_frag_depth + 0.001*float(splatSetIndex), 0.0, 1.0);
-        
+
+#ifdef DEBUG        
     if (!(ignoreIntraSplatTexCoo>0)) {
 	gl_FragDepthEXT = planar_frag_depth;
     } else {
 	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
     }
+#else
+    gl_FragDepthEXT = planar_frag_depth;
 #endif
 
-    // To identify particular splats during debugging
+#endif
+
+    // To identify particular splats during debugging (and figure generation)
     // if (    ( abs(splat_i-43.0) < 0.5 )   &&    ( abs(splat_j-43.0) < 0.5 )    )
     //     gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     // if (    ( abs(splat_i-42.0) < 0.5 )   &&    ( abs(splat_j-43.0) < 0.5 )    )

@@ -1,3 +1,9 @@
+// To do:
+// - Split shaders in two sets, one for the "most recent proxy" and one for the others, to avoid if-tests
+// - Check that the "discard" hack really is the best way to do this
+// - Background colour in ProxyRenderer.js should be set to whatever the application is using
+// - Texture size 2^n-restriction should be lifted. Also, in connection with this, resizing code might need revisiting...
+
 #define USE_FRAG_DEPTH_EXT
 
 attribute vec2 aVertexPosition;
@@ -6,17 +12,16 @@ varying highp vec2 texCoo;                      // Implicitly taken to be *outpu
 varying highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
 varying highp vec2 depth_e;                     // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
-varying highp float frag_depth;
+varying highp float frag_depth;                 // Fragment depth for the vertex, i.e., the center of the splat
 varying highp vec2 frag_depth_e;
 
-varying highp vec2 vertPos;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
-uniform highp mat4 PM;
-uniform highp mat4 MV;
-uniform highp mat4 depthPMinv;
-uniform highp mat4 depthMVinv;
+// uniform highp mat4 PM;
+// uniform highp mat4 MV;
+// uniform highp mat4 depthPMinv;
+// uniform highp mat4 depthMVinv;
 uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
 
 uniform sampler2D depthImg;
@@ -31,18 +36,22 @@ uniform float splatOverlap;                     // Makes little sense in having 
                                                 //
 varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 
+#ifdef DEBUG
 uniform int screenSpaceSized;
+varying highp float splat_i, splat_j;
+#endif
+
 uniform float splats_x;
 uniform float splats_y;
 uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
 const int mostRecentProxyModelOffset = 7;
-varying highp float splat_i, splat_j;
 
 
 
 
+// Is it really the case that WebGL doesn't have this?!
 mat2 invrs(mat2 tmp)
 {
     float det_inv = 1.0/(tmp[0][0]*tmp[1][1] - tmp[1][0]*tmp[0][1]);              // det_inv = 1/(ad-bc)
@@ -54,13 +63,14 @@ mat2 invrs(mat2 tmp)
 
 void main(void)
 {
+#ifdef DEBUG
     splat_j = floor( (0.5*aVertexPosition.x+1.0)*splats_x ); // For debugging
     splat_i = floor( (0.5*aVertexPosition.y+1.0)*splats_y );
+#endif
 
     vec2 st = 0.5*(aVertexPosition.xy+1.0); // From [-1, 1] to [0, 1]
     st.y = 1.0-st.y;
     texCoo = st;
-    vertPos = aVertexPosition; // Declared as varying, but will be constant all over the POINT primitive.
 
     // With a 1024^2 canvas and 512^2 splats, there are no artifacts to be seen from using 16 bits for the depth.
     // (But 8 is clearly too coarse.)
@@ -168,15 +178,6 @@ void main(void)
 
     depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
 
-    // Discarding splats that are not front-facing.
-    // Modifying the test to remove some more of the border-line cases. How can we do this more precisely?
-    // vec3 dx = normalize( vec3(scr_dx, 0.0) );
-    // vec3 dy = normalize( vec3(scr_dy, 0.0) );
-    // if ( cross(dx, dy).z < 0.2 ) {
-    //     gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-    //     return;
-    // }
-
     // This will discard all splats not facing forward
     vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
     vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
@@ -189,6 +190,7 @@ void main(void)
     // (This does not take into account perspective. How can we fix this? It does not work very well without this. Or, maybe
     // there is something else wrong?!)
 #if 0
+    // 140617: NB! If enabled, remember to uncomment the declaration of MV and depthMVinv at the top, and also to set these in the ProxyRenderer.js!
     mat4 tmp = MV * depthMVinv;
     vec3 dir = vec3( -tmp[2][0], -tmp[2][1], -tmp[2][2] );
     dir = normalize(dir);
@@ -204,7 +206,11 @@ void main(void)
     //
     //----------------------------------------------------------------------------------------------------
 
+#ifdef DEBUG
     if (screenSpaceSized>0) {
+#else
+    if (true) {
+#endif
 
         // We have already sampled the depths for the adjacent splats in the x-direction (*_dx) and y-direction (*_dy),
         // and will use the screen space difference between these adjacent splats to determine an appropriate (screen
