@@ -43,7 +43,7 @@ HTTPServer::HTTPServer( tinia::jobcontroller::Job* job,
                         QObject *parent)
     : QTcpServer(parent),
       m_job(job),
-      m_serverGrabber( new OpenGLServerGrabber( job, this ) ),
+      m_serverGrabber( new OpenGLServerGrabber( this ) ),
       m_mainthread_invoker( new Invoker( this ) )
 {
     listen(QHostAddress::Any, 8080);

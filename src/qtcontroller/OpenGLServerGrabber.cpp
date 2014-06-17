@@ -10,12 +10,10 @@ namespace qtcontroller {
 namespace impl {
 
 
-OpenGLServerGrabber::OpenGLServerGrabber( tinia::jobcontroller::Job* job,
-                                          QObject *parent)
+OpenGLServerGrabber::OpenGLServerGrabber( QObject *parent)
     : QObject(parent),
       m_buffer( NULL ),
       m_buffer_size(0),
-      m_job(job),
       m_openglIsReady(false),
       m_width(500),
       m_height(500)

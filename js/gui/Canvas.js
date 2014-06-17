@@ -175,14 +175,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        // console.log("response updateParsed = " + response);
                         var response_obj = eval( '(' + response + ')' );
                         this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })
                 });
-                // console.log("url: " + url);
             }
-
         }));
 
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function (xml) {
@@ -191,10 +188,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }));
 
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
-
             // Temporary sanity fix for firefox
-            // this._setImageFromText(params.response); // @@@ Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?
-
+            // )Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 var response_obj = eval( '(' + params.response + ')' );
                 if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
@@ -369,8 +364,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (this._proxyRenderer) {
             this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
         }
-        // This would show the image from the server, if it was the rgb-image.
-        // When it is the depth buffer, it may look "funny".
         this._showCorrect();
         return response_rgb;
     },
@@ -464,14 +457,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _startGL: function () {
 
         if (window.WebGLRenderingContext) {
-          // browser supports WebGL
-            console.log("The browser should support WebGL.");
+            // browser supports WebGL
+            // console.log("The browser should support WebGL.");
         } else {
-            console.log("The browser doesn't seem to support WebGL.");
+            console.log("The browser doesn't seem to support WebGL. Have you turned on necessary flags? Recent enough version? Chrome and Firefox should work.");
         }
 
         this._gl = WebGLUtils.setupWebGL(this._canvas);
-        console.log("_startGL");
         if (this._gl) {
             if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
                 this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
@@ -581,10 +573,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
         }
-//        else {
-//            dojo.style(this._img, "z-index", "2");
-//            this._img.style.zIndex = "2";
-//        }
+        else {
+            dojo.style(this._img, "z-index", "2");
+            this._img.style.zIndex = "2";
+        }
 
         if (this._loadingDiv) {
             if (this._imageLoading && !this._active) {

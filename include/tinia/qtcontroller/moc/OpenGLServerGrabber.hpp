@@ -15,20 +15,10 @@ class OpenGLServerGrabber : public QObject
 {
     Q_OBJECT
 public:
-    explicit OpenGLServerGrabber( tinia::jobcontroller::Job* job,
-                                  QObject *parent );
+    explicit OpenGLServerGrabber(QObject *parent);
 
     ~OpenGLServerGrabber();
 
-private:
-
-    // This is for waiting. We let the event-loop take the image, and wait
-    // for it to finish.
-   QWaitCondition m_waitCondition;
-
- tinia::jobcontroller::Job* m_job;
-
-public:
     /** Mutex that governs exclusive access to this object. */
     QMutex*
     exclusiveAccessMutex()
