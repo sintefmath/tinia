@@ -189,7 +189,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             // Temporary sanity fix for firefox
-            // )Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
+            // (Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 var response_obj = eval( '(' + params.response + ')' );
                 if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this

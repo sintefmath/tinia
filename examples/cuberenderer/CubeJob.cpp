@@ -49,7 +49,7 @@ bool CubeJob::init()
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
     // To use the autoProxy mode, enable this line
-    m_model->addElement<bool>( "useAutoProxy", true );
+    // m_model->addElement<bool>( "useAutoProxy", true );
 
     m_model->setGUILayout(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"),
                           tinia::model::gui::DESKTOP);
