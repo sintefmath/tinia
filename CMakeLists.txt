@@ -40,6 +40,8 @@ OPTION( Tinia_BUILD_TUTORIALS "Build tutorials?" ON )
 OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
 OPTION( Tinia_AMAZON "Configurations needed to make Tinia work smoothly on Amazon" OFF)
 
+OPTION( Tinia_IPC_LOG_TRACE "Enable numerous logging messages to track actions of IPC threads" OFF )
+
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
         ON )
@@ -65,9 +67,14 @@ ENDIF()
 IF(Tinia_AMAZON) 
   ADD_DEFINITIONS(-DTINIA_AMAZON)
 ENDIF()
+
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-        SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
+    SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" )
+    IF( Tinia_IPC_LOG_TRACE )
+        add_definitions( -DTINIA_IPC_LOG_TRACE )
+    ENDIF( Tinia_IPC_LOG_TRACE )
 ENDIF()
+
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
         #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)

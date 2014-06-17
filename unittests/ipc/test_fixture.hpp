@@ -37,6 +37,10 @@
     *((int*)0xDEADBEEF) = 42;                                                   \
     } } while(0)
 
+struct SendRecvFixtureBase;
+
+
+
 
 // RAII-locker for fixture
 class Locker
@@ -91,6 +95,22 @@ protected:
     bool                    m_locked;
 };
 
+class ScopeTrace
+{
+public:
+    explicit inline ScopeTrace( SendRecvFixtureBase* that, const std::string& what );
+
+    inline ~ScopeTrace();
+
+protected:
+    SendRecvFixtureBase*    m_that;
+    const std::string&      m_what;
+    pthread_t               m_id;
+    int                     m_index;
+};
+
+
+
 
 struct SendRecvFixtureBase
 {
@@ -109,6 +129,8 @@ struct SendRecvFixtureBase
     {}
     
     std::vector<pthread_t>  m_threads;
+    pthread_mutex_t         m_threads_lock;
+
     pthread_mutex_t         lock;
     pthread_mutex_t         client_lock;    // for use when transaction lock is held
     pthread_mutex_t         server_lock;    // for use when transaction lock is held
@@ -125,6 +147,7 @@ struct SendRecvFixtureBase
     pthread_cond_t          m_clients_exited_cond;
     std::string             m_error_from_thread;
     int                     m_jitter;
+
     
     void
     setErrorFromThread( const std::string& error )
@@ -171,7 +194,9 @@ struct SendRecvFixtureBase
     void
     run()
     {
-        fprintf( stderr, "test begin.\n" );
+#ifdef TINIA_IPC_LOG_TRACE
+        fprintf( stderr, "--- [FIXTURE] test begin ------------------------------------------------------\n" );
+#endif
         m_clients_initialized = 0;
         m_clients_exited = 0;
 
@@ -200,6 +225,7 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_mutexattr_settype( &mutex_attr2, PTHREAD_MUTEX_ERRORCHECK ) == 0 );
         BOOST_REQUIRE( pthread_mutex_init( &client_lock, &mutex_attr2 ) == 0 );
         BOOST_REQUIRE( pthread_mutex_init( &server_lock, &mutex_attr2 ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_init( &m_threads_lock, &mutex_attr2 ) == 0 );
 
         BOOST_REQUIRE( pthread_cond_init( &m_server_runs_cond, NULL ) == 0 );
         BOOST_REQUIRE( pthread_cond_init( &m_clients_initialized_cond, NULL ) == 0 );
@@ -210,24 +236,29 @@ struct SendRecvFixtureBase
         // wait for server to be up and running.
         Locker locker( this->lock );
         m_server = NULL;
-        m_threads.resize( m_threads.size()+1 );
 
-        BOOST_REQUIRE( pthread_create( &m_threads.back(),
-                                       NULL,
-                                       server_thread_func,
-                                       this ) == 0 );
-        m_server_runs_flag = 0;
-        do {
-            int rc = pthread_cond_timedwait( &m_server_runs_cond,
-                                             &lock,
-                                             &timeout );
-            BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-            if( rc == ETIMEDOUT ) {
-                BOOST_CHECK( false && "timed out while waiting for server to be created."  );
-                goto hung;
-            }
+        {   Locker threads_lock( m_threads_lock );
+            m_threads.resize( m_threads.size()+1 );
+            BOOST_REQUIRE( pthread_create( &m_threads.back(),
+                                           NULL,
+                                           server_thread_func,
+                                           this ) == 0 );
         }
-        while( m_server_runs_flag == 0 );
+        m_server_runs_flag = 0;
+        {
+            ScopeTrace( this, std::string(__func__)+".scope_0" );
+            do {
+                int rc = pthread_cond_timedwait( &m_server_runs_cond,
+                                                 &lock,
+                                                 &timeout );
+                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
+                if( rc == ETIMEDOUT ) {
+                    BOOST_CHECK( false && "timed out while waiting for server to be created."  );
+                    goto hung;
+                }
+            }
+            while( m_server_runs_flag == 0 );
+        }
 
         BOOST_REQUIRE( m_server != NULL );
         BOOST_REQUIRE( m_server->shmem_header_ptr != NULL );
@@ -235,6 +266,7 @@ struct SendRecvFixtureBase
         // create clients
         BOOST_REQUIRE( (m_clients >= 0) && (m_clients < 10) ); // sanity check
         for(int i=0; i<m_clients; i++ ) {
+            Locker threads_lock( m_threads_lock );
             m_threads.resize( m_threads.size()+1 );
             BOOST_REQUIRE( pthread_create( &m_threads.back(),
                                            NULL,
@@ -244,30 +276,36 @@ struct SendRecvFixtureBase
 
         
         // wait for clients to run
-        while( m_clients_initialized != m_clients ) {
-            int rc = pthread_cond_timedwait( &m_clients_initialized_cond,
-                                             &lock,
-                                             &timeout );
-            BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-            if( rc == ETIMEDOUT ) {
-                BOOST_CHECK( false && "timed out while waiting for clients to initialize."  );
-                goto hung;
+        {
+            ScopeTrace( this, std::string(__func__)+".scope_1" );
+            while( m_clients_initialized != m_clients ) {
+                int rc = pthread_cond_timedwait( &m_clients_initialized_cond,
+                                                 &lock,
+                                                 &timeout );
+                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
+                if( rc == ETIMEDOUT ) {
+                    BOOST_CHECK( false && "timed out while waiting for clients to initialize."  );
+                    goto hung;
+                }
             }
         }
-        
+
         if( inner() != 0 ) {
             goto hung;
         }
 
         // wait for clients to finish
-        while( m_clients_exited != m_clients ) {
-            int rc = pthread_cond_timedwait( &m_clients_exited_cond,
-                                             &lock,
-                                             &timeout );
-            BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-            if( rc == ETIMEDOUT ) {
-                BOOST_CHECK( false && "timed out while waiting for clients to finish."  );
-                goto hung;
+        {
+            ScopeTrace( this, std::string(__func__)+".scope_2" );
+            while( m_clients_exited != m_clients ) {
+                int rc = pthread_cond_timedwait( &m_clients_exited_cond,
+                                                 &lock,
+                                                 &timeout );
+                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
+                if( rc == ETIMEDOUT ) {
+                    BOOST_CHECK( false && "timed out while waiting for clients to finish."  );
+                    goto hung;
+                }
             }
         }
 
@@ -281,14 +319,17 @@ struct SendRecvFixtureBase
         locker.lock();
         
         // wait for server thread to finsh
-        while( m_server != NULL ) {
-            int rc = pthread_cond_timedwait( &m_server_runs_cond,
-                                             &lock,
-                                             &timeout );
-            BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-            if( rc == ETIMEDOUT ) {
-                BOOST_CHECK( false && "timed out while waiting for server to finish."  );
-                goto hung;
+        {
+            ScopeTrace( this, std::string(__func__)+".scope_3" );
+            while( m_server != NULL ) {
+                int rc = pthread_cond_timedwait( &m_server_runs_cond,
+                                                 &lock,
+                                                 &timeout );
+                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
+                if( rc == ETIMEDOUT ) {
+                    BOOST_CHECK( false && "timed out while waiting for server to finish."  );
+                    goto hung;
+                }
             }
         }
         locker.unlock();
@@ -299,15 +340,17 @@ hung:
 
         // invariants:
         // - m_shared_lock locked.
-        for( size_t i=0; i<m_threads.size(); i++ ) {
-            pthread_cancel( m_threads[i] );
+        {   Locker threads_lock( m_threads_lock );
+            for( size_t i=0; i<m_threads.size(); i++ ) {
+                pthread_cancel( m_threads[i] );
+            }
         }
         locker.unlock();
 
 cleanup:
 
         for( int it=0; it<3; it++) {
-
+            Locker threads_lock( m_threads_lock );
             std::vector<pthread_t> unterminated;
             for( size_t i=0; i<m_threads.size(); i++ ) {
                 void* tmp;
@@ -336,7 +379,10 @@ cleanup:
         }
         FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
 done:
-        BOOST_REQUIRE( m_threads.empty() );
+        {
+            Locker threads_lock( m_threads_lock );
+            BOOST_REQUIRE( m_threads.empty() );
+        }
         //std::cerr << "done.\n";
         BOOST_REQUIRE( pthread_cond_destroy( &m_server_runs_cond ) == 0 );
         BOOST_REQUIRE( pthread_cond_destroy( &m_clients_initialized_cond ) == 0 );
@@ -348,7 +394,7 @@ done:
             BOOST_REQUIRE( m_error_from_thread.empty() );
         }
 
-        fprintf( stderr, "FIXTURE: Test end.\n" );
+        fprintf( stderr, "--- [FIXTURE] test end --------------------------------------------------------\n" );
     }
 
     static
@@ -467,13 +513,14 @@ done:
     server_thread_func( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-
+        ScopeTrace( that, __func__ );
 
         // setup server
         tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
                                                   logger,
                                                   arg );
         {
+            ScopeTrace( that, std::string(__func__)+".scope_0" );
             Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
@@ -482,15 +529,21 @@ done:
         }
         // run server mainloop
         //std::cerr << __LINE__ << ": A\n";
-        int rc = ipc_msg_server_mainloop( server,
+
+        int rc;
+        {
+            ScopeTrace( that, std::string(__func__)+".scope_1" );
+            rc = ipc_msg_server_mainloop( server,
                                           server_periodic, that,
                                           server_input_handler, that,
                                           server_output_handler, that );
+        }
         if( rc < -1 ) { // Serious error.
             fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
             NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
         }
         {
+            ScopeTrace( that, std::string(__func__)+".scope_2" );
             Locker locker( that->lock );
             that->m_server = NULL;
         }
@@ -499,6 +552,7 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         {
+            ScopeTrace( that, std::string(__func__)+".scope_3" );
             Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
@@ -575,6 +629,7 @@ done:
     {
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
+        ScopeTrace( that, __func__ );
         
         unsigned int seed = 0;
         if( that->m_jitter ) {
@@ -584,6 +639,7 @@ done:
         }
 
         {
+            ScopeTrace( that, std::string(__func__)+".scope_0" );
             Locker locker( that->lock );
             that->m_clients_initialized++;
             if( that->m_clients_initialized == that->m_clients ) {
@@ -597,6 +653,7 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         do {
+            ScopeTrace( that, std::string(__func__)+".scope_1" );
             if( that->m_jitter ) {
                 seed = get_random_seed();
                 int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
@@ -631,6 +688,7 @@ done:
         
         // notify that we have finished
         {
+            ScopeTrace( that, std::string(__func__)+".scope_2" );
             Locker locker( that->lock );
             that->m_clients_exited++;
             if( that->m_clients_exited == that->m_clients ) {
@@ -645,4 +703,36 @@ done:
 
     
 };
+
+
+ScopeTrace::ScopeTrace( SendRecvFixtureBase* that, const std::string& what )
+    : m_that( that ),
+      m_what( what ),
+      m_id( pthread_self() ),
+      m_index( -1 )
+
+{
+#ifdef TINIA_IPC_LOG_TRACE
+    {
+        pthread_t id = pthread_self();
+        Locker threads_locker( that->m_threads_lock );
+        for( size_t i=0; i<that->m_threads.size(); i++ ) {
+            if( that->m_threads[i] == id ) {
+                m_index = i;
+                break;
+            }
+        }
+    }
+
+    fprintf( stderr, "[%lu | %d] >>> %s.\n", m_id, m_index, m_what.c_str() );
+#endif
+}
+
+ScopeTrace::~ScopeTrace()
+{
+#ifdef TINIA_IPC_LOG_TRACE
+    fprintf( stderr, "[%lu | %d] <<< %s.\n", m_id, m_index, m_what.c_str() );
+#endif
+}
+
 

@@ -634,7 +634,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
     int rc, ret = 0;
 
     if( pthread_equal( pthread_self(), server->thread_id ) != 0  ) {
-#ifdef DEBUG
+#ifdef TINIA_IPC_LOG_TRACE
         server->logger_f( server->logger_d, 2, who, "Invoked from mainloop thread, has lock and signaling." );
 #endif
         // --- we're the mainloop thread -------------------------------------------
@@ -653,7 +653,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
         // --- try to lock transaction lock ------------------------------------
         rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
         if( rc == EBUSY ) {
-#ifdef DEBUG
+#ifdef TINIA_IPC_LOG_TRACE
             server->logger_f( server->logger_d, 2, who, "Invoked from non-mainloop thread, lock busy, deferring" );
 #endif
             // someone is interacting with the server, defer signaling until
@@ -667,7 +667,7 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
             ret = -2;  
         }
         else {
-#ifdef DEBUG
+#ifdef TINIA_IPC_LOG_TRACE
             server->logger_f( server->logger_d, 2, who,
                               "Invoked from non-mainloop thread, got lock, signaling" );
 #endif
@@ -878,7 +878,7 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
         if( server->deferred_notification_event ) {
             rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
             if( rc == EBUSY ) {
-#ifdef DEBUG
+#ifdef TINIA_IPC_LOG_TRACE
                     server->logger_f( server->logger_d, 2, who,
                                       "Tried to deliver deferred notification event, but lock busy.",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
@@ -895,7 +895,7 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
 
                 rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
                 if( rc == 0 ) {
-#ifdef DEBUG
+#ifdef TINIA_IPC_LOG_TRACE
                     server->logger_f( server->logger_d, 2, who,
                                       "Successfully delivered deferred notification event.",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );

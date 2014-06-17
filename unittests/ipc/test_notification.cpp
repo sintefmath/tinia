@@ -47,6 +47,7 @@ struct NotificationFixture
     int
     inner()
     {
+        ScopeTrace( this, __func__ );
         // assuming that lock is held.
 
         struct timespec timeout;
@@ -81,6 +82,7 @@ struct NotificationFixture
                     const int part,
                     const int more )
     {
+        ScopeTrace( this, __func__ );
         return 0;
     }
     
@@ -91,6 +93,7 @@ struct NotificationFixture
                     const size_t buffer_size,
                     const int part )
     {
+        ScopeTrace( this, __func__ );
         Locker locker( this->server_lock );
         int flag = m_flag;
         *((int*)buffer) = flag;
@@ -117,6 +120,7 @@ struct NotificationFixture
                     const int part,
                     const int more ) 
     {
+        ScopeTrace( this, __func__ );
         if( *((int*)buffer) == 0 ) {
             Locker locker( this->client_lock );
             m_longpolling_clients++;

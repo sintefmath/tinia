@@ -56,6 +56,7 @@ struct ErrorInduceFixture
                     const int part,
                     const int more )
     {
+        ScopeTrace( this, __func__ );
         Locker locker( this->server_lock );
         m_server_consumer_invocations++;
         if( m_fail_func & SERVER_CONSUMER ) {
@@ -73,6 +74,7 @@ struct ErrorInduceFixture
                     const size_t buffer_size,
                     const int part )
     {
+        ScopeTrace( this, __func__ );
         int ret = 0;
         {
             Locker locker( this->server_lock );
@@ -100,6 +102,7 @@ struct ErrorInduceFixture
                     const size_t buffer_size,
                     const int part )
     {
+        ScopeTrace( this, __func__ );
         int ret = 0;
         {
             Locker lcoker( this->client_lock );
@@ -128,6 +131,7 @@ struct ErrorInduceFixture
                     const int part,
                     const int more ) 
     {
+        ScopeTrace( this, __func__ );
         Locker locker( this->client_lock );
         m_client_consumer_invocations++;
         if( m_fail_func & CLIENT_CONSUMER ) {
