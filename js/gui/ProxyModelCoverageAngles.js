@@ -32,7 +32,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
             this.proxyModelRing[i] = new gui.ProxyModel(this._gl);
         }
         this.mostRecentModel = new gui.ProxyModel(this._gl);
-        this._ringSize = ringSize;
+        this.bufferRingSize = ringSize;
         this._proxyModelReplacementAngle = angleThreshold;
         this._proxyModelReplacementZoom = zoomThreshold;
         console.log("ProxyModelCoverageAngles constructor ended");
@@ -46,7 +46,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         }
 
         // Simply replacing the oldest proxy model with the new one.
-        this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+        this._depthRingCursor = (this._depthRingCursor + 1) % this.bufferRingSize;
         this.proxyModelRing[this._depthRingCursor] = model;
         // console.log("processDepthDataReplaceOldest: inserted into slot " + this._depthRingCursor);
     },
@@ -82,7 +82,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
             }
         }
         if (addModel) {
-            this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+            this._depthRingCursor = (this._depthRingCursor + 1) % this.bufferRingSize;
             this.proxyModelRing[this._depthRingCursor] = model;
             console.log("processDepthDataReplaceOldestWhenDifferent: inserted into slot " + this._depthRingCursor);
         } else {
@@ -103,7 +103,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
         var addModel = false;
 
         // For this strategy, the cursor is not really important, but we can use it to detect whether or not we have filled the ring so far
-        this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+        this._depthRingCursor = (this._depthRingCursor + 1) % this.bufferRingSize;
         if ( this.proxyModelRing[this._depthRingCursor].state == 0 ) {
             // The ring has not been filled, no need to find a model to throw out, we simply add the new one to the set
             // console.log("processDepthDataReplaceFarthestAway: ring not full, inserting directly");
@@ -115,7 +115,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
             var worstIndx  = -1;
             var worstCosAngle = 10.0;
             var worstZoom  = 0.0;
-            for (var i=0; i<this._ringSize; i++) {
+            for (var i=0; i<this.bufferRingSize; i++) {
                 // An assertion that should be removed when not debugging
                 if ( this.proxyModelRing[i].state != 2 ) {
                     alert("processDepthDataReplaceOldestWhenDifferent: Incomplete proxy model added to ring.");
@@ -151,9 +151,9 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
     _coverageNorm: function() {
         // var t0 = Date.now();
         var totalCosAngleSum = 0.0;
-        for (var i=0; i<this._ringSize; i++) {
+        for (var i=0; i<this.bufferRingSize; i++) {
             if ( this.proxyModelRing[i].state == 2 ) {
-                for (var j=0; j<this._ringSize; j++) {
+                for (var j=0; j<this.bufferRingSize; j++) {
                     if ( (i!=j) && (this.proxyModelRing[j].state==2) ) {
                         var tmp = vec3.dot( this.proxyModelRing[i].dir, this.proxyModelRing[j].dir );
                         totalCosAngleSum += (tmp+1.0)*(tmp+1.0);
@@ -181,7 +181,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
 
         var addModel = false;
 
-        this._depthRingCursor = (this._depthRingCursor + 1) % this._ringSize;
+        this._depthRingCursor = (this._depthRingCursor + 1) % this.bufferRingSize;
         if ( this.proxyModelRing[this._depthRingCursor].state == 0 ) {
             // The ring has not been filled, no need to find a model to throw out, we simply add the new one to the set
             console.log("processDepthDataOptimizeCoverage: ring not full, inserting directly into slot " + this._depthRingCursor);
@@ -192,7 +192,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
             // Can we improve the coverage with respect to angles?
             var minNorm = 1e99;
             var best_i = -1;
-            for (var i=0; i<this._ringSize; i++) {
+            for (var i=0; i<this.bufferRingSize; i++) {
                 var temporaryReplacedModel = this.proxyModelRing[i];
                 this.proxyModelRing[i] = model;
                 var norm = this._coverageNorm();
@@ -220,7 +220,7 @@ dojo.declare("gui.ProxyModelCoverageAngles", null, {
             if ( best_i < 0 ) {
                 // Checking if we can improve the buffer by replacing an older model
                 var minNorm = 0.0;
-                for (var i=0; i<this._ringSize; i++) {
+                for (var i=0; i<this.bufferRingSize; i++) {
                     var zoom = this.proxyModelRing[i].dist / model.dist;
                     // console.log("  processDepthDataOptimizeCoverage: zoom[" + i + "]        = " + zoom);
                     if ( zoom > minNorm ) {

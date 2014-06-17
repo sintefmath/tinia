@@ -177,7 +177,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        console.log("response updateParsed = " + response);
+                        // console.log("response updateParsed = " + response);
                         var response_obj = eval( '(' + response + ')' );
                         this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })

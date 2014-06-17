@@ -13,6 +13,8 @@ namespace impl {
 OpenGLServerGrabber::OpenGLServerGrabber( tinia::jobcontroller::Job* job,
                                           QObject *parent)
     : QObject(parent),
+      m_buffer( NULL ),
+      m_buffer_size(0),
       m_job(job),
       m_openglIsReady(false),
       m_width(500),
@@ -53,7 +55,7 @@ OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
     glPixelStorei( GL_PACK_ALIGNMENT, 4 );
 
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = scanline_size*height*4; // @@@ 3 should be enough, but 4 seem to avoid a bug connected to the resizing of the buffer... (?!)
+    size_t req_buffer_size = scanline_size*height*3;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
