@@ -90,7 +90,7 @@ struct NotificationFixture
                     const size_t buffer_size,
                     const int part )
     {
-        Locker locker( this );
+        Locker locker( this->server_lock );
         int flag = m_flag;
         *((int*)buffer) = flag;
         *buffer_bytes = sizeof(flag);
@@ -117,7 +117,7 @@ struct NotificationFixture
                     const int more ) 
     {
         if( *((int*)buffer) == 0 ) {
-            Locker locker( this );
+            Locker locker( this->client_lock );
             m_longpolling_clients++;
             if( m_longpolling_clients == m_clients ) {
                 NOT_MAIN_THREAD_REQUIRE( this, pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
@@ -125,7 +125,7 @@ struct NotificationFixture
             return 1;
         }
         else {
-            Locker locker( this );
+            Locker locker( this->client_lock );
             m_clients_that_got_flag++;
         }
         return 0;

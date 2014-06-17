@@ -28,6 +28,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
     size_t              m_server_bytes_to_send;
     size_t              m_server_bytes_received;
 
+
     void
     run()
     {
@@ -47,7 +48,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
             // first
         }
         {
-            Locker locker( this );
+            Locker locker( this->server_lock );
             m_server_bytes_received += buffer_bytes;
         }
         if( more == 0 ) {
@@ -66,7 +67,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
     {
         size_t bytes_to_send;
         {
-            Locker Locker( this );
+            Locker Locker( this->server_lock );
             bytes_to_send = m_server_bytes_to_send;
         }
         
@@ -97,7 +98,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
     {
         size_t bytes_to_send;
         {
-            Locker locker( this );
+            Locker locker( this->client_lock );
             bytes_to_send = m_client_bytes_to_send;
         }
         
@@ -129,7 +130,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
             // first
         }
         {
-            Locker locker( this );
+            Locker locker( this->client_lock );
             m_client_bytes_received += buffer_bytes;
         }
         if( more == 0 ) {

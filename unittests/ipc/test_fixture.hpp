@@ -38,61 +38,63 @@
     } } while(0)
 
 
+// RAII-locker for fixture
+class Locker
+{
+public:
+    explicit Locker( pthread_mutex_t& mutex )
+        : m_mutex( mutex ),
+          m_locked( false )
+    {
+        lock();
+    }
+
+    ~Locker()
+    {
+        if( m_locked ) {
+            unlock();
+        }
+    }
+
+    void
+    lock()
+    {
+        if( m_locked ) {
+            fprintf( stderr, "Locker::lock: Locker already locked\n" );
+            *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
+        }
+
+        int rv = pthread_mutex_lock( &m_mutex );
+        if( rv != 0 ) {
+            fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
+        }
+        m_locked = true;
+    }
+
+    void
+    unlock()
+    {
+        if( !m_locked ) {
+            fprintf( stderr, "Locker::lock: Locker not locked\n" );
+            *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
+        }
+
+        int rv = pthread_mutex_unlock( &m_mutex );
+        if( rv != 0 ) {
+            fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
+        }
+        m_locked = false;
+    }
+
+protected:
+    pthread_mutex_t&        m_mutex;
+    bool                    m_locked;
+};
+
+
 struct SendRecvFixtureBase
 {
 
-    // RAII-locker for fixture
-    class Locker
-    {
-    public:
-        explicit Locker( SendRecvFixtureBase* that )
-            : m_that( that ),
-              m_locked( false )
-        {
-            lock();
-        }
-
-        ~Locker()
-        {
-            if( m_locked ) {
-                unlock();
-            }
-        }
-
-        void
-        lock()
-        {
-            if( m_locked ) {
-                fprintf( stderr, "Locker::lock: Locker already locked\n" );
-                *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
-            }
-
-            int rv = pthread_mutex_lock( &m_that->lock );
-            if( rv != 0 ) {
-                fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
-            }
-            m_locked = true;
-        }
-
-        void
-        unlock()
-        {
-            if( !m_locked ) {
-                fprintf( stderr, "Locker::lock: Locker not locked\n" );
-                *((int*)0xDEADBEEF) = 42;   // Serious error, force segfault & termination.
-            }
-
-            int rv = pthread_mutex_unlock( &m_that->lock );
-            if( rv != 0 ) {
-                fprintf( stderr, "Locker::lock: %s\n", strerror( rv ) );
-            }
-            m_locked = false;
-        }
-
-    protected:
-        SendRecvFixtureBase*    m_that;
-        bool                    m_locked;
-    };
 
 
     SendRecvFixtureBase()
@@ -108,6 +110,9 @@ struct SendRecvFixtureBase
     
     std::vector<pthread_t>  m_threads;
     pthread_mutex_t         lock;
+    pthread_mutex_t         client_lock;    // for use when transaction lock is held
+    pthread_mutex_t         server_lock;    // for use when transaction lock is held
+    
     tinia_ipc_msg_server_t*               m_server;
     int                     m_server_runs_flag;
     pthread_cond_t          m_server_runs_cond;
@@ -124,7 +129,7 @@ struct SendRecvFixtureBase
     void
     setErrorFromThread( const std::string& error )
     {
-        Locker locker( this );
+        Locker locker( this->lock );
         m_error_from_thread = error;
     }
 
@@ -190,6 +195,12 @@ struct SendRecvFixtureBase
         
         BOOST_REQUIRE( pthread_mutex_init( &lock, &mutex_attr ) == 0 );
 
+        pthread_mutexattr_t mutex_attr2;
+        BOOST_REQUIRE( pthread_mutexattr_init( &mutex_attr2) == 0 );
+        BOOST_REQUIRE( pthread_mutexattr_settype( &mutex_attr2, PTHREAD_MUTEX_ERRORCHECK ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_init( &client_lock, &mutex_attr2 ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_init( &server_lock, &mutex_attr2 ) == 0 );
+
         BOOST_REQUIRE( pthread_cond_init( &m_server_runs_cond, NULL ) == 0 );
         BOOST_REQUIRE( pthread_cond_init( &m_clients_initialized_cond, NULL ) == 0 );
         BOOST_REQUIRE( pthread_cond_init( &m_clients_exited_cond, NULL ) == 0 );
@@ -197,7 +208,7 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_mutexattr_destroy( &mutex_attr) == 0 );
 
         // wait for server to be up and running.
-        Locker locker( this );
+        Locker locker( this->lock );
         m_server = NULL;
         m_threads.resize( m_threads.size()+1 );
 
@@ -348,7 +359,7 @@ done:
             const char* msg, ... )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)data;
-        Locker locker( that );
+        Locker locker( that->lock );
         char buf[1024];
         va_list args;
         va_start( args, msg );
@@ -443,7 +454,7 @@ done:
         }
 
 
-        Locker locker( that );
+        Locker locker( that->lock );
         if( that->m_server_runs_flag == 0 ) {
             that->m_server_runs_flag = 1;
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
@@ -463,7 +474,7 @@ done:
                                                   logger,
                                                   arg );
         {
-            Locker locker( that );
+            Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_header_ptr != NULL );
@@ -480,7 +491,7 @@ done:
             NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
         }
         {
-            Locker locker( that );
+            Locker locker( that->lock );
             that->m_server = NULL;
         }
 
@@ -488,7 +499,7 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         {
-            Locker locker( that );
+            Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
         return NULL;
@@ -573,7 +584,7 @@ done:
         }
 
         {
-            Locker locker( that );
+            Locker locker( that->lock );
             that->m_clients_initialized++;
             if( that->m_clients_initialized == that->m_clients ) {
                 // last client to finish init
@@ -595,7 +606,7 @@ done:
             int timeout;
             bool failure_is_an_option;
             {
-                Locker locker( that );
+                Locker locker( that->lock );
                 timeout = that->m_clients_should_longpoll ? 2 : 0;
                 failure_is_an_option = that->m_failure_is_an_option;
             }
@@ -620,7 +631,7 @@ done:
         
         // notify that we have finished
         {
-            Locker locker( that );
+            Locker locker( that->lock );
             that->m_clients_exited++;
             if( that->m_clients_exited == that->m_clients ) {
                 // last client to finish init

@@ -55,7 +55,7 @@ struct ErrorInduceFixture
                     const int part,
                     const int more )
     {
-        Locker locker( this );
+        Locker locker( this->server_lock );
         m_server_consumer_invocations++;
         if( m_fail_func & SERVER_CONSUMER ) {
             if( part == m_fail_part ) {
@@ -74,7 +74,7 @@ struct ErrorInduceFixture
     {
         int ret = 0;
         {
-            Locker locker( this );
+            Locker locker( this->server_lock );
             m_server_producer_invocations++;
             if( m_fail_func & SERVER_PRODUCER ) {
                 if( part == m_fail_part ) {
@@ -101,7 +101,7 @@ struct ErrorInduceFixture
     {
         int ret = 0;
         {
-            Locker lcoker( this );
+            Locker lcoker( this->client_lock );
             m_client_producer_invocations++;
             if( m_fail_func & CLIENT_PRODUCER ) {
                 if( part == m_fail_part ) {
@@ -127,7 +127,7 @@ struct ErrorInduceFixture
                     const int part,
                     const int more ) 
     {
-        Locker locker( this );
+        Locker locker( this->client_lock );
         m_client_consumer_invocations++;
         if( m_fail_func & CLIENT_CONSUMER ) {
             if( part == m_fail_part ) {
