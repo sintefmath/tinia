@@ -45,7 +45,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     
                     const int more )
     {
-        ScopeTrace( this, __func__ );
+        ScopeTrace scope_trace( this, __func__ );
         if( part == 0 ) {
             // first
         }
@@ -67,7 +67,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        ScopeTrace( this, __func__ );
+        ScopeTrace scope_trace( this, __func__ );
         size_t bytes_to_send;
         {
             Locker Locker( this->server_lock );
@@ -99,7 +99,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const size_t buffer_size,
                     const int part )
     {
-        ScopeTrace( this, __func__ );
+        ScopeTrace scope_trace( this, __func__ );
         size_t bytes_to_send;
         {
             Locker locker( this->client_lock );
@@ -130,7 +130,7 @@ struct SendRecvFixture : public SendRecvFixtureBase
                     const int part,
                     const int more ) 
     {
-        ScopeTrace( this, __func__ );
+        ScopeTrace scope_trace( this, __func__ );
         if( part == 0 ) {
             // first
         }

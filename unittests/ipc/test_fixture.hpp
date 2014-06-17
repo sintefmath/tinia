@@ -104,7 +104,7 @@ public:
 
 protected:
     SendRecvFixtureBase*    m_that;
-    const std::string&      m_what;
+    const std::string       m_what;
     pthread_t               m_id;
     int                     m_index;
 };
@@ -246,7 +246,7 @@ struct SendRecvFixtureBase
         }
         m_server_runs_flag = 0;
         {
-            ScopeTrace( this, std::string(__func__)+".scope_0" );
+            ScopeTrace scope_trace( this, std::string(__func__)+".scope_0" );
             do {
                 int rc = pthread_cond_timedwait( &m_server_runs_cond,
                                                  &lock,
@@ -277,7 +277,7 @@ struct SendRecvFixtureBase
         
         // wait for clients to run
         {
-            ScopeTrace( this, std::string(__func__)+".scope_1" );
+            ScopeTrace scope_trace( this, std::string(__func__)+".scope_1" );
             while( m_clients_initialized != m_clients ) {
                 int rc = pthread_cond_timedwait( &m_clients_initialized_cond,
                                                  &lock,
@@ -296,7 +296,7 @@ struct SendRecvFixtureBase
 
         // wait for clients to finish
         {
-            ScopeTrace( this, std::string(__func__)+".scope_2" );
+            ScopeTrace scope_trace( this, std::string(__func__)+".scope_2" );
             while( m_clients_exited != m_clients ) {
                 int rc = pthread_cond_timedwait( &m_clients_exited_cond,
                                                  &lock,
@@ -320,7 +320,7 @@ struct SendRecvFixtureBase
         
         // wait for server thread to finsh
         {
-            ScopeTrace( this, std::string(__func__)+".scope_3" );
+            ScopeTrace scope_trace( this, std::string(__func__)+".scope_3" );
             while( m_server != NULL ) {
                 int rc = pthread_cond_timedwait( &m_server_runs_cond,
                                                  &lock,
@@ -513,14 +513,14 @@ done:
     server_thread_func( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        ScopeTrace( that, __func__ );
+        ScopeTrace scope_trace( that, __func__ );
 
         // setup server
         tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
                                                   logger,
                                                   arg );
         {
-            ScopeTrace( that, std::string(__func__)+".scope_0" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_0" );
             Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
             NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
@@ -532,7 +532,7 @@ done:
 
         int rc;
         {
-            ScopeTrace( that, std::string(__func__)+".scope_1" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
             rc = ipc_msg_server_mainloop( server,
                                           server_periodic, that,
                                           server_input_handler, that,
@@ -543,7 +543,7 @@ done:
             NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
         }
         {
-            ScopeTrace( that, std::string(__func__)+".scope_2" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
             Locker locker( that->lock );
             that->m_server = NULL;
         }
@@ -552,7 +552,7 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         {
-            ScopeTrace( that, std::string(__func__)+".scope_3" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_3" );
             Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
@@ -629,7 +629,7 @@ done:
     {
         int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        ScopeTrace( that, __func__ );
+        ScopeTrace scope_trace_body( that, __func__ );
         
         unsigned int seed = 0;
         if( that->m_jitter ) {
@@ -639,7 +639,7 @@ done:
         }
 
         {
-            ScopeTrace( that, std::string(__func__)+".scope_0" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_0" );
             Locker locker( that->lock );
             that->m_clients_initialized++;
             if( that->m_clients_initialized == that->m_clients ) {
@@ -653,7 +653,7 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
         do {
-            ScopeTrace( that, std::string(__func__)+".scope_1" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
             if( that->m_jitter ) {
                 seed = get_random_seed();
                 int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
@@ -688,7 +688,7 @@ done:
         
         // notify that we have finished
         {
-            ScopeTrace( that, std::string(__func__)+".scope_2" );
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
             Locker locker( that->lock );
             that->m_clients_exited++;
             if( that->m_clients_exited == that->m_clients ) {
@@ -724,6 +724,7 @@ ScopeTrace::ScopeTrace( SendRecvFixtureBase* that, const std::string& what )
         }
     }
 
+    Locker locker( m_that->lock );
     fprintf( stderr, "[%lu | %d] >>> %s.\n", m_id, m_index, m_what.c_str() );
 #endif
 }
@@ -731,6 +732,7 @@ ScopeTrace::ScopeTrace( SendRecvFixtureBase* that, const std::string& what )
 ScopeTrace::~ScopeTrace()
 {
 #ifdef TINIA_IPC_LOG_TRACE
+    Locker locker( m_that->lock );
     fprintf( stderr, "[%lu | %d] <<< %s.\n", m_id, m_index, m_what.c_str() );
 #endif
 }
