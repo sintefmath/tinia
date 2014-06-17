@@ -23,13 +23,15 @@ varying highp vec2 vertPos;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
+varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
+
 uniform highp float splats_x;
 uniform highp float splats_y;
-varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 uniform highp int splatSetIndex;
 uniform highp int screenSpaceSized;
 uniform highp int vp_width;
 uniform highp int vp_height;
+uniform highp vec3 backgroundCol;
 
 #define PI 3.1415926535
 
@@ -86,7 +88,14 @@ void main(void)
     // have the necessary information.
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
     if ( intra_splat_depth > 0.999 ) {
-        discard;
+	if (splatSetIndex==-1) {
+	    // We treat this "most recent model" specially, so that it can overwrite spurious fragments from the other models.
+	    // For the other models, we want a 'discard', to give better models a chance of colouring this fragment, but
+	    // when the "most recent model" is rendered, it should override anything else.
+	    gl_FragColor = vec4( backgroundCol, src_alpha );
+	    return;
+	}
+	discard;
     }
 
     // If this is "the most recent proxy model", it should be brought some amount toward the front. Note that this is

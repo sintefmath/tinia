@@ -224,9 +224,11 @@ void main(void)
         if ( splatSetIndex >= 0 ) {
             // The "ordinary" proxy model splat sets
             
-            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 1.5; // splatOverlap;
+            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.5; // splatOverlap;
             //actualSplatOverlap = max( length(scr_dx), length(scr_dy) )/1.41 / splatSize * 1.0; // splatOverlap;
             // It is probably not important to have this as large as 2.0. Using 1.0 seems to leave unnecessary gaps. Maybe 1.5 is an ok compromise.
+	    // On the other hand, the "non-mostRecentModel" is only to be shown a brief period of time, so it may actually
+	    // be better to have a larger value to avoid noticeable gaps, rather than having a perfect texturing. Trying 2.5.
 
             if ( actualSplatOverlap > 10.0 ) {
                 // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside
@@ -236,9 +238,12 @@ void main(void)
                 gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
                 return;
             }
-            // We restrict the size of these splats to avoid "silhouette overshooting". We need at 2.0 to get nice
+            // We restrict the size of these splats to avoid "silhouette overshooting". We need at least 2.0 to get nice
             // silhouettes when MV*MV_depth_inv == id, which is only relevant for the "most recent proxy", so we treat this specially below.
-            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 1.5);
+	    // 140617: Changing this from 1.5 (used together with 1.5 above) to 2.5 (with 2.5 above.) Hopefully, this would give better
+	    //         coverage during interaction, while still keeping the "silhouette overshooting artifacts" small enough to be
+	    //         overwritten by the "most recent model".
+	    actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0);
         } else {
             // Special values for the "most recent splat set".
 

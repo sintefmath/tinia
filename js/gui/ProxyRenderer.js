@@ -31,6 +31,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         // This is not yet implemented.
         this._useBlending = false;
 
+        this._backgroundCol = vec3.createFrom(1.0, 1.0, 1.0);
+
         // The most recent proxy model will always be shown, and with a small depth offset to force it in front
         this._alwaysShowMostRecent = true;
 
@@ -51,15 +53,15 @@ dojo.declare("gui.ProxyRenderer", null, {
                                                                     1.1);                               // "Zoom threshold"
 
         // --- For debugging, start
-        this._frameOutputInterval  = 100;
-        this._frameMeasureInterval = 10;
-        this._pausePerFrameInMilliseconds = 0; // 100; // (Useful for GPU fans that we don't want to spin up too much... :-) )
-        this._debugSplatCol          = 0;
-        this._decayMode              = 0;
-        this._roundSplats            = 0;
-        this._screenSpaceSized       = 1;
-        this._ignoreIntraSplatTexCoo = 0;
-        this._splatOutline           = 0;
+        this._frameOutputInterval         = 100;
+        this._frameMeasureInterval        = 10;
+        this._pausePerFrameInMilliseconds = 0; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
+        this._debugSplatCol               = 0;
+        this._decayMode                   = 0;
+        this._roundSplats                 = 0;
+        this._screenSpaceSized            = 1;
+        this._ignoreIntraSplatTexCoo      = 0;
+        this._splatOutline                = 0;
         // --- For debugging, end
 
         // ---------------- End of configuration section -----------------
@@ -102,57 +104,60 @@ dojo.declare("gui.ProxyRenderer", null, {
         // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
         // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
         // these.
-        this.exposedModel.addLocalListener("reloadShader", dojo.hitch(this, function(event) {
-            if(this.exposedModel.getElementValue("reloadShader")) {
-                this._loadShaders();
-            } else {
-                this.exposedModel.updateElement("reloadShader", false);
-            }
-        }));
-        this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
-            this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent");
-        }) );
-        this.exposedModel.addLocalListener( "overlap", dojo.hitch(this, function(event) {
-            this._splatOverlap = this.exposedModel.getElementValue("overlap") / 100.0;
-        }) );
-        this.exposedModel.addLocalListener( "splats", dojo.hitch(this, function(event) {
-            var splats = this.exposedModel.getElementValue("splats");
-            if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
-                this._splats_x = splats;
-                this._splats_y = splats;
-                // We must re-initialize the vertex buffer!
-                this._splatVertexBuffer = this.gl.createBuffer();
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
-                this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
-                for (var i=0; i<this._splats_y; i++) {
-                    for (var j=0; j<this._splats_x; j++) {
-                        var u = (j+0.5)/this._splats_x;
-                        var v = (i+0.5)/this._splats_y;
-                        this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
-                        this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
-                    }
+        if (this._debugging) {
+            this.exposedModel.addLocalListener("reloadShader", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("reloadShader")) {
+                    this._loadShaders();
+                } else {
+                    this.exposedModel.updateElement("reloadShader", false);
                 }
-                this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
-            }
-        }) );
-        this.exposedModel.addLocalListener( "debugSplatCol", dojo.hitch(this, function(event) {
-            this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol");
-        }) );
-        this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
-            this._decayMode = this.exposedModel.getElementValue("decayMode");
-        }) );
-        this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
-            this._roundSplats = this.exposedModel.getElementValue("roundSplats");
-        }) );
-        this.exposedModel.addLocalListener( "screenSpaceSized", dojo.hitch(this, function(event) {
-            this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized");
-        }) );
-        this.exposedModel.addLocalListener( "ignoreIntraSplatTexCoo", dojo.hitch(this, function(event) {
-            this._ignoreIntraSplatTexCoo = this.exposedModel.getElementValue("ignoreIntraSplatTexCoo");
-        }) );
-        this.exposedModel.addLocalListener( "splatOutline", dojo.hitch(this, function(event) {
-            this._splatOutline = this.exposedModel.getElementValue("splatOutline");
-        }) );
+            }));
+            this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent");
+            }) );
+            this.exposedModel.addLocalListener( "overlap", dojo.hitch(this, function(event) {
+                this._splatOverlap = this.exposedModel.getElementValue("overlap") / 100.0;
+            }) );
+            this.exposedModel.addLocalListener( "splats", dojo.hitch(this, function(event) {
+                var splats = this.exposedModel.getElementValue("splats");
+                if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
+                    this._splats_x = splats;
+                    this._splats_y = splats;
+                    // We must re-initialize the vertex buffer!
+                    this._splatVertexBuffer = this.gl.createBuffer();
+                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+                    this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
+                    for (var i=0; i<this._splats_y; i++) {
+                        for (var j=0; j<this._splats_x; j++) {
+                            var u = (j+0.5)/this._splats_x;
+                            var v = (i+0.5)/this._splats_y;
+                            this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                            this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
+                        }
+                    }
+                    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
+                }
+            }) );
+            this.exposedModel.addLocalListener( "debugSplatCol", dojo.hitch(this, function(event) {
+                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol");
+            }) );
+            this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
+                this._decayMode = this.exposedModel.getElementValue("decayMode");
+            }) );
+            this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
+                this._roundSplats = this.exposedModel.getElementValue("roundSplats");
+            }) );
+            this.exposedModel.addLocalListener( "screenSpaceSized", dojo.hitch(this, function(event) {
+                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized");
+            }) );
+            this.exposedModel.addLocalListener( "ignoreIntraSplatTexCoo", dojo.hitch(this, function(event) {
+                this._ignoreIntraSplatTexCoo = this.exposedModel.getElementValue("ignoreIntraSplatTexCoo");
+            }) );
+            this.exposedModel.addLocalListener( "splatOutline", dojo.hitch(this, function(event) {
+                this._splatOutline = this.exposedModel.getElementValue("splatOutline");
+            }) );
+            // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
+        }
 
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
@@ -247,18 +252,22 @@ dojo.declare("gui.ProxyRenderer", null, {
     },
 
 
+    // Some useful wrappers
     _setUniform1i: function(prog, name, value) {
         if (this.gl.getUniformLocation(prog, name)) {
             this.gl.uniform1i( this.gl.getUniformLocation(prog, name), value );
         }
     },
-
     _setUniform1f: function(prog, name, value) {
          if (this.gl.getUniformLocation(prog, name)) {
              this.gl.uniform1f( this.gl.getUniformLocation(prog, name), value );
          }
      },
-
+    _setUniform3fv: function(prog, name, value) {
+         if (this.gl.getUniformLocation(prog, name)) {
+             this.gl.uniform3fv( this.gl.getUniformLocation(prog, name), value );
+         }
+     },
     _setUniformMatrix4fv: function(prog, name, value) {
         if (this.gl.getUniformLocation(prog, name)) {
             this.gl.uniformMatrix4fv( this.gl.getUniformLocation(prog, name), false, value );
@@ -295,11 +304,19 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (this._splatProgram) {
 
             if ( this._useBlending) {
-                this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
+                if (this._debugging) {
+                    this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
+                } else {
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+                }
                 this.gl.enable(this.gl.BLEND);
                 this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
             } else {
-                this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
+                if (this._debugging) {
+                    this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
+                } else {
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.8);
+                }
             }
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
             this.gl.enable(this.gl.DEPTH_TEST);
@@ -317,9 +334,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "useBlending", this._useBlending ? 1 : 0);
             this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
             this._setUniformMatrix4fv(this._splatProgram, "PM", matrices.m_projection);
-            // @@@ for debugging
-            if ( (this.exposedModel.hasKey("resetAllModels")) && (this.exposedModel.getElementValue("resetAllModels")) ) {
-                console.log("reset trykket");
+            if ( (this._debugging) && (this.exposedModel.hasKey("resetAllModels")) && (this.exposedModel.getElementValue("resetAllModels")) ) {
                 this.exposedModel.updateElement("resetAllModels", false);
                 for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
                     this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
@@ -332,10 +347,12 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
             this._setUniform1i(this._splatProgram, "vp_width", this.gl.canvas.width);
             this._setUniform1i(this._splatProgram, "vp_height", this.gl.canvas.height);
+            this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
+
+
             var t0 = performance.now();
-            // Should combine these by putting the "most recent model" into the ring buffer...
             for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", i);
@@ -348,6 +365,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.proxyModelRing[i].projection_inverse);
                     this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.proxyModelRing[i].to_world);
                     if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
+                        // Could this be simplified?
                         var A = mat4.create();
                         mat4.multiply( matrices.m_projection, matrices.m_from_world, A );
                         var B = mat4.create();
@@ -370,6 +388,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this._setUniformMatrix4fv(this._splatProgram, "depthPMinv", this._proxyModelCoverage.mostRecentModel.projection_inverse);
                     this._setUniformMatrix4fv(this._splatProgram, "depthMVinv", this._proxyModelCoverage.mostRecentModel.to_world);
                     if (this.gl.getUniformLocation(this._splatProgram, "projUnproj")) {
+                        // Could this be simplified?
                         var A = mat4.create();
                         mat4.multiply( matrices.m_projection, matrices.m_from_world, A );
                         var B = mat4.create();
