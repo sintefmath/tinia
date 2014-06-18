@@ -548,11 +548,13 @@ done:
             that->m_server = NULL;
         }
 
-        rc = ipc_msg_server_delete( server );
-        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-
         {
             ScopeTrace scope_trace( that, std::string(__func__)+".scope_3" );
+            rc = ipc_msg_server_delete( server );
+        }
+        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+        {
+            ScopeTrace scope_trace( that, std::string(__func__)+".scope_4" );
             Locker locker( that->lock );
             NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
         }
@@ -725,7 +727,7 @@ ScopeTrace::ScopeTrace( SendRecvFixtureBase* that, const std::string& what )
     }
 
     Locker locker( m_that->lock );
-    fprintf( stderr, "[%lu | %d] >>> %s.\n", m_id, m_index, m_what.c_str() );
+    fprintf( stderr, "    [%lu | %d] >>> %s.\n", m_id, m_index, m_what.c_str() );
 #endif
 }
 
@@ -733,7 +735,7 @@ ScopeTrace::~ScopeTrace()
 {
 #ifdef TINIA_IPC_LOG_TRACE
     Locker locker( m_that->lock );
-    fprintf( stderr, "[%lu | %d] <<< %s.\n", m_id, m_index, m_what.c_str() );
+    fprintf( stderr, "    [%lu | %d] <<< %s.\n", m_id, m_index, m_what.c_str() );
 #endif
 }
 
