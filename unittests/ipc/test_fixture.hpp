@@ -306,40 +306,58 @@ struct SendRecvFixtureBase
         }
         
         // ---- and wait around until all threads actually terminates ----------
-        for( int it=0; it<3; it++) {
+        std::vector<pthread_t> threads;
+        {
             Locker threads_lock( m_threads_lock );
+            threads = m_threads;
+        }
+
+        for( int it=0; it<3; it++) {
+            
             std::vector<pthread_t> unterminated;
-            for( size_t i=0; i<m_threads.size(); i++ ) {
+            for( size_t i=0; i<threads.size(); i++ ) {
+                long nanoseconds = 1000000L<<(10*it);    //12
+                
+                struct timespec timeout;
+                BOOST_REQUIRE( clock_gettime( CLOCK_REALTIME, &timeout ) == 0 );
+                timeout.tv_nsec += nanoseconds;
+                if( timeout.tv_nsec > 1000000000L ) {
+                    timeout.tv_sec  += 1;
+                    timeout.tv_nsec -= 1000000000L;
+                }
                 void* tmp;
-                if( pthread_tryjoin_np( m_threads[i], &tmp ) != 0 ) {
-                    unterminated.push_back( m_threads[i] );
+                int rc = pthread_timedjoin_np( threads[i], &tmp, &timeout );
+                if( rc != 0 ) {
+                    int index = -1;
+                    for( size_t k=0; k<m_threads.size(); k++ ) {
+                        if( m_threads[k] == threads[i] ) {
+                            index = k;
+                            break;
+                        }
+                    }
+                    
+                    fprintf( stderr, "FIXTURE: Failed to join thread [%lu | %d] while waiting %lu ns.\n",
+                             threads[i], index, nanoseconds );
+
+                    unterminated.push_back( threads[i] );
                 }
             }
-            m_threads.swap( unterminated );
-            if( m_threads.empty() ) {
+            threads.swap( unterminated );
+            if( threads.empty() ) {
                 if( it != 0 ) {
                     fprintf( stderr, "FIXTURE: All threads joined.\n" );
                 }
                 goto done;
             }
-
-            int msec = 1<<(10*it);
-            fprintf( stderr, "FIXTURE: %d threads still alive, waiting %d microseconds.\n",
-                     (int)m_threads.size(), msec  );
-            usleep( msec );
-            if( it != 0 ) {
+            else {
                 fprintf( stderr, "FIXTURE: Cancelling threads and retrying to join them.\n" );
-                for( size_t i=0; i<m_threads.size(); i++ ) {
-                    pthread_cancel( m_threads[i] );
+                for( size_t i=0; i<threads.size(); i++ ) {
+                    pthread_cancel( threads[i] );
                 }
             }
         }
         FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
 done:
-        {
-            Locker threads_lock( m_threads_lock );
-            BOOST_REQUIRE( m_threads.empty() );
-        }
 
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_finished ) == 0 );
