@@ -276,6 +276,7 @@ struct SendRecvFixtureBase
         locker.unlock();
 
         if( inner_rc != 0 ) {
+            fprintf( stderr, "FIXTURE: Entering error handling path...\n" );
             // something went wrong, just cancel all threads and hope for the best
             ipc_msg_server_mainloop_break( m_server );
             usleep( 100000 );
@@ -366,6 +367,9 @@ done:
 
         
         FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &lock ) == 0 );
+        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &client_lock ) == 0 );
+        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &server_lock ) == 0 );
+        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &m_threads_lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
         if( !m_error_from_thread.empty() ) {
             fprintf( stderr, "FIXTURE: Error from thread: %s\n", m_error_from_thread.c_str() );

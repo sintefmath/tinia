@@ -47,6 +47,8 @@ struct NotificationFixture
     int
     inner()
     {
+        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
+
         ScopeTrace scope_trace( this, __func__ );
         // assuming that lock is held.
 
@@ -55,19 +57,25 @@ struct NotificationFixture
         timeout.tv_sec += 10;
 
         int ret=0;
-        while( m_longpolling_clients != m_clients ) {
-            int rc = pthread_cond_timedwait( &m_longpolling_clients_cond,
-                                             &lock,
-                                             &timeout );
-            if( rc == ETIMEDOUT ) {
-                ret = -1;
-                BOOST_CHECK( false && "timed out while waiting for clients to start longpolling" );
+        {
+            Locker locker( client_lock );
+            while( m_longpolling_clients != m_clients ) {
+                int rc = pthread_cond_timedwait( &m_longpolling_clients_cond,
+                                                 &client_lock,
+                                                 &timeout );
+                if( rc == ETIMEDOUT ) {
+                    ret = -1;
+                    BOOST_CHECK( false && "timed out while waiting for clients to start longpolling" );
+                }
             }
         }
-        m_flag = 1;
-        
-        BOOST_REQUIRE( pthread_mutex_unlock( &lock ) == 0 );
 
+        // All clients should be longpolling, now set the flag and notify server
+        // that something has changed.
+        {
+            Locker locker( server_lock );
+            m_flag = 1;
+        }
         int rc = ipc_msg_server_notify( m_server );
         
         BOOST_REQUIRE( pthread_mutex_lock( &lock ) == 0 );
@@ -124,6 +132,7 @@ struct NotificationFixture
         if( *((int*)buffer) == 0 ) {
             Locker locker( this->client_lock );
             m_longpolling_clients++;
+
             if( m_longpolling_clients == m_clients ) {
                 NOT_MAIN_THREAD_REQUIRE( this, pthread_cond_signal( &m_longpolling_clients_cond ) == 0  );
             }
