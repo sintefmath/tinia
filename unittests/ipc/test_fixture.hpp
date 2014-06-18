@@ -300,8 +300,8 @@ struct SendRecvFixtureBase
             {
                 ScopeTrace scope_trace( this, std::string(__func__)+".barrier_server_finished" );
     
-                int rc;
-                BOOST_REQUIRE( (rc = pthread_barrier_wait( &m_barrier_server_finished )) == 0 );
+                int rc = pthread_barrier_wait( &m_barrier_server_finished );
+                BOOST_REQUIRE( (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
             }
         }
         
