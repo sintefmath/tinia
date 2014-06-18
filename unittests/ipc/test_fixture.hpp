@@ -123,28 +123,27 @@ struct SendRecvFixtureBase
           m_failure_is_an_option( 0 ),
           m_clients( 1 ),
           m_clients_should_longpoll( 0 ),
-          m_clients_initialized( 0 ),
-          m_clients_exited( 0 ),
           m_jitter(1000)
     {}
     
     std::vector<pthread_t>  m_threads;
     pthread_mutex_t         m_threads_lock;
 
+    pthread_barrier_t       m_barrier_server_running;
+    pthread_barrier_t       m_barrier_server_finished;
+    pthread_barrier_t       m_barrier_clients_running;
+    pthread_barrier_t       m_barrier_clients_finished;
+    
     pthread_mutex_t         lock;
     pthread_mutex_t         client_lock;    // for use when transaction lock is held
     pthread_mutex_t         server_lock;    // for use when transaction lock is held
     
     tinia_ipc_msg_server_t*               m_server;
     int                     m_server_runs_flag;
-    pthread_cond_t          m_server_runs_cond;
     int                     m_failure_is_an_option;
     int                     m_clients;
     int                     m_clients_should_longpoll;
-    int                     m_clients_initialized;
-    pthread_cond_t          m_clients_initialized_cond;
-    int                     m_clients_exited;
-    pthread_cond_t          m_clients_exited_cond;
+
     std::string             m_error_from_thread;
     int                     m_jitter;
 
@@ -197,8 +196,6 @@ struct SendRecvFixtureBase
 #ifdef TINIA_IPC_LOG_TRACE
         fprintf( stderr, "--- [FIXTURE] test begin ------------------------------------------------------\n" );
 #endif
-        m_clients_initialized = 0;
-        m_clients_exited = 0;
 
         int rc;
         // Note boost::test is not thread safe. Thus, we use a lock around
@@ -227,16 +224,18 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_mutex_init( &server_lock, &mutex_attr2 ) == 0 );
         BOOST_REQUIRE( pthread_mutex_init( &m_threads_lock, &mutex_attr2 ) == 0 );
 
-        BOOST_REQUIRE( pthread_cond_init( &m_server_runs_cond, NULL ) == 0 );
-        BOOST_REQUIRE( pthread_cond_init( &m_clients_initialized_cond, NULL ) == 0 );
-        BOOST_REQUIRE( pthread_cond_init( &m_clients_exited_cond, NULL ) == 0 );
         
+        BOOST_REQUIRE( pthread_barrier_init( &m_barrier_server_running, NULL, 2 ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_init( &m_barrier_server_finished, NULL, 2 ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_running, NULL, m_clients + 1 ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_finished, NULL, m_clients + 1 ) == 0 );
+         
         BOOST_REQUIRE( pthread_mutexattr_destroy( &mutex_attr) == 0 );
 
-        // wait for server to be up and running.
+        // --- run server and wait for it be up and running --------------------
         Locker locker( this->lock );
         m_server = NULL;
-
+        m_server_runs_flag = 0;
         {   Locker threads_lock( m_threads_lock );
             m_threads.resize( m_threads.size()+1 );
             BOOST_REQUIRE( pthread_create( &m_threads.back(),
@@ -244,26 +243,17 @@ struct SendRecvFixtureBase
                                            server_thread_func,
                                            this ) == 0 );
         }
-        m_server_runs_flag = 0;
+        locker.unlock();
         {
-            ScopeTrace scope_trace( this, std::string(__func__)+".scope_0" );
-            do {
-                int rc = pthread_cond_timedwait( &m_server_runs_cond,
-                                                 &lock,
-                                                 &timeout );
-                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-                if( rc == ETIMEDOUT ) {
-                    BOOST_CHECK( false && "timed out while waiting for server to be created."  );
-                    goto hung;
-                }
-            }
-            while( m_server_runs_flag == 0 );
+            ScopeTrace scope_trace( this, std::string(__func__) + ".barrier_server_running" );
+            BOOST_REQUIRE( pthread_barrier_wait( &m_barrier_server_running ) == 0 );
         }
+        locker.lock();
 
         BOOST_REQUIRE( m_server != NULL );
         BOOST_REQUIRE( m_server->shmem_header_ptr != NULL );
             
-        // create clients
+        // --- create clients and wait for all of them to be up and running ----
         BOOST_REQUIRE( (m_clients >= 0) && (m_clients < 10) ); // sanity check
         for(int i=0; i<m_clients; i++ ) {
             Locker threads_lock( m_threads_lock );
@@ -273,82 +263,49 @@ struct SendRecvFixtureBase
                                            client_thread_func,
                                            this ) == 0 );
         }
-
-        
-        // wait for clients to run
-        {
-            ScopeTrace scope_trace( this, std::string(__func__)+".scope_1" );
-            while( m_clients_initialized != m_clients ) {
-                int rc = pthread_cond_timedwait( &m_clients_initialized_cond,
-                                                 &lock,
-                                                 &timeout );
-                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-                if( rc == ETIMEDOUT ) {
-                    BOOST_CHECK( false && "timed out while waiting for clients to initialize."  );
-                    goto hung;
-                }
-            }
-        }
-
-        if( inner() != 0 ) {
-            goto hung;
-        }
-
-        // wait for clients to finish
-        {
-            ScopeTrace scope_trace( this, std::string(__func__)+".scope_2" );
-            while( m_clients_exited != m_clients ) {
-                int rc = pthread_cond_timedwait( &m_clients_exited_cond,
-                                                 &lock,
-                                                 &timeout );
-                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-                if( rc == ETIMEDOUT ) {
-                    BOOST_CHECK( false && "timed out while waiting for clients to finish."  );
-                    goto hung;
-                }
-            }
-        }
-
-        // kill server
-        BOOST_REQUIRE( m_server != NULL );
-
         locker.unlock();
-        rc = ipc_msg_server_mainloop_break( m_server );
-        BOOST_REQUIRE( rc == 0 );
+
+        {
+            ScopeTrace scope_trace( this, std::string(__func__) + ".barrier_clients_running" );
+            rc = pthread_barrier_wait( &m_barrier_clients_running );
+            BOOST_REQUIRE( (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD ) );
+        }
 
         locker.lock();
-        
-        // wait for server thread to finsh
-        {
-            ScopeTrace scope_trace( this, std::string(__func__)+".scope_3" );
-            while( m_server != NULL ) {
-                int rc = pthread_cond_timedwait( &m_server_runs_cond,
-                                                 &lock,
-                                                 &timeout );
-                BOOST_REQUIRE( (rc == 0) || (rc==ETIMEDOUT) );
-                if( rc == ETIMEDOUT ) {
-                    BOOST_CHECK( false && "timed out while waiting for server to finish."  );
-                    goto hung;
+        int inner_rc = inner();
+        locker.unlock();
+
+        if( inner_rc != 0 ) {
+            // something went wrong, just cancel all threads and hope for the best
+            ipc_msg_server_mainloop_break( m_server );
+            usleep( 100000 );
+    
+            // invariants:
+            // - m_shared_lock locked.
+            {   Locker threads_lock( m_threads_lock );
+                for( size_t i=0; i<m_threads.size(); i++ ) {
+                    pthread_cancel( m_threads[i] );
                 }
             }
         }
-        locker.unlock();
-        goto cleanup;
-hung:
-        ipc_msg_server_mainloop_break( m_server );
-        usleep( 100000 );
+        else {
+            // wait for clients to finish
+            ScopeTrace scope_trace( this, std::string(__func__) + ".barrier_clients_finished" );
+            rc = pthread_barrier_wait( &m_barrier_clients_finished );
+            BOOST_REQUIRE( (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD ) );
 
-        // invariants:
-        // - m_shared_lock locked.
-        {   Locker threads_lock( m_threads_lock );
-            for( size_t i=0; i<m_threads.size(); i++ ) {
-                pthread_cancel( m_threads[i] );
+            // --- ask server to quit and wait until server thread finishes ----
+            rc = ipc_msg_server_mainloop_break( m_server );
+            BOOST_REQUIRE( rc == 0 );
+            {
+                ScopeTrace scope_trace( this, std::string(__func__)+".barrier_server_finished" );
+    
+                int rc;
+                BOOST_REQUIRE( (rc = pthread_barrier_wait( &m_barrier_server_finished )) == 0 );
             }
         }
-        locker.unlock();
-
-cleanup:
-
+        
+        // ---- and wait around until all threads actually terminates ----------
         for( int it=0; it<3; it++) {
             Locker threads_lock( m_threads_lock );
             std::vector<pthread_t> unterminated;
@@ -383,10 +340,13 @@ done:
             Locker threads_lock( m_threads_lock );
             BOOST_REQUIRE( m_threads.empty() );
         }
-        //std::cerr << "done.\n";
-        BOOST_REQUIRE( pthread_cond_destroy( &m_server_runs_cond ) == 0 );
-        BOOST_REQUIRE( pthread_cond_destroy( &m_clients_initialized_cond ) == 0 );
-        BOOST_REQUIRE( pthread_cond_destroy( &m_clients_exited_cond) == 0 );
+
+        BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_running ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_finished ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_running ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_finished ) == 0 );
+
+        
         FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
         if( !m_error_from_thread.empty() ) {
@@ -492,6 +452,7 @@ done:
     server_periodic( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
+        ScopeTrace scope_trace( that, __func__ );
         unsigned int seed = 0;
         if( that->m_jitter ) {
             seed = get_random_seed();
@@ -500,10 +461,19 @@ done:
         }
 
 
-        Locker locker( that->lock );
-        if( that->m_server_runs_flag == 0 ) {
-            that->m_server_runs_flag = 1;
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+        // First invocation of server, notify that server is running.
+        int flag = 0;
+        {
+            Locker locker( that->server_lock );
+            flag = that->m_server_runs_flag;
+            if( flag == 0 ) {
+                that->m_server_runs_flag = 1;
+            }
+        }
+        if( flag == 0 ) {
+            ScopeTrace scope_trace( that, std::string(__func__) + ".barrier_server_running" );
+            int rc = pthread_barrier_wait( &that->m_barrier_server_running );
+            NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
         }
         return 0;
     }
@@ -551,12 +521,12 @@ done:
         {
             ScopeTrace scope_trace( that, std::string(__func__)+".scope_3" );
             rc = ipc_msg_server_delete( server );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
         }
-        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
         {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_4" );
-            Locker locker( that->lock );
-            NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_server_runs_cond ) == 0 );
+            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_server_finished" );
+            int rc=pthread_barrier_wait( &that->m_barrier_server_finished );
+            NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
         }
         return NULL;
     }
@@ -639,15 +609,11 @@ done:
             int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
             usleep( time );
         }
-
+        
         {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_0" );
-            Locker locker( that->lock );
-            that->m_clients_initialized++;
-            if( that->m_clients_initialized == that->m_clients ) {
-                // last client to finish init
-                NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_initialized_cond ) == 0 );
-            }
+            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_running" );
+            int rc = pthread_barrier_wait( &that->m_barrier_clients_running );
+            NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
         }
 
         tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
@@ -688,16 +654,12 @@ done:
         NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
         free( client );
         
-        // notify that we have finished
         {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
-            Locker locker( that->lock );
-            that->m_clients_exited++;
-            if( that->m_clients_exited == that->m_clients ) {
-                // last client to finish init
-                NOT_MAIN_THREAD_REQUIRE( that, pthread_cond_signal( &that->m_clients_exited_cond ) == 0 );
-            }
+            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_finished" );
+            int rc = pthread_barrier_wait( &that->m_barrier_clients_finished );
+            NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
         }
+
 
         return NULL;
     }
