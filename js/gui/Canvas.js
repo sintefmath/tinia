@@ -361,7 +361,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
         this._img.src = "data:image/png;base64," + response_rgb;
-        if (this._proxyRenderer) {
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) && (this._proxyRenderer) ) {
             this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
         }
         this._showCorrect();
@@ -465,15 +465,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         this._gl = WebGLUtils.setupWebGL(this._canvas);
         if (this._gl) {
-            if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
-                this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
-            } else {
-                this._render_list_store = new renderlist.RenderListStore(this._gl);
-                this._render_list_parser = new renderlist.RenderListParser();
-                this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
-                this._getRenderList();
-            }
-			this._render();
+            this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
+            this._render_list_store = new renderlist.RenderListStore(this._gl);
+            this._render_list_parser = new renderlist.RenderListParser();
+            this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
+            this._getRenderList();
+            this._render();
         } else {
             console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quit the browser, and restart it.");
         }

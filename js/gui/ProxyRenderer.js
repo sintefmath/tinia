@@ -70,16 +70,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl = glContext;
         this.exposedModel = exposedModel;
 
-        if ( (this.exposedModel.hasKey("autoProxyDebugging")) && (this.exposedModel.getElementValue("autoProxyDebugging")) ) {
-            this._debugging = true;
-            this._frameOutputCounter   = 0;
-            this._frameMeasureCounter  = 0;
-            this._frameTime = 0.0;
-            this._lock = false; // for debugging
-            this._lock2 = false; // for debugging
-        } else {
-            this._debugging = false;
-            // @@@ fjerne de under
+        this._debugging = (this.exposedModel.hasKey("autoProxyDebugging")) && (this.exposedModel.getElementValue("autoProxyDebugging"));
+        if (this._debugging) {
             this._frameOutputCounter   = 0;
             this._frameMeasureCounter  = 0;
             this._frameTime = 0.0;
@@ -159,6 +151,17 @@ dojo.declare("gui.ProxyRenderer", null, {
             }) );
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
         }
+
+        // Listeners that are not for debugging only. Currently we use this only to clear the buffer in the event
+        // that autoProxy has been enabled, but was then disabled. It could be that this is not needed if the clear-colours
+        // used are set otherwise, for instance to the same value as the caller (Canvas-object) is using?!
+        this.exposedModel.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
+            var tmp = this.exposedModel.getElementValue("useAutoProxy");
+            if (!tmp) {
+                console.log("autoProxy was turned off. Clearing.");
+                this._clearCanvas();
+            }
+        }) );
 
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
@@ -278,7 +281,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     // Adding a wrapper with an artificial pause in order to make sure the GPU fan doesn't spin up...
     render: function(matrices) {
-        if ( this._pausePerFrameInMilliseconds > 0 ) {
+        if ( (this._debugging) && (this._pausePerFrameInMilliseconds>0) ) {
             if (this._waitInProgress == true)
                 return;
             this._matrices = matrices;
@@ -291,7 +294,30 @@ dojo.declare("gui.ProxyRenderer", null, {
     },
 
 
+    _clearCanvas: function() {
+        if ( this._useBlending) {
+            if (this._debugging) {
+                this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
+            } else {
+                this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+            }
+            this.gl.enable(this.gl.BLEND);
+            this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
+        } else {
+            if (this._debugging) {
+                this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
+            } else {
+                this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+            }
+        }
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    },
+
+
     renderMain: function() {
+        if ( !this.exposedModel.getElementValue("useAutoProxy") )
+            return; // Just to be sure we don't mess up anything after this has been turned off @@@
+
         var matrices = this._matrices;
 
         if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
@@ -304,22 +330,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         if (this._splatProgram) {
 
-            if ( this._useBlending) {
-                if (this._debugging) {
-                    this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
-                } else {
-                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
-                }
-                this.gl.enable(this.gl.BLEND);
-                this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
-            } else {
-                if (this._debugging) {
-                    this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
-                } else {
-                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.8);
-                }
-            }
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+            this._clearCanvas();
             this.gl.enable(this.gl.DEPTH_TEST);
 
             this.gl.useProgram(this._splatProgram);

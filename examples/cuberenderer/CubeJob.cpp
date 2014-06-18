@@ -49,10 +49,26 @@ bool CubeJob::init()
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
     // To use the autoProxy mode, enable this line
-    // m_model->addElement<bool>( "useAutoProxy", true );
+    // m_model->addElement<bool>( "useAutoProxy", false );
 
+#if 0
+    // To get a checkbox for turning on/off the autoProxy feature, choose this branch.
+    m_model->addAnnotation("useAutoProxy", "Automatically generated proxy geometry");
+
+    tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
+    rootLayout->addChild( new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox") );
+
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(1, 1);
+    mainGrid->setChild(0, 0, new tinia::model::gui::CheckBox("useAutoProxy"));
+    rootLayout->addChild(mainGrid);
+
+    m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
+#else
+    // This dead simple version only contains the canvas itself.
     m_model->setGUILayout(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"),
                           tinia::model::gui::DESKTOP);
+#endif
+
     return true;
 }
 
