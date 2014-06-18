@@ -251,6 +251,14 @@ do { \
     CHECK( pthread_mutex_init( &server->shmem_header_ptr->operation_lock, &mutexattr ) );
     CHECK( pthread_mutexattr_destroy( &mutexattr ) );
 
+    // --- initialize deferred_notification lock -------------------------------
+    CHECK( pthread_mutexattr_init( &mutexattr ) );
+#ifdef DEBUG
+    CHECK( pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_ERRORCHECK ) );
+#endif
+    CHECK( pthread_mutex_init( &server->deferred_notification_lock, &mutexattr ) );
+    CHECK( pthread_mutexattr_destroy( &mutexattr ) );
+
     // --- initialize notification condition variable --------------------------
     CHECK( pthread_condattr_init( &condattr ) );
     CHECK( pthread_condattr_setpshared( &condattr, PTHREAD_PROCESS_SHARED ) );
@@ -268,6 +276,8 @@ do { \
     CHECK( pthread_condattr_setpshared( &condattr, PTHREAD_PROCESS_SHARED ) );
     CHECK( pthread_cond_init( &server->shmem_header_ptr->client_event, &condattr ) );
     CHECK( pthread_condattr_destroy( &condattr ) );
+
+
 #undef CHECK
     
     // --- if some of the pthread-init-stuff has failed, give up ---------------
@@ -622,7 +632,60 @@ ipc_msg_server_send( char* errnobuf,
     return ret;
 }
 
+int
+ipc_msg_poll_deferred_notification_event( tinia_ipc_msg_server_t* server )
+{
+    char errnobuf[256];
+    int ret = 0;
 
+    int rc = pthread_mutex_lock( &server->deferred_notification_lock );
+    if( rc != 0 ) {
+        server->logger_f( server->logger_d, 0, __func__,
+                          "pthread_mutex_lock( &server->deferred_notification_lock ) failed: %s",
+                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+        ret = -2;
+    }
+    else {
+        ret = server->deferred_notification_event;
+
+        rc = pthread_mutex_unlock( &server->deferred_notification_lock );
+        if( rc != 0 ) {
+            server->logger_f( server->logger_d, 0, __func__,
+                              "pthread_mutex_unlock( &server->deferred_notification_lock ) failed: %s",
+                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+            ret = -2;
+        }
+    }
+    return ret;
+}
+
+
+int
+ipc_msg_set_deferred_notification_event( tinia_ipc_msg_server_t* server )
+{
+    char errnobuf[256];
+    int ret = 0;
+
+    int rc = pthread_mutex_lock( &server->deferred_notification_lock );
+    if( rc != 0 ) {
+        server->logger_f( server->logger_d, 0, __func__,
+                          "pthread_mutex_lock( &server->deferred_notification_lock ) failed: %s",
+                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+        ret = -2;
+    }
+    else {
+        server->deferred_notification_event = 1;
+
+        rc = pthread_mutex_unlock( &server->deferred_notification_lock );
+        if( rc != 0 ) {
+            server->logger_f( server->logger_d, 0, __func__,
+                              "pthread_mutex_unlock( &server->deferred_notification_lock ) failed: %s",
+                              ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+            ret = -2;
+        }
+    }
+    return ret;
+}
 
 
 
@@ -658,7 +721,9 @@ ipc_msg_server_notify( tinia_ipc_msg_server_t* server )
 #endif
             // someone is interacting with the server, defer signaling until
             // main thread can handle it.
-            server->deferred_notification_event = 1;
+            if( ipc_msg_set_deferred_notification_event( server ) != 0 ) {
+                ret = -2;
+            }
         }
         else if (rc != 0 ) {
             server->logger_f( server->logger_d, 0, who,
@@ -875,7 +940,8 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
         
 
         // --- Handle deferred notification events -----------------------------
-        if( server->deferred_notification_event ) {
+        int deferred_notification_event = ipc_msg_poll_deferred_notification_event( server );
+        if( deferred_notification_event == 1 ) {
             rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
             if( rc == EBUSY ) {
 #ifdef TINIA_IPC_LOG_TRACE

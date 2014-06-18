@@ -150,6 +150,7 @@ struct tinia_ipc_msg_server_struct {
      * mainloop polls this value.
      */
     volatile int        deferred_notification_event;
+    pthread_mutex_t     deferred_notification_lock;
 };
 
 // === CLIENT AND SERVER COMMON API ============================================
@@ -170,7 +171,6 @@ void
 tinia_ipc_msg_dump_backtrace( tinia_ipc_msg_log_func_t log_f, void* log_d );
 
 // === CLIENT INTERNAL API =====================================================
-
 
 int
 ipc_msg_client_signal_server( char* errnobuf,
@@ -205,6 +205,18 @@ ipc_msg_client_recv( char* errnobuf,
  */
 void*
 ipc_msg_server_signal_thread( void* data );
+
+int
+ipc_msg_set_deferred_notification_event( tinia_ipc_msg_server_t* server );
+
+
+/*
+ * Returns 1 if event, 0 if no event, and -2 if error.
+ *
+ */
+int
+ipc_msg_poll_deferred_notification_event( tinia_ipc_msg_server_t* server );
+
 
 char*
 ipc_msg_strerror_wrap( int errnum,
