@@ -346,64 +346,26 @@ struct SendRecvFixtureBase
             threads = m_threads;
         }
 
-        for( int it=0; it<3; it++) {
-            
-            std::vector<pthread_t> unterminated;
-            for( size_t i=0; i<threads.size(); i++ ) {
-                long nanoseconds = 1000000L<<(10*it);    //12
-                
-                struct timespec timeout;
-                BOOST_REQUIRE( clock_gettime( CLOCK_REALTIME, &timeout ) == 0 );
-                timeout.tv_nsec += nanoseconds;
-                if( timeout.tv_nsec > 1000000000L ) {
-                    timeout.tv_sec  += 1;
-                    timeout.tv_nsec -= 1000000000L;
-                }
-                void* tmp;
-                int rc = pthread_timedjoin_np( threads[i], &tmp, &timeout );
-                if( rc != 0 ) {
-                    int index = -1;
-                    for( size_t k=0; k<m_threads.size(); k++ ) {
-                        if( m_threads[k] == threads[i] ) {
-                            index = k;
-                            break;
-                        }
-                    }
-                    
-                    fprintf( stderr, "FIXTURE: Failed to join thread [%lu | %d] while waiting %lu ns.\n",
-                             threads[i], index, nanoseconds );
-                    if( (rc == EBUSY) || (rc==ETIMEDOUT) ) {
-                        // not finished, try later
-                        unterminated.push_back( threads[i] );
-                    }
-                    else {
-                        fprintf( stderr, "FIXTURE: pthread join returned %s\n.", strerror(errno) );
-                    }
-                }
-            }
-            threads.swap( unterminated );
-            if( threads.empty() ) {
-                if( true || it != 0 ) {
-                    fprintf( stderr, "FIXTURE: All threads joined.\n" );
-                }
-                goto done;
-            }
-            else {
-                fprintf( stderr, "FIXTURE: Cancelling threads and retrying to join them.\n" );
-                for( size_t i=0; i<threads.size(); i++ ) {
-                    pthread_cancel( threads[i] );
-                }
+        for( size_t i=0; i<threads.size(); i++ ) {
+            struct timespec timeout;
+            BOOST_REQUIRE( clock_gettime( CLOCK_REALTIME, &timeout ) == 0 );
+            timeout.tv_sec += 60;
+
+            void* ret;
+            int rc = pthread_timedjoin_np( threads[i], &ret, &timeout );
+            if( rc != 0 ) {
+                fprintf( stderr, "pthread_join: %s", strerror(rc) );
+                BOOST_REQUIRE( 0 );
             }
         }
-        FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
-done:
+
         VALGRIND_HG_BARRIER_DESTROY_PRE( &m_implicit_join_threads_barrier );
 
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_finished ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_finished ) == 0 );
-
+        BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_finished_with_msgserver ) == 0 );
         
         BOOST_REQUIRE( pthread_mutex_destroy( &lock ) == 0 );
         BOOST_REQUIRE( pthread_mutex_destroy( &client_lock ) == 0 );
