@@ -41,6 +41,7 @@ OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
 OPTION( Tinia_AMAZON "Configurations needed to make Tinia work smoothly on Amazon" OFF)
 
 OPTION( Tinia_IPC_LOG_TRACE "Enable numerous logging messages to track actions of IPC threads" OFF )
+OPTION( Tinia_IPC_VALGRIND_ANNOTATIONS "Enable some annotation for valgrind and its tools" OFF )
 
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
@@ -129,6 +130,13 @@ FIND_PACKAGE( GLM REQUIRED )
 
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 IF(Tinia_SERVER)
+    IF( Tinia_IPC_VALGRIND_ANNOTATIONS )
+        FIND_PATH(
+            VALGRIND_INCLUDE_DIR valgrind.h
+            HINTS   "/usr/include/valgrind"
+        )
+        ADD_DEFINITIONS( -DTINIA_IPC_VALGRIND_ANNOTATIONS )
+    ENDIF( Tinia_IPC_VALGRIND_ANNOTATIONS )
 
   FIND_PATH( APACHE_INCLUDE_DIR httpd.h
     HINTS "/usr/include/apache2" "/usr/include/httpd/"
@@ -158,6 +166,7 @@ SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${GLEW_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${APACHE_INCLUDE_DIR}
+  ${VALGRIND_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}

@@ -24,7 +24,15 @@
 #include <boost/test/unit_test.hpp>
 #include <tinia/ipc/ipc_msg.h>
 #include "../../src/ipc/ipc_msg_internal.h"
-
+#ifdef TINIA_IPC_VALGRIND_ANNOTATIONS
+#include <helgrind.h>
+#else
+// No valigrind annotations; empty macros
+#define VALGRIND_HG_BARRIER_INIT_PRE(_bar, _count, _resizable)
+#define VALGRIND_HG_BARRIER_WAIT_PRE(_bar)
+#define VALGRIND_HG_BARRIER_RESIZE_PRE(_bar, _newcount)
+#define VALGRIND_HG_BARRIER_DESTROY_PRE(_bar)
+#endif
 
 #define NOT_MAIN_THREAD_REQUIRE( obj, a ) do { if(!(a)){                    \
     std::stringstream o;                                                    \
@@ -133,6 +141,13 @@ struct SendRecvFixtureBase
     pthread_barrier_t       m_barrier_server_finished;
     pthread_barrier_t       m_barrier_clients_running;
     pthread_barrier_t       m_barrier_clients_finished;
+
+    // In the end of the test, we (at least try) to join all threads that we
+    // create during the test (server and clients). When successful, this in
+    // effect implements a barrier. However, helgrind doesn't seem to pick up
+    // on this, and generates some false positives. To avoid this, we annotate
+    // this implicit barrier using this variable.
+    int                     m_implicit_join_threads_barrier;
     
     pthread_mutex_t         lock;
     pthread_mutex_t         client_lock;    // for use when transaction lock is held
@@ -229,7 +244,9 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_server_finished, NULL, 2 ) == 0 );
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_running, NULL, m_clients + 1 ) == 0 );
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_finished, NULL, m_clients + 1 ) == 0 );
-         
+
+        VALGRIND_HG_BARRIER_INIT_PRE( &m_implicit_join_threads_barrier, (m_clients+2), 0 );
+
         BOOST_REQUIRE( pthread_mutexattr_destroy( &mutex_attr) == 0 );
 
         // --- run server and wait for it be up and running --------------------
@@ -307,6 +324,8 @@ struct SendRecvFixtureBase
         }
         
         // ---- and wait around until all threads actually terminates ----------
+        VALGRIND_HG_BARRIER_WAIT_PRE( &m_implicit_join_threads_barrier );
+
         std::vector<pthread_t> threads;
         {
             Locker threads_lock( m_threads_lock );
@@ -345,7 +364,7 @@ struct SendRecvFixtureBase
             }
             threads.swap( unterminated );
             if( threads.empty() ) {
-                if( it != 0 ) {
+                if( true || it != 0 ) {
                     fprintf( stderr, "FIXTURE: All threads joined.\n" );
                 }
                 goto done;
@@ -360,16 +379,19 @@ struct SendRecvFixtureBase
         FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
 done:
 
+        VALGRIND_HG_BARRIER_DESTROY_PRE( &m_implicit_join_threads_barrier );
+
+
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_finished ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_clients_finished ) == 0 );
 
         
-        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &lock ) == 0 );
-        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &client_lock ) == 0 );
-        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &server_lock ) == 0 );
-        FAIL_MISERABLY_UNLESS( pthread_mutex_destroy( &m_threads_lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_destroy( &lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_destroy( &client_lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_destroy( &server_lock ) == 0 );
+        BOOST_REQUIRE( pthread_mutex_destroy( &m_threads_lock ) == 0 );
         //ipc_msg_server_wipe( "unittest" );
         if( !m_error_from_thread.empty() ) {
             fprintf( stderr, "FIXTURE: Error from thread: %s\n", m_error_from_thread.c_str() );
@@ -505,51 +527,54 @@ done:
     server_thread_func( void* arg )
     {
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        ScopeTrace scope_trace( that, __func__ );
+        {   // Extra scope to assert that VALGRIND_HG_BARRIER_WAIT_PRE runs last
+            ScopeTrace scope_trace( that, __func__ );
 
-        // setup server
-        tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
-                                                  logger,
-                                                  arg );
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_0" );
-            Locker locker( that->lock );
-            NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
-            NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
-            NOT_MAIN_THREAD_REQUIRE( that, server->shmem_header_ptr != NULL );
-            that->m_server = server;
-        }
-        // run server mainloop
-        //std::cerr << __LINE__ << ": A\n";
+            // setup server
+            tinia_ipc_msg_server_t* server = ipc_msg_server_create( "unittest",
+                                                                    logger,
+                                                                    arg );
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".scope_0" );
+                Locker locker( that->lock );
+                NOT_MAIN_THREAD_REQUIRE( that, server != NULL );
+                NOT_MAIN_THREAD_REQUIRE( that, server->shmem_base != NULL );
+                NOT_MAIN_THREAD_REQUIRE( that, server->shmem_header_ptr != NULL );
+                that->m_server = server;
+            }
+            // run server mainloop
+            //std::cerr << __LINE__ << ": A\n";
 
-        int rc;
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
-            rc = ipc_msg_server_mainloop( server,
-                                          server_periodic, that,
-                                          server_input_handler, that,
-                                          server_output_handler, that );
-        }
-        if( rc < -1 ) { // Serious error.
-            fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
-            NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
-        }
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
-            Locker locker( that->lock );
-            that->m_server = NULL;
-        }
+            int rc;
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
+                rc = ipc_msg_server_mainloop( server,
+                                              server_periodic, that,
+                                              server_input_handler, that,
+                                              server_output_handler, that );
+            }
+            if( rc < -1 ) { // Serious error.
+                fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
+                NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
+            }
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
+                Locker locker( that->lock );
+                that->m_server = NULL;
+            }
 
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_3" );
-            rc = ipc_msg_server_delete( server );
-            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".scope_3" );
+                rc = ipc_msg_server_delete( server );
+                NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            }
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".barrier_server_finished" );
+                int rc=pthread_barrier_wait( &that->m_barrier_server_finished );
+                NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
+            }
         }
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_server_finished" );
-            int rc=pthread_barrier_wait( &that->m_barrier_server_finished );
-            NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
-        }
+        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier );
         return NULL;
     }
     
@@ -621,68 +646,69 @@ done:
     void*
     client_thread_func( void* arg )
     {
-        int rc;
         SendRecvFixtureBase* that = (SendRecvFixtureBase*)arg;
-        ScopeTrace scope_trace_body( that, __func__ );
-        
-        unsigned int seed = 0;
-        if( that->m_jitter ) {
-            seed = get_random_seed();
-            int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
-            usleep( time );
-        }
-        
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_running" );
-            int rc = pthread_barrier_wait( &that->m_barrier_clients_running );
-            NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
-        }
+        {   // Extra scope to assert that VALGRIND_HG_BARRIER_WAIT_PRE runs last
+            int rc;
+            ScopeTrace scope_trace_body( that, __func__ );
 
-        tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
-        rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
-        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-
-        do {
-            ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
+            unsigned int seed = 0;
             if( that->m_jitter ) {
                 seed = get_random_seed();
                 int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
                 usleep( time );
             }
 
-            int timeout;
-            bool failure_is_an_option;
             {
-                Locker locker( that->lock );
-                timeout = that->m_clients_should_longpoll ? 2 : 0;
-                failure_is_an_option = that->m_failure_is_an_option;
+                ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_running" );
+                int rc = pthread_barrier_wait( &that->m_barrier_clients_running );
+                NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
             }
 
-            rc = tinia_ipc_msg_client_sendrecv( client,
-                                          client_producer, that,
-                                          client_consumer, that,
-                                          timeout );
-            
-            if( failure_is_an_option ) {
-                NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
-            }
-            else {
-                NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-            }
+            tinia_ipc_msg_client_t* client = (tinia_ipc_msg_client_t*)malloc( tinia_ipc_msg_client_t_sizeof );
+            rc = tinia_ipc_msg_client_init( client, "unittest", logger, arg );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
 
-        } while(0);
+            do {
+                ScopeTrace scope_trace( that, std::string(__func__)+".scope_1" );
+                if( that->m_jitter ) {
+                    seed = get_random_seed();
+                    int time = ( (long)that->m_jitter*rand_r( &seed )) /RAND_MAX;
+                    usleep( time );
+                }
 
-        rc = tinia_ipc_msg_client_release( client );
-        NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
-        free( client );
-        
-        {
-            ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_finished" );
-            int rc = pthread_barrier_wait( &that->m_barrier_clients_finished );
-            NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
+                int timeout;
+                bool failure_is_an_option;
+                {
+                    Locker locker( that->lock );
+                    timeout = that->m_clients_should_longpoll ? 2 : 0;
+                    failure_is_an_option = that->m_failure_is_an_option;
+                }
+
+                rc = tinia_ipc_msg_client_sendrecv( client,
+                                                    client_producer, that,
+                                                    client_consumer, that,
+                                                    timeout );
+
+                if( failure_is_an_option ) {
+                    NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
+                }
+                else {
+                    NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+                }
+
+            } while(0);
+
+            rc = tinia_ipc_msg_client_release( client );
+            NOT_MAIN_THREAD_REQUIRE( that, rc == 0 );
+            free( client );
+
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".barrier_clients_finished" );
+                int rc = pthread_barrier_wait( &that->m_barrier_clients_finished );
+                NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
+            }
         }
-
-
+        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier );
         return NULL;
     }
 
