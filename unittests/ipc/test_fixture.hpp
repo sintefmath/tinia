@@ -26,12 +26,15 @@
 #include "../../src/ipc/ipc_msg_internal.h"
 #ifdef TINIA_IPC_VALGRIND_ANNOTATIONS
 #include <helgrind.h>
+#include <drd.h>
 #else
 // No valigrind annotations; empty macros
 #define VALGRIND_HG_BARRIER_INIT_PRE(_bar, _count, _resizable)
 #define VALGRIND_HG_BARRIER_WAIT_PRE(_bar)
 #define VALGRIND_HG_BARRIER_RESIZE_PRE(_bar, _newcount)
 #define VALGRIND_HG_BARRIER_DESTROY_PRE(_bar)
+#define ANNOTATE_HAPPENS_BEFORE( obj )
+#define ANNOTATE_HAPPENS_AFTER( obj )
 #endif
 
 #define NOT_MAIN_THREAD_REQUIRE( obj, a ) do { if(!(a)){                    \
@@ -324,7 +327,8 @@ struct SendRecvFixtureBase
         }
         
         // ---- and wait around until all threads actually terminates ----------
-        VALGRIND_HG_BARRIER_WAIT_PRE( &m_implicit_join_threads_barrier );
+        VALGRIND_HG_BARRIER_WAIT_PRE( &m_implicit_join_threads_barrier );       // for helgrind
+        ANNOTATE_HAPPENS_AFTER( &m_implicit_join_threads_barrier );             // for drd
 
         std::vector<pthread_t> threads;
         {
@@ -378,9 +382,7 @@ struct SendRecvFixtureBase
         }
         FAIL_MISERABLY_UNLESS( 0 && "Unable to join threads." );
 done:
-
         VALGRIND_HG_BARRIER_DESTROY_PRE( &m_implicit_join_threads_barrier );
-
 
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_running ) == 0 );
         BOOST_REQUIRE( pthread_barrier_destroy( &m_barrier_server_finished ) == 0 );
@@ -574,7 +576,8 @@ done:
                 NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
             }
         }
-        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier );
+        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier ); // for helgrind
+        ANNOTATE_HAPPENS_BEFORE( &that->m_implicit_join_threads_barrier );      // for drd
         return NULL;
     }
     
@@ -708,7 +711,8 @@ done:
                 NOT_MAIN_THREAD_REQUIRE( that, (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD) );
             }
         }
-        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier );
+        VALGRIND_HG_BARRIER_WAIT_PRE( &that->m_implicit_join_threads_barrier ); // for helgrind
+        ANNOTATE_HAPPENS_BEFORE( &that->m_implicit_join_threads_barrier );      // for drd
         return NULL;
     }
 
