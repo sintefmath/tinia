@@ -942,48 +942,72 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
         // --- Handle deferred notification events -----------------------------
         int deferred_notification_event = ipc_msg_poll_deferred_notification_event( server );
         if( deferred_notification_event == 1 ) {
-            rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
-            if( rc == EBUSY ) {
+
+            // Avoid deadlock, Release operation lock (letting client finish)
+            rc = pthread_mutex_unlock( &server->shmem_header_ptr->operation_lock );
+            if( rc != 0 ) {
+                server->logger_f( server->logger_d, 0, __func__,
+                                  "pthread_mutex_unlock( operation_lock ): %s",
+                                  ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
+                return -2;
+            }
+            else {
+                // And try to get hold of the transaction lock (making sure all
+                // clients that might long-poll has entered wait-state
+                rc = pthread_mutex_trylock( &server->shmem_header_ptr->transaction_lock );
+                if( rc == EBUSY ) {
 #ifdef TINIA_IPC_LOG_TRACE
                     server->logger_f( server->logger_d, 2, who,
                                       "Tried to deliver deferred notification event, but lock busy.",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
 #endif
-            }
-            else if( rc != 0 ) {
-                server->logger_f( server->logger_d, 0, who,
-                                  "pthread_mutex_timedlock( transaction_lock ) failed: %s",
-                                  ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                return -2;  
-            }
-            else {
-                int ret = 0;
-
-                rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
-                if( rc == 0 ) {
-#ifdef TINIA_IPC_LOG_TRACE
-                    server->logger_f( server->logger_d, 2, who,
-                                      "Successfully delivered deferred notification event.",
+                }
+                else if( rc != 0 ) {
+                    server->logger_f( server->logger_d, 0, who,
+                                      "pthread_mutex_timedlock( transaction_lock ) failed: %s",
                                       ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-#endif
-                    server->deferred_notification_event = 0;
+                    return -2;
                 }
                 else {
-                    server->logger_f( server->logger_d, 0, who,
-                                      "pthread_cond_broadcast( notification_event ) failed: %s",
-                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                    ret = -2;
+                    int ret = 0;
+
+                    // Got transaction lock, broadcast notifiaction
+                    rc = pthread_cond_broadcast( &server->shmem_header_ptr->notification_event );
+                    if( rc == 0 ) {
+#ifdef TINIA_IPC_LOG_TRACE
+                        server->logger_f( server->logger_d, 2, who,
+                                          "Successfully delivered deferred notification event.",
+                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+#endif
+                        server->deferred_notification_event = 0;
+                    }
+                    else {
+                        server->logger_f( server->logger_d, 0, who,
+                                          "pthread_cond_broadcast( notification_event ) failed: %s",
+                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        ret = -2;
+                    }
+
+                    // Release Transaction lock
+                    rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
+                    if( rc != 0 ) {
+                        server->logger_f( server->logger_d, 0, who,
+                                          "pthread_mutex_unlock( transaction_lock ) failed: %s",
+                                          ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
+                        ret = -2;
+                    }
+                    if( ret != 0 ) {
+                        return ret;
+                    }
                 }
 
-                rc = pthread_mutex_unlock( &server->shmem_header_ptr->transaction_lock );
+                // Re-obtain operation lock
+                rc = pthread_mutex_lock( &server->shmem_header_ptr->operation_lock );
                 if( rc != 0 ) {
-                    server->logger_f( server->logger_d, 0, who,
-                                      "pthread_mutex_unlock( transaction_lock ) failed: %s",
-                                      ipc_msg_strerror_wrap(rc, errnobuf, sizeof(errnobuf) ) );
-                    ret = -2;
-                }
-                if( ret != 0 ) {
-                    return ret;
+                    server->logger_f( server->logger_d, 0, __func__,
+                                      "pthread_mutex_lock( operation_lock ): %s",
+                                      ipc_msg_strerror_wrap(errno, errnobuf, sizeof(errnobuf) ) );
+                    return -2;
                 }
             }
         }
@@ -1019,18 +1043,23 @@ ipc_msg_server_mainloop_iteration( char* errnobuf,
         }
         
         // --- sleep a bit -----------------------------------------------------
-        rc = pthread_cond_timedwait( &server->shmem_header_ptr->server_event,
-                                     &server->shmem_header_ptr->operation_lock,
-                                     &timeout );
-        if( rc == ETIMEDOUT ) {
-            // timeout expected and not an error
-        }
-        // --- error, bail out -------------------------------------------------
-        else if( rc != 0 ) {
-            server->logger_f( server->logger_d, 0, who,
-                              "pthread_cond_timedwait( server_event) failed: %s",
-                              ipc_msg_strerror_wrap(rc, errnobuf, errnobuf_size ) );
-            return -2;
+        // note, if we broadcasted a notification, we let go of the operation
+        // lock, and thus, I'm not sure if we can rule out a server event. Thus,
+        // we check it.
+        if( server->shmem_header_ptr->server_event_predicate == 0 ) {
+            rc = pthread_cond_timedwait( &server->shmem_header_ptr->server_event,
+                                         &server->shmem_header_ptr->operation_lock,
+                                         &timeout );
+            if( rc == ETIMEDOUT ) {
+                // timeout expected and not an error
+            }
+            // --- error, bail out -------------------------------------------------
+            else if( rc != 0 ) {
+                server->logger_f( server->logger_d, 0, who,
+                                  "pthread_cond_timedwait( server_event) failed: %s",
+                                  ipc_msg_strerror_wrap(rc, errnobuf, errnobuf_size ) );
+                return -2;
+            }
         }
     }
     while( server->shmem_header_ptr->server_event_predicate == 0 );
