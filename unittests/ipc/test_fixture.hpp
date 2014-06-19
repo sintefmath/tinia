@@ -144,6 +144,7 @@ struct SendRecvFixtureBase
     pthread_barrier_t       m_barrier_server_finished;
     pthread_barrier_t       m_barrier_clients_running;
     pthread_barrier_t       m_barrier_clients_finished;
+    pthread_barrier_t       m_barrier_finished_with_msgserver;
 
     // In the end of the test, we (at least try) to join all threads that we
     // create during the test (server and clients). When successful, this in
@@ -247,6 +248,8 @@ struct SendRecvFixtureBase
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_server_finished, NULL, 2 ) == 0 );
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_running, NULL, m_clients + 1 ) == 0 );
         BOOST_REQUIRE( pthread_barrier_init( &m_barrier_clients_finished, NULL, m_clients + 1 ) == 0 );
+        BOOST_REQUIRE( pthread_barrier_init( &m_barrier_finished_with_msgserver, NULL, 2 ) == 0 );
+
 
         VALGRIND_HG_BARRIER_INIT_PRE( &m_implicit_join_threads_barrier, (m_clients+2), 0 );
 
@@ -318,6 +321,12 @@ struct SendRecvFixtureBase
             // --- ask server to quit and wait until server thread finishes ----
             rc = ipc_msg_server_mainloop_break( m_server );
             BOOST_REQUIRE( rc == 0 );
+            {
+                ScopeTrace scope_trace( this, std::string(__func__)+".barrier_finished_with_msgserver"  );
+                int rc = pthread_barrier_wait( &m_barrier_finished_with_msgserver );
+                BOOST_REQUIRE( (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
+            }
+
             {
                 ScopeTrace scope_trace( this, std::string(__func__)+".barrier_server_finished" );
     
@@ -563,6 +572,12 @@ done:
             if( rc < -1 ) { // Serious error.
                 fprintf( stderr, "Return code from ipc_msg_server_main = %d\n", rc );
                 NOT_MAIN_THREAD_REQUIRE( that, rc >= -1 );
+            }
+            // wait until all is finished with server
+            {
+                ScopeTrace scope_trace( that, std::string(__func__)+".barrier_finished_with_msgserver" );
+                int rc=pthread_barrier_wait( &that->m_barrier_finished_with_msgserver );
+                NOT_MAIN_THREAD_REQUIRE( that, (rc == 0) || (rc == PTHREAD_BARRIER_SERIAL_THREAD) );
             }
             {
                 ScopeTrace scope_trace( that, std::string(__func__)+".scope_2" );
