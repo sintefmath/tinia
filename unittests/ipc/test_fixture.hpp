@@ -362,8 +362,13 @@ struct SendRecvFixtureBase
                     
                     fprintf( stderr, "FIXTURE: Failed to join thread [%lu | %d] while waiting %lu ns.\n",
                              threads[i], index, nanoseconds );
-
-                    unterminated.push_back( threads[i] );
+                    if( (rc == EBUSY) || (rc==ETIMEDOUT) ) {
+                        // not finished, try later
+                        unterminated.push_back( threads[i] );
+                    }
+                    else {
+                        fprintf( stderr, "FIXTURE: pthread join returned %s\n.", strerror(errno) );
+                    }
                 }
             }
             threads.swap( unterminated );
