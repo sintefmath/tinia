@@ -269,7 +269,8 @@ struct SendRecvFixtureBase
         locker.unlock();
         {
             ScopeTrace scope_trace( this, std::string(__func__) + ".barrier_server_running" );
-            BOOST_REQUIRE( pthread_barrier_wait( &m_barrier_server_running ) == 0 );
+            rc = pthread_barrier_wait( &m_barrier_server_running );
+            BOOST_REQUIRE( (rc==0) || (rc==PTHREAD_BARRIER_SERIAL_THREAD ) );
         }
         locker.lock();
 
