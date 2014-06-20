@@ -32,16 +32,19 @@ trell_send_reply_static_file( trell_sconf_t*         sconf,
     char* path = NULL;
 
     if( dinfo->m_component == TRELL_COMPONENT_JOB ) {
-        path = apr_pstrcat( r->pool, sconf->m_job_www_root, "/", dinfo->m_requestname, NULL );
+        path = apr_pstrcat( r->pool, sconf->m_job_www_root, "/", dinfo->m_static_path, NULL );
     }
     if( path == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "Empty file." );
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "Path is NULL." );
+        return HTTP_INTERNAL_SERVER_ERROR;
     }
 
     apr_finfo_t finfo;
     rv = apr_stat( &finfo, path, APR_FINFO_SIZE, r->pool);
     if( rv != APR_SUCCESS ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Failed to stat static file." );
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r,
+                       "%s: %s: Failed to stat static file.",
+                       r->handler, path );
         return HTTP_NOT_FOUND;
     }
     ap_set_content_length( r, finfo.size );
@@ -67,7 +70,9 @@ trell_send_reply_static_file( trell_sconf_t*         sconf,
     apr_file_t* fd;
     rv = apr_file_open( &fd, path, APR_READ | APR_SENDFILE_ENABLED, APR_OS_DEFAULT, r->pool );
     if( rv != APR_SUCCESS ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Failed to open static file." );
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r,
+                       "%s: %s: Failed to open static file.",
+                       r->handler, path );
         return HTTP_NOT_FOUND;
     }
 

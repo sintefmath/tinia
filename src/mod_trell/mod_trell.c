@@ -22,6 +22,7 @@
 #include <http_main.h>
 #include <util_script.h>
 #include <ap_config.h>
+#include <apr_lib.h>
 #include <apr_strings.h>
 #include <http_log.h>
 
@@ -42,7 +43,39 @@
 module AP_MODULE_DECLARE_DATA trell_module;
 
 
+const module* tinia_get_module()
+{
+    return &trell_module;
+}
 
+static int
+tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
+{
+    if( src == NULL ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is an empty string.",
+                       r->handler, what );
+        return -1;
+    }
+    int i;
+    for(i=0; (src[i]!='\0') && (i<maxlen); i++) {
+        if( !( apr_isalnum(src[i]) || (src[i]=='_' ) ) ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s contains illegal char '%c'.",
+                           r->handler, what, dst[i] );
+            dst[0] = '\0';
+            return -1;
+        }
+        dst[i] = src[i];
+    }
+    if( dst[i] != '\0' ) {
+        dst[0] = '\0';
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is too long.",
+                       r->handler, what );
+        return -1;
+    }
+    return 0;
+}
+
+//trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
 
 
@@ -52,8 +85,6 @@ static int trell_handler_body(request_rec *r)
     if (!r->handler || strcmp(r->handler, "trell") ) {
         return DECLINED;
     }
-
-    // And we require a path
     if( r->path_info == NULL ) {
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, HTTP_NOT_FOUND, r,
                        "mod_trell: Path missing" );
@@ -69,14 +100,15 @@ static int trell_handler_body(request_rec *r)
     }
 
     int code;
-    trell_dispatch_info_t dispatch_info;
-    code = trell_decode_path_info( &dispatch_info, r );
+    trell_dispatch_info_t* dispatch_info = apr_pcalloc( r->pool, sizeof(*dispatch_info) );
+
+    code = trell_decode_path_info( dispatch_info, r );
     if( code != OK ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                       "mod_trell: decode_path_info failed to decode request='%s'", r->path_info );
+                       "mod_trell: decode_path_info failed to decode request='%s', args='%s'", r->path_info, r->args );
         return code;
     }
-    dispatch_info.m_entry = apr_time_now();
+    dispatch_info->m_entry = apr_time_now();
 
 
 #if 0
@@ -94,12 +126,13 @@ static int trell_handler_body(request_rec *r)
                    dispatch_info.m_height );
 #endif
 
-    switch( dispatch_info.m_component ) {
+    
+    switch( dispatch_info->m_component ) {
 
     case TRELL_COMPONENT_OPS:
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_RPC_XML:
-            switch( dispatch_info.m_mod_action ) {
+            switch( dispatch_info->m_mod_action ) {
             case TRELL_MOD_ACTION_RESTART_MASTER:
                 return trell_ops_do_restart_master( sconf, r );
                 break;
@@ -113,11 +146,12 @@ static int trell_handler_body(request_rec *r)
         break;
 
     case TRELL_COMPONENT_MASTER:
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_RPC_XML:
             return trell_job_rpc_handle( sconf, r,
                                          sconf->m_rpc_master_schema,
-                                         sconf->m_master_id );
+                                         sconf->m_master_id,
+                                         dispatch_info );
         default:
             break;
         }
@@ -126,34 +160,34 @@ static int trell_handler_body(request_rec *r)
 
     case TRELL_COMPONENT_JOB:
 
-        switch( dispatch_info.m_request ) {
+        switch( dispatch_info->m_request ) {
         case TRELL_REQUEST_STATIC_FILE:
-            return trell_send_reply_static_file( sconf, r, &dispatch_info );
+            return trell_send_reply_static_file( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_POLICY_UPDATE_XML:
-            return trell_handle_get_model_update( sconf, r, &dispatch_info );
+            return trell_handle_get_model_update( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_STATE_UPDATE_XML:
-            return trell_handle_update_state( sconf, r, &dispatch_info );
+            return trell_handle_update_state( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_PNG:
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
-                int rv = trell_handle_update_state( sconf, r, &dispatch_info );
-                if( rv != HTTP_NO_CONTENT ) {
+                int rv = trell_handle_update_state( sconf, r, dispatch_info );
+                if( rv != OK ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
             }
-            int rv = trell_handle_get_snapshot( sconf, r, &dispatch_info );
-            dispatch_info.m_exit = apr_time_now();
+            int rv = trell_handle_get_snapshot( sconf, r, dispatch_info );
+            dispatch_info->m_exit = apr_time_now();
             
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 
                            "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
-                           apr_time_as_msec(dispatch_info.m_exit-dispatch_info.m_entry ),
-                           apr_time_as_msec(dispatch_info.m_png_exit-dispatch_info.m_png_entry),
-                           apr_time_as_msec(dispatch_info.m_png_filter_exit-dispatch_info.m_png_filter_entry),
-                           apr_time_as_msec(dispatch_info.m_png_compress_exit-dispatch_info.m_png_compress_entry)
+                           apr_time_as_msec(dispatch_info->m_exit-dispatch_info->m_entry ),
+                           apr_time_as_msec(dispatch_info->m_png_exit-dispatch_info->m_png_entry),
+                           apr_time_as_msec(dispatch_info->m_png_filter_exit-dispatch_info->m_png_filter_entry),
+                           apr_time_as_msec(dispatch_info->m_png_compress_exit-dispatch_info->m_png_compress_entry)
                            );
             
             return rv;
@@ -161,16 +195,16 @@ static int trell_handler_body(request_rec *r)
         case TRELL_REQUEST_GET_RENDERLIST:
             // Check if a model update is piggy-backed on request.
             if( r->method_number == M_POST ) {
-                int rv = trell_handle_update_state( sconf, r, &dispatch_info );
-                if( rv != HTTP_NO_CONTENT ) {
+                int rv = trell_handle_update_state( sconf, r, dispatch_info );
+                if( rv != OK ) {
                     // Something went wrong with the update, bail out.
                     return rv;
                 }
             }
-            return trell_handle_get_renderlist( sconf, r, &dispatch_info );
+            return trell_handle_get_renderlist( sconf, r, dispatch_info );
             break;
         case TRELL_REQUEST_GET_SCRIPT:
-            return trell_handle_get_script( sconf, r, &dispatch_info);
+            return trell_handle_get_script( sconf, r, dispatch_info);
 
         default:
             break;
@@ -192,6 +226,28 @@ static int trell_handler(request_rec *r)
     int retval = trell_handler_body( r );
     //ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "mod_trell: %d: end = %d.", getpid(), retval );
     return retval;
+}
+
+
+void
+trell_messenger_log_wrapper( void* data, int level, const char* who, const char* message, ... )
+{
+    char buf[ 256 ];
+    
+    va_list args;
+    va_start( args, message );
+    apr_vsnprintf( buf, sizeof(buf), message, args );
+    va_end( args );
+    
+    request_rec* r = (request_rec*)data;
+    int ap_level;
+    switch( level ) {
+    case 0: ap_level = APLOG_CRIT; break;
+    case 1: ap_level = APLOG_WARNING; break;
+    default: ap_level = APLOG_NOTICE; break;
+    }
+    ap_log_rerror( APLOG_MARK, ap_level, OK, r, "%s: %s", who, buf );
+    
 }
 
 
@@ -218,6 +274,20 @@ trell_child_init_parse_schema( const char* path, const char* file, apr_pool_t* p
         xmlSchemaFreeParserCtxt( pctx );
     }
     return schema;
+}
+
+/** Helper callback for logging libxml output to apache using server_rec. */
+static void
+trell_xml_error_s_cb( void* ctx, const char* msg, ... )
+{
+    server_rec* s = (server_rec*)ctx;
+    va_list args;
+    char *fmsg;
+    va_start( args, msg );
+    fmsg = apr_pvsprintf( s->process->pool, msg, args );
+    va_end( args );
+    ap_log_perror( APLOG_MARK, APLOG_NOTICE, 0, s->process->pool,
+                   "mod_trell: libxml2: %s", fmsg );
 }
 
 static void
@@ -295,6 +365,21 @@ trell_child_init(apr_pool_t *p, server_rec *s)
         xmlSetGenericErrorFunc( orig_error_cb, orig_error_func );
     }
 
+    // create CRC table (used by png encoder)
+    svr_conf->m_crc_table = apr_palloc( s->process->pool, sizeof(unsigned int)*256 );
+    unsigned int j, i;
+    for( j=0; j<256; j++) {
+        unsigned int c = j;
+        for( i=0; i<8; i++) {
+            if( c & 0x1 ) {
+                c = 0xedb88320ul ^ (c>>1);
+            }
+            else {
+                c = c>>1;
+            }
+        }
+        svr_conf->m_crc_table[j] = c;
+    }
 }
 
 
@@ -389,6 +474,14 @@ static const command_rec mod_trell_commands[] = {
 static void
 mod_trell_register_hooks (apr_pool_t *p)
 {
+    ap_register_input_filter( "tinia_validate_xml",
+                              tinia_validate_xml_in_filter,
+                              NULL, // ap_init_filter_func
+                              AP_FTYPE_RESOURCE );
+    ap_register_output_filter( "tinia_validate_xml",
+                               tinia_validate_xml_out_filter,
+                               NULL, // ap_init_filter_func
+                               AP_FTYPE_RESOURCE );
     ap_hook_handler(trell_handler, NULL, NULL, APR_HOOK_LAST );
 //    ap_hook_pre_config( trell_pre_config, NULL, NULL, APR_HOOK_LAST );
 //    ap_hook_post_config( trell_post_config, NULL, NULL, APR_HOOK_LAST );

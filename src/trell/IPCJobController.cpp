@@ -28,6 +28,10 @@
 
 namespace tinia {
 namespace trell {
+namespace {
+    static const std::string package = "IPCJobController";
+} // of anonymous namespace
+
 
 
 IPCJobController::IPCJobController( bool is_master )
@@ -134,7 +138,7 @@ IPCJobController::onUpdateState( const char*         buffer,
 }
 
 size_t
-IPCJobController::handle( trell_message* msg, size_t buf_size )
+IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 {
     std::string session;
     std::string key;
@@ -145,115 +149,212 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
     int w, h;
     size_t retsize = 0u;
 
-    switch( msg->m_type ) {
+//    char buf[97];
+//    for(int i=0; i<96; i++) {
+//        int t = ((char*)msg)[i];
+//        
+//        if( isalnum(t) ) {
+//            buf[i]=t;
+//        }
+//        else if (t==0) {
+//            buf[i] = (i%10)+'0';
+//        }
+//        else {
+//            buf[i] = '-';
+//        }
+//    }
+//    buf[96] = '\0';
+//    m_logger_callback( m_logger_data, 2, package.c_str(),
+//                       "> %s", buf );
+    
+    switch( msg->type ) {
 
     case TRELL_MESSAGE_DIE:
-        std::cerr << "Received suggestion to commit suicide.\n";
+    {
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "Received suggestion to commit suicide." );
         fail();
-        msg->m_type = TRELL_MESSAGE_OK;
-        msg->m_size = 0u;
-        retsize = TRELL_MSGHDR_SIZE;
+        //volatile tinia_msg_t* r = (tinia_msg_t*)msg;
+        msg->type = TRELL_MESSAGE_OK;
+        return sizeof(tinia_msg_t);
+    }
         break;
 
     case TRELL_MESSAGE_GET_POLICY_UPDATE:
+    {
+        tinia_msg_get_exposed_model_t* msg_get_exposed_model = (tinia_msg_get_exposed_model_t*)msg;
+        
         session = "undefined";
-        revision = msg->m_get_model_update_payload.m_revision;
-        if( onGetExposedModelUpdate( msg->m_size,
-                               msg->m_xml_payload,
-                               buf_size - TRELL_MSGHDR_SIZE,
-                               session,
-                               revision ) )
+        revision = msg_get_exposed_model->revision;
+
+        size_t result_size;
+        if( onGetExposedModelUpdate( result_size,
+                                     (char*)msg + sizeof(tinia_msg_xml_t),
+                                     buf_size - sizeof(tinia_msg_xml_t),
+                                     session,
+                                     revision ) )
         {
-            msg->m_type = TRELL_MESSAGE_XML;
-            retsize = TRELL_MSGHDR_SIZE + msg->m_size;
+#ifdef DEBUG
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for policy, returning updates (has_revision=%d).", revision );
+#endif
+            tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
+            reply->msg.type = TRELL_MESSAGE_XML;
+            return result_size + sizeof(tinia_msg_xml_t);
         }
         else {
-            msg->m_type = TRELL_MESSAGE_OK;
-            retsize = TRELL_MSGHDR_SIZE;
+#ifdef DEBUG
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for policy, no updates available (has_revision=%d).", revision );
+#endif
+            msg->type = TRELL_MESSAGE_OK;
+            return sizeof(tinia_msg_t);
         }
+    }
         break;
 
     case TRELL_MESSAGE_GET_SNAPSHOT:
-        format  = msg->m_get_snapshot.m_pixel_format;
-        w       = msg->m_get_snapshot.m_width;
-        h       = msg->m_get_snapshot.m_height;
-        session = std::string( msg->m_get_snapshot.m_session_id );
-        key     = std::string( msg->m_get_snapshot.m_key );
-        if( format == TRELL_PIXEL_FORMAT_BGR8 ) {
-            size_t image_size = 3*w*h;
-            retsize = TRELL_MESSAGE_IMAGE_SIZE + image_size;
-            if( retsize < buf_size ) {
-                if( onGetSnapshot( msg->m_image.m_data,
-                                   format, w, h, session, key ) )
-                {
-                    msg->m_type = TRELL_MESSAGE_IMAGE;
-                }
-                else {
-                    msg->m_type = TRELL_MESSAGE_ERROR;
-                    msg->m_size = 0;
-                    retsize = TRELL_MSGHDR_SIZE;
-                }
+        if( 1 ) {
+            tinia_msg_get_snapshot_t* q = (tinia_msg_get_snapshot_t*)msg;
+
+            format  = q->pixel_format;
+            w       = q->width;
+            h       = q->height;
+            session = std::string( q->session_id );
+            key     = std::string( q->key );
+            
+            if( format != TRELL_PIXEL_FORMAT_BGR8 ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Queried for snapshot, unsupported image format %d.", (int)format );
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
+            }
+            else if( buf_size <= 3*w*h+sizeof(tinia_msg_image_t) ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Queried for snapshot, buffer too small." );
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
+            }
+            else if( onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
+                                     format, w, h, session, key ) ) {
+#ifdef DEBUG
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Queried for snapshot, ok." );
+#endif
+                tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
+                reply->msg.type     = TRELL_MESSAGE_IMAGE;
+                reply->width        = w;
+                reply->height       = h;
+                reply->pixel_format = format;
+                return sizeof(tinia_msg_image_t) + 3*w*h; // size of msg + payload
             }
             else {
-                msg->m_type = TRELL_MESSAGE_ERROR;
-                msg->m_size = 0;
-                retsize = TRELL_MSGHDR_SIZE;
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Queried for snapshot, rendering error." );
+
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
             }
-        }
-        else {
-            msg->m_type = TRELL_MESSAGE_ERROR;
-            msg->m_size = 0;
-            retsize = TRELL_MSGHDR_SIZE;
         }
         break;
 
     case TRELL_MESSAGE_GET_RENDERLIST:
-        session   = std::string( msg->m_get_renderlist.m_session_id );
-        key       = std::string( msg->m_get_renderlist.m_key );
-        timestamp = std::string( msg->m_get_renderlist.m_timestamp );
-        if( onGetRenderlist( msg->m_size,
-                             msg->m_xml.m_xml,
-                             buf_size - TRELL_MESSAGE_XML_SIZE,
+    {
+        tinia_msg_get_renderlist_t* msg_get_renderlist = (tinia_msg_get_renderlist_t*)msg;
+        
+        session   = std::string( msg_get_renderlist->session_id );
+        key       = std::string( msg_get_renderlist->key );
+        timestamp = std::string( msg_get_renderlist->timestamp );
+        
+        size_t result_size;
+        if( onGetRenderlist( result_size,
+                             (char*)msg + sizeof(tinia_msg_xml_t),
+                             buf_size - sizeof(tinia_msg_xml_t),
                              session,
                              key,
                              timestamp ) )
         {
-            msg->m_type = TRELL_MESSAGE_XML;
-            retsize = TRELL_MESSAGE_XML_SIZE + msg->m_size;
+            tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
+            reply->msg.type = TRELL_MESSAGE_XML;
+#ifdef DEBUG
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for renderlist, ok." );
+#endif
+            return result_size + sizeof(tinia_msg_xml_t);
         }
         else {
-            msg->m_type = TRELL_MESSAGE_ERROR;
-            retsize = TRELL_MSGHDR_SIZE;
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for renderlist, error occured." );
+            msg->type = TRELL_MESSAGE_ERROR;
+            return sizeof(tinia_msg_t);
         }
+    }
         break;
 
     case TRELL_MESSAGE_UPDATE_STATE:
-        session = "undefined";
-        if( onUpdateState( msg->m_xml_payload, msg->m_size, session ) ) {
-            msg->m_type = TRELL_MESSAGE_OK;
-            retsize = TRELL_MSGHDR_SIZE;
+    {
+        tinia_msg_update_exposed_model_t* query = (tinia_msg_update_exposed_model_t*)msg;
+        session = query->session_id;
+
+        if( onUpdateState( (char*)msg + sizeof(*query),
+                           msg_size - sizeof(*query),
+                           session ) )
+        {
+            //volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+            msg->type = TRELL_MESSAGE_OK;
+#ifdef DEBUG
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Update state, ok (msg_size=%d).", msg_size );
+#endif
+            return sizeof(tinia_msg_t);
         }
         else {
-            msg->m_type = TRELL_MESSAGE_ERROR;
-            retsize = TRELL_MSGHDR_SIZE;
+            //volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+            msg->type = TRELL_MESSAGE_ERROR;
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Update state, failure." );
+            return sizeof(tinia_msg_t);
         }
+    }
         break;
 
     case TRELL_MESSAGE_GET_SCRIPTS:
-        if ( onGetScripts(msg->m_size, msg->m_script.m_script, buf_size - TRELL_MESSAGE_SCRIPT_SIZE)) {
-            msg->m_type = TRELL_MESSAGE_SCRIPT;
-            retsize = TRELL_MESSAGE_SCRIPT_SIZE + msg->m_size;
+    {
+        
+        //volatile tinia_msg_t* reply = (tinia_msg_t*)msg;
+        size_t result_size;
+        if ( onGetScripts( result_size,
+                           (char*)msg + sizeof(tinia_msg_script_t),
+                           buf_size - sizeof(tinia_msg_script_t) ) )
+        {
+#ifdef DEBUG
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Queried for scripts, ok (result_size=%ld).", result_size );
+#endif
+            tinia_msg_script_t* reply = (tinia_msg_script_t*)msg;
+            reply->msg.type = TRELL_MESSAGE_SCRIPT;
+            return sizeof(tinia_msg_script_t) + result_size;
         }
         else {
-            msg->m_type = TRELL_MESSAGE_ERROR;
-            retsize = TRELL_MSGHDR_SIZE;
+            m_logger_callback( m_logger_data, 0, package.c_str(),
+                               "Queried for scripts, failed." );
+            msg->type = TRELL_MESSAGE_ERROR;
+            return sizeof(tinia_msg_t);
         }
+    }
         break;
 
     default:
-        msg->m_type = TRELL_MESSAGE_ERROR;
-        msg->m_size = 0u;
-        retsize = TRELL_MSGHDR_SIZE;
+        m_logger_callback( m_logger_data, 0, package.c_str(),
+                           "Received unknown message: type=%d, size=%d.",
+                           msg->type, msg_size );
+        msg->type = TRELL_MESSAGE_ERROR;
+        retsize = sizeof(tinia_msg_t);
         break;
     }
 

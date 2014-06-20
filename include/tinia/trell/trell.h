@@ -26,7 +26,6 @@ extern "C" {
 #include <stddef.h>
 #endif
 
-#define TRELL_JOBID_MAXLENGTH 64
 #define TRELL_SESSIONID_MAXLENGTH 64
 #define TRELL_REQUESTNAME_MAXLENGTH 128
 #define TRELL_KEYID_MAXLENGTH 64
@@ -89,78 +88,88 @@ enum TrellMessageType {
     TRELL_MESSAGE_GET_SCRIPTS
 };
 
-typedef struct trell_message
+/** Base message struct.
+ *
+ * Container for:
+ * - TRELL_MESSAGE_OK
+ * - TRELL_MESSAGE_ERROR
+ */
+typedef struct tinia_msg
 {
-    /** The type of the message. */
-    enum TrellMessageType       m_type;
-    /** The size of the payload. */
-    size_t                      m_size;
-    union {
-
-        struct {
-            unsigned int            m_revision;
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_tail;
-        }                       m_get_model_update_payload;
-
-        struct {
-            char                    m_xml[1];
-        }                       m_xml;
-
-        struct {
-            char m_script[1];
-        } m_script;
-
-        struct {
-            char                    m_xml[1];
-        }                       m_update_state;
-
-        struct {
-            enum TrellPixelFormat   m_pixel_format;
-            unsigned int            m_width;
-            unsigned int            m_height;
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_key[ TRELL_KEYID_MAXLENGTH ];
-            char                    m_tail;
-        }                       m_get_snapshot;
-
-        struct {
-            enum TrellPixelFormat   m_pixel_format;
-            unsigned int            m_width;
-            unsigned int            m_height;
-            char                    m_tail;
-            char                    m_data[1];
-        }                       m_image;
-
-        struct {
-            char                    m_session_id[TRELL_SESSIONID_MAXLENGTH];
-            char                    m_key[ TRELL_KEYID_MAXLENGTH ];
-            char                    m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
-            char                    m_tail;
-
-        }                       m_get_renderlist;
+    enum TrellMessageType   type;    
+} tinia_msg_t;
 
 
-        /** Label used for address calculations. */
-        char                    m_payload;
-        /** Payload for character-based messages (XML). */
-        char                    m_xml_payload[1];
-        /** Payload for heartbeat messages. */
-        struct {
-            /** State of job sending the heartbeat. */
-            enum TrellJobState  m_state;
-            /** Id of job sending the heartbeat. */
-            char                m_job_id[1];
-        }                       m_ping_payload;
-    };
-} trell_message_t;
+/** Message struct for TRELL_MESSAGE_HEARTBEAT. */
+typedef struct tinia_msg_heartbeat
+{
+    tinia_msg_t         msg;
+    enum TrellJobState  state;
+    char                job_id[ TINIA_IPC_JOBID_MAXLENGTH+1 ];
+} tinia_msg_heartbeat_t;
 
-#define TRELL_MSGHDR_SIZE                       (offsetof(trell_message_t, m_payload))
-#define TRELL_MESSAGE_GET_POLICY_UPDATE_SIZE    (offsetof(trell_message_t, m_get_model_update_payload.m_tail ) )
-#define TRELL_MESSAGE_IMAGE_SIZE                (offsetof(trell_message_t, m_image.m_data))
-#define TRELL_MESSAGE_GET_RENDERLIST_SIZE       (offsetof(trell_message_t, m_get_renderlist.m_tail ) )
-#define TRELL_MESSAGE_XML_SIZE                  (offsetof(trell_message_t, m_xml.m_xml ))
-#define TRELL_MESSAGE_SCRIPT_SIZE               (offsetof(trell_message_t, m_script.m_script ))
+
+/** Message struct for TRELL_MESSAGE_HEARTBEAT. */
+typedef struct {
+    tinia_msg_t             msg;
+    enum TrellPixelFormat   pixel_format;
+    unsigned int            width;
+    unsigned int            height;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+    char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+} tinia_msg_get_snapshot_t;
+
+/** Message struct for TRELL_MESSAGE_GET_SCRIPTS. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_get_script_t;
+
+/** Message struct for TRELL_MESSAGE_SCRIPT. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_script_t;
+
+/** Message struct for TRELL_MESSAGE_UPDATE_STATE. */
+typedef struct {
+    tinia_msg_t             msg;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+} tinia_msg_update_exposed_model_t;
+
+
+/** Message struct for TRELL_MESSAGE_GET_POLICY_UPDATE. */
+typedef struct {
+    tinia_msg_t             msg;
+    unsigned int            revision;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
+} tinia_msg_get_exposed_model_t;
+
+
+/** Message struct for msg.type=TRELL_MESSAGE_GET_RENDERLIST. */
+typedef struct {
+    tinia_msg_t             msg;
+    char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1 ];
+    char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+    char                    timestamp[ TRELL_TIMESTAMP_MAXLENGTH + 1 ];
+} tinia_msg_get_renderlist_t;
+
+
+/** Message struct for TRELL_MESSAGE_IMAGE. */
+typedef struct {
+    tinia_msg_t             msg;
+    enum TrellPixelFormat   pixel_format;
+    unsigned int            width;
+    unsigned int            height;
+} tinia_msg_image_t;
+
+
+
+
+/** Message struct for TRELL_MESSAGE_XML. */
+typedef struct {
+    tinia_msg_t             msg;
+} tinia_msg_xml_t;
+
+
 
 #ifdef __cplusplus
 }

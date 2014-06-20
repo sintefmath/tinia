@@ -42,8 +42,7 @@ IF(Tinia_SERVER)
     )
 
   TARGET_LINK_LIBRARIES(tutorial5_web
-    ${RT}
-    ${LIB_APR}
+    ${TINIA_LIBRARIES}
     ${GLEW_LIBRARY}
     ${QT_LIBRARIES}
     ${QT_QTOPENGL_LIBRARIES}

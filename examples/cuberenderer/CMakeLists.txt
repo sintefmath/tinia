@@ -39,8 +39,7 @@ IF(Tinia_SERVER)
     )
 
   TARGET_LINK_LIBRARIES(cube_cloud_job
-    ${RT}
-    ${LIB_APR}
+    ${TINIA_LIBRARIES}
     ${GLEW_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${Boost_LIBRARIES} 
