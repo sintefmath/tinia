@@ -108,6 +108,7 @@ private:
     bool
     checkForGLError() const;
 
+
 };
 
 

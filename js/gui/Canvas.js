@@ -175,6 +175,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 dojo.xhrGet({
                     url: this._urlHandler.getURL(),
                     preventCache: true,
+                    handleAs: "json",
                     load: dojo.hitch(this, function (response, ioArgs) {
                         this._setImageFromText(response);
                     })
@@ -349,11 +350,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _setImageFromText: function (response) {
-        if (!response.substring(response.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
-            response = response.substring(0, response.length - 1);
+        try {
+            console.log("_setImageFromText");
+            console.log(typeof(response));
+            console.log(response);
+
+            this._img.src = "data:image/png;base64," + response[this._key];
+            this._showCorrect();
+        } catch(e) {
+            console.log(e);
         }
-        this._img.src = "data:image/png;base64," + response;
-        this._showCorrect();
+
         return response;
     },
 

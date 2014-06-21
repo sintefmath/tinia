@@ -169,6 +169,11 @@ protected:
       */
     size_t
     handle( trell_message* msg, size_t buf_size );
+
+
+    std::vector<std::string> m_viewerKeys;
+
+    size_t m_totalViewerKeySize;
 };
 
 

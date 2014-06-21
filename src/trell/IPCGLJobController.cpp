@@ -209,6 +209,20 @@ IPCGLJobController::init()
         }
     }
 #endif
+
+std::cerr << __FILE__ << __LINE__ << std::endl;
+    std::vector<tinia::model::StateSchemaElement> modelElements;
+    m_model->getFullStateSchema(modelElements);
+    std::cerr << "modelElements.size()) = "<< modelElements.size() << std::endl;
+    m_totalViewerKeySize = 0;
+    for(int i = 0; i < modelElements.size(); ++i) {
+        std::cerr << modelElements[i].getXSDType() <<std::endl;
+        if (modelElements[i].getXSDType() =="xsd:complexType") {
+            m_viewerKeys.push_back(modelElements[i].getKey());
+            m_totalViewerKeySize += m_viewerKeys[m_viewerKeys.size() - 1].size() + 1;
+
+        }
+    }
     
     bool ipcRetVal = IPCJobController::init();
     return (ipcRetVal && m_openGLJob->initGL());

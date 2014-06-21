@@ -174,36 +174,80 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
         break;
 
     case TRELL_MESSAGE_GET_SNAPSHOT:
+
+        if (m_viewerKeys.size() == 0) {
+            std::vector<tinia::model::StateSchemaElement> modelElements;
+                m_model->getFullStateSchema(modelElements);
+                std::cerr << "modelElements.size()) = "<< modelElements.size() << std::endl;
+            m_totalViewerKeySize = 0;
+            for(int i = 0; i < modelElements.size(); ++i) {
+                std::cerr << modelElements[i].getXSDType() <<std::endl;
+                if (modelElements[i].getXSDType() =="xsd:complexType") {
+                    m_viewerKeys.push_back(modelElements[i].getKey());
+                    m_totalViewerKeySize += m_viewerKeys[m_viewerKeys.size() - 1].size() + 1;
+
+                }
+            }
+        }
         format  = msg->m_get_snapshot.m_pixel_format;
         w       = msg->m_get_snapshot.m_width;
         h       = msg->m_get_snapshot.m_height;
         session = std::string( msg->m_get_snapshot.m_session_id );
         key     = std::string( msg->m_get_snapshot.m_key );
         if( format == TRELL_PIXEL_FORMAT_BGR8 ) {
-            size_t image_size = 3*w*h;
+
+            size_t image_size = 1 + 3*w*h * m_viewerKeys.size() + m_totalViewerKeySize;
+
             retsize = TRELL_MESSAGE_IMAGE_SIZE + image_size;
+
             if( retsize < buf_size ) {
-                if( onGetSnapshot( msg->m_image.m_data,
-                                   format, w, h, session, key ) )
-                {
-                    msg->m_type = TRELL_MESSAGE_IMAGE;
-                }
-                else {
-                    msg->m_type = TRELL_MESSAGE_ERROR;
-                    msg->m_size = 0;
-                    retsize = TRELL_MSGHDR_SIZE;
+
+                char* currentPointer = msg->m_image.m_data;
+
+                *(currentPointer++) = (char)m_viewerKeys.size();
+
+
+                for (int i = 0; i <m_viewerKeys.size(); ++i) {
+
+                    m_viewerKeys[i].copy(currentPointer, m_viewerKeys[i].size());
+
+                    currentPointer += m_viewerKeys[i].size();
+
+                    *(currentPointer++) = '\0';
+
+                    if( onGetSnapshot( currentPointer,
+
+                                   format, w, h, session, m_viewerKeys[i] ) )
+                    {
+
+                        msg->m_type = TRELL_MESSAGE_IMAGE;
+
+                        currentPointer += 3 * w *h;
+
+                    }
+                    else {
+                        std::cerr << "something bad at " <<  __LINE__ << " in file " <<__FILE__ << std::endl;
+                        msg->m_type = TRELL_MESSAGE_ERROR;
+                        msg->m_size = 0;
+                        retsize = TRELL_MSGHDR_SIZE;
+                        break;
+                    }
                 }
             }
-            else {
+
+            else {std::cerr << "something bad at " <<  __LINE__ << " in file " <<__FILE__ << std::endl;
                 msg->m_type = TRELL_MESSAGE_ERROR;
                 msg->m_size = 0;
                 retsize = TRELL_MSGHDR_SIZE;
             }
         }
         else {
+
             msg->m_type = TRELL_MESSAGE_ERROR;
             msg->m_size = 0;
+
             retsize = TRELL_MSGHDR_SIZE;
+
         }
         break;
 

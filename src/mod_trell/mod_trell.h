@@ -178,8 +178,18 @@ int
 trell_send_xml_failure( trell_sconf_t*  sconf,
                         request_rec*    r );
 
+int trell_send_images_png(trell_sconf_t*          sconf,
+                          request_rec*            r,
+                          trell_dispatch_info_t*  dispatch_info,
+                          enum TrellPixelFormat   format,
+                          const int               width,
+                          const int               height,
+                          const char*             payload,
+                          const size_t            payload_size);
+
 int
-trell_send_png( trell_sconf_t*          sconf,
+trell_send_png(     struct apr_bucket_brigade* bb,
+                    trell_sconf_t*          sconf,
                 request_rec*            r,
                 trell_dispatch_info_t*  dispatch_info,
                 enum TrellPixelFormat   format,

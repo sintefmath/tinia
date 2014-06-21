@@ -213,7 +213,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
             else if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
 
                 if( dispatch_info->m_request == TRELL_REQUEST_PNG ) {
-                    retval = trell_send_png( sconf, r, dispatch_info,
+                    retval = trell_send_images_png( sconf, r, dispatch_info,
                                              msg->m_image.m_pixel_format,
                                              msg->m_image.m_width,
                                              msg->m_image.m_height,

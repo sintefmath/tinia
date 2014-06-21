@@ -38,9 +38,79 @@ trell_png_crc( const unsigned long* crc_table, unsigned char* p, size_t length )
     return ~crc;
 }
 
+int trell_send_images_png(trell_sconf_t*          sconf,
+                          request_rec*            r,
+                          trell_dispatch_info_t*  dispatch_info,
+                          enum TrellPixelFormat   format,
+                          const int               width,
+                          const int               height,
+                          const char*             payload,
+                          const size_t            payload_size)
+{
+
+    struct apr_bucket_brigade* bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
+    apr_table_setn( r->headers_out, "Content-Type", "text/plain" );
+    ap_set_content_type( r, "text/plain" );
+    char* datestring = apr_palloc( r->pool, APR_RFC822_DATE_LEN );
+    apr_rfc822_date( datestring, apr_time_now() );
+    apr_table_setn( r->headers_out, "Last-Modified", datestring );
+    apr_table_setn( r->headers_out, "Cache-Control", "no-cache" );
+
+    // We need to find the number of buffers to create:
+
+    int numberOfBuffers = (int)(*payload++);
+    static const char* topJson = "{";
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( topJson, strlen(topJson), bb->bucket_alloc ) );
+
+
+
+    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                   "NumberOfBuffers = %d",
+                   numberOfBuffers );
+    char const* currentPointer = payload;
+    for(int i = 0; i < numberOfBuffers; ++i) {
+
+        const size_t jsonBufferSize = 1000;
+        char* jsonBuffer = apr_palloc( r->pool, jsonBufferSize);
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
+                       "viewer %d = ‰s",
+                       i, currentPointer );
+        snprintf(jsonBuffer,jsonBufferSize, "\"%s\":\"", currentPointer);
+        currentPointer += strlen(currentPointer) + 1;
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( jsonBuffer, strlen(jsonBuffer), bb->bucket_alloc ) );
+        trell_send_png(bb, sconf, r, dispatch_info, format, width, height, currentPointer, payload_size);
+        currentPointer += 3 * width * height;
+        static const char* endString = "\"";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( endString, strlen(endString), bb->bucket_alloc ) );
+
+        if( i!= numberOfBuffers -1)  {
+            static const char* comma = ",";
+            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( comma, strlen(comma), bb->bucket_alloc ) );
+
+        }
+    }
+
+
+    static const char* bottomJson = "}\n\n";
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( bottomJson, strlen(bottomJson), bb->bucket_alloc ) );
+    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
+
+    apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
+    dispatch_info->m_png_exit = apr_time_now();
+
+
+    if( rv != APR_SUCCESS ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
+        return HTTP_INTERNAL_SERVER_ERROR;
+    }
+    else {
+        return OK;
+    }
+}
 
 int
-trell_send_png( trell_sconf_t*          sconf,
+trell_send_png( struct apr_bucket_brigade* bb,
+                trell_sconf_t*          sconf,
                 request_rec*            r,
                 trell_dispatch_info_t*  dispatch_info,
                 enum TrellPixelFormat   format,
@@ -171,12 +241,9 @@ trell_send_png( trell_sconf_t*          sconf,
     *p++ = 130;
   
     
-    char* datestring = apr_palloc( r->pool, APR_RFC822_DATE_LEN );
-    apr_rfc822_date( datestring, apr_time_now() );
-    apr_table_setn( r->headers_out, "Last-Modified", datestring );
-    apr_table_setn( r->headers_out, "Cache-Control", "no-cache" );
 
-    struct apr_bucket_brigade* bb = apr_brigade_create( r->pool, r->connection->bucket_alloc );
+
+
     if( dispatch_info->m_base64 == 0 ) {
         // Send as plain png image
         ap_set_content_type( r, "image/png" );
@@ -185,24 +252,13 @@ trell_send_png( trell_sconf_t*          sconf,
     }
     else {
         // Encode png as base64 and send as string
-        apr_table_setn( r->headers_out, "Content-Type", "text/plain" );
-        ap_set_content_type( r, "text/plain" );
+
         char* base64 = apr_palloc( r->pool, apr_base64_encode_len( p-png ) );
         int base64_size = apr_base64_encode( base64, (char*)png, p-png );
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( base64, base64_size, bb->bucket_alloc ) );
     }
-    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
 
-    apr_status_t rv = ap_pass_brigade( r->output_filters, bb );
-    dispatch_info->m_png_exit = apr_time_now();
+    return OK;
 
-    
-    if( rv != APR_SUCCESS ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, r, "Output error" );
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-    else {
-        return OK;
-    }
 }
 

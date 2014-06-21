@@ -73,7 +73,7 @@ dojo.declare("model.ExposedModelSender", null, {
             url: this._makeURL(),
             postData : xml,
             headers: {"Content-Type": "text/xml"},
-            
+            handleAs: "json",
             preventCache: true,
             load : dojo.hitch(this, function(response, ioArgs) {
                 try {
