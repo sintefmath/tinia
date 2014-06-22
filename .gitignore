@@ -79,6 +79,3 @@ tinia.sln
 
 
 /js/nbproject/private/
-
-# Config settings for Qt Creator
-CMakeLists.txt.user.*
