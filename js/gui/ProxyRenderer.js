@@ -113,7 +113,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }));
             this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
-                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent" ? 1 : 0);
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "overlap", dojo.hitch(this, function(event) {
                 this._splatOverlap = this.exposedModel.getElementValue("overlap") / 100.0;
@@ -139,25 +139,25 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }) );
             this.exposedModel.addLocalListener( "debugSplatCol", dojo.hitch(this, function(event) {
-                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol" ? 1 : 0);
+                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
                 this._decayMode = this.exposedModel.getElementValue("decayMode" ? 1: 0);
             }) );
             this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
-                this._roundSplats = this.exposedModel.getElementValue("roundSplats" ? 1 : 0);
+                this._roundSplats = this.exposedModel.getElementValue("roundSplats") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "screenSpaceSized", dojo.hitch(this, function(event) {
-                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized" ? 1 : 0);
+                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "useISTC", dojo.hitch(this, function(event) {
                 this._useISTC = this.exposedModel.getElementValue("useISTC") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "splatOutline", dojo.hitch(this, function(event) {
-                this._splatOutline = this.exposedModel.getElementValue("splatOutline" ? 1 : 0);
+                this._splatOutline = this.exposedModel.getElementValue("splatOutline") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "useFragExt", dojo.hitch(this, function(event) {
-                this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt" ? 1 : 0);
+                this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt") ? 1 : 0;
                 this._compileShaders();
             }) );
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
@@ -221,6 +221,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         if ( this._debugging ) {
             splat_vs_src = "#define DEBUG\n" + splat_vs_src;
+            console.log("debug");
             splat_fs_src = "#define DEBUG\n" + splat_fs_src;
         }
 
@@ -384,7 +385,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "roundSplats", this._roundSplats);
             this._setUniform1i(this._splatProgram, "screenSpaceSized", this._screenSpaceSized);
             this._setUniform1i(this._splatProgram, "useISTC", this._useISTC);
-            console.log("Satte this._useISTC: " + this._useISTC);
             this._setUniform1i(this._splatProgram, "splatOutline", this._splatOutline);
             this._setUniform1i(this._splatProgram, "useBlending", this._useBlending ? 1 : 0);
 //            this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
