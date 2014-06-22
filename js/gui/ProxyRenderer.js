@@ -42,8 +42,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that the ratio between these numbers should ideally equal the aspect ratio of the viewport for best results.)
-        this._splats_x = 64;
-        this._splats_y = 64;
+        this._splats_x = 16;
+        this._splats_y = 16;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
@@ -142,7 +142,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
-                this._decayMode = this.exposedModel.getElementValue("decayMode" ? 1: 0);
+                this._decayMode = this.exposedModel.getElementValue("decayMode") ? 1: 0;
             }) );
             this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
                 this._roundSplats = this.exposedModel.getElementValue("roundSplats") ? 1 : 0;
@@ -243,8 +243,10 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._useFragDepthAndAvailable = true;
             splat_vs_src = "#define USE_FRAG_DEPTH_EXT\n" + splat_vs_src;
             splat_fs_src = "#extension GL_EXT_frag_depth : enable\n#define USE_FRAG_DEPTH_EXT\n" + splat_fs_src;
+            console.log("#define USE_FRAG_DEPTH_EXT");
         } else {
             this._useFragDepthAndAvailable = false;
+            console.log("NOT defining USE_FRAG_DEPTH_EXT!");
         }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
@@ -432,7 +434,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             // Currently, the "most recent model" looks awful if we use it without an offset to get it in front, and it it looks awful with offset, *if* we
             // don't have the FragDepthExtension, so in this latter case, we disable it altogether.
-            if ( (this._alwaysShowMostRecent) && (this._useFragDepthAndAvailable) ) {
+            if ( (this._alwaysShowMostRecent) ) { // && (this._useFragDepthAndAvailable) ) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", -1);
                     this.gl.activeTexture(this.gl.TEXTURE0);

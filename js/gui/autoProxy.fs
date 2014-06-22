@@ -31,7 +31,11 @@ varying highp float splat_i, splat_j;
 #endif
 
 uniform int useBlending;
+#ifdef USE_FRAG_DEPTH_EXT
 const int mostRecentProxyModelOffset = 7;
+#else
+const int mostRecentProxyModelOffset = 1;
+#endif
 
 
 
@@ -94,10 +98,14 @@ void main(void)
     // If this is "the most recent proxy model", it should be brought some amount toward the front. Note that this is
     // not a very good solution for billboards, since it requires a very large offset to work properly. Possible
     // solutions to this: 1) Use non-gl_Point-primitives that have "transformed fragments", or 2) set depths using the
-    // gl_FragDepth extension.
-#ifndef USE_FRAG_DEPTH_EXT
+    // gl_FragDepth extension. (Don't think (1) is a good idea, will not work for non-planar regions.) Using a minimal
+    // offset if we don't have the gl_FragDepth extension.
+#ifdef USE_FRAG_DEPTH_EXT
+    // 140622: No need to offset.
+    //         Was it a mistake not to use an offset here? 
+#else
     if (splatSetIndex==-1) {
-        intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+	intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
     }
 #endif
 

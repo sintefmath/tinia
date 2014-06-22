@@ -50,6 +50,8 @@ bool APCJob::init()
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
     // Adding variables to the model
+    // Note that these values are not communicated to the ProxyRenderer until they are actually changed, due to the use
+    // of listeners. (Should maybe fix this, by some initialization routine.)
     {
         m_model->addElement<bool>( "useAutoProxy", true );          // This turns on the new autoProxy
         m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)

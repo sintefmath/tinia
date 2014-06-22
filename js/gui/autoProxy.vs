@@ -6,7 +6,11 @@
 // - Texture size 2^n-restriction should be lifted. Also, in connection with this, resizing code might need revisiting...
 // - ExposedModel elements controlling autoProxy should have names prefixed with something reserved.
 // - Do not send depth buffers from server if they are not to be used.
-
+// - Initialize ProxyRenderer constants by params to the constructor, to avoid problems with initial GUI elements
+//   not matching ProxyRenderer defaults...
+// - Should mostRecent have som discard-tests disabled? E.g., the one with intraFragDepth!=planarFragDepth?
+//   Could be an idea to replace discarding with different colour-encodings, just to check whatever tests get triggered in 
+//   different situations!
 
 attribute vec2 aVertexPosition;
 
@@ -44,7 +48,11 @@ uniform float splats_y;
 uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
+#ifdef USE_FRAG_DEPTH_EXT
 const int mostRecentProxyModelOffset = 7;
+#else
+const int mostRecentProxyModelOffset = 1;
+#endif
 
 
 
