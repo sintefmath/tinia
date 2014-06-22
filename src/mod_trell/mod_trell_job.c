@@ -194,7 +194,9 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
             // create query message
             trell_message_t* msg = msgr.m_shmem_ptr;
             msg->m_type = TRELL_MESSAGE_GET_SNAPSHOT;
-            msg->m_get_snapshot.m_pixel_format = TRELL_PIXEL_FORMAT_BGR8;
+            // msg->m_get_snapshot.m_pixel_format = TRELL_PIXEL_FORMAT_BGR8; // @@@
+            msg->m_get_snapshot.m_pixel_format = dispatch_info->m_pixel_format;
+            // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny mod_trell: trell_handle_get_snapshot('%s') using format: %d", dispatch_info->m_jobid, dispatch_info->m_pixel_format); // @@@
             msg->m_get_snapshot.m_width = dispatch_info->m_width;
             msg->m_get_snapshot.m_height = dispatch_info->m_height;
             memcpy( msg->m_get_snapshot.m_session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
@@ -211,14 +213,22 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
                 retval = HTTP_INTERNAL_SERVER_ERROR;
             }
             else if( msg->m_type == TRELL_MESSAGE_IMAGE ) {
-
                 if( dispatch_info->m_request == TRELL_REQUEST_PNG ) {
-                    retval = trell_send_png( sconf, r, dispatch_info,
-                                             msg->m_image.m_pixel_format,
-                                             msg->m_image.m_width,
-                                             msg->m_image.m_height,
-                                             msg->m_image.m_data,
-                                             0u );
+                    if (dispatch_info->m_pixel_format==TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH) {
+                        retval = trell_send_png_bundle( sconf, r, dispatch_info,
+                                                        msg->m_image.m_width,
+                                                        msg->m_image.m_height, // @@@ NB! The data should contain twice the amount of data, i.e., height*2 scan lines, now! + even more!
+                                                        msg->m_image.m_data );
+                    } else {
+                        // Old version, single image
+                        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny mod_trell: trell_handle_get_snapshot('%s') burde vi kunne havne her i det hele tatt?", dispatch_info->m_jobid);
+                        retval = trell_send_png( sconf, r, dispatch_info,
+                                                 msg->m_image.m_pixel_format,
+                                                 msg->m_image.m_width,
+                                                 msg->m_image.m_height,
+                                                 msg->m_image.m_data,
+                                                 0u);
+                    }
                 }
                 else {
                     retval = HTTP_NOT_IMPLEMENTED;

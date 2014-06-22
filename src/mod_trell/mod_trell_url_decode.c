@@ -29,6 +29,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     dispatch_info->m_component = TRELL_COMPONENT_NONE;
     dispatch_info->m_request = TRELL_REQUEST_NONE;
     dispatch_info->m_mod_action = TRELL_MOD_ACTION_NONE;
+    dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_BGR8; // Default value.
     dispatch_info->m_jobid[0] = '\0';
     dispatch_info->m_sessionid[0] = '\0';
     dispatch_info->m_requestname[0] = '\0';
@@ -186,16 +187,19 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         dispatch_info->m_request = TRELL_REQUEST_STATE_UPDATE_XML;
     }
     else if( strcmp( dispatch_info->m_requestname, "snapshot.png" ) == 0 ) {
+        // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny trell_decode_path_info: snapshot.PNG!" ); // @@@
         require_key    = 1;
         require_width  = 1;
         require_height = 1;
         dispatch_info->m_request = TRELL_REQUEST_PNG;
     }
     else if( strcmp( dispatch_info->m_requestname, "snapshot.txt" ) == 0 ) {
+        // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny trell_decode_path_info: snapshot.txt" ); // @@@
         require_key    = 1;
         require_width  = 1;
         require_height = 1;
         dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH;
         dispatch_info->m_base64 = 1;
     }
     else if( strcmp( dispatch_info->m_requestname, "getRenderList.xml" ) == 0 ) {

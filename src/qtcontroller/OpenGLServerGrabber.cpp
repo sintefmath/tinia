@@ -104,8 +104,8 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
     // Depth encoded as 24 bit fixed point values.
-    for(size_t i=0; i<width*height; i++) {
-        float value = ((float*)m_buffer)[i];
+    for (size_t i=0; i<width*height; i++) {
+        float value = ((float *)m_buffer)[i];
         for (size_t j=0; j<3; j++) {
             ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
             value = 255.0*value - floor(value*255.0);

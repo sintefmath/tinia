@@ -31,6 +31,9 @@ dojo.declare("gui.ProxyRenderer", null, {
         // This is not yet implemented.
         this._useBlending = false;
 
+        // The extension will not be attempted used if unavailable.
+        this._useFragDepthExt = true;
+
         // Currently this is not set to any value used by the application
         this._backgroundCol = vec3.createFrom(0.0, 0.0, 0.0);
 
@@ -54,14 +57,14 @@ dojo.declare("gui.ProxyRenderer", null, {
                                                                     1.1);                               // "Zoom threshold"
 
         // --- For debugging, start
-        this._frameOutputInterval         = 100;
-        this._frameMeasureInterval        = 10;
-        this._pausePerFrameInMilliseconds = 100; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
+        this._frameOutputInterval         = 1000;
+        this._frameMeasureInterval        = 100;
+        this._pausePerFrameInMilliseconds = 0; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
         this._debugSplatCol               = 0;
         this._decayMode                   = 0;
         this._roundSplats                 = 0;
         this._screenSpaceSized            = 1;
-        this._ignoreIntraSplatTexCoo      = 0;
+        this._useISTC                     = 1;
         this._splatOutline                = 0;
         // --- For debugging, end
 
@@ -70,11 +73,15 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl = glContext;
         this.exposedModel = exposedModel;
 
+        this._useFragDepthAndAvailable = false; // Will be set according to availability when we test for that
+
         this._debugging = (this.exposedModel.hasKey("autoProxyDebugging")) && (this.exposedModel.getElementValue("autoProxyDebugging"));
         if (this._debugging) {
             this._frameOutputCounter   = 0;
             this._frameMeasureCounter  = 0;
             this._frameTime = 0.0;
+            this._totalTime = 0.0;
+            this._t0 = 0.0;
             this._lock = false; // for debugging
             this._lock2 = false; // for debugging
         }
@@ -106,7 +113,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }));
             this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
-                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent");
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent" ? 1 : 0);
             }) );
             this.exposedModel.addLocalListener( "overlap", dojo.hitch(this, function(event) {
                 this._splatOverlap = this.exposedModel.getElementValue("overlap") / 100.0;
@@ -132,22 +139,26 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }) );
             this.exposedModel.addLocalListener( "debugSplatCol", dojo.hitch(this, function(event) {
-                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol");
+                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol" ? 1 : 0);
             }) );
             this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
-                this._decayMode = this.exposedModel.getElementValue("decayMode");
+                this._decayMode = this.exposedModel.getElementValue("decayMode" ? 1: 0);
             }) );
             this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
-                this._roundSplats = this.exposedModel.getElementValue("roundSplats");
+                this._roundSplats = this.exposedModel.getElementValue("roundSplats" ? 1 : 0);
             }) );
             this.exposedModel.addLocalListener( "screenSpaceSized", dojo.hitch(this, function(event) {
-                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized");
+                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized" ? 1 : 0);
             }) );
-            this.exposedModel.addLocalListener( "ignoreIntraSplatTexCoo", dojo.hitch(this, function(event) {
-                this._ignoreIntraSplatTexCoo = this.exposedModel.getElementValue("ignoreIntraSplatTexCoo");
+            this.exposedModel.addLocalListener( "useISTC", dojo.hitch(this, function(event) {
+                this._useISTC = this.exposedModel.getElementValue("useISTC") ? 1 : 0;
             }) );
             this.exposedModel.addLocalListener( "splatOutline", dojo.hitch(this, function(event) {
-                this._splatOutline = this.exposedModel.getElementValue("splatOutline");
+                this._splatOutline = this.exposedModel.getElementValue("splatOutline" ? 1 : 0);
+            }) );
+            this.exposedModel.addLocalListener( "useFragExt", dojo.hitch(this, function(event) {
+                this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt" ? 1 : 0);
+                this._compileShaders();
             }) );
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
         }
@@ -155,6 +166,10 @@ dojo.declare("gui.ProxyRenderer", null, {
         // Listeners that are not for debugging only. Currently we use this only to clear the buffer in the event
         // that autoProxy has been enabled, but was then disabled. It could be that this is not needed if the clear-colours
         // used are set otherwise, for instance to the same value as the caller (Canvas-object) is using?!
+        this.exposedModel.addLocalListener( "autoProxyDebugging", dojo.hitch(this, function(event) {
+            this._debugging = this.exposedModel.getElementValue("autoProxyDebugging");
+            this._compileShaders();
+        }) );
         this.exposedModel.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
             var tmp = this.exposedModel.getElementValue("useAutoProxy");
             if (!tmp) {
@@ -201,19 +216,38 @@ dojo.declare("gui.ProxyRenderer", null, {
     _compileShaders: function() {
         console.log("Shader source should now have been read from files, compiling and linking program...");
 
+        var splat_vs_src = this._splat_vs_src;
+        var splat_fs_src = this._splat_fs_src;
+
         if ( this._debugging ) {
-            this._splat_vs_src = "#define DEBUG\n" + this._splat_vs_src;
-            this._splat_fs_src = "#define DEBUG\n" + this._splat_fs_src;
+            splat_vs_src = "#define DEBUG\n" + splat_vs_src;
+            splat_fs_src = "#define DEBUG\n" + splat_fs_src;
         }
 
         var available_extensions = this.gl.getSupportedExtensions();
         console.log("extensions: " + JSON.stringify(available_extensions));
 
-        var frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
-        console.log("frag_depth_ext = " + frag_depth_ext);
+        this._frag_depth_ext = this.gl.getExtension("EXT_frag_depth");
+        // Note that this is not a boolean, but an object is returned. Not sure if this object must be kept alive for the remainder
+        // of the execution, but taking no chances.
+        console.log("this._frag_depth_ext = " + this._frag_depth_ext);
+        if (this.exposedModel.hasKey("fragExtStatus")) {
+            if (this._frag_depth_ext) {
+                this.exposedModel.updateElement("fragExtStatus", "(available)");
+            } else {
+                this.exposedModel.updateElement("fragExtStatus", "(na)");
+            }
+        }
+        if ( (this._frag_depth_ext) && (this._useFragDepthExt) ) {
+            this._useFragDepthAndAvailable = true;
+            splat_vs_src = "#define USE_FRAG_DEPTH_EXT\n" + splat_vs_src;
+            splat_fs_src = "#extension GL_EXT_frag_depth : enable\n#define USE_FRAG_DEPTH_EXT\n" + splat_fs_src;
+        } else {
+            this._useFragDepthAndAvailable = false;
+        }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-        this.gl.shaderSource(splat_fs, this._splat_fs_src);
+        this.gl.shaderSource(splat_fs, splat_fs_src);
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
             alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
@@ -221,7 +255,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
 
         var splat_vs = this.gl.createShader(this.gl.VERTEX_SHADER);
-        this.gl.shaderSource(splat_vs, this._splat_vs_src);
+        this.gl.shaderSource(splat_vs, splat_vs_src);
         this.gl.compileShader(splat_vs);
         if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
             alert("An error occurred compiling the splat_vs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_vs));
@@ -241,7 +275,7 @@ dojo.declare("gui.ProxyRenderer", null, {
     setDepthData: function(imageAsText, depthBufferAsText, viewMatAsText, projMatAsText) {
         // console.log("setDepthData: Starting load process for image-as-text data");
         if (this._proxyModelBeingProcessed.state!=0) {
-            console.log("A depth buffer is already in the pipeline, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
+            console.log("A depth buffer is already being processed, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
         } else {
             if (!this._lock2) {
                 // lock2 not set, we shall update the ring buffer as usual
@@ -295,22 +329,30 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     _clearCanvas: function() {
-        if ( this._useBlending) {
-            if (this._debugging) {
-                this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
+        if ( this.exposedModel.getElementValue("useAutoProxy") ) {
+
+            if ( this._useBlending) {
+                if (this._debugging) {
+                    this.gl.clearColor(0.2, 0.2, 0.2, 0.0);
+                } else {
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+                }
+                this.gl.enable(this.gl.BLEND);
+                this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
             } else {
-                this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+                if (this._debugging) {
+                    this.gl.clearColor(0.2, 0.2, 0.2, 0.8); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+                } else {
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
+                }
             }
-            this.gl.enable(this.gl.BLEND);
-            this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
         } else {
-            if (this._debugging) {
-                this.gl.clearColor(0.2, 0.2, 0.2, 0.8);
-            } else {
-                this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
-            }
+            // Not using the auto-proxy. Why do we end up in _clearCanvas at all, then?!
+            this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 0.0);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         }
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     },
 
 
@@ -341,7 +383,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "decayMode", this._decayMode);
             this._setUniform1i(this._splatProgram, "roundSplats", this._roundSplats);
             this._setUniform1i(this._splatProgram, "screenSpaceSized", this._screenSpaceSized);
-            this._setUniform1i(this._splatProgram, "ignoreIntraSplatTexCoo", this._ignoreIntraSplatTexCoo);
+            this._setUniform1i(this._splatProgram, "useISTC", this._useISTC);
+            console.log("Satte this._useISTC: " + this._useISTC);
             this._setUniform1i(this._splatProgram, "splatOutline", this._splatOutline);
             this._setUniform1i(this._splatProgram, "useBlending", this._useBlending ? 1 : 0);
 //            this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
@@ -387,7 +430,9 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
-            if (this._alwaysShowMostRecent) {
+            // Currently, the "most recent model" looks awful if we use it without an offset to get it in front, and it it looks awful with offset, *if* we
+            // don't have the FragDepthExtension, so in this latter case, we disable it altogether.
+            if ( (this._alwaysShowMostRecent) && (this._useFragDepthAndAvailable) ) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", -1);
                     this.gl.activeTexture(this.gl.TEXTURE0);
@@ -410,18 +455,33 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
 
             // Timing-stuff
-//            this.gl.flush();
-//            if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
-//                this._frameTime += performance.now() - t0;
-//            }
-//            this._frameMeasureCounter++;
-//            this._frameOutputCounter++;
-//            if ( this._frameOutputCounter == this._frameOutputInterval ) {
-//                console.log("Average shader time: " + (this._frameTime/this._frameMeasureInterval) + " (" + (1000.0/(this._frameTime/this._frameMeasureInterval)) + " fps)");
-//                this._frameOutputCounter = 0;
-//                this._frameMeasureCounter = 0;
-//                this._frameTime = 0.0;
-//            }
+            //            if (this._debugging) {
+            if (false) {
+                //            this.gl.flush();
+                if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
+                    var t1 = performance.now();
+                    this._frameTime += t1 - t0;
+                    this._totalTime += t1 - this._t0;
+                    this._t0 = t1;
+                }
+                this._frameMeasureCounter++;
+                this._frameOutputCounter++;
+                if ( this._frameOutputCounter == this._frameOutputInterval ) {
+                    var ms = Math.floor(this._frameTime/this._frameMeasureInterval*100.0)/100.0;
+                    var fps = Math.floor(1000.0/(this._frameTime/this._frameMeasureInterval));
+                    var ms_total = Math.floor(this._totalTime/this._frameMeasureInterval*100.0)/100.0;
+                    var fps_total = Math.floor(1000.0/(this._totalTime/this._frameMeasureInterval));
+                    console.log("Average shader time: " + (ms) + " (" + (fps) + " fps), total time: " + (ms_total) + " (" + (fps_total) + " fps)");
+                    if (this.exposedModel.hasKey("consoleLog")) {
+                        this.exposedModel.updateElement("consoleLog", "Average shader time: " + (ms) + " (" + (fps) + " fps), total time: " + (ms_total) + " (" + (fps_total) + " fps)");
+                    }
+                    this._frameOutputCounter = 0;
+                    this._frameMeasureCounter = 0;
+                    this._frameTime = 0.0;
+                    this._totalTime = 0.0;
+                }
+                this.exposedModel.updateElement("cntr", this.exposedModel.getElementValue("cntr") + 1 );
+            }
 
             if ( this._useBlending ) {
                 this.gl.colorMask(false, false, false, true);

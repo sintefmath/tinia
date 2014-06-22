@@ -1,7 +1,3 @@
-#extension GL_EXT_frag_depth : enable
-
-#define USE_FRAG_DEPTH_EXT
-
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 
@@ -18,7 +14,6 @@ varying highp mat2 intraSplatTexCooTransform2;
 uniform highp float splats_x;
 uniform highp float splats_y;
 uniform highp int splatSetIndex;
-uniform highp int screenSpaceSized;
 uniform highp int vp_width;
 uniform highp int vp_height;
 uniform highp vec3 backgroundCol;
@@ -30,7 +25,7 @@ varying highp float actualSplatOverlap;         // Only used for debugging purpo
 uniform int debugSplatCol;
 uniform int decayMode;
 uniform int roundSplats;
-uniform int ignoreIntraSplatTexCoo;
+uniform int useISTC;
 uniform int splatOutline;
 varying highp float splat_i, splat_j;
 #endif
@@ -72,7 +67,7 @@ void main(void)
     highp vec2 tc = texCoo;
     tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
 #ifdef DEBUG
-    if (!(ignoreIntraSplatTexCoo>0)) {
+    if (useISTC>0) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
     }
 #else
@@ -118,7 +113,7 @@ void main(void)
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
 
 #ifdef DEBUG
-    if (!(ignoreIntraSplatTexCoo>0)) {
+    if (useISTC>0) {
         if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) // Values chosen by using the visualization above
             discard;
     }
@@ -183,7 +178,7 @@ void main(void)
     // if (splatSetIndex>=0) planar_frag_depth = clamp(planar_frag_depth + 0.001*float(splatSetIndex), 0.0, 1.0);
 
 #ifdef DEBUG        
-    if (!(ignoreIntraSplatTexCoo>0)) {
+    if (useISTC>0) {
 	gl_FragDepthEXT = planar_frag_depth;
     } else {
 	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!

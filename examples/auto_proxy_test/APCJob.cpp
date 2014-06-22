@@ -51,8 +51,9 @@ bool APCJob::init()
 
     // Adding variables to the model
     {
-        m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false".
         m_model->addElement<bool>( "useAutoProxy", true );          // This turns on the new autoProxy
+        m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)
+        m_model->addAnnotation("autoProxyDebugging", "Debug mode");
 
         m_model->addElement<bool>( "debugSplatCol", false );
         m_model->addAnnotation("debugSplatCol", "Index coloring (r, g, b, y, c, m)");
@@ -66,22 +67,30 @@ bool APCJob::init()
         m_model->addAnnotation("overlap", "Overlap factor)");
         m_model->addElement<bool>( "alwaysShowMostRecent", true );
         m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addConstrainedElement<int>("splats", 64, 2, 512);
+        m_model->addConstrainedElement<int>("splats", 16, 2, 512);
         m_model->addAnnotation("splats", "Number of splats)");
         m_model->addElement<bool>( "resetAllModels", false );
         m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
-        m_model->addElement<bool>( "ignoreIntraSplatTexCoo", false );
-        m_model->addAnnotation("ignoreIntraSplatTexCoo", "Ignore intra-splat texcoo");
+        m_model->addElement<bool>( "useISTC", true );
+        m_model->addAnnotation("useISTC", "Use intra-splat texcoo");
         m_model->addElement<bool>( "splatOutline", false );
         m_model->addAnnotation("splatOutline", "Square splat outline");
         m_model->addElement<bool>( "reloadShader", false );
         m_model->addAnnotation("reloadShader", "Reload shader");
+        m_model->addElement<bool>( "useFragExt", true );
+        m_model->addAnnotation("useFragExt", "Use FragDepthExt if available");
+        m_model->addElement( "fragExtStatus", "---" );
+        m_model->addElement( "consoleLog", "---" );
+        m_model->addElement<int>( "cntr", 0 );
     }
 
     // Setting up the mainGrid containing the GUI elements
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
     {
         int row = 0;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useAutoProxy"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("autoProxyDebugging"));
+        row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugSplatCol"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decayMode"));
@@ -102,12 +111,17 @@ bool APCJob::init()
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ignoreIntraSplatTexCoo"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useISTC"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("reloadShader"));
         row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useFragExt"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("fragExtStatus", true)); // true) We get the text string connected to the element, false) name of element
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Label("consoleLog", false));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("consoleLog", true));
         // More elements...
     }
 
@@ -170,7 +184,7 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
     }
 
     // Simulated high latency
-    usleep(200000);
+    // usleep(200000);
 
     glEnable(GL_DEPTH_TEST);
 

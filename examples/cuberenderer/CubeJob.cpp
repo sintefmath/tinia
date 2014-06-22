@@ -49,7 +49,7 @@ bool CubeJob::init()
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
     // To use the autoProxy mode, enable this line
-    // m_model->addElement<bool>( "useAutoProxy", false );
+    // m_model->addElement<bool>( "useAutoProxy", true );
 
 #if 0
     // To get a checkbox for turning on/off the autoProxy feature, choose this branch.

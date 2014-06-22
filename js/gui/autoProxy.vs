@@ -5,8 +5,8 @@
 // - Background colour in ProxyRenderer.js should be set to whatever the application is using.
 // - Texture size 2^n-restriction should be lifted. Also, in connection with this, resizing code might need revisiting...
 // - ExposedModel elements controlling autoProxy should have names prefixed with something reserved.
+// - Do not send depth buffers from server if they are not to be used.
 
-#define USE_FRAG_DEPTH_EXT
 
 attribute vec2 aVertexPosition;
 
@@ -20,10 +20,6 @@ varying highp vec2 frag_depth_e;
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
 
-// uniform highp mat4 PM;
-// uniform highp mat4 MV;
-// uniform highp mat4 depthPMinv;
-// uniform highp mat4 depthMVinv;
 uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
 
 uniform sampler2D depthImg;

@@ -179,7 +179,11 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
         h       = msg->m_get_snapshot.m_height;
         session = std::string( msg->m_get_snapshot.m_session_id );
         key     = std::string( msg->m_get_snapshot.m_key );
-        if( format == TRELL_PIXEL_FORMAT_BGR8 ) {
+
+        switch (format) {
+        case TRELL_PIXEL_FORMAT_BGR8:
+        {
+            // std::cerr << "jny IPCJobController::handle: format = TRELL_PIXEL_FORMAT_BGR8" << std::endl; // @@@
             size_t image_size = 3*w*h;
             retsize = TRELL_MESSAGE_IMAGE_SIZE + image_size;
             if( retsize < buf_size ) {
@@ -199,12 +203,37 @@ IPCJobController::handle( trell_message* msg, size_t buf_size )
                 msg->m_size = 0;
                 retsize = TRELL_MSGHDR_SIZE;
             }
+            break;
         }
-        else {
+        case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
+        {
+            // std::cerr << "jny IPCJobController::handle: format = TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH" << std::endl; // @@@
+            const size_t image_size = 4*((3*w*h + 3)/4);
+            const size_t padding = 4*((3*w*h + 3)/4) - 3*w*h;
+            const size_t depth_size = 4*w*h;
+            const size_t matrix_size = 4*16;
+            retsize = TRELL_MESSAGE_IMAGE_SIZE + image_size + padding + image_size + padding + matrix_size*2;
+            if ( image_size + padding + depth_size + matrix_size*2 < buf_size ) { // Might fail if w*h < 1, but that is caught somewhere else, methinks
+                if( onGetSnapshot( msg->m_image.m_data, format, w, h, session, key ) ) {
+                    msg->m_type = TRELL_MESSAGE_IMAGE;
+                } else {
+                    msg->m_type = TRELL_MESSAGE_ERROR;
+                    msg->m_size = 0;
+                    retsize = TRELL_MSGHDR_SIZE;
+                }
+            } else {
+                msg->m_type = TRELL_MESSAGE_ERROR;
+                msg->m_size = 0;
+                retsize = TRELL_MSGHDR_SIZE;
+            }
+            break;
+        }
+        default:
             msg->m_type = TRELL_MESSAGE_ERROR;
             msg->m_size = 0;
             retsize = TRELL_MSGHDR_SIZE;
         }
+
         break;
 
     case TRELL_MESSAGE_GET_RENDERLIST:
