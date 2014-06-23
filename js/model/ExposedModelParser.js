@@ -310,10 +310,10 @@ dojo.declare("model.StateParser", model.XMLHelper, {
             //return;
         }
         if(parent.getType(nodeName) == "composite") {
-            if ( nodeName == "viewer" ) {
+            //if ( nodeName == "viewer" ) {
                 // Currently we ignore viewer for a quickfix
                 return;
-            }
+            //}
             this.updateCompositeElement(parent, xmlElement, nodeName);
         }
         else if(parent.isList(nodeName)) {
