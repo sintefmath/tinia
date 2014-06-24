@@ -20,9 +20,12 @@
 #define MOD_TRELL_H
 
 #include <httpd.h>
+#include <http_config.h>
 #include <apr_hash.h>
+#include <util_filter.h>
 #include <libxml/xmlschemas.h>
-#include "tinia/trell/messenger.h"
+#include <tinia/ipc/ipc_msg.h>
+#include <tinia/ipc/ipc_util.h>
 #include "tinia/trell/trell.h"
 #include "apr_time.h"
 
@@ -56,6 +59,8 @@ typedef struct mod_trell_svr_conf
     xmlSchemaPtr  m_rpc_job_schema;
     /** Schema that validates XML RPC replies */
     xmlSchemaPtr  m_rpc_reply_schema;
+    /** 256-entry CRC table used by PNG encoder. */
+    unsigned int* m_crc_table;
 } trell_sconf_t;
 
 enum TrellComponent {
@@ -81,6 +86,13 @@ enum TrellModAction {
     TRELL_MOD_ACTION_RESTART_MASTER
 };
 
+const module* tinia_get_module();
+
+typedef struct {
+    xmlSchemaPtr    m_schema;
+} req_cfg_t;
+
+
 typedef struct mod_trell_dispatch_info
 {
     enum TrellComponent  m_component;
@@ -92,11 +104,11 @@ typedef struct mod_trell_dispatch_info
     int                  m_base64;
     int                  m_width;
     int                  m_height;
-    char                 m_jobid[TRELL_JOBID_MAXLENGTH];
-    char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH];
-    char                 m_requestname[TRELL_REQUESTNAME_MAXLENGTH];
+    char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
+    char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
     char                 m_key[TRELL_KEYID_MAXLENGTH];
     char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
+    char*                m_static_path;
     apr_time_t           m_entry;
     apr_time_t           m_exit;
     apr_time_t           m_png_entry;
@@ -107,9 +119,25 @@ typedef struct mod_trell_dispatch_info
     apr_time_t           m_png_compress_exit;
 } trell_dispatch_info_t;
 
+
+apr_status_t
+tinia_validate_xml_in_filter( ap_filter_t *f,
+                              apr_bucket_brigade *bb,
+                              ap_input_mode_t mode,
+                              apr_read_type_e block,
+                              apr_off_t readbytes);
+
+apr_status_t
+tinia_validate_xml_out_filter( ap_filter_t *f, apr_bucket_brigade *bb );
+
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info,
                         request_rec*           r );
+
+int
+trell_handle_get_snapshot( trell_sconf_t*          sconf,
+                           request_rec*            r,
+                           trell_dispatch_info_t*  dispatch_info );
 
 /** Handles long-polling request from client.
   *
@@ -124,6 +152,100 @@ int
 trell_handle_get_model_update( trell_sconf_t*          sconf,
                                 request_rec*            r,
                                 trell_dispatch_info_t*  dispatch_info );
+
+typedef struct {
+    trell_sconf_t*          m_sconf;
+    request_rec*            m_r;
+    trell_dispatch_info_t*  m_dispatch_info;
+} trell_callback_data_t;
+
+/******************************************************************************/
+
+typedef struct
+{
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    void*                   message;
+    size_t                  message_offset;
+    size_t                  message_size;
+    int                     pass_post;
+} trell_pass_query_msg_post_data_t;
+
+typedef struct {
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    int                     width;
+    int                     height;
+    char*                   buffer;
+    char*                   filtered;
+    size_t                  bytes_read;
+} trell_encode_png_state_t;
+        
+
+
+/** Sends a message composed by a predefined part and post data.
+ *
+ * \implements tinia_ipc_msg_producer_func_t.
+ */
+int
+trell_pass_query_msg_post( void*           data,
+                           int*            more,
+                           char*           buffer,
+                           size_t*         bytes_written,
+                           const size_t    buffer_size,
+                           const int       part );
+
+
+/******************************************************************************/
+// return 0 on success & finished, -1 failure, and 1 on longpoll wanted.
+
+typedef struct {
+    trell_sconf_t*          sconf;
+    request_rec*            r;
+    trell_dispatch_info_t*  dispatch_info;
+    int                     longpolling;
+    apr_bucket_brigade*     brigade;
+    size_t                  bytes_sent;
+} tinia_pass_reply_data_t;
+
+
+/** Callback that passes data from ipc.msg.client to apache.
+ *
+ * \implements tinia_ipc_msg_consumer_func_t.
+ *
+ * Handles:
+ * - MESSENGER_OK
+ * - MESSENGER_ERROR
+ * - MESSENGER_XML
+ * - TRELL_MESSAGE_SCRIPT
+ *
+ */
+int
+trell_pass_reply(void* data,
+                  const char* buffer,
+                  const size_t buffer_bytes,
+                  const int part,
+                  const int more );
+
+/** Callback that passes data from ipc.msg.client to apache.
+ *
+ * \implements tinia_ipc_msg_consumer_func_t.
+ *
+ * Handles:
+ * - TRELL_MESSAGE_IMAGE
+ */
+int
+trell_pass_reply_png( void* data,
+                      const char* buffer,
+                      const size_t buffer_bytes,
+                      const int part,
+                      const int more );
+
+/******************************************************************************/
+
+
 
 /** Gets the user defined scripts */
 int
@@ -149,32 +271,15 @@ trell_handle_update_state( trell_sconf_t*          sconf,
                            request_rec*            r,
                            trell_dispatch_info_t*  dispatch_info );
 
-int
-trell_handle_get_snapshot( trell_sconf_t*          sconf,
-                           request_rec*            r,
-                           trell_dispatch_info_t*  dispatch_info );
 
 int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info );
 
-int
-trell_send_script(  trell_sconf_t*   sconf,
-                    request_rec*     r,
-                    const char*      payload,
-                    const size_t     payload_size );
 
-int
-trell_send_xml( trell_sconf_t*   sconf,
-                request_rec*     r,
-                const char*      payload,
-                const size_t     payload_size );
 
-int
-trell_send_xml_success( trell_sconf_t*  sconf,
-                        request_rec*    r );
-
+#if 0
 int
 trell_send_xml_failure( trell_sconf_t*  sconf,
                         request_rec*    r );
@@ -196,6 +301,8 @@ trell_send_png_bundle( trell_sconf_t*          sconf,
                        const int               width,
                        const int               height,
                        const char * const      payload );
+#endif
+
 
 int
 trell_send_reply_static_file( trell_sconf_t* sconf,
@@ -203,34 +310,12 @@ trell_send_reply_static_file( trell_sconf_t* sconf,
                        trell_dispatch_info_t* dinfo );
 
 
-
-/** Send the XML contents of a locked messenger back to the HTTP client.
-  *
-  * \param r     The request structure of the request.
-  * \param msgr  A locked messenger containing the reply to encode. The
-  *              The messenger will not be unlocked.
-  * \returns     The return value for the handler.
-  */
-int
-trell_send_reply_xml( trell_sconf_t* sconf, request_rec* r, struct messenger* msgr );
-
-
-
-
-
-/** Handle an RPC request that is directed to mod_trell.
-  *
-  * \param sconf  The server configuration.
-  * \param r      The request structure of the request.
-  * \returns      The return value for the operation.
-  */
-int
-trell_ops_rpc_handle( trell_sconf_t* sconf, request_rec* r );
-
-
 /** Restart the master. */
 int
 trell_ops_do_restart_master( trell_sconf_t* sconf, request_rec*r );
+
+void
+trell_messenger_log_wrapper( void* data, int level, const char* who, const char* message, ... );
 
 
 /** Handle an RPC request that is directed to a job (i.e. passed over IPC).
@@ -241,58 +326,10 @@ trell_ops_do_restart_master( trell_sconf_t* sconf, request_rec*r );
   * \returns      The return value for the operation.
   */
 int
-trell_job_rpc_handle( trell_sconf_t* sconf, request_rec*r, xmlSchemaPtr schema, const char* job );
-
-
-apr_hash_t*
-trell_parse_args_uniq_key( request_rec* r, char* args );
-
-
-/** Checks if a job-name is valid
-  *
-  * \returns 1 If the job-name is valid and 0 otherwise.
-  */
-int
-trell_valid_jobid( trell_sconf_t* sconf, request_rec* r, const char* job );
-
-/** Flattens a list of brigades into a memory chunk.
-  *
-  * \param sconf        The server configuration.
-  * \param r            The request structure of the request.
-  * \param buffer       The memory chunk into where to store the contents of the
-  *                     brigades.
-  * \param buffer_size  The size of the memory chunk, in bytes.
-  * \param brigades     An array of pointers to brigades.
-  */
-size_t
-trell_flatten_brigades_into_mem( trell_sconf_t* sconf, request_rec*r,
-                                 char* buffer, size_t buffer_size,
-                                 apr_array_header_t* brigades );
-
-int
-trell_parse_xml( trell_sconf_t* sconf,
-                 request_rec* r,
-                 apr_array_header_t* brigades,
-                 xmlSchemaPtr schema );
-
-
-/** LibXML2 error callback to use when we have a server_rec. */
-void
-trell_xml_error_s_cb( void* ctx, const char* msg, ... );
-
-
-
-struct TrellLibXMLState
-{
-    void*                m_original_error_context;
-    xmlGenericErrorFunc  m_original_error_func;
-};
-
-void
-trell_libxml_state_set_r( struct TrellLibXMLState* old, request_rec* r );
-
-void
-trell_libxml_state_restore( struct TrellLibXMLState* old );
-
+trell_job_rpc_handle( trell_sconf_t* sconf,
+                      request_rec*r,
+                      xmlSchemaPtr schema,
+                      const char* job,
+                      trell_dispatch_info_t*  dispatch_info );
 
 #endif // MOD_TRELL_H

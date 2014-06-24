@@ -40,6 +40,9 @@ OPTION( Tinia_BUILD_TUTORIALS "Build tutorials?" ON )
 OPTION( Tinia_BUILD_UNIT_TESTS "Build unit tests?" ON )
 OPTION( Tinia_AMAZON "Configurations needed to make Tinia work smoothly on Amazon" OFF)
 
+OPTION( Tinia_IPC_LOG_TRACE "Enable numerous logging messages to track actions of IPC threads" OFF )
+OPTION( Tinia_IPC_VALGRIND_ANNOTATIONS "Enable some annotation for valgrind and its tools" OFF )
+
 OPTION( Tinia_EXTEND_CMAKE_MODULE_PATH
         "Extend the CMAKE_MODULE_PATH variable with user directories?"
         ON )
@@ -65,9 +68,14 @@ ENDIF()
 IF(Tinia_AMAZON) 
   ADD_DEFINITIONS(-DTINIA_AMAZON)
 ENDIF()
+
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-        SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
+    SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" )
+    IF( Tinia_IPC_LOG_TRACE )
+        add_definitions( -DTINIA_IPC_LOG_TRACE )
+    ENDIF( Tinia_IPC_LOG_TRACE )
 ENDIF()
+
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
         #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
@@ -122,6 +130,13 @@ FIND_PACKAGE( GLM REQUIRED )
 
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 IF(Tinia_SERVER)
+    IF( Tinia_IPC_VALGRIND_ANNOTATIONS )
+        FIND_PATH(
+            VALGRIND_INCLUDE_DIR valgrind.h
+            HINTS   "/usr/include/valgrind"
+        )
+        ADD_DEFINITIONS( -DTINIA_IPC_VALGRIND_ANNOTATIONS )
+    ENDIF( Tinia_IPC_VALGRIND_ANNOTATIONS )
 
   FIND_PATH( APACHE_INCLUDE_DIR httpd.h
     HINTS "/usr/include/apache2" "/usr/include/httpd/"
@@ -136,13 +151,14 @@ IF(Tinia_SERVER)
     NAMES apr-1
     PATHS "/usr/lib/"
     )
+  FIND_PACKAGE( Threads )
 
   FIND_PATH(APR_INCLUDE_DIR "apr.h"
 HINTS   "/usr/include/apr-1.0"
         "/usr/include/apr-1"
         "apr-1/"
         "apr-1.0")
-    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${LIB_APR})
+    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIB_APR})
 ENDIF()
 
 SET(TINIA_EXTERNAL_INCLUDE_DIRS
@@ -150,6 +166,7 @@ SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${GLEW_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
   ${APACHE_INCLUDE_DIR}
+  ${VALGRIND_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
@@ -182,14 +199,22 @@ IF(Tinia_DESKTOP)
   SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_qtcontroller)
 ENDIF()
 IF(Tinia_SERVER)
+  ADD_SUBDIRECTORY( "src/ipc" )
   ADD_SUBDIRECTORY( "src/trell" )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
   ADD_SUBDIRECTORY( "src/mod_trell" )
   ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
 
+# --- The rest are built as applications using tinia ---------------------------
+SET( TINIA_LIBRARIES ${TINIA_LIBRARIES_FOR_CONFIG} )
+
+
 # Unit tests
 IF( Tinia_BUILD_UNIT_TESTS )
+  IF( Tinia_SERVER )
+    ADD_SUBDIRECTORY( "unittests/ipc/" )
+  ENDIF( Tinia_SERVER )
   ADD_SUBDIRECTORY( "unittests/model/" )
   IF(LIBXML2_FOUND)
     ADD_SUBDIRECTORY( "unittests/modelxml/" )
@@ -251,7 +276,7 @@ SET(TINIA_TARGETS_APPEND "")
 # This is for local build directory:
 IF(Tinia_DESKTOP)
 	IF(Tinia_SERVER)
-		export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tinia_trell
+		export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tiniaipc tinia_trell
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 	ELSE()
 	   IF(LIBXML2_FOUND)
@@ -263,7 +288,7 @@ IF(Tinia_DESKTOP)
 		ENDIF()
 	ENDIF()
 ELSE()
-	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tinia_trell
+	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tiniaipc tinia_trell
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 ENDIF()
 

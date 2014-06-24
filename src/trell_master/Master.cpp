@@ -134,39 +134,57 @@ Master::Master( bool for_real )
 
 
 size_t
-Master::handle( trell_message* msg, size_t buf_size )
+Master::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 {
-    TrellMessageType return_type = TRELL_MESSAGE_ERROR;
-    size_t osize = 0;
+    const std::string func = package + ".handle";
+    
+    m_logger_callback( m_logger_data, 2, func.c_str(), "Got message %d", msg->type );
 
-    if( msg->m_type == TRELL_MESSAGE_XML ) {
+    if( msg->type == TRELL_MESSAGE_XML ) {
+        
         ParsedXML data;
         data.m_action = ParsedXML::ACTION_NONE;
-        parseXML( data, msg->m_xml_payload, msg->m_size );
+        parseXML( data,
+                  (char*)msg + sizeof(tinia_msg_xml_t),
+                  msg_size - sizeof(tinia_msg_xml_t) );
 
         string retval;
         switch( data.m_action ) {
         case ParsedXML::ACTION_NONE:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: no action." );
             break;
         case ParsedXML::ACTION_PING:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: ping." );
             retval = ret_pong;
             break;
         case ParsedXML::ACTION_GET_SERVER_LOAD:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: getLoad." );
             retval = getLoad();
             break;
         case ParsedXML::ACTION_WIPE_JOB:
             if( wipeJob( data.m_job ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: wipeJob(%s): success.", data.m_job.c_str() );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: wipeJob(%s): failure.", data.m_job.c_str() );
                 retval = ret_failure;
             }
             break;
         case ParsedXML::ACTION_KILL_JOB:
             if( killJob( data.m_job, data.m_force ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: killJob(%s, force=%d): success.", data.m_job.c_str(), data.m_force );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: killJob(%s, force=%d): failure.", data.m_job.c_str(), data.m_force );
                 retval = ret_failure;
             }
             break;
@@ -175,17 +193,26 @@ Master::handle( trell_message* msg, size_t buf_size )
                         data.m_application,
                         data.m_args,
                         data.m_rendering_devices,
-                        string( msg->m_xml_payload, msg->m_size ) ) ) {
+                        string( (char*)msg + sizeof(tinia_msg_xml_t),
+                                msg_size - sizeof(tinia_msg_xml_t) ) ) ) {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: addJob(%s): success.", data.m_job.c_str() );
                 retval = ret_success;
             }
             else {
+                m_logger_callback( m_logger_data, 1, package.c_str(),
+                                   "Received xml-rpc: addJob(%s): failure.", data.m_job.c_str() );
                 retval = ret_failure;
             }
             break;
         case ParsedXML::ACTION_GET_JOB_LIST:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: getJobList." );
             retval = encodeMasterState();
             break;
         case ParsedXML::ACTION_LIST_RENDERING_DEVICES:
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "Received xml-rpc: listRenderingDevices." );
             retval = ret_header
                    + m_rendering_devices.xml()
                    + ret_footer;
@@ -194,8 +221,12 @@ Master::handle( trell_message* msg, size_t buf_size )
             m_applications.refresh();
             if( m_applications.timestamp() <= data.m_timestamp ) {
                 retval = ret_success;
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: listApplications: no changes." );
             }
             else {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Received xml-rpc: listApplications: list have changed." );
                 retval = ret_header
                        + m_applications.xml()
                        + ret_footer;
@@ -204,30 +235,46 @@ Master::handle( trell_message* msg, size_t buf_size )
         }
         
         if( !retval.empty() ) {
-
-            size_t l = retval.size() + 1;
-            if( TRELL_MSGHDR_SIZE + l < buf_size ) {
-                return_type = TRELL_MESSAGE_XML;
-                osize = l;
-                strcpy( msg->m_xml_payload, retval.c_str() );
+            if( buf_size  <= sizeof(tinia_msg_xml_t) + retval.size() ) {
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Shmem buffer too small." );
             }
             else {
-                std::cerr << "Shmem buffer too small.\n";
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Replied with %d bytes of XML.", retval.size() );
+                
+                tinia_msg_xml_t* reply = (tinia_msg_xml_t*)msg;
+                reply->msg.type = TRELL_MESSAGE_XML;
+                memcpy( (char*)msg + sizeof(tinia_msg_xml_t), retval.data(), retval.size() );
+                return sizeof(tinia_msg_xml_t) + retval.size();
             }
         }
-
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_ERROR;
+        return sizeof(tinia_msg_t);
     }
-    else if( msg->m_type == TRELL_MESSAGE_HEARTBEAT ) {
-        std::string job = msg->m_ping_payload.m_job_id;
-        setJobState( job, msg->m_ping_payload.m_state, true );
-        return_type = TRELL_MESSAGE_OK;
-        osize = 0u;
+    else if( msg->type == TRELL_MESSAGE_HEARTBEAT ) {
+        tinia_msg_heartbeat_t* q = reinterpret_cast<tinia_msg_heartbeat_t*>(msg);
+
+        m_logger_callback( m_logger_data, 2, package.c_str(),
+                           "Received heartbeat from %s, state=%d.",
+                           q->job_id, q->state );
+
+        std::string job = q->job_id;
+        setJobState( job, q->state, true );
+
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_OK;
+        return sizeof(tinia_msg_t);
     }
-
-
-    msg->m_type = return_type;
-    msg->m_size = osize;
-    return osize + TRELL_MSGHDR_SIZE;
+    else {
+        m_logger_callback( m_logger_data, 0, package.c_str(),
+                           "Received unknown message: type=%d, size=%d.",
+                           msg->type, msg_size );
+        tinia_msg_t* reply = (tinia_msg_t*)msg;
+        reply->type = TRELL_MESSAGE_ERROR;
+        return sizeof(tinia_msg_t);
+    }
 }
 
 bool
@@ -344,7 +391,7 @@ Master::setJobState( const std::string& job, TrellJobState state, bool heartbeat
 void
 Master::parseXML( ParsedXML& data, char* buf, size_t len )
 {
-    std::cerr << std::string(  buf, buf + len ) << "\n";
+    //std::cerr << std::string(  buf, buf + len ) << "\n";
     
     xmlTextReaderPtr reader = xmlReaderForMemory( buf,
                                                   len,
@@ -819,51 +866,39 @@ Master::addJob( const std::string& id,
             execvpe( it->second.m_executable.c_str(),
                      reinterpret_cast<char* const*>( arg.data() ),
                      reinterpret_cast<char* const*>( env.data() ) );
-            std::cerr << "Failed to exec: " << strerror(errno) << "\n";
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "'%s' failed to exec.", it->second.m_id.c_str() );
 
-            // Notify master that things went wrong
-
-            messenger m;
-            messenger_status_t mrv;
-
-            mrv = messenger_init( &m, getMasterID().c_str() );
-            if( mrv != MESSENGER_OK ) {
-                std::cerr << __func__ << ": messenger_init(" << getMasterID() << ") failed: " << messenger_strerror( mrv ) << "\n";
+            // --- notify master that things went wrong ------------------------
+            tinia_msg_heartbeat_t query;
+            query.msg.type = TRELL_MESSAGE_HEARTBEAT;
+            query.state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
+            strncpy( query.job_id, it->second.m_id.c_str(), TINIA_IPC_JOBID_MAXLENGTH );
+            query.job_id[ TINIA_IPC_JOBID_MAXLENGTH ] = '\0';
+            
+            tinia_msg_t reply;
+            size_t reply_actual;
+        
+            
+            if( (ipc_msg_client_sendrecv_buffered_by_name( getMasterID().c_str(),
+                                                          m_logger_callback, m_logger_data,
+                                                          reinterpret_cast<const char*>( &query ), sizeof(query),
+                                                          reinterpret_cast<char*>( &reply ), &reply_actual, sizeof(reply) ) == 0 )
+                && (reply_actual == sizeof(reply))
+                    && (reply.type == TRELL_MESSAGE_OK) )
+            {
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Notified master that '%s' is about to terminate.",
+                                   it->second.m_id.c_str() );
             }
             else {
-                mrv = messenger_lock( &m );
-
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_lock(" << getMasterID() << ") failed: " << messenger_strerror( mrv ) << "\n";
-                }
-                else {
-                    size_t msg_size = (it->second.m_id.length()+1) + offsetof( trell_message, m_ping_payload.m_job_id );
-                    if( msg_size < m.m_shmem_size ) {
-                        trell_message* msg = reinterpret_cast<trell_message*>( m.m_shmem_ptr );
-                        msg->m_type = TRELL_MESSAGE_HEARTBEAT;
-                        msg->m_size = msg_size - TRELL_MSGHDR_SIZE;
-                        msg->m_ping_payload.m_state = TRELL_JOBSTATE_TERMINATED_UNSUCCESSFULLY;
-                        strcpy( msg->m_ping_payload.m_job_id, it->second.m_id.c_str() );
-
-                        mrv = messenger_post( &m, msg_size );
-                        if( mrv != MESSENGER_OK ) {
-                            std::cerr << __func__ << ": messenger_post("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                        }
-                        else {
-                            std::cerr << "Notified master.\n";
-                        }
-                    }
-                    mrv = messenger_unlock( &m );
-                    if( mrv != MESSENGER_OK ) {
-                        std::cerr << __func__ << ": messenger_unlock("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                    }
-                }
-                messenger_status_t mrv = messenger_free( &m );
-                if( mrv != MESSENGER_OK ) {
-                    std::cerr << __func__ << ": messenger_free("<<getMasterID()<<"): " << messenger_strerror( mrv ) << "\n";
-                }
+                m_logger_callback( m_logger_data, 0, package.c_str(),
+                                   "Tried to notify master that '%s' is about terminate, but failed to send message.",
+                                   it->second.m_id.c_str() );
             }
-            std::cerr << "Exiting.\n";
+                                                            
+            m_logger_callback( m_logger_data, 2, package.c_str(),
+                               "'%s' exits.", it->second.m_id.c_str() );
             exit( EXIT_FAILURE );
         }
         else {

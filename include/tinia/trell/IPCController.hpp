@@ -20,7 +20,7 @@
 
 #include <string>
 #include <semaphore.h>
-#include "messenger.h"
+#include <tinia/ipc/ipc_msg.h>
 #include "trell.h"
 #include "tinia/jobcontroller/Controller.hpp"
 #include "tinia/model/StateListener.hpp"
@@ -155,23 +155,6 @@ protected:
     bool
     periodic();
 
-    /** Hook that is invoked very often.
-     *
-     * Probably only useful for master job.
-     *
-     * Invoked
-     * - Each time a message has been processed.
-     * - The message wait has timed out.
-     * - The message wait has been interrupted by a signal.
-     *
-     */
-    virtual
-    void
-    often();
-    
-    void
-    mainloop();
-    
 
     /** Hook that is invoked just before the job terminates.
       *
@@ -208,7 +191,7 @@ protected:
       */
     virtual
     size_t
-    handle( trell_message* msg, size_t buf_size ) = 0;
+    handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size ) = 0;
 
     /** Convenience function to send a message without payload to a message box.
       *
@@ -231,6 +214,8 @@ private:
     /** The pid of the process that should invoke the cleanup functions (to
       * avoid clashes when fork succeds, but execl fails. */
     int             m_cleanup_pid;
+
+    tinia_ipc_msg_server_t*  m_msgbox;
     /** The id of this message box. */
     std::string     m_id;
     /** True of this job is the master job. */
@@ -239,44 +224,10 @@ private:
     std::string     m_master_id;
     /** The current state of this job/messagebox */
     TrellJobState   m_job_state;
-    /** Pointer to the shared memory of this message box. */
-    void*           m_shmem_ptr;
-    /** The size (in bytes) of the shared memory of this message box. */
-    size_t          m_shmem_size;
-    /** The system-wide name of the shared memory of this message box. */
-    std::string     m_shmem_name;
-    /** The semaphore that can lock this message box. */
-    sem_t*          m_sem_lock;
-    /** The system-wide name of the semaphore that can lock this message box. */
-    std::string     m_sem_lock_name;
-    /** The semaphore that signals a pending incoming message. */
-    sem_t*          m_sem_query;
-    /** The system-wide name of the semaphore that signals a pending incoming message. */
-    std::string     m_sem_query_name;
 
-    /** The semaphore that signals a pending reply in response to the incoming message. */
-    sem_t*          m_sem_reply;
-    /** The system-wide name of the semaphore that singals a pending reply. */
-    std::string     m_sem_reply_name;
+    // /** A messenger to the master job's message box. */
+    // tinia_ipc_msg_client_t*    m_master_mbox;
 
-    volatile bool   m_notify;
-    sem_t*          m_sem_notify;
-    std::string     m_sem_notify_name;
-
-    /** A messenger to the master job's message box. */
-    messenger       m_master_mbox;
-
-    static bool
-    createSharedMemory( void** memory, size_t* memory_size, const std::string& name, const size_t size );
-
-    static void
-    deleteSharedMemory( void** memory, size_t* memory_size, const std::string& name );
-
-    static bool
-    createSemaphore( sem_t** semaphore, const std::string& name );
-
-    static void
-    deleteSemaphore( sem_t** semaphore, const std::string& name );
 
     /** Sends a heartbeat message to the master job. */
     bool
@@ -286,6 +237,56 @@ private:
     void
     shutdown();
 
+
+    struct Context
+    {
+        IPCController*  m_ipc_controller;
+        char*           m_buffer;
+        size_t          m_buffer_offset;
+        size_t          m_output_bytes;
+        size_t          m_buffer_size;
+    };
+    
+
+    static
+    int
+    message_input_handler(tinia_ipc_msg_consumer_func_t* consumer,
+                           void** consumer_data,
+                           void* handler_data,
+                           const char *buffer,
+                           const size_t buffer_bytes );
+    
+    static
+    int
+    message_output_handler( tinia_ipc_msg_producer_func_t* producer,
+                            void** producer_data,
+                            void* handler_data );
+
+    
+    static
+    int
+    message_consumer( void*                     data,
+                      const char*               buffer,
+                      const size_t              buffer_bytes,
+                      const int                 iteration,
+                      const int                 more ) ;
+
+    static
+    int
+    message_producer( void*         data,
+                      int*          more,
+                      char*         buffer,
+                      size_t*       buffer_bytes,
+                      const size_t  buffer_size,
+                      const int     iteration );
+
+    static
+    int
+    handle_periodic( void* data );
+    
+    
+    
+    
 };
 
 

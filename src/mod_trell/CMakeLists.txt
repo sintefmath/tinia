@@ -1,19 +1,19 @@
 SET( MOD_TRELL_SRC
     "mod_trell.c"
+    "filter_validate_xml.c"
     "mod_trell_ops.c"
     "mod_trell_job.c"
-    "mod_trell_util.c"
-    "mod_trell_reply.c"
-    "mod_trell_send_png.c"
-    "mod_trell_send_bmp.c"
-    "mod_trell_send_xml.c"
     "mod_trell_send_file.c"
     "mod_trell_url_decode.c"
-    "../trell/messenger.c"
+    "pass_query.c"
+    "pass_reply.c"
+    "pass_reply_png.c"
 )
 
+FIND_PACKAGE(Threads)
 ADD_LIBRARY( mod_tinia_trell ${MOD_TRELL_SRC} )
-TARGET_LINK_LIBRARIES( mod_tinia_trell ${RT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
+TARGET_LINK_LIBRARIES( mod_tinia_trell tiniaipc ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIBXML2_LIBRARIES} ${LIB_APR} )
+ADD_DEFINITIONS( -Wall )
 
 INSTALL( TARGETS mod_tinia_trell
   EXPORT TiniaTargets
