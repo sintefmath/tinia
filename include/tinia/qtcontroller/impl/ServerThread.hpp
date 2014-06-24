@@ -24,11 +24,17 @@ private:
 
     bool isLongPoll(const QString& request);
 
-    /** Collects view matrix, projection matrix, rgb buffer and depth buffer, and write them out as a JSON object.
+    /** Collects the rgb buffer data and return i as text.
      */
     void getSnapshotTxt(QTextStream &os, const QString &request,
                         tinia::jobcontroller::Job* job,
                         tinia::qtcontroller::impl::OpenGLServerGrabber* grabber);
+
+    /** Collects view matrix, projection matrix, rgb buffer and depth buffer, and write them out as a JSON object.
+     */
+    void getSnapshotBundleTxt(QTextStream &os, const QString &request,
+                              tinia::jobcontroller::Job* job,
+                              tinia::qtcontroller::impl::OpenGLServerGrabber* grabber);
 
     /** Handles non-static content, if applicable.
      * @returns true if the file is non-static, false otherwise.

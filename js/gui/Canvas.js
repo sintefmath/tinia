@@ -33,6 +33,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (!params.renderListURL) {
             params.renderListURL = "xml/getRenderList.xml";
         }
+        if (!params.snapshotBundleURL) {
+            params.snapshotBundleURL = "snapshot_bundle.txt";
+        }
         if (!params.snapshotURL) {
             params.snapshotURL = "snapshot.txt";
         }
@@ -46,6 +49,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._width = 512;
         this._height = 512;
         this._modelLib = params.modelLib;
+        this._snapshotBundleURL = params.snapshotBundleURL;
         this._snapshotURL = params.snapshotURL;
 
         this._localMode = params.localMode;
@@ -165,7 +169,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // We always want to update after the first parsing
         this._shouldUpdate = true;
 
-        this._urlHandler.setURL(this._snapshotURL);
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+            this._urlHandler.setURL(this._snapshotBundleURL);
+        } else {
+            this._urlHandler.setURL(this._snapshotURL);
+        }
 
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
             if (!this._imageLoading) {
@@ -174,9 +182,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        console.log("/model/updateParsed: response = " + response);
-                        var response_obj = eval( '(' + response + ')' );
-                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
+                        // console.log("/model/updateParsed: response = " + response);
+                        if (response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be a JSON bundle
+                            var response_obj = eval( '(' + response + ')' );
+                            this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
+                        } else {
+                            this._setImageFromText( response );
+                        }
                     })
                 });
             }
@@ -190,11 +202,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             // Temporary sanity fix for firefox
             // (Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
-            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
-                console.log("/model/updateSendPartialComplete: response = " + params.response);
-                var response_obj = eval( '(' + params.response + ')' );
-                if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image. // @@@ Should be replaced by something that also works for non-bundle data
+                // console.log("/model/updateSendPartialComplete: response = " + params.response);
+                if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be a JSON bundle
+                    var response_obj = eval( '(' + params.response + ')' );
+                    if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+                } else {
+                    this._setImageFromText( params.response );
+                }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
             }
@@ -356,8 +372,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _setImageFromText: function (response_rgb, response_depth, response_view, response_proj) {
-        // What is this about?
-        if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
+        if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) { // @@@ What is this about?
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
         this._img.src = "data:image/png;base64," + response_rgb;
@@ -552,8 +567,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _makeImgURL: function () {
-        return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
-        + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        } else {
+            return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
+                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        }
     },
 
     _update: function () {

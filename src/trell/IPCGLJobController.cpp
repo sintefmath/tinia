@@ -502,7 +502,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         m_logger_callback( m_logger_data, 0, package.c_str(), "jny IPCGLJobController::onGetSnapshot: Bedt om aa grabbe alt"); // @@@
         unsigned char *buffer_pos = (unsigned char *)buffer;
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer_pos );
-#if 1
+#if 0
         static int cntr=0;
         {
             char fname[1000];
@@ -523,7 +523,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 value = 255.0*value - floor(value*255.0);
             }
         }
-#if 1
+#if 0
         {
             char fname[1000];
             sprintf(fname, "/tmp/depth_%05d.ppm", cntr);

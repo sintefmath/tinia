@@ -33,6 +33,8 @@ extern "C" {
 
 /** The pixel formats that is used in the trell system. */
 enum TrellPixelFormat {
+    /** Trap for unset format */
+    TRELL_PIXEL_FORMAT_UNDEFINED,
     /** 8-bit normalized bgr data. */
     TRELL_PIXEL_FORMAT_BGR8,
     /** 8-bit normalized bgr data + 24-bit fixed point depth. */

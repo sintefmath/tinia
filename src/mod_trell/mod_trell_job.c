@@ -165,8 +165,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
 
     tinia_msg_get_snapshot_t query;
     query.msg.type     = TRELL_MESSAGE_GET_SNAPSHOT;
-    //query.pixel_format = TRELL_PIXEL_FORMAT_BGR8; // @@@@
-    query.pixel_format = TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH; // @@@ Argh! It is not enough to set this here, I think!
+    query.pixel_format = dispatch_info->m_pixel_format;
     query.width        = dispatch_info->m_width;
     query.height       = dispatch_info->m_height;
     memcpy( query.session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
@@ -192,24 +191,11 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     encode_png_state.height        = 0;
     encode_png_state.buffer        = NULL;
     
-// @@@ Think maybe the same trell_pass_reply_png can handle different images, it can detect the type from the 'query' data
-    //    int rv=-2;
-//    switch (query.pixel_format) { // @@@
-//    case TRELL_PIXEL_FORMAT_BGR8:
-        int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
-                                                    trell_messenger_log_wrapper, r,
-                                                    trell_pass_query_msg_post, &pass_query_data,
-                                                    trell_pass_reply_png, &encode_png_state,
-                                                    0 );
-//        break;
-//    case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
-//        rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
-//                                                    trell_messenger_log_wrapper, r,
-//                                                    trell_pass_query_msg_post, &pass_query_data,
-//                                                    trell_pass_reply_png_bundle, &encode_png_state,
-//                                                    0 );
-//        break;
-//    }
+    int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
+                                                trell_messenger_log_wrapper, r,
+                                                trell_pass_query_msg_post, &pass_query_data,
+                                                trell_pass_reply_png, &encode_png_state,
+                                                0 );
 
     if( rv == 0 ) {
         return OK;

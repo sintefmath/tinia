@@ -278,32 +278,6 @@ trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              trell_dispatch_info_t*  dispatch_info );
 
 
-
-#if 0
-int
-trell_send_xml_failure( trell_sconf_t*  sconf,
-                        request_rec*    r );
-
-int
-trell_send_png( trell_sconf_t*          sconf,
-                request_rec*            r,
-                trell_dispatch_info_t*  dispatch_info,
-                enum TrellPixelFormat   format,
-                const int               width,
-                const int               height,
-                const char*             payload,
-                const size_t            payload_size);
-
-int
-trell_send_png_bundle( trell_sconf_t*          sconf,
-                       request_rec*            r,
-                       trell_dispatch_info_t*  dispatch_info,
-                       const int               width,
-                       const int               height,
-                       const char * const      payload );
-#endif
-
-
 int
 trell_send_reply_static_file( trell_sconf_t* sconf,
                        request_rec*   r,

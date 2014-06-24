@@ -111,7 +111,7 @@ static int trell_handler_body(request_rec *r)
     dispatch_info->m_entry = apr_time_now();
 
 
-#if 1
+#if 0
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                    "mod_trell: decode_path_info returned c=%d, r=%d, j='%s', s='%s', r='%s' rev=%d, ac=%d, key=%s, w=%d, h=%d",
                    dispatch_info->m_component,
@@ -179,9 +179,9 @@ static int trell_handler_body(request_rec *r)
                     return rv;
                 }
             }
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny foer trell_handle_get_snapshot, format=%d", dispatch_info->m_pixel_format); // @@@
+            // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny foer trell_handle_get_snapshot, format=%d", dispatch_info->m_pixel_format); // @@@
             int rv = trell_handle_get_snapshot( sconf, r, dispatch_info );
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny etter trell_handle_get_snapshot"); // @@@
+            // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny etter trell_handle_get_snapshot"); // @@@
             dispatch_info->m_exit = apr_time_now();
 
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 

@@ -43,6 +43,14 @@ public:
              unsigned int width,
              unsigned int height,
              const std::string &key);
+
+    /** Grabs the depth buffer of a view
+     *
+     * \note The buffer is transformed to an RGB image with depth values encoded as fixed point numbers.
+     * \note Must be invoked in the thread that holds the OpenGL context,
+     *       usually the main/GUI-thread.
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
     void
     grabDepth( tinia::jobcontroller::OpenGLJob* job,
                unsigned int width,
