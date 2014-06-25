@@ -392,14 +392,11 @@ trell_pass_reply_png_bundle( void*          data,
         uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
         unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 );
         unsigned char* p = png;
-//        trell_png_encode( data, &p ); // This updates *p
 
         char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
         apr_rfc822_date( datestring, apr_time_now() );
         apr_table_setn( encoder_state->r->headers_out, "Last-Modified", datestring );
         apr_table_setn( encoder_state->r->headers_out, "Cache-Control", "no-cache" );
-
-
 
         // Encode png as base64 and send as string
         apr_table_setn( encoder_state->r->headers_out, "Content-Type", "text/plain" );
@@ -410,16 +407,13 @@ trell_pass_reply_png_bundle( void*          data,
         // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny Adding prefix '%s', midfix '%s' and suffix '%s'", s1, s2, s5);
 
         // Header in front of the rgb-image
-//    {
-        char *s = "{ \"rgb\": \"";
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( s, strlen(s), bb->bucket_alloc ) );
-//    }
+        char *rgb_prefix = "{ \"rgb\": \"";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( rgb_prefix, strlen(rgb_prefix), bb->bucket_alloc ) );
 
         // Base64-encoded rgb-image
-//    {
-        const int tmp = trell_png_encode( data, 0, &p );
-        if (tmp!=OK)
-            return tmp;
+        int rv = trell_png_encode( data, 0, &p );
+        if (rv!=OK)
+            return rv;
         char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
         int base64_size = apr_base64_encode( base64, (char*)png, p-png );
         // Seems like the zero-byte is included in the string size.
@@ -427,74 +421,61 @@ trell_pass_reply_png_bundle( void*          data,
             base64_size--;
         }
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-//    }
 
         // Header in front of the depth-image (and "footer" for previous rgb-image), typically '\", depth: \"'
-//    {
-            char *s2 = "\", \"depth\": \"";
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( s2, strlen(s2), bb->bucket_alloc ) );
-//    }
+        char *depth_prefix = "\", \"depth\": \"";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( depth_prefix, strlen(depth_prefix), bb->bucket_alloc ) );
 
         // Base64-encoded depth buffer
-//    {
-//        unsigned char *png, *p;
-            p = png; // @@@ Reusing the old buffer, should be ok with "transient" buckets?!
-            const size_t depth_offset = 4*( (buffer_img_size+3)/4 );
-            const int tmp2 = trell_png_encode( data, depth_offset, &p );
-            if (tmp2!=OK)
-                return tmp2;
-            char* base642 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-            int base64_size2 = apr_base64_encode( base642, (char*)png, p-png );
-            // Seems like the zero-byte is included in the string size.
-            if( (base64_size2 > 0) && (base642[base64_size2-1] == '\0') ) {
-                base64_size2--;
-            }
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base642, base64_size2, bb->bucket_alloc ) );
-//    }
+        p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
+        const size_t depth_offset = 4*( (buffer_img_size+3)/4 );
+        rv = trell_png_encode( data, depth_offset, &p );
+        if (rv!=OK)
+            return rv;
+        char* base642 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+        int base64_size2 = apr_base64_encode( base642, (char*)png, p-png );
+        // Seems like the zero-byte is included in the string size.
+        if( (base64_size2 > 0) && (base642[base64_size2-1] == '\0') ) {
+            base64_size2--;
+        }
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base642, base64_size2, bb->bucket_alloc ) );
 
         // View matrix
-//    {
-            const float * const pp = (const float * const)( encoder_state->buffer + 2*depth_offset );
-            char matrix_string[1000];
-            const int bytes_written = snprintf(matrix_string, 1000, "\", \"view\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
-                                               pp[0], pp[1], pp[2], pp[3], pp[4], pp[5], pp[6], pp[7], pp[8], pp[9], pp[10], pp[11], pp[12], pp[13], pp[14], pp[15]);
-            assert( bytes_written < 1000 );
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string, bytes_written, bb->bucket_alloc ) );
-//    }
+        const float * const MV = (const float * const)( encoder_state->buffer + 2*depth_offset );
+        char matrix_string[1000];
+        const int bytes_written = snprintf(matrix_string, 1000, "\", \"view\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
+                                           MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15]);
+        assert( bytes_written < 1000 );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string, bytes_written, bb->bucket_alloc ) );
 
         // Projection matrix
-//    {
-            const float * const p2 = (const float * const)( encoder_state->buffer + 2*depth_offset + sizeof(float)*16 );
-            char matrix_string2[1000];
-            const int bytes_written2 = snprintf(matrix_string2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
-                                               p2[0], p2[1], p2[2], p2[3], p2[4], p2[5], p2[6], p2[7], p2[8], p2[9], p2[10], p2[11], p2[12], p2[13], p2[14], p2[15]);
-            assert( bytes_written2 < 1000 );
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written2, bb->bucket_alloc ) );
-//    }
+        const float * const PM = (const float * const)( encoder_state->buffer + 2*depth_offset + sizeof(float)*16 );
+        char matrix_string2[1000];
+        const int bytes_written2 = snprintf(matrix_string2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
+                                            PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15]);
+        assert( bytes_written2 < 1000 );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written2, bb->bucket_alloc ) );
 
 #if 0
-            // To inspect the resulting package
-            struct apr_bucket *b;
-            for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
-                const char *buf;
-                size_t bytes;
-                apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny bucket content (%lu bytes): '%s'", bytes, buf);
-            }
+        // To inspect the resulting package
+        struct apr_bucket *b;
+        for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
+            const char *buf;
+            size_t bytes;
+            apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny bucket content (%lu bytes): '%s'", bytes, buf);
+        }
 #endif
 
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
-        apr_status_t rv = ap_pass_brigade( encoder_state->r->output_filters, bb );
+        apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );
 
-
-        if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, encoder_state->r, "ap_pass_brigade failed." );
+        if( arv != APR_SUCCESS ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, arv, encoder_state->r, "ap_pass_brigade failed." );
             return -1;
         }
-
 
     }
     return 0;   // success
 
 }
-
