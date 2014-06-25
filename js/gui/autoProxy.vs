@@ -1,17 +1,3 @@
-// To do:
-//
-// - Split shaders in two sets, one for the "most recent proxy" and one for the others, to avoid if-tests.
-// - Check that the "discard" hack really is the best way to do this.
-// - Background colour in ProxyRenderer.js should be set to whatever the application is using.
-// - Texture size 2^n-restriction should be lifted. Also, in connection with this, resizing code might need revisiting...
-// - ExposedModel elements controlling autoProxy should have names prefixed with something reserved.
-// - Do not send depth buffers from server if they are not to be used.
-// - Initialize ProxyRenderer constants by params to the constructor, to avoid problems with initial GUI elements
-//   not matching ProxyRenderer defaults...
-// - Should mostRecent have som discard-tests disabled? E.g., the one with intraFragDepth!=planarFragDepth?
-//   Could be an idea to replace discarding with different colour-encodings, just to check whatever tests get triggered in 
-//   different situations!
-
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!

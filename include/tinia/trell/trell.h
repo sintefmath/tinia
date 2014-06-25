@@ -38,7 +38,7 @@ enum TrellPixelFormat {
     /** 8-bit normalized bgr data. */
     TRELL_PIXEL_FORMAT_BGR8,
     /** 8-bit normalized bgr data + 24-bit fixed point depth. */
-    TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH // @@@
+    TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH
 };
 
 /** States that a MessageBox/Master/Job/InteractiveJob can be in */

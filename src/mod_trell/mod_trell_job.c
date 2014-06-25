@@ -30,35 +30,6 @@
 #include "tinia/trell/trell.h"
 
 
-#if 0
-// @@@ Huh?! Doesn't seem to be used at all?!
-
-int
-trell_reply_handler( tinia_ipc_msg_consumer_func_t*  consumer,
-                     void**                          consumer_data,
-                     void*                           handler_data,
-                     const char*                     buffer,
-                     const size_t                    buffer_bytes )
-{
-    *consumer = trell_pass_reply;
-    *consumer_data = handler_data;
-    return 0;
-}
-
-int
-trell_reply_handler_png( tinia_ipc_msg_consumer_func_t*  consumer,
-                         void**                          consumer_data,
-                         void*                           handler_data,
-                         const char*                     buffer,
-                         const size_t                    buffer_bytes )
-{
-    *consumer = trell_pass_reply_png;
-    *consumer_data = handler_data;
-    return 0;
-}
-#endif
-
-
 int
 trell_handle_get_script( trell_sconf_t           *sconf,
                          request_rec             *r,

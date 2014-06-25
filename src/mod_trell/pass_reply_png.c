@@ -48,7 +48,7 @@ static
 int
 trell_png_encode( void* data,
                   size_t offset,
-                  unsigned char **p_ptr ) // @@@ Used both for input and output
+                  unsigned char **p_ptr ) // Used both for input and output
 {
 
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
@@ -164,12 +164,11 @@ trell_png_encode( void* data,
 }
 
 
-// @@@
 static
 int
 trell_pass_reply_png_bundle( void*          data,
-                             const char    *buffer, // @@@ Is data copied from 'data' to 'buffer', then again to 'filtered' during encoding?
-                             const size_t   buffer_bytes, // @@@ Seems to be the number of bytes in the "binary blob", either one png or the whole bundle
+                             const char    *buffer,
+                             const size_t   buffer_bytes,
                              const int      part,
                              const int      more );
 
@@ -183,11 +182,8 @@ trell_pass_reply_png( void* data,
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny er her 2, format = %d", encoder_state->dispatch_info->m_pixel_format );
-
-    // By testing on this here, we can keep as much of the controlling code ignorant of these differences as possible. // @@@
     if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny er her" );
+        // We escape into the new routine packaging both rgb, depth and transformation data
         return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more );
     }
 
@@ -316,22 +312,19 @@ trell_pass_reply_png( void* data,
 }
 
 
-// @@@
 static
 int
 trell_pass_reply_png_bundle( void*          data,
-                             const char    *buffer, // @@@ Is data copied from 'data' to 'buffer', then again to 'filtered' during encoding?
-                             const size_t   buffer_bytes, // @@@ Seems to be the number of bytes in the "binary blob", either one png or the whole bundle
+                             const char    *buffer,
+                             const size_t   buffer_bytes,
                              const int      part,
                              const int      more )
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny Entering trell_pass_reply_png_bundle...");
-
     if ( encoder_state->dispatch_info->m_base64 == 0 ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
-                       "jny This routine is not meant for sending of non-base64-encoded image data: %s:%s:%d",
+                       "This routine is not meant for sending of non-base64-encoded image data: %s:%s:%d",
                        encoder_state->r->handler, __FILE__, __LINE__ );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
@@ -346,21 +339,14 @@ trell_pass_reply_png_bundle( void*          data,
                            "got reply of type %d.", msg->msg.type );
             return -1; // error
         }
-
         encoder_state->width  = msg->width;
         encoder_state->height = msg->height;
         const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height;
-        // encoder_state->buffer = apr_palloc( encoder_state->r->pool, buffer_img_size ); // @@@ This is used for "single png"
-
         const size_t buffer_img_padding = 4*( (buffer_img_size+3)/4 ) - buffer_img_size;
         const size_t matrix_size = sizeof(float) * 16;
-        // @@@ But now we have png + padding + png + padding + matrix + matrix
         encoder_state->buffer = apr_palloc( encoder_state->r->pool, 2*(buffer_img_size + buffer_img_padding) + 2*matrix_size );
-
         const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height;
-        // encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound ); // @@@ This is used for "single png"
-        encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + matrix_size ); // @@@ Just in case the image is smaller than 4*16 bytes!
-
+        encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
         encoder_state->bytes_read = 0;
         offset += sizeof(tinia_msg_image_t);
     }
@@ -372,15 +358,13 @@ trell_pass_reply_png_bundle( void*          data,
                 buffer + offset,
                 bytes );
         encoder_state->bytes_read += bytes;
-
     }
 
     if( more == 0 ) {
         // last invocation
-        // const size_t bytes_expected = 3*encoder_state->width*encoder_state->height; // @@@ For single png
         const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height;
         const size_t buffer_img_padding = 4*( (buffer_img_size+3)/4 ) - buffer_img_size;
-        const size_t bytes_expected = 2*(buffer_img_size + buffer_img_padding) + 2*sizeof(float)*16; // @@@ For bundle
+        const size_t bytes_expected = 2*(buffer_img_size + buffer_img_padding) + 2*sizeof(float)*16;
         if( encoder_state->bytes_read != bytes_expected ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
                            "expected %d bytes, got %ld bytes.",
@@ -390,7 +374,7 @@ trell_pass_reply_png_bundle( void*          data,
         }
 
         uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 );
+        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16);
         unsigned char* p = png;
 
         char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
@@ -403,8 +387,6 @@ trell_pass_reply_png_bundle( void*          data,
         ap_set_content_type( encoder_state->r, "text/plain" );
 
         struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool, encoder_state->r->connection->bucket_alloc );
-
-        // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "jny Adding prefix '%s', midfix '%s' and suffix '%s'", s1, s2, s5);
 
         // Header in front of the rgb-image
         char *rgb_prefix = "{ \"rgb\": \"";
@@ -455,17 +437,6 @@ trell_pass_reply_png_bundle( void*          data,
                                             PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15]);
         assert( bytes_written2 < 1000 );
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written2, bb->bucket_alloc ) );
-
-#if 0
-        // To inspect the resulting package
-        struct apr_bucket *b;
-        for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
-            const char *buf;
-            size_t bytes;
-            apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny bucket content (%lu bytes): '%s'", bytes, buf);
-        }
-#endif
 
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
         apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );

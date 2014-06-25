@@ -361,7 +361,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
     renderMain: function() {
         if ( !this.exposedModel.getElementValue("useAutoProxy") )
-            return; // Just to be sure we don't mess up anything after this has been turned off @@@
+            return; // Just to be sure we don't mess up anything after this has been turned off
 
         var matrices = this._matrices;
 

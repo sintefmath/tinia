@@ -229,7 +229,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 data_size = 3*w*h;
             break;
             case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
-                data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // @@@ Two padded images + 2 matrices
+                data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two padded images + 2 matrices
             break;
             default:
                 m_logger_callback( m_logger_data, 0, package.c_str(),
