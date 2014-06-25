@@ -68,7 +68,7 @@ dojo.declare("model.ExposedModelSender", null, {
     
     _send: function(xml) {
         this._updateInProgress = true;
-        console.log("sending update");
+        // console.log("sending update");
         dojo.rawXhrPost({
             url: this._makeURL(),
             postData : xml,

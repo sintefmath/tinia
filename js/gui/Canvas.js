@@ -25,12 +25,16 @@ dojo.require("renderlist.RenderListRenderer" );
 dojo.require("dijit._Widget");
 dojo.require("gui.TrackBallViewer");
 dojo.require("dojo.touch");
+dojo.require("gui.ProxyRenderer");
 
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function (params) {
 
         if (!params.renderListURL) {
             params.renderListURL = "xml/getRenderList.xml";
+        }
+        if (!params.snapshotBundleURL) {
+            params.snapshotBundleURL = "snapshot_bundle.txt";
         }
         if (!params.snapshotURL) {
             params.snapshotURL = "snapshot.txt";
@@ -42,9 +46,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 500;
-        this._height = 500;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
+        this._snapshotBundleURL = params.snapshotBundleURL;
         this._snapshotURL = params.snapshotURL;
 
         this._localMode = params.localMode;
@@ -76,8 +81,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             "width": w,
             "height": h
         });
-
-
 
         var viewer = this._modelLib.getValue(this._key);
         viewer.updateElement("width", w);
@@ -166,19 +169,23 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // We always want to update after the first parsing
         this._shouldUpdate = true;
 
-        this._urlHandler.setURL(this._snapshotURL);
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+            this._urlHandler.setURL(this._snapshotBundleURL);
+        } else {
+            this._urlHandler.setURL(this._snapshotURL);
+        }
 
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
-
             if (!this._imageLoading) {
                 console.log("Getting new image");
                 dojo.xhrGet({
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        this._setImageFromText(response);
+                        // console.log("/model/updateParsed: response = " + response);
+                        var response_obj = eval( '(' + response + ')' );
+                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })
-
                 });
             }
         }));
@@ -190,7 +197,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             // Temporary sanity fix for firefox
-            this._setImageFromText(params.response);
+            // (Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
+            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
+                // console.log("/model/updateSendPartialComplete: response = " + params.response);
+                var response_obj = eval( '(' + params.response + ')' );
+                if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+            } else {
+                console.log("This was not a snapshot. Why are we here at all?");
+            }
         }));
 
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
@@ -348,13 +363,16 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._loadingDiv.style.top = (-2 * this._height) + "px";
     },
 
-    _setImageFromText: function (response) {
-        if (!response.substring(response.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) {
-            response = response.substring(0, response.length - 1);
+    _setImageFromText: function (response_rgb, response_depth, response_view, response_proj) {
+        if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) { // @@@ What is this about?
+            response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
-        this._img.src = "data:image/png;base64," + response;
+        this._img.src = "data:image/png;base64," + response_rgb;
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) && (this._proxyRenderer) ) {
+            this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
+        }
         this._showCorrect();
-        return response;
+        return response_rgb;
     },
 
     _touchGestureBegin: function (event) {
@@ -366,6 +384,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         event.preventDefault();
     },
+
     _touchGesture: function (event) {
 
         if (event && event.scale && event.scale != 1) {
@@ -443,12 +462,24 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _startGL: function () {
+
+        if (window.WebGLRenderingContext) {
+            // browser supports WebGL
+            // console.log("The browser should support WebGL.");
+        } else {
+            console.log("The browser doesn't seem to support WebGL. Have you turned on necessary flags? Recent enough version? Chrome and Firefox should work.");
+        }
+
         this._gl = WebGLUtils.setupWebGL(this._canvas);
         if (this._gl) {
+            this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
             this._render_list_store = new renderlist.RenderListStore(this._gl);
             this._render_list_parser = new renderlist.RenderListParser();
             this._render_list_renderer = new renderlist.RenderListRenderer(this._gl);
             this._getRenderList();
+            this._render();
+        } else {
+            console.log("The browser does support WebGL, but we were unable to get a GL context. It may help to completely quit the browser, and restart it.");
         }
     },
 
@@ -473,10 +504,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         );
     },
 
+
     _render: function () {
-        window.requestAnimFrame(dojo.hitch(this, function () {
-            this._render();
-        }));
+			window.requestAnimFrame(dojo.hitch(this, function () {
+				this._render();
+			}));
 
         var viewer = this._modelLib.getElementValue(this._key);
         var view_coord_sys = {
@@ -485,8 +517,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             m_to_world: mat4.inverse(mat4.create(viewer.getElementValue("modelview"))),
             m_from_world: viewer.getElementValue("modelview")
         }
-        this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+            this._proxyRenderer.render(view_coord_sys);
+        } else {
+            this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+        }
+
     },
+
 
     _loadImage: function () {
         return;
@@ -512,17 +551,21 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._imageLoading = false;
 
         if (this._loadImageAgain--) {
-
             this._loadImageStage2();
         } else {
-
         }
+
         this._showCorrect();
     },
 
     _makeImgURL: function () {
-        return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
-        + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        } else {
+            return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
+                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+        }
     },
 
     _update: function () {

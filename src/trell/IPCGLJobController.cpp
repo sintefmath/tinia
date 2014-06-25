@@ -386,11 +386,11 @@ IPCGLJobController::getRenderEnvironment( GLsizei width, GLsizei height, GLsizei
 
 bool
 IPCGLJobController::onGetSnapshot( char*               buffer,
-                                 TrellPixelFormat    pixel_format,
-                                 const size_t        width,
-                                 const size_t        height,
-                                 const std::string&  session,
-                                 const std::string&  key )
+                                   TrellPixelFormat    pixel_format,
+                                   const size_t        width,
+                                   const size_t        height,
+                                   const std::string&  session,
+                                   const std::string&  key )
 {
     // bind context
     if( !m_context.bindContext() ) {
@@ -491,10 +491,55 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     // --- read pixels ---------------------------------------------------------
     glBindFramebuffer( GL_FRAMEBUFFER, env_copy->m_fbo );
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+    std::cerr << "jny IPCGLJobController.cpp: onGetSnapshot: format = " << pixel_format << std::endl;
     switch( pixel_format ) {
     case TRELL_PIXEL_FORMAT_BGR8:
+        m_logger_callback( m_logger_data, 0, package.c_str(), "jny IPCGLJobController::onGetSnapshot: Burde vi vaert her? Bedt om aa grabbe bare rgb"); // @@@
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
         break;
+    case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
+    {
+        m_logger_callback( m_logger_data, 0, package.c_str(), "jny IPCGLJobController::onGetSnapshot: Bedt om aa grabbe alt"); // @@@
+        unsigned char *buffer_pos = (unsigned char *)buffer;
+        glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer_pos );
+#if 0
+        static int cntr=0;
+        {
+            char fname[1000];
+            sprintf(fname, "/tmp/rgb_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+            fwrite(buffer_pos, 1, 3*width*height, fp);
+            fclose(fp);
+        }
+#endif
+        buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
+        glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
+        // Depth encoded as 24 bit fixed point values.
+        for (size_t i=0; i<width*height; i++) {
+            float value = (float)( ((GLfloat *)buffer_pos)[i] );
+            for (size_t j=0; j<3; j++) {
+                (buffer_pos)[3*i+(2-j)] = (unsigned char)( floor(value*255.0) );
+                value = 255.0*value - floor(value*255.0);
+            }
+        }
+#if 0
+        {
+            char fname[1000];
+            sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+            fwrite(buffer_pos, 1, 3*width*height, fp);
+            fclose(fp);
+            cntr++;
+        }
+#endif
+        buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
+        glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
+        buffer_pos += 4*16;
+        glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
+        break;
+    }
     default:
         if( m_logger_callback != NULL ) {
             m_logger_callback( m_logger_data, 0, package.c_str(),

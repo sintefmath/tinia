@@ -15,7 +15,7 @@ class OpenGLServerGrabber : public QObject
 {
     Q_OBJECT
 public:
-    explicit OpenGLServerGrabber( QObject *parent );
+    explicit OpenGLServerGrabber(QObject *parent);
 
     ~OpenGLServerGrabber();
 
@@ -23,7 +23,7 @@ public:
     QMutex*
     exclusiveAccessMutex()
     { return &m_mainMutex; }
-    
+
     /** Returns a pointer to the grabbed image.
      *
      * \note \ref exclusiveAccessMutex must be held before invocation.
@@ -31,7 +31,7 @@ public:
     const unsigned char*
     imageBuffer() const
     { return m_buffer; }
-    
+
     /** Grabs an image of a view
      *
      * \note Must be invoked in the thread that holds the OpenGL context,
@@ -39,12 +39,24 @@ public:
      * \note \ref exclusiveAccessMutex must be held before invocation.
      */
     void
-    grab( tinia::jobcontroller::OpenGLJob* job,
-          unsigned int width,
-          unsigned int height,
-          const std::string &key );
-    
-    
+    grabRGB( tinia::jobcontroller::OpenGLJob* job,
+             unsigned int width,
+             unsigned int height,
+             const std::string &key);
+
+    /** Grabs the depth buffer of a view
+     *
+     * \note The buffer is transformed to an RGB image with depth values encoded as fixed point numbers.
+     * \note Must be invoked in the thread that holds the OpenGL context,
+     *       usually the main/GUI-thread.
+     * \note \ref exclusiveAccessMutex must be held before invocation.
+     */
+    void
+    grabDepth( tinia::jobcontroller::OpenGLJob* job,
+               unsigned int width,
+               unsigned int height,
+               const std::string &key);
+
 private:
     void setupOpenGL();
     void resize(unsigned int width, unsigned int height);

@@ -63,7 +63,7 @@ dojo.declare("model.ExposedModelReceiver", null, {
                     return response;
                 }
                 
-                console.log("update received");
+                //console.log("update received");
                 dojo.publish("/model/updateReceived", [{"response": response,
                                                             "ioArgs": ioArgs}]);
                 this._handleUpdate(response);

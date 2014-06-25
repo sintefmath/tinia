@@ -13,6 +13,12 @@
         <file>gui/GUIBuilder.js</file>
         <file>gui/HorizontalLayout.js</file>
         <file>gui/ImageReceiver.js</file>
+        <file>gui/ProxyRenderer.js</file>
+        <file>gui/ProxyModel.js</file>
+        <file>gui/ProxyModelCoverageGrid.js</file>
+        <file>gui/ProxyModelCoverageAngles.js</file>
+        <file>gui/autoProxy.vs</file>
+        <file>gui/autoProxy.fs</file>
         <file>gui/Label.js</file>
         <file>gui/RadioButtonWithLabel.js</file>
         <file>gui/TrackBallViewer.js</file>
