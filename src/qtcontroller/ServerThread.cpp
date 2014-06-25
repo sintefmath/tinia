@@ -263,8 +263,10 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
         if(file == "/snapshot.txt") {
             updateState(os, request);
             os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
-            SnapshotAsTextFetcher f( os, request, m_job, m_grabber, true /* RGB requested */ );
-            m_mainthread_invoker->invokeInMainThread( &f, true );
+            {
+                SnapshotAsTextFetcher f( os, request, m_job, m_grabber, true /* RGB requested */ );
+                m_mainthread_invoker->invokeInMainThread( &f, true );
+            }
             os << "\" }";
             return true;
         }

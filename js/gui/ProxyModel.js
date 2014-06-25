@@ -39,6 +39,12 @@ dojo.declare("gui.ProxyModel", null, {
         if ( this.state == 1 ) {
             throw "Trying to set data for a proxy model being processed!";
         }
+
+        if ( (!depthBufferAsText) || (!viewMatAsText) || (!projMatAsText) ) {
+            // then we have probably been passed a snapshot made when autoProxy was disabled. We cannot and should not use this, so we just return.
+            return;
+        }
+
         this.state = 1;
 
         var image = new Image();

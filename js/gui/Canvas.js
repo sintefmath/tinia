@@ -174,6 +174,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         } else {
             this._urlHandler.setURL(this._snapshotURL);
         }
+        this._modelLib.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("useAutoProxy") ) {
+                this._urlHandler.setURL(this._snapshotBundleURL);
+            } else {
+                this._urlHandler.setURL(this._snapshotURL);
+            }
+        }) );
+
 
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
             if (!this._imageLoading) {
