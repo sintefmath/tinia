@@ -225,7 +225,7 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
             parseGet<boost::tuple<unsigned int, unsigned int,
             std::string> >(decodeGetParameters(request), "width height key");
     std::string key = arguments.get<2>();
-    os << httpHeader(getMimeType("file.txt")) << "\r\n" << "{ \"rgb\": \"";
+    os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
     {
         SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
         m_mainthread_invoker->invokeInMainThread( &f, true );
@@ -262,9 +262,10 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
     try {
         if(file == "/snapshot.txt") {
             updateState(os, request);
-            os << httpHeader(getMimeType("file.txt")) << "\r\n";
+            os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
             SnapshotAsTextFetcher f( os, request, m_job, m_grabber, true /* RGB requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
+            os << "\" }";
             return true;
         }
         else if ( file == "/snapshot_bundle.txt" ) {

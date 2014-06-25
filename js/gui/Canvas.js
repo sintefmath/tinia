@@ -183,12 +183,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
                         // console.log("/model/updateParsed: response = " + response);
-                        if (response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be a JSON bundle
-                            var response_obj = eval( '(' + response + ')' );
-                            this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
-                        } else {
-                            this._setImageFromText( response );
-                        }
+                        var response_obj = eval( '(' + response + ')' );
+                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                     })
                 });
             }
@@ -202,15 +198,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             // Temporary sanity fix for firefox
             // (Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
-            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image. // @@@ Should be replaced by something that also works for non-bundle data
+            if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 // console.log("/model/updateSendPartialComplete: response = " + params.response);
-                if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be a JSON bundle
-                    var response_obj = eval( '(' + params.response + ')' );
-                    if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
-                } else {
-                    this._setImageFromText( params.response );
-                }
+                var response_obj = eval( '(' + params.response + ')' );
+                if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
             }

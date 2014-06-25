@@ -261,7 +261,11 @@ trell_pass_reply_png( void* data,
             if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
                 base64_size--;
             }
+            char *prefix = "{ \"rgb\": \"";
+            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( prefix, strlen(prefix), bb->bucket_alloc ) );
             APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( base64, base64_size, bb->bucket_alloc ) );
+            char *suffix = "\"}";
+            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( suffix, strlen(suffix), bb->bucket_alloc ) );
         }
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
 
