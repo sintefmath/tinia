@@ -46,38 +46,56 @@ dojo.declare("gui.ProxyModel", null, {
         }
 
         this.state = 1;
+        var imagesLoaded = 0;
+        var depth_t0 = 0;
+        var rgb_t0 = 0;
 
-        var image = new Image();
-        image.onload = dojo.hitch(this, function() {
+        var depthImage = new Image();
+        depthImage.onload = dojo.hitch(this, function() {
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.depthTexture);
-            this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, image);
+            this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, depthImage);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.NEAREST);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.NEAREST);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-
-            var rgbImage = new Image();
-            rgbImage.onload = dojo.hitch(this, function() {
-                this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
-                this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGBA, this._gl.RGBA, this._gl.UNSIGNED_BYTE, rgbImage);
-                this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
-                this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
-                this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-
+            console.log("Depth image (" + depthBufferAsText.length + " bytes) loaded in " + (Date.now()-depth_t0) + " ms. (" + Math.floor((depthBufferAsText.length/(Date.now()-depth_t0))) + " bytes/ms)");
+            imagesLoaded = imagesLoaded + 1;
+            if (imagesLoaded==2) {
                 this.projection         = projMatAsText.split(/ /);
                 this.projection_inverse = mat4.inverse(mat4.create( this.projection ));
                 this.from_world         = viewMatAsText.split(/ /);
                 this.to_world           = mat4.inverse(mat4.create( this.from_world ));
-
                 this.dir = vec3.create( [-this.to_world[8], -this.to_world[9], -this.to_world[10]] );
                 vec3.normalize(this.dir); // Should probably already be normalized...
                 this.dist = vec3.length( vec3.create( [this.to_world[12], this.to_world[13], this.to_world[14]] ) );
-
                 this.state = 2;
-            });
-            rgbImage.src = "data:image/png;base64," + imageAsText;
-
+            }
         });
-        image.src = "data:image/png;base64," + depthBufferAsText;
+        depth_t0 = Date.now();
+        depthImage.src = "data:image/png;base64," + depthBufferAsText;
+
+        var rgbImage = new Image();
+        rgbImage.onload = dojo.hitch(this, function() {
+            this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
+            this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, rgbImage);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
+            this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
+            this._gl.bindTexture(this._gl.TEXTURE_2D, null);
+            console.log("RGB image (" + imageAsText.length + " bytes) loaded in " + (Date.now()-rgb_t0) + " ms. (" + Math.floor((imageAsText.length/(Date.now()-rgb_t0))) + " bytes/ms)");
+            imagesLoaded = imagesLoaded + 1;
+            if (imagesLoaded==2) {
+                this.projection         = projMatAsText.split(/ /);
+                this.projection_inverse = mat4.inverse(mat4.create( this.projection ));
+                this.from_world         = viewMatAsText.split(/ /);
+                this.to_world           = mat4.inverse(mat4.create( this.from_world ));
+                this.dir = vec3.create( [-this.to_world[8], -this.to_world[9], -this.to_world[10]] );
+                vec3.normalize(this.dir); // Should probably already be normalized...
+                this.dist = vec3.length( vec3.create( [this.to_world[12], this.to_world[13], this.to_world[14]] ) );
+                this.state = 2;
+            }
+        });
+        rgb_t0 = Date.now();
+        rgbImage.src = "data:image/png;base64," + imageAsText;
+
     },
 
 

@@ -92,6 +92,7 @@ void main(void)
 	    gl_FragColor = vec4( backgroundCol, src_alpha );
 	    return;
 	}
+        // gl_FragColor = vec4( 1.0, 0.0, 0.0, src_alpha ); return;
 	discard;
     }
 
@@ -122,8 +123,10 @@ void main(void)
 
 #ifdef DEBUG
     if (useISTC>0) {
-        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) // Values chosen by using the visualization above
+        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Constant chosen by using the visualization above
+            // gl_FragColor = vec4( 0.0, 1.0, 0.0, src_alpha ); return;
             discard;
+        }
     }
     if (decayMode==0) {
         decay = 1.0;
@@ -160,7 +163,8 @@ void main(void)
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
 #else
-    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Values chosen by using the visualization above
+    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Constant chosen by using the visualization above
+        //gl_FragColor = vec4( 0.0, 1.0, 0.0, src_alpha ); return;
 	discard;
     }
     gl_FragColor = vec4( texture2D( rgbImage, tc ).xyz, src_alpha );
