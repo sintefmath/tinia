@@ -308,7 +308,6 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 
     const char* request = APR_ARRAY_IDX( path_items, o, char*);
 
-
     // --- rpc.xml ---------------------------------------------------------
     if( apr_strnatcmp( request, "rpc.xml" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_RPC_XML;

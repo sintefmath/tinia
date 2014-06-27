@@ -257,6 +257,23 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             reply->msg.type     = TRELL_MESSAGE_IMAGE;
             reply->width        = w;
             reply->height       = h;
+            if ( format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
+                // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
+                // latter two into the buffer.
+                tinia::model::Viewer viewer;
+                m_model->getElementValue( key, viewer );
+                if ( ( (unsigned long)((char*)msg + sizeof(tinia_msg_image_t)) ) % 4 != 0 ) {
+                    m_logger_callback( m_logger_data, 2, package.c_str(),
+                                       "Ouch. Non-aligned buffer %d", ( (unsigned long)((char*)msg + sizeof(tinia_msg_image_t)) ) % 4 );
+                }
+                float * buf = (float *)( ((char*)msg + sizeof(tinia_msg_image_t)) + 4*((3*w*h+3)/4) * 2 );
+                for (size_t i=0; i<15; i++) {
+                    buf[i] = viewer.modelviewMatrix[i];
+                }
+                for (size_t i=0; i<15; i++) {
+                    buf[16+i] = viewer.projectionMatrix[i];
+                }
+            }
             reply->pixel_format = format;
             m_logger_callback( m_logger_data, 2, package.c_str(), "data_size = %d", data_size );
             return sizeof(tinia_msg_image_t) + data_size; // size of msg + payload
