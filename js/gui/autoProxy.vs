@@ -1,3 +1,5 @@
+//#define VS_DISCARD_DEBUG
+
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
@@ -27,6 +29,9 @@ varying highp float actualSplatOverlap;         // Only used for debugging purpo
 #ifdef DEBUG
 uniform int screenSpaceSized;
 varying highp float splat_i, splat_j;
+#endif
+#ifdef VS_DISCARD_DEBUG
+varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 #endif
 
 uniform float splats_x;
@@ -59,6 +64,9 @@ void main(void)
     splat_j = floor( (0.5*aVertexPosition.x+1.0)*splats_x ); // For debugging
     splat_i = floor( (0.5*aVertexPosition.y+1.0)*splats_y );
 #endif
+#ifdef VS_DISCARD_DEBUG
+    debugCol = vec4(0.0, 0.0, 0.0, 0.0); // Using alpha=1 to signify "yes, escape with this fragment color" in the FS.
+#endif
 
     vec2 st = 0.5*(aVertexPosition.xy+1.0); // From [-1, 1] to [0, 1]
     st.y = 1.0-st.y;
@@ -72,7 +80,18 @@ void main(void)
 
     if ( sampled_depth > 0.999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
+#ifdef VS_DISCARD_DEBUG
+        debugCol = vec4(1.0, 0.5, 0.5, 1.0); // Not discarding, colouring the whole primitive pink instead
+        // Must set the gl_Position now, since it has not been set already.
+  #ifndef USE_FRAG_DEPTH_EXT
+        if (splatSetIndex==-1) {
+            sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+        }
+  #endif
+        gl_Position = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
+#else
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
         return;
     }
     
@@ -137,11 +156,19 @@ void main(void)
     if (depth_dx>0.999) {
         // Possible actions: Use the 'sampled_depth' value to get something more sensible. The primitive will be drawn,
         // but is it useful to draw an oddly textured splat? Another alternative is to discard the whole splat.
+#ifdef VS_DISCARD_DEBUG
+	debugCol = vec4(0.5, 1.0, 0.5, 1.0); // Not discarding, colouring the whole primitive light green instead
+#else
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
  	return;
     }
     if (depth_dy>0.999) {
+#ifdef VS_DISCARD_DEBUG
+        debugCol = vec4(0.5, 0.5, 1.0, 1.0); // Not discarding, colouring the whole fragment light blue instead
+#else
  	gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
  	return;
     }
 #ifndef USE_FRAG_DEPTH_EXT
@@ -174,7 +201,11 @@ void main(void)
     vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
     vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
     if ( cross(dx, dy).z < 0.0 ) {
+#ifdef VS_DISCARD_DEBUG
+        debugCol = vec4(1.0, 1.0, 1.0, 1.0); // Not discarding, colouring the whole primitive white instead
+#else
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
         return;
     }
 
@@ -233,7 +264,11 @@ void main(void)
                 // the splats, and tricky to crop them along the scene silhouettes. Also, danger of those "bad and
                 // large" splats shadowing better and smaller ones. Not easy to handle the last one. (Maybe with a
                 // multi-pass algorithm.) Pros: Better coverage
+#ifdef VS_DISCARD_DEBUG
+                debugCol = vec4(1.0, 0.0, 0.0, 1.0); // Not discarding, colouring the fragment red instead
+#else
                 gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
                 return;
             }
             // We restrict the size of these splats to avoid "silhouette overshooting". We need at least 2.0 to get nice
@@ -248,7 +283,11 @@ void main(void)
             actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.0;
 
             if ( actualSplatOverlap > 3.0 ) { // It is not likely that these get very large.
+#ifdef VS_DISCARD_DEBUG
+		debugCol = vec4(0.0, 1.0, 0.0, 1.0); // Not discarding, colouring the fragment green instead
+#else
                 gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+#endif
                 return;
             }
             actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0); // Need at least 2.0 for the "most recent", >= the one in the test above is meaningless.

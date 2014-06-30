@@ -168,6 +168,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         // used are set otherwise, for instance to the same value as the caller (Canvas-object) is using?!
         this.exposedModel.addLocalListener( "autoProxyDebugging", dojo.hitch(this, function(event) {
             this._debugging = this.exposedModel.getElementValue("autoProxyDebugging");
+            console.log("Recompiling shaders without DEBUG set...");
             this._compileShaders();
         }) );
         this.exposedModel.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
@@ -220,9 +221,11 @@ dojo.declare("gui.ProxyRenderer", null, {
         var splat_fs_src = this._splat_fs_src;
 
         if ( this._debugging ) {
+            console.log("#DEBUG");
             splat_vs_src = "#define DEBUG\n" + splat_vs_src;
-            console.log("debug");
             splat_fs_src = "#define DEBUG\n" + splat_fs_src;
+        } else {
+            console.log("// #DEBUG");
         }
 
         var available_extensions = this.gl.getSupportedExtensions();
@@ -246,7 +249,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("#define USE_FRAG_DEPTH_EXT");
         } else {
             this._useFragDepthAndAvailable = false;
-            console.log("NOT defining USE_FRAG_DEPTH_EXT!");
+            console.log("// #define USE_FRAG_DEPTH_EXT");
         }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
@@ -344,7 +347,8 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA); // s-factor, d-factor
             } else {
                 if (this._debugging) {
-                    this.gl.clearColor(0.2, 0.2, 0.2, 0.8); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+                    // this.gl.clearColor(0.2, 0.2, 0.2, 0.8); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+                    this.gl.clearColor(0.0, 0.2, 0.0, 1.0); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
                 } else {
                     this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
                 }
@@ -429,6 +433,13 @@ dojo.declare("gui.ProxyRenderer", null, {
                         mat4.multiply( B, this._proxyModelCoverage.proxyModelRing[i].projection_inverse, A );
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "projUnproj"), false, A );
                     }
+                    if (this.gl.getUniformLocation(this._splatProgram, "camDir")) {
+                        var A = mat4.create();
+                        mat4.multiply( matrices.m_from_world, this._proxyModelCoverage.proxyModelRing[i].to_world, A ); // MV * MVinv[i]
+                        var camDir = vec3.create( [-A[8], -A[9], -A[10]] );
+                        vec3.normalize(camDir);
+                        this.gl.uniform3fv( this.gl.getUniformLocation(this._splatProgram, "camDir"), camDir );
+                    }
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
@@ -451,6 +462,13 @@ dojo.declare("gui.ProxyRenderer", null, {
                         mat4.multiply( A, this._proxyModelCoverage.mostRecentModel.to_world, B );
                         mat4.multiply( B, this._proxyModelCoverage.mostRecentModel.projection_inverse, A );
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "projUnproj"), false, A );
+                    }
+                    if (this.gl.getUniformLocation(this._splatProgram, "camDir")) {
+                        var A = mat4.create();
+                        mat4.multiply( matrices.m_from_world, this._proxyModelCoverage.mostRecentModel.to_world, A ); // MV * MVinv[mostRecentModel]
+                        var camDir = vec3.create( [-A[8], -A[9], -A[10]] );
+                        vec3.normalize(camDir);
+                        this.gl.uniform3fv( this.gl.getUniformLocation(this._splatProgram, "camDir"), camDir );
                     }
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }

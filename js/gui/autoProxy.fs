@@ -1,3 +1,6 @@
+//#define VS_DISCARD_DEBUG // Should be defined if it is defined in the VS
+//#define FS_DISCARD_DEBUG // Independent of VS_DISCARD_DEBUG
+
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 
@@ -17,6 +20,7 @@ uniform highp int splatSetIndex;
 uniform highp int vp_width;
 uniform highp int vp_height;
 uniform highp vec3 backgroundCol;
+uniform highp vec3 camDir;
 
 #define PI 3.1415926535
 
@@ -28,6 +32,9 @@ uniform int roundSplats;
 uniform int useISTC;
 uniform int splatOutline;
 varying highp float splat_i, splat_j;
+#endif
+#ifdef VS_DISCARD_DEBUG
+varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 #endif
 
 uniform int useBlending;
@@ -49,12 +56,21 @@ void main(void)
     highp float src_alpha = 1.0;
     if (useBlending>0) {
 	src_alpha = 0.1;
-	if (splatSetIndex==-1)
+	if (splatSetIndex==-1) {
 	    src_alpha = 1.0;
+	}
     }
     
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
 
+#ifdef VS_DISCARD_DEBUG
+    if (debugCol.w>0.0) {
+        gl_FragColor = vec4(debugCol.xyz, src_alpha);
+        // Note that escaping like this will mess up the fragment depth buffer, if USE_FRAG_DEPTH_EXT is set, since we
+        // in that case really should make all branches actually set the fragment depth!
+        return;
+    }
+#endif
 #ifdef DEBUG
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
@@ -86,13 +102,21 @@ void main(void)
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
     if ( intra_splat_depth > 0.999 ) {
 	if (splatSetIndex==-1) {
-	    // We treat this "most recent model" specially, so that it can overwrite spurious fragments from the other models.
-	    // For the other models, we want a 'discard', to give better models a chance of colouring this fragment, but
-	    // when the "most recent model" is rendered, it should override anything else.
+	    // We treat this "most recent model" specially, so that it can overwrite spurious fragments from the other
+	    // models.  For the other models, we want a 'discard', to give other models with better coverage a chance of
+	    // colouring this fragment, but when the "most recent model" is rendered, it should override anything else,
+	    // hence, we use the background color in this case.
+#ifdef FS_DISCARD_DEBUG
+	    gl_FragColor = vec4( 1.0, 1.0, 1.0, src_alpha ); return;
+#else
 	    gl_FragColor = vec4( backgroundCol, src_alpha );
+#endif
+            // Again, we should set the fragment depth if using the extension!!! @@@ @@@ @@@
 	    return;
 	}
-        // gl_FragColor = vec4( 1.0, 0.0, 0.0, src_alpha ); return;
+#ifdef FS_DISCARD_DEBUG
+        gl_FragColor = vec4( 1.0, 0.0, 1.0, src_alpha ); return; // Coloring fragments "outside the scene" magenta
+#endif
 	discard;
     }
 
@@ -121,13 +145,21 @@ void main(void)
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
 
+    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( 3.0 / 180.0 * PI) )  // Test for "plane interpolation quality" if angle < 3 deg.
 #ifdef DEBUG
-    if (useISTC>0) {
-        if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Constant chosen by using the visualization above
-            // gl_FragColor = vec4( 0.0, 1.0, 0.0, src_alpha ); return;
-            discard;
-        }
+	   &&   ( useISTC > 0 )
+#endif
+	   &&   ( abs(planar_depth-intra_splat_depth) > 1.0*0.5/1000.0 )   ) { // Testing for "plane interpolation quality"
+#ifdef FS_DISCARD_DEBUG
+	gl_FragColor = vec4( 0.5, 1.0, 1.0, src_alpha ); return; // Coloring fragments with bad "plane interpolation" light cyan.
+#endif
+	discard;
     }
+
+    gl_FragColor = vec4( texture2D( rgbImage, tc ).xyz, src_alpha );
+
+#ifdef DEBUG
+    // Coloring fragments according to position in the (ring) buffer etc.
     if (decayMode==0) {
         decay = 1.0;
     }
@@ -151,23 +183,18 @@ void main(void)
             if ( x > 0.5 ) r = 1.0;
 	    if ( r_squared > 0.16 ) gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha); else gl_FragColor = vec4(r, 0.0, 0.0, src_alpha);
         }
-    } else {
-        // To visualize the "most recent proxy model" even when not in debug-colour-mode:
-	//         if (splatSetIndex==-1)
-	//             if ( ( r_squared > 0.2 ) && ( r_squared < 0.25 ) )
-	//                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
     }
+    // To visualize the "most recent proxy model" even when not in debug-colour-mode:
+    //         if (splatSetIndex==-1) {
+    //             if ( ( r_squared > 0.2 ) && ( r_squared < 0.25 ) )
+    //                 gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+    //         }
     if (splatOutline>0) {
 	highp float tmp = 0.5-0.0015*float(splats_x)/actualSplatOverlap;
-	if ( (c.x<-tmp) || (c.x>tmp) || (c.y<-tmp) || (c.y>tmp) )
+	if ( (c.x<-tmp) || (c.x>tmp) || (c.y<-tmp) || (c.y>tmp) ) {
 	    gl_FragColor = vec4(1.0, 1.0, 1.0, src_alpha);
+	}
     }
-#else
-    if ( abs(planar_depth-intra_splat_depth) > 0.5/1000.0 ) { // Constant chosen by using the visualization above
-        //gl_FragColor = vec4( 0.0, 1.0, 0.0, src_alpha ); return;
-	discard;
-    }
-    gl_FragColor = vec4( texture2D( rgbImage, tc ).xyz, src_alpha );
 #endif
     
 #ifdef USE_FRAG_DEPTH_EXT
