@@ -25,6 +25,7 @@ uniform highp vec3 camDir;
 #define PI 3.1415926535
 
 #ifdef DEBUG
+varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 uniform int debugSplatCol;
 uniform int decayMode;
@@ -72,6 +73,12 @@ void main(void)
     }
 #endif
 #ifdef DEBUG
+    if (debugCol.w>0.0) {
+        gl_FragColor = vec4(debugCol.xyz, src_alpha);
+        // Note that escaping like this will mess up the fragment depth buffer, if USE_FRAG_DEPTH_EXT is set, since we
+        // in that case really should make all branches actually set the fragment depth!
+        return;
+    }
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
     if ( (roundSplats>0) && (r_squared>0.25) ) {

@@ -27,6 +27,7 @@ uniform float splatOverlap;                     // Makes little sense in having 
 varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 
 #ifdef DEBUG
+varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 uniform int screenSpaceSized;
 varying highp float splat_i, splat_j;
 #endif
@@ -63,6 +64,7 @@ void main(void)
 #ifdef DEBUG
     splat_j = floor( (0.5*aVertexPosition.x+1.0)*splats_x ); // For debugging
     splat_i = floor( (0.5*aVertexPosition.y+1.0)*splats_y );
+    debugCol = vec4(0.0, 0.0, 0.0, 0.0); // Using alpha=1 to signify "yes, escape with this fragment color" in the FS.
 #endif
 #ifdef VS_DISCARD_DEBUG
     debugCol = vec4(0.0, 0.0, 0.0, 0.0); // Using alpha=1 to signify "yes, escape with this fragment color" in the FS.
