@@ -1,5 +1,4 @@
-//#define VS_DISCARD_DEBUG // Should be defined if it is defined in the VS
-//#define FS_DISCARD_DEBUG // Independent of VS_DISCARD_DEBUG
+// #define FS_DISCARD_DEBUG
 
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
@@ -25,7 +24,6 @@ uniform highp vec3 camDir;
 #define PI 3.1415926535
 
 #ifdef DEBUG
-varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 uniform int debugSplatCol;
 uniform int decayMode;
@@ -33,16 +31,14 @@ uniform int roundSplats;
 uniform int useISTC;
 uniform int splatOutline;
 varying highp float splat_i, splat_j;
-#endif
-#ifdef VS_DISCARD_DEBUG
 varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 #endif
 
 uniform int useBlending;
 #ifdef USE_FRAG_DEPTH_EXT
-const int mostRecentProxyModelOffset = 7;
+const highp float mostRecentProxyModelOffset = 0.007;
 #else
-const int mostRecentProxyModelOffset = 1;
+const highp float mostRecentProxyModelOffset = 0.001;
 #endif
 
 
@@ -50,9 +46,8 @@ const int mostRecentProxyModelOffset = 1;
 
 void main(void)
 {
-    // if (splatSetIndex!=-1) discard; // Only showing "the most recent proxy model"
-    // if ((splatSetIndex!=-1) && (splatSetIndex!=0) ) discard;
-    // if (splatSetIndex>0) discard;
+    // The "most recent" is -1, the others have indices 0, 1, ...
+    // if (splatSetIndex!=-1) discard;
 
     highp float src_alpha = 1.0;
     if (useBlending>0) {
@@ -64,25 +59,53 @@ void main(void)
     
     highp vec2 c = gl_PointCoord-vec2(0.5);   // c in [-0.5, 0.5]^2
 
-#ifdef VS_DISCARD_DEBUG
-    if (debugCol.w>0.0) {
-        gl_FragColor = vec4(debugCol.xyz, src_alpha);
-        // Note that escaping like this will mess up the fragment depth buffer, if USE_FRAG_DEPTH_EXT is set, since we
-        // in that case really should make all branches actually set the fragment depth!
-        return;
+#ifdef USE_FRAG_DEPTH_EXT
+    {
+        // With the help of 'frag_depth', 'frag_depth_e', 'intraSplatTexCooTransform2' and the intra-splat coordinates
+        // 'c', we can interpolate the appropriate depth buffer value for the planar part of the splat. If the
+        // gl_FragDepthEXT extension is available, we can set the depth value to this, and this makes it much more
+        // effective to use an offset to force the most recent proxy model in front.
+        
+        highp float planar_frag_depth = frag_depth + dot( frag_depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
+        
+        // Testing. Should give black in center. Then the interpolated z-frag is correct there. Should then be red
+        // farther away, and green closer.
+        // gl_FragColor = vec4( 500.0*clamp(planar_frag_depth-depth, 0.0, 1.0), 
+        //                      500.0*clamp(depth-planar_frag_depth, 0.0, 1.0), 0.0, src_alpha); return;
+        
+        if (splatSetIndex==-1) {
+            planar_frag_depth = clamp(planar_frag_depth - mostRecentProxyModelOffset, 0.0, 1.0);
+        }
+        
+        // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
+        // if (splatSetIndex>=0) planar_frag_depth = clamp(planar_frag_depth + 0.001*float(splatSetIndex), 0.0, 1.0);
+        
+  #ifdef DEBUG        
+        if (useISTC>0) {
+            gl_FragDepthEXT = planar_frag_depth;
+        } else {
+            gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
+        }
+  #else
+        gl_FragDepthEXT = planar_frag_depth;
+  #endif
     }
 #endif
+
 #ifdef DEBUG
     if (debugCol.w>0.0) {
         gl_FragColor = vec4(debugCol.xyz, src_alpha);
-        // Note that escaping like this will mess up the fragment depth buffer, if USE_FRAG_DEPTH_EXT is set, since we
-        // in that case really should make all branches actually set the fragment depth!
         return;
     }
     highp float r_squared = dot(c, c);        // r_squared in [0, 0.5], radius squared for the largest inscribed circle is 0.25
     					      // radius squared for the smallest circle containing the 'square splat' is 0.5
     if ( (roundSplats>0) && (r_squared>0.25) ) {
+  #ifdef FS_DISCARD_DEBUG
+        gl_FragColor = vec4(1.0, 1.0, 0.5, src_alpha); // light yellow?
+        return;
+  #else
         discard;
+  #endif
     }
     // Decay factor = 1.0 in splat center, tending toward 0 at circular rim.
     // In the distance sqrt(2*(0.5/overlap)^2), i.e., r_squared=2*(0.5/overlap)^2, we get decay=0.25,
@@ -92,7 +115,7 @@ void main(void)
 
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
-    tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    // tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
 #ifdef DEBUG
     if (useISTC>0) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
@@ -124,7 +147,7 @@ void main(void)
 #ifdef FS_DISCARD_DEBUG
         gl_FragColor = vec4( 1.0, 0.0, 1.0, src_alpha ); return; // Coloring fragments "outside the scene" magenta
 #endif
-	discard;
+        discard;
     }
 
     // If this is "the most recent proxy model", it should be brought some amount toward the front. Note that this is
@@ -132,12 +155,9 @@ void main(void)
     // solutions to this: 1) Use non-gl_Point-primitives that have "transformed fragments", or 2) set depths using the
     // gl_FragDepth extension. (Don't think (1) is a good idea, will not work for non-planar regions.) Using a minimal
     // offset if we don't have the gl_FragDepth extension.
-#ifdef USE_FRAG_DEPTH_EXT
-    // 140622: No need to offset.
-    //         Was it a mistake not to use an offset here? 
-#else
+#ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
-	intra_splat_depth = clamp(intra_splat_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+	intra_splat_depth = clamp(intra_splat_depth - mostRecentProxyModelOffset, 0.0, 1.0);
     }
 #endif
 
@@ -152,13 +172,13 @@ void main(void)
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
 
-    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( 3.0 / 180.0 * PI) )  // Test for "plane interpolation quality" if angle < 3 deg.
+    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( 3.0 / 180.0 * PI) )  // Test for "plane interpolation quality" if angle > 3 deg.
 #ifdef DEBUG
 	   &&   ( useISTC > 0 )
 #endif
-	   &&   ( abs(planar_depth-intra_splat_depth) > 1.0*0.5/1000.0 )   ) { // Testing for "plane interpolation quality"
+	   &&   ( abs(planar_depth-intra_splat_depth) > 10.0*0.5/1000.0 )   ) { // Testing for "plane interpolation quality"
 #ifdef FS_DISCARD_DEBUG
-	gl_FragColor = vec4( 0.5, 1.0, 1.0, src_alpha ); return; // Coloring fragments with bad "plane interpolation" light cyan.
+	gl_FragColor = vec4( 0.0, 1.0, 1.0, src_alpha ); return; // Coloring fragments with bad "plane interpolation" cyan.
 #endif
 	discard;
     }
@@ -204,36 +224,8 @@ void main(void)
     }
 #endif
     
-#ifdef USE_FRAG_DEPTH_EXT
-    // With the help of 'frag_depth', 'frag_depth_e', 'intraSplatTexCooTransform2' and the intra-splat coordinates 'c',
-    // we can interpolate the appropriate depth buffer value for the planar part of the splat. If the gl_FragDepthEXT
-    // extension is available, we can set the depth value to this, and this makes it much more effective to use an
-    // offset to force the most recent proxy model in front.
-    
-    highp float planar_frag_depth = frag_depth + dot( frag_depth_e, intraSplatTexCooTransform2*vec2(c.x, -c.y) );
-    
-    // Testing. Should give black in center. Then the interpolated z-frag is correct there. Should then be red
-    // farther away, and green closer.
-    // gl_FragColor = vec4(500.0*clamp(planar_frag_depth-depth, 0.0, 1.0), 500.0*clamp(depth-planar_frag_depth, 0.0, 1.0), 0.0, src_alpha); return;
-    
-    if (splatSetIndex==-1) {
-        planar_frag_depth = clamp(planar_frag_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
-    }
 
-    // This will cause proxy models to be layered, and not flicker in and out due to small differences in computed frag.z values
-    // if (splatSetIndex>=0) planar_frag_depth = clamp(planar_frag_depth + 0.001*float(splatSetIndex), 0.0, 1.0);
 
-#ifdef DEBUG        
-    if (useISTC>0) {
-	gl_FragDepthEXT = planar_frag_depth;
-    } else {
-	gl_FragDepthEXT = frag_depth; // NB! All paths in the FS must set this, if any at all!
-    }
-#else
-    gl_FragDepthEXT = planar_frag_depth;
-#endif
-
-#endif
 
     // To identify particular splats during debugging (and figure generation)
     // if (    ( abs(splat_i-43.0) < 0.5 )   &&    ( abs(splat_j-43.0) < 0.5 )    )

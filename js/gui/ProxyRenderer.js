@@ -51,10 +51,11 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Proxy model replacement strategy
         // this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize); // Not implemented yet
+        var models = 5;
         this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
-                                                                    5,                                  // Number of proxy models to keep
-                                                                    (180.0/5.0) / 180.0*3.1415926535,   // Is this a sensible value? 180/#models degrees
-                                                                    1.1);                               // "Zoom threshold"
+                                                                    models,                                 // Number of proxy models to keep
+                                                                    (180.0/models) / 180.0*3.1415926535,    // Is this a sensible value? 180/#models degrees
+                                                                    1.1);                                   // "Zoom threshold"
 
         // --- For debugging, start
         this._frameOutputInterval         = 1000;

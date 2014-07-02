@@ -1,4 +1,13 @@
-//#define VS_DISCARD_DEBUG
+// #define VS_DISCARD_DEBUG
+// NB! Note that coloring the primitives instead of discarding them, may cause otherwise good primitives to be shadowed
+// by bad ones, when the define above is enabled. To counter this, consider disabling all but one proxy model in the
+// FS. (See that start of the FS main() function.)
+
+// #define CULL_BACK_SIDES              // We use pos(i, j+1)-pos(i, j) x pos(i+1, j)-pos(i, j) to determine culling
+
+#define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
+#define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
+                                        // otherwise, the splat is discarded.
 
 attribute vec2 aVertexPosition;
 
@@ -26,12 +35,11 @@ uniform float splatOverlap;                     // Makes little sense in having 
                                                 //
 varying highp float actualSplatOverlap;         // Only used for debugging purposes in the FS
 
+#define PI 3.1415926535
+
 #ifdef DEBUG
-varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 uniform int screenSpaceSized;
 varying highp float splat_i, splat_j;
-#endif
-#ifdef VS_DISCARD_DEBUG
 varying highp vec4 debugCol;                    // For replacing discarded primitives with an identifying color.
 #endif
 
@@ -41,9 +49,9 @@ uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
 #ifdef USE_FRAG_DEPTH_EXT
-const int mostRecentProxyModelOffset = 7;
+const float mostRecentProxyModelOffset = 0.007;
 #else
-const int mostRecentProxyModelOffset = 1;
+const float mostRecentProxyModelOffset = 0.001;
 #endif
 
 
@@ -67,9 +75,14 @@ void main(void)
     debugCol = vec4(0.0, 0.0, 0.0, 0.0); // Using alpha=1 to signify "yes, escape with this fragment color" in the FS.
 #endif
 #ifdef VS_DISCARD_DEBUG
-    debugCol = vec4(0.0, 0.0, 0.0, 0.0); // Using alpha=1 to signify "yes, escape with this fragment color" in the FS.
+    // Setting these now, so that we can safely exit early from the VS.
+    depth_e = vec2(0.0);
+    frag_depth = 0.5;
+    frag_depth_e = vec2(0.0);
+    intraSplatTexCooTransform2 = mat2(1.0, 0.0, 0.0, 1.0);
+    intraSplatTexCooTransform = intraSplatTexCooTransform2;
 #endif
-
+    
     vec2 st = 0.5*(aVertexPosition.xy+1.0); // From [-1, 1] to [0, 1]
     st.y = 1.0-st.y;
     texCoo = st;
@@ -77,26 +90,15 @@ void main(void)
     // With a 1024^2 canvas and 512^2 splats, there are no artifacts to be seen from using 16 bits for the depth.
     // (But 8 is clearly too coarse.)
     // Now using all 24 bits, since we do send them from the server, currently.
-    st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    //st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
     sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
 
     if ( sampled_depth > 0.999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
-#ifdef VS_DISCARD_DEBUG
-        debugCol = vec4(1.0, 0.5, 0.5, 1.0); // Not discarding, colouring the whole primitive pink instead
-        // Must set the gl_Position now, since it has not been set already.
-  #ifndef USE_FRAG_DEPTH_EXT
-        if (splatSetIndex==-1) {
-            sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
-        }
-  #endif
-        gl_Position = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
-#else
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-#endif
         return;
     }
-    
+
 #ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
         // Moving the most recent proxy model forward.
@@ -105,7 +107,7 @@ void main(void)
         // with the viewport"...
         // (Would it be feasible to adjust all fragments intra-splat for more accurate depths? This could perhaps solve the problem.)
         // (Unfortunately, WebGL doesn't support gl_FragDepth.)
-        sampled_depth = clamp(sampled_depth - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+        sampled_depth = clamp(sampled_depth - mostRecentProxyModelOffset, 0.0, 1.0);
     }
 #endif
 
@@ -151,8 +153,8 @@ void main(void)
     vec2 st_dy = 0.5*( vec2(aVertexPosition.x, aVertexPosition.y+delta*2.0/splats_y) + 1.0 );
     st_dx.y = 1.0-st_dx.y;
     st_dy.y = 1.0-st_dy.y; 
-    st_dx = st_dx + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
-    st_dy = st_dy + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+//     st_dx = st_dx + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+//     st_dy = st_dy + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
     float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
     float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
     if (depth_dx>0.999) {
@@ -175,8 +177,8 @@ void main(void)
     }
 #ifndef USE_FRAG_DEPTH_EXT
     if (splatSetIndex==-1) {
-        depth_dx = clamp(depth_dx - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
-        depth_dy = clamp(depth_dy - 0.001*float(mostRecentProxyModelOffset), 0.0, 1.0);
+        depth_dx = clamp(depth_dx - mostRecentProxyModelOffset, 0.0, 1.0);
+        depth_dy = clamp(depth_dy - mostRecentProxyModelOffset, 0.0, 1.0);
     }
 #endif
     
@@ -200,16 +202,18 @@ void main(void)
     depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
 
     // This will discard all splats not facing forward
+#ifdef CULL_BACK_SIDES
     vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
     vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
     if ( cross(dx, dy).z < 0.0 ) {
-#ifdef VS_DISCARD_DEBUG
+  #ifdef VS_DISCARD_DEBUG
         debugCol = vec4(1.0, 1.0, 1.0, 1.0); // Not discarding, colouring the whole primitive white instead
-#else
+  #else
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-#endif
+  #endif
         return;
     }
+#endif
 
     // Can we discard splats that were "recorded" with a direction very much different from the one we view it with?
     // (This does not take into account perspective. How can we fix this? It does not work very well without this. Or, maybe
@@ -219,7 +223,8 @@ void main(void)
     mat4 tmp = MV * depthMVinv;
     vec3 dir = vec3( -tmp[2][0], -tmp[2][1], -tmp[2][2] );
     dir = normalize(dir);
-    if ( dir.z > 0.0 ) { // What is a good theshold here? Started with -0.6, even that is sometimes not strict enough. But it removes too much. Trying 0...
+    if ( dir.z > 0.0 ) { // What is a good theshold here? Started with -0.6, even that is sometimes not strict enough. 
+                         // But it removes too much. Trying 0...
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
         return;
     }
@@ -286,13 +291,14 @@ void main(void)
 
             if ( actualSplatOverlap > 3.0 ) { // It is not likely that these get very large.
 #ifdef VS_DISCARD_DEBUG
-		debugCol = vec4(0.0, 1.0, 0.0, 1.0); // Not discarding, colouring the fragment green instead
+		debugCol = vec4(0.8, 1.0, 0.8, 1.0); // Not discarding, colouring the fragment green instead
 #else
                 gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
 #endif
                 return;
             }
-            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0); // Need at least 2.0 for the "most recent", >= the one in the test above is meaningless.
+            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0); // Need at least 2.0 for the "most recent", >= the one in the test
+                                                                      // above is meaningless.
         }
     } else {
         actualSplatOverlap = splatOverlap;
@@ -312,10 +318,50 @@ void main(void)
     intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
 	mat2( splatSizeVec.x, 0.0, 0.0, splatSizeVec.y ) *     // screen region, producing a coordinate in [0, 1]^2 for points inside
-	actualSplatOverlap;                                          // this region.
+	actualSplatOverlap;                                    // this region.
 
     intraSplatTexCooTransform =
 	mat2( st_e1, st_e2 ) *                                 // This term maps the screen region "between the splats", given
 	                                                       // with coordinates in [0, 1]^2, to the corresponding texture region.
 	intraSplatTexCooTransform2;
+
+    // Discarding the primitive if the transformation stretches too much. We test on the length of the spanning vectors,
+    // as well as the angle between them. (Could we do this more elegantly? We want to test for "affinity" in some
+    // sense...)
+
+    // Without "screen-spaced" splats: length seems to be overlap/#splats
+    vec2 stretch_target = actualSplatOverlap / vec2(splats_x, splats_y);
+    vec2 basis_lengths = vec2(length(intraSplatTexCooTransform[0]), length(intraSplatTexCooTransform[1]));
+    vec2 stretch_factor = basis_lengths / stretch_target;
+
+    // Angle between the two vectors
+    float angle = acos( dot(intraSplatTexCooTransform[0], intraSplatTexCooTransform[1])/basis_lengths.x/basis_lengths.y );
+    float distortion_factor = angle/(0.5*PI);
+    
+#ifdef CULL_SKEWED_SPLATS
+    if ( (abs(stretch_factor.x-1.0)>0.7) ||
+         (abs(stretch_factor.y-1.0)>0.7) ||
+         (abs(distortion_factor-1.0)>0.7) ) {
+  #ifdef VS_DISCARD_DEBUG
+        // Not discarding, colouring the fragment dark red|green|blue instead
+        if (abs(stretch_factor.x-1.0)>0.7) {
+            debugCol = vec4(0.4, 0.0, 0.0, 1.0);
+        }
+        if (abs(stretch_factor.y-1.0)>0.7) {
+            debugCol = vec4(0.0, 0.4, 0.0, 1.0);
+        }
+        if (abs(distortion_factor-1.0)>0.7) {
+            debugCol = vec4(0.0, 0.0, 0.4, 1.0);
+        }
+  #else
+    #ifdef BLOB_INSTEAD_OF_SKEWED_SPLAT
+        intraSplatTexCooTransform = mat2(0.0); // This will cause the splat to get uniform coloring
+    #else
+        gl_Position = vec4(0.0, 0.0, -1000.0, 0.0); // This amounts to a "discard" operation on the primitive
+    #endif
+  #endif
+        return;
+    }
+#endif
+
 }
