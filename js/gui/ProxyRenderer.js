@@ -23,6 +23,38 @@ dojo.require("gui.ProxyModelCoverageAngles");
 dojo.declare("gui.ProxyRenderer", null, {
 
 
+    // Will set the ProxyModelCoverage object to use for "algorithm <i>".
+    _initProxyCoverage: function(i, glContext) {
+        switch (i) {
+            // What would be the proper way to do this? I.e., to avoid having to define these strings both in the client (here) and the server (the C++ job)?!
+        case "0) AngleCoverage-5":
+        case 0:
+            this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
+                                                                        5,                                  // Number of proxy models to keep
+                                                                        (180.0/5) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
+                                                                        1.1,                                // "Zoom threshold"
+                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+            break;
+        case "1) AngleCoverage-2":
+        case 1:
+            this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
+                                                                        2,                                  // Number of proxy models to keep
+                                                                        (180.0/2) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
+                                                                        1.1,                                // "Zoom threshold"
+                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+            break;
+        case "2) OnlyMostRecent":
+        case 2:
+            this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
+                                                                        0,                                  // Number of proxy models to keep
+                                                                        (180.0/1) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
+                                                                        1.1,                                // "Zoom threshold"
+                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+            break;
+        }
+    },
+
+
     constructor: function(glContext, exposedModel, viewerKey) {
 
 
@@ -51,11 +83,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Proxy model replacement strategy
         // this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize); // Not implemented yet
-        var models = 5;
-        this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
-                                                                    models,                                 // Number of proxy models to keep
-                                                                    (180.0/models) / 180.0*3.1415926535,    // Is this a sensible value? 180/#models degrees
-                                                                    1.1);                                   // "Zoom threshold"
+        this._initProxyCoverage(0, glContext);
 
         // --- For debugging, start
         this._frameOutputInterval         = 1000;
@@ -160,6 +188,12 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.exposedModel.addLocalListener( "useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt") ? 1 : 0;
                 this._compileShaders();
+            }) );
+            this.exposedModel.addLocalListener( "autoProxyAlgo", dojo.hitch(this, function(event) {
+                //this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt") ? 1 : 0;
+                //this._compileShaders();
+                console.log("new algo: " + this.exposedModel.getElementValue("autoProxyAlgo") );
+                this._initProxyCoverage( this.exposedModel.getElementValue("autoProxyAlgo"), this.gl );
             }) );
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
         }
@@ -371,10 +405,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         var matrices = this._matrices;
 
         if ( this._proxyModelBeingProcessed.state == 2 ) { // ... then there is a new proxy model that has been completely loaded, but not inserted into the ring.
-            // this._proxyModelCoverage.processDepthDataReplaceOldest( this._proxyModelBeingProcessed );
-            // this._proxyModelCoverage.processDepthDataReplaceOldestWhenDifferent( this._proxyModelBeingProcessed );
-            // this._proxyModelCoverage.processDepthDataReplaceFarthestAway( this._proxyModelBeingProcessed );
-            this._proxyModelCoverage.processDepthDataOptimizeCoverage(this._proxyModelBeingProcessed);
+            this._proxyModelCoverage.processDepthData( this._proxyModelBeingProcessed );
             this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
         }
 

@@ -36,6 +36,16 @@
 #include <iostream>
 #include "tinia/model/File.hpp"
 
+
+namespace {
+
+    const char *allowed_auto_proxy_algos[] = { "0) AngleCoverage-5",
+                                               "1) AngleCoverage-2",
+                                               "2) OnlyMostRecent",
+                                               NULL };
+}
+
+
 namespace tinia {
 namespace example {
 APCJob::APCJob()
@@ -56,7 +66,12 @@ bool APCJob::init()
         m_model->addElement<bool>( "useAutoProxy", true );          // This turns on the new autoProxy
         m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)
         m_model->addAnnotation("autoProxyDebugging", "Debug mode");
-
+        int algos=0;
+        while ( allowed_auto_proxy_algos[algos] != NULL ) {
+            algos++;
+        }
+        m_model->addElementWithRestriction<std::string>( "autoProxyAlgo", allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0]+algos );
+        m_model->addAnnotation("autoProxyAlgo", "Proxy model replacement algo");
         m_model->addElement<bool>( "debugSplatCol", false );
         m_model->addAnnotation("debugSplatCol", "Index coloring (r, g, b, y, c, m)");
         m_model->addElement<bool>( "decayMode", false );
@@ -93,6 +108,9 @@ bool APCJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useAutoProxy"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("autoProxyDebugging"));
         row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Label("autoProxyAlgo"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::ComboBox("autoProxyAlgo"));
+        row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugSplatCol"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decayMode"));
@@ -124,7 +142,8 @@ bool APCJob::init()
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::Label("consoleLog", false));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("consoleLog", true));
-        // More elements...
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::VerticalExpandingSpace());
     }
 
     // Setting up root consisting of canvas + mainGrid
