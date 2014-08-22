@@ -318,8 +318,7 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-//    QString fullPath = ":javascript/" + uri;
-    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
+    QString fullPath = ":javascript/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

@@ -19,6 +19,9 @@
 dojo.require("gui.ProxyModel");
 dojo.require("gui.ProxyModelCoverageGrid");
 dojo.require("gui.ProxyModelCoverageAngles");
+dojo.require("gui.ProxyModelCoverageReplaceFarthestAway");
+dojo.require("gui.ProxyModelCoverageReplaceOldest");
+dojo.require("gui.ProxyModelCoverageReplaceOldestWhenDifferent");
 
 dojo.declare("gui.ProxyRenderer", null, {
 
@@ -32,26 +35,38 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
                                                                         5,                                  // Number of proxy models to keep
                                                                         (180.0/5) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
-                                                                        1.1,                                // "Zoom threshold"
-                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+                                                                        1.1);                               // "Zoom threshold"
             break;
         case "1) AngleCoverage-2":
         case 1:
             this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
                                                                         2,                                  // Number of proxy models to keep
                                                                         (180.0/2) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
-                                                                        1.1,                                // "Zoom threshold"
-                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+                                                                        1.1);                               // "Zoom threshold"
             break;
         case "2) OnlyMostRecent":
         case 2:
             this._proxyModelCoverage = new gui.ProxyModelCoverageAngles(glContext,
                                                                         0,                                  // Number of proxy models to keep
                                                                         (180.0/1) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
-                                                                        1.1,                                // "Zoom threshold"
-                                                                        0);                                 // Replacement mode, 0) Optimize angle coverage
+                                                                        1.1);                               // "Zoom threshold"
+            break;
+        case "3) ReplaceOldestWhenDifferent-5":
+        case 3:
+            this._proxyModelCoverage = new gui.ProxyModelCoverageReplaceOldestWhenDifferent(glContext,
+                                                                        5,                                  // Number of proxy models to keep
+                                                                        (180.0/5) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
+                                                                        1.1);                               // "Zoom threshold"
+            break;
+        case "4) ReplaceOldest-5":
+        case 4:
+            this._proxyModelCoverage = new gui.ProxyModelCoverageReplaceOldest(glContext,
+                                                                        5,                                  // Number of proxy models to keep
+                                                                        (180.0/5) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
+                                                                        1.1);                               // "Zoom threshold"
             break;
         }
+        console.log( "New proxy model replacement algo: " + i );
     },
 
 

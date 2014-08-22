@@ -39,10 +39,14 @@
 
 namespace {
 
+    // NB! This list must match the one in ProxyRenderer.js, exactly!
     const char *allowed_auto_proxy_algos[] = { "0) AngleCoverage-5",
                                                "1) AngleCoverage-2",
                                                "2) OnlyMostRecent",
+                                               "3) ReplaceOldestWhenDifferent-5",
+                                               "4) ReplaceOldest-5",
                                                NULL };
+
 }
 
 
