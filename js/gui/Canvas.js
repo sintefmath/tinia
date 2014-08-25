@@ -183,39 +183,53 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }) );
 
 
+        // This gets called when the SERVER has initiated a change in the model.
+        // This could for instance be a simulation and the server updates the current
+        // simulation time.
+        // We need to fetch a new image.
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
             if (!this._imageLoading) {
                 console.log("Getting new image");
-                dojo.xhrGet({
+                dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
                         // console.log("/model/updateParsed: response = " + response);
                         var response_obj = eval( '(' + response + ')' );
-                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
+//                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
+                        var viewer_key = "viewer2";
+                        this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
                     })
                 });
             }
         }));
 
+        // We are initiating a new update TO the server.
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function (xml) {
             this._imageLoading = true;
-            this._showCorrect();
+            // Make sure we are showing the proxy geometry (if the mouse is over the canvas):
+            this._showCorrect(); // Shows the correct image: either proxy or server image.
         }));
 
+        // We have sent a new update to the server.
+        // The "partial" bit says that we _may_ have another update to send after this as well.
+        // Either way, we should show the image we just got from the server (it's newer than the one we have!).
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
-            // Temporary sanity fix for firefox
-            // (Chrome gets here too. Should this be here? Would be nice to know why... Is this a bug workaround?)
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
                 // console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
-                if (response_obj) // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+                if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+//                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
+                    var viewer_key = "viewer2";
+                    this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
+                }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
             }
         }));
 
+        // Here we know that we have no further updates to send at the moment. Therefore the
+        // image we received is a perfect match for our current exposedmodel.
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
             this._imageLoading = false;
             this._showCorrect();
@@ -568,9 +582,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _makeImgURL: function () {
         if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
-            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
-                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+            // @@@
+//            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+//                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+            var tmp =  this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+                    + "&timestamp=" + (new Date()).getTime() + "&key=" + "viewer2";
+            console.log("img-url = " + tmp);
+            return tmp;
         } else {
+            console.log("_makeImgUrl for non-ap-moode");
             return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
                     + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
         }

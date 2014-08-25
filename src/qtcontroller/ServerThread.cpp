@@ -194,6 +194,9 @@ void ServerThread::run()
         }
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
+
+            std::cout << "\n\nrequest= '" << QString( request ).toStdString() << "'\n\n" << std::endl;
+
             if(!handleNonStatic(os, getRequestURI(request), request)) {
                 os << getStaticContent(getRequestURI(request)) << "\r\n";
             }
@@ -220,10 +223,8 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
                                   tinia::jobcontroller::Job* job,
                                   tinia::qtcontroller::impl::OpenGLServerGrabber* grabber)
 {
-    boost::tuple<unsigned int, unsigned int,
-            std::string> arguments =
-            parseGet<boost::tuple<unsigned int, unsigned int,
-            std::string> >(decodeGetParameters(request), "width height key");
+    boost::tuple<unsigned int, unsigned int, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string> >( decodeGetParameters(request), "width height key" );
     std::string key = arguments.get<2>();
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
     {
@@ -318,7 +319,8 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    QString fullPath = ":javascript/" + uri;
+//    QString fullPath = ":javascript/" + uri;
+    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {
