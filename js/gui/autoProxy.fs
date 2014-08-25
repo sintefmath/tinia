@@ -36,7 +36,7 @@ varying highp vec4 debugCol;                    // For replacing discarded primi
 
 uniform int useBlending;
 #ifdef USE_FRAG_DEPTH_EXT
-const highp float mostRecentProxyModelOffset = 0.007;
+const highp float mostRecentProxyModelOffset = 0.05; // 140825: Needed to increase from 0.007 to 0.05 for apc_job to render properly with default settings.
 #else
 const highp float mostRecentProxyModelOffset = 0.001;
 #endif

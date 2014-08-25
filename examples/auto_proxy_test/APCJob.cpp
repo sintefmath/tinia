@@ -67,85 +67,85 @@ bool APCJob::init()
     // Note that these values are not communicated to the ProxyRenderer until they are actually changed, due to the use
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
-        m_model->addElement<bool>( "useAutoProxy", true );          // This turns on the new autoProxy
-        m_model->addElement<bool>( "autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)
-        m_model->addAnnotation("autoProxyDebugging", "Debug mode");
+        m_model->addElement<bool>( "ap_useAutoProxy", true );          // This turns on the new autoProxy
+        m_model->addElement<bool>( "ap_autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)
+        m_model->addAnnotation("ap_autoProxyDebugging", "Debug mode");
         int algos=0;
         while ( allowed_auto_proxy_algos[algos] != NULL ) {
             algos++;
         }
-        m_model->addElementWithRestriction<std::string>( "autoProxyAlgo", allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0]+algos );
-        m_model->addAnnotation("autoProxyAlgo", "Proxy model replacement algo");
-        m_model->addElement<bool>( "debugSplatCol", false );
-        m_model->addAnnotation("debugSplatCol", "Index coloring (r, g, b, y, c, m)");
-        m_model->addElement<bool>( "decayMode", false );
-        m_model->addAnnotation("decayMode", "Splats decaying from center");
-        m_model->addElement<bool>( "roundSplats", false );
-        m_model->addAnnotation("roundSplats", "Circular splats");
-        m_model->addElement<bool>( "screenSpaceSized", true );
-        m_model->addAnnotation("screenSpaceSized", "Screen-space-sized splats");
-        m_model->addConstrainedElement<int>("overlap", 200, 1, 300);
-        m_model->addAnnotation("overlap", "Overlap factor)");
-        m_model->addElement<bool>( "alwaysShowMostRecent", true );
-        m_model->addAnnotation("alwaysShowMostRecent", "Always show most recent proxy model");
-        m_model->addConstrainedElement<int>("splats", 16, 2, 512);
-        m_model->addAnnotation("splats", "Number of splats)");
-        m_model->addElement<bool>( "resetAllModels", false );
-        m_model->addAnnotation("resetAllModels", "Remove all models, and update just once");
-        m_model->addElement<bool>( "useISTC", true );
-        m_model->addAnnotation("useISTC", "Use intra-splat texcoo");
-        m_model->addElement<bool>( "splatOutline", false );
-        m_model->addAnnotation("splatOutline", "Square splat outline");
-        m_model->addElement<bool>( "reloadShader", false );
-        m_model->addAnnotation("reloadShader", "Reload shader");
-        m_model->addElement<bool>( "useFragExt", true );
-        m_model->addAnnotation("useFragExt", "Use FragDepthExt if available");
-        m_model->addElement( "fragExtStatus", "---" );
-        m_model->addElement( "consoleLog", "---" );
-        m_model->addElement<int>( "cntr", 0 );
+        m_model->addElementWithRestriction<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[2], &allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0]+algos );
+        m_model->addAnnotation("ap_autoProxyAlgo", "Proxy model replacement algo");
+        m_model->addElement<bool>( "ap_debugSplatCol", false );
+        m_model->addAnnotation("ap_debugSplatCol", "Index coloring (r, g, b, y, c, m)");
+        m_model->addElement<bool>( "ap_decayMode", false );
+        m_model->addAnnotation("ap_decayMode", "Splats decaying from center");
+        m_model->addElement<bool>( "ap_roundSplats", false );
+        m_model->addAnnotation("ap_roundSplats", "Circular splats");
+        m_model->addElement<bool>( "ap_screenSpaceSized", true );
+        m_model->addAnnotation("ap_screenSpaceSized", "Screen-space-sized splats");
+        m_model->addConstrainedElement<int>("ap_overlap", 200, 1, 300);
+        m_model->addAnnotation("ap_overlap", "Overlap factor)");
+        m_model->addElement<bool>( "ap_alwaysShowMostRecent", true );
+        m_model->addAnnotation("ap_alwaysShowMostRecent", "Most recent model in front");
+        m_model->addConstrainedElement<int>("ap_splats", 64, 2, 512); // NB! The initial value will be overridden by the one in Tinia if different!
+        m_model->addAnnotation("ap_splats", "Number of splats)");
+        m_model->addElement<bool>( "ap_resetAllModels", false );
+        m_model->addAnnotation("ap_resetAllModels", "Remove all models, update now");
+        m_model->addElement<bool>( "ap_useISTC", true );
+        m_model->addAnnotation("ap_useISTC", "Use intra-splat texcoo");
+        m_model->addElement<bool>( "ap_splatOutline", false );
+        m_model->addAnnotation("ap_splatOutline", "Square splat outline");
+        m_model->addElement<bool>( "ap_reloadShader", false );
+        m_model->addAnnotation("ap_reloadShader", "Reload shader");
+        m_model->addElement<bool>( "ap_useFragExt", true );
+        m_model->addAnnotation("ap_useFragExt", "Use FragDepthExt if available");
+        m_model->addElement( "ap_fragExtStatus", "---" );
+        m_model->addElement( "ap_consoleLog", "---" );
+        m_model->addElement<int>( "ap_cntr", 0 );
     }
 
     // Setting up the mainGrid containing the GUI elements
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
     {
         int row = 0;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useAutoProxy"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("autoProxyDebugging"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useAutoProxy"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_autoProxyDebugging"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::Label("autoProxyAlgo"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::ComboBox("autoProxyAlgo"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::Label("ap_autoProxyAlgo"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::ComboBox("ap_autoProxyAlgo"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("debugSplatCol"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_debugSplatCol"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("decayMode"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_decayMode"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("roundSplats"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_roundSplats"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("screenSpaceSized"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_screenSpaceSized"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("overlap"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Label("overlap", false));
-        mainGrid->setChild(row, 2, new tinia::model::gui::Label("overlap", true));
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_overlap"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_overlap", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_overlap", true));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("alwaysShowMostRecent"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_alwaysShowMostRecent"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("splats"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Label("splats", false));
-        mainGrid->setChild(row, 2, new tinia::model::gui::Label("splats", true));
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_splats"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_splats", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_splats", true));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::Button("resetAllModels"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_resetAllModels"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useISTC"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useISTC"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("splatOutline"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_splatOutline"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::Button("reloadShader"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_reloadShader"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("useFragExt"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Label("fragExtStatus", true)); // true) We get the text string connected to the element, false) name of element
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useFragExt"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_fragExtStatus", true)); // true) We get the text string connected to the element, false) name of element
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::Label("consoleLog", false));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Label("consoleLog", true));
+        mainGrid->setChild(row, 0, new tinia::model::gui::Label("ap_consoleLog", false));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_consoleLog", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::VerticalExpandingSpace());
     }

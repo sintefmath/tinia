@@ -169,13 +169,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // We always want to update after the first parsing
         this._shouldUpdate = true;
 
-        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             this._urlHandler.setURL(this._snapshotBundleURL);
         } else {
             this._urlHandler.setURL(this._snapshotURL);
         }
-        this._modelLib.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
-            if ( this._modelLib.getElementValue("useAutoProxy") ) {
+        this._modelLib.addLocalListener( "ap_useAutoProxy", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("ap_useAutoProxy") ) {
                 this._urlHandler.setURL(this._snapshotBundleURL);
             } else {
                 this._urlHandler.setURL(this._snapshotURL);
@@ -376,7 +376,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
         this._img.src = "data:image/png;base64," + response_rgb;
-        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) && (this._proxyRenderer) ) {
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) && (this._proxyRenderer) ) {
             this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
         }
         this._showCorrect();
@@ -526,7 +526,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             m_from_world: viewer.getElementValue("modelview")
         }
 
-        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             this._proxyRenderer.render(view_coord_sys);
         } else {
             this._render_list_renderer.render(this._render_list_store, view_coord_sys);
@@ -567,7 +567,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
     _makeImgURL: function () {
-        if ( (this._modelLib.hasKey("useAutoProxy")) && (this._modelLib.getElementValue("useAutoProxy")) ) {
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
                     + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
         } else {

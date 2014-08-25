@@ -4,7 +4,6 @@
 // FS. (See that start of the FS main() function.)
 
 // #define CULL_BACK_SIDES              // We use pos(i, j+1)-pos(i, j) x pos(i+1, j)-pos(i, j) to determine culling
-
 #define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
 #define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
                                         // otherwise, the splat is discarded.
@@ -49,7 +48,7 @@ uniform int vp_width;
 uniform int vp_height;
 uniform int splatSetIndex;
 #ifdef USE_FRAG_DEPTH_EXT
-const float mostRecentProxyModelOffset = 0.007;
+const float mostRecentProxyModelOffset = 0.05; // 140825: Needed to increase from 0.007 to 0.05 for apc_job to render properly with default settings.
 #else
 const float mostRecentProxyModelOffset = 0.001;
 #endif
@@ -203,6 +202,9 @@ void main(void)
 
     // This will discard all splats not facing forward
 #ifdef CULL_BACK_SIDES
+    // This does not work as originally intended. For unwanted splats (or, rather, splats with unwanted parts, typically
+    // extending beyond the silhouette of the object) the direction computed by 'dx x dy' is more often that not from the
+    // "good part" of the splat, hence, it cannot be used to discard the whole splat or detect that it has "bad parts"!
     vec3 dx = normalize( pos_dx.xyz/pos_dx.w - pos.xyz/pos.w ); // possible to reuse computations from above?
     vec3 dy = normalize( pos_dy.xyz/pos_dy.w - pos.xyz/pos.w );
     if ( cross(dx, dy).z < 0.0 ) {

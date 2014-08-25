@@ -89,8 +89,8 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Number of proxy geometry splats (gl Points) in each direction, covering the viewport.
         // (Note that the ratio between these numbers should ideally equal the aspect ratio of the viewport for best results.)
-        this._splats_x = 16;
-        this._splats_y = 16;
+        this._splats_x = 64;
+        this._splats_y = 64;
 
         // This factor is just a guestimate at how much overlap we need between splats for those being moved toward the observer to fill in
         // gaps due to expansion caused by the perspective view, before new depth buffers arrive.
@@ -98,7 +98,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         // Proxy model replacement strategy
         // this._proxyModelCoverage = new gui.ProxyModelCoverageGrid(this.gl, this._coverageGridSize); // Not implemented yet
-        this._initProxyCoverage(0, glContext);
+        this._initProxyCoverage(2, glContext);
 
         // --- For debugging, start
         this._frameOutputInterval         = 1000;
@@ -119,7 +119,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this._useFragDepthAndAvailable = false; // Will be set according to availability when we test for that
 
-        this._debugging = (this.exposedModel.hasKey("autoProxyDebugging")) && (this.exposedModel.getElementValue("autoProxyDebugging"));
+        this._debugging = (this.exposedModel.hasKey("ap_autoProxyDebugging")) && (this.exposedModel.getElementValue("ap_autoProxyDebugging"));
         if (this._debugging) {
             this._frameOutputCounter   = 0;
             this._frameMeasureCounter  = 0;
@@ -149,21 +149,21 @@ dojo.declare("gui.ProxyRenderer", null, {
         // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
         // these.
         if (this._debugging) {
-            this.exposedModel.addLocalListener("reloadShader", dojo.hitch(this, function(event) {
-                if(this.exposedModel.getElementValue("reloadShader")) {
+            this.exposedModel.addLocalListener("ap_reloadShader", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_reloadShader")) {
                     this._loadShaders();
                 } else {
-                    this.exposedModel.updateElement("reloadShader", false);
+                    this.exposedModel.updateElement("ap_reloadShader", false);
                 }
             }));
-            this.exposedModel.addLocalListener( "alwaysShowMostRecent", dojo.hitch(this, function(event) {
-                this._alwaysShowMostRecent = this.exposedModel.getElementValue("alwaysShowMostRecent") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_alwaysShowMostRecent", dojo.hitch(this, function(event) {
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_alwaysShowMostRecent") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "overlap", dojo.hitch(this, function(event) {
-                this._splatOverlap = this.exposedModel.getElementValue("overlap") / 100.0;
+            this.exposedModel.addLocalListener( "ap_overlap", dojo.hitch(this, function(event) {
+                this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
             }) );
-            this.exposedModel.addLocalListener( "splats", dojo.hitch(this, function(event) {
-                var splats = this.exposedModel.getElementValue("splats");
+            this.exposedModel.addLocalListener( "ap_splats", dojo.hitch(this, function(event) {
+                var splats = this.exposedModel.getElementValue("ap_splats");
                 if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
                     this._splats_x = splats;
                     this._splats_y = splats;
@@ -182,33 +182,33 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
                 }
             }) );
-            this.exposedModel.addLocalListener( "debugSplatCol", dojo.hitch(this, function(event) {
-                this._debugSplatCol = this.exposedModel.getElementValue("debugSplatCol") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_debugSplatCol", dojo.hitch(this, function(event) {
+                this._debugSplatCol = this.exposedModel.getElementValue("ap_debugSplatCol") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "decayMode", dojo.hitch(this, function(event) {
-                this._decayMode = this.exposedModel.getElementValue("decayMode") ? 1: 0;
+            this.exposedModel.addLocalListener( "ap_decayMode", dojo.hitch(this, function(event) {
+                this._decayMode = this.exposedModel.getElementValue("ap_decayMode") ? 1: 0;
             }) );
-            this.exposedModel.addLocalListener( "roundSplats", dojo.hitch(this, function(event) {
-                this._roundSplats = this.exposedModel.getElementValue("roundSplats") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_roundSplats", dojo.hitch(this, function(event) {
+                this._roundSplats = this.exposedModel.getElementValue("ap_roundSplats") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "screenSpaceSized", dojo.hitch(this, function(event) {
-                this._screenSpaceSized = this.exposedModel.getElementValue("screenSpaceSized") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_screenSpaceSized", dojo.hitch(this, function(event) {
+                this._screenSpaceSized = this.exposedModel.getElementValue("ap_screenSpaceSized") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "useISTC", dojo.hitch(this, function(event) {
-                this._useISTC = this.exposedModel.getElementValue("useISTC") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_useISTC", dojo.hitch(this, function(event) {
+                this._useISTC = this.exposedModel.getElementValue("ap_useISTC") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "splatOutline", dojo.hitch(this, function(event) {
-                this._splatOutline = this.exposedModel.getElementValue("splatOutline") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_splatOutline", dojo.hitch(this, function(event) {
+                this._splatOutline = this.exposedModel.getElementValue("ap_splatOutline") ? 1 : 0;
             }) );
-            this.exposedModel.addLocalListener( "useFragExt", dojo.hitch(this, function(event) {
-                this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
+                this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 this._compileShaders();
             }) );
-            this.exposedModel.addLocalListener( "autoProxyAlgo", dojo.hitch(this, function(event) {
-                //this._useFragDepthExt = this.exposedModel.getElementValue("useFragExt") ? 1 : 0;
+            this.exposedModel.addLocalListener( "ap_autoProxyAlgo", dojo.hitch(this, function(event) {
+                //this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 //this._compileShaders();
-                console.log("new algo: " + this.exposedModel.getElementValue("autoProxyAlgo") );
-                this._initProxyCoverage( this.exposedModel.getElementValue("autoProxyAlgo"), this.gl );
+                console.log("new algo: " + this.exposedModel.getElementValue("ap_autoProxyAlgo") );
+                this._initProxyCoverage( this.exposedModel.getElementValue("ap_autoProxyAlgo"), this.gl );
             }) );
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
         }
@@ -216,13 +216,13 @@ dojo.declare("gui.ProxyRenderer", null, {
         // Listeners that are not for debugging only. Currently we use this only to clear the buffer in the event
         // that autoProxy has been enabled, but was then disabled. It could be that this is not needed if the clear-colours
         // used are set otherwise, for instance to the same value as the caller (Canvas-object) is using?!
-        this.exposedModel.addLocalListener( "autoProxyDebugging", dojo.hitch(this, function(event) {
-            this._debugging = this.exposedModel.getElementValue("autoProxyDebugging");
+        this.exposedModel.addLocalListener( "ap_autoProxyDebugging", dojo.hitch(this, function(event) {
+            this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
             console.log("Recompiling shaders without DEBUG set...");
             this._compileShaders();
         }) );
-        this.exposedModel.addLocalListener( "useAutoProxy", dojo.hitch(this, function(event) {
-            var tmp = this.exposedModel.getElementValue("useAutoProxy");
+        this.exposedModel.addLocalListener( "ap_useAutoProxy", dojo.hitch(this, function(event) {
+            var tmp = this.exposedModel.getElementValue("ap_useAutoProxy");
             if (!tmp) {
                 console.log("autoProxy was turned off. Clearing.");
                 this._clearCanvas();
@@ -285,11 +285,11 @@ dojo.declare("gui.ProxyRenderer", null, {
         // Note that this is not a boolean, but an object is returned. Not sure if this object must be kept alive for the remainder
         // of the execution, but taking no chances.
         console.log("this._frag_depth_ext = " + this._frag_depth_ext);
-        if (this.exposedModel.hasKey("fragExtStatus")) {
+        if (this.exposedModel.hasKey("ap_fragExtStatus")) {
             if (this._frag_depth_ext) {
-                this.exposedModel.updateElement("fragExtStatus", "(available)");
+                this.exposedModel.updateElement("ap_fragExtStatus", "(available)");
             } else {
-                this.exposedModel.updateElement("fragExtStatus", "(na)");
+                this.exposedModel.updateElement("ap_fragExtStatus", "(na)");
             }
         }
         if ( (this._frag_depth_ext) && (this._useFragDepthExt) ) {
@@ -385,7 +385,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     _clearCanvas: function() {
-        if ( this.exposedModel.getElementValue("useAutoProxy") ) {
+        if ( this.exposedModel.getElementValue("ap_useAutoProxy") ) {
 
             if ( this._useBlending) {
                 if (this._debugging) {
@@ -414,7 +414,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     renderMain: function() {
-        if ( !this.exposedModel.getElementValue("useAutoProxy") )
+        if ( !this.exposedModel.getElementValue("ap_useAutoProxy") )
             return; // Just to be sure we don't mess up anything after this has been turned off
 
         var matrices = this._matrices;
@@ -442,8 +442,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1i(this._splatProgram, "useBlending", this._useBlending ? 1 : 0);
 //            this._setUniformMatrix4fv(this._splatProgram, "MV", matrices.m_from_world);
 //            this._setUniformMatrix4fv(this._splatProgram, "PM", matrices.m_projection);
-            if ( (this._debugging) && (this.exposedModel.hasKey("resetAllModels")) && (this.exposedModel.getElementValue("resetAllModels")) ) {
-                this.exposedModel.updateElement("resetAllModels", false);
+            if ( (this._debugging) && (this.exposedModel.hasKey("ap_resetAllModels")) && (this.exposedModel.getElementValue("ap_resetAllModels")) ) {
+                this.exposedModel.updateElement("ap_resetAllModels", false);
                 for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
                     this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
                 }
@@ -539,15 +539,15 @@ dojo.declare("gui.ProxyRenderer", null, {
                     var ms_total = Math.floor(this._totalTime/this._frameMeasureInterval*100.0)/100.0;
                     var fps_total = Math.floor(1000.0/(this._totalTime/this._frameMeasureInterval));
                     console.log("Average shader time: " + (ms) + " (" + (fps) + " fps), total time: " + (ms_total) + " (" + (fps_total) + " fps)");
-                    if (this.exposedModel.hasKey("consoleLog")) {
-                        this.exposedModel.updateElement("consoleLog", "Average shader time: " + (ms) + " (" + (fps) + " fps), total time: " + (ms_total) + " (" + (fps_total) + " fps)");
+                    if (this.exposedModel.hasKey("ap_consoleLog")) {
+                        this.exposedModel.updateElement("ap_consoleLog", "Average shader time: " + (ms) + " (" + (fps) + " fps), total time: " + (ms_total) + " (" + (fps_total) + " fps)");
                     }
                     this._frameOutputCounter = 0;
                     this._frameMeasureCounter = 0;
                     this._frameTime = 0.0;
                     this._totalTime = 0.0;
                 }
-                this.exposedModel.updateElement("cntr", this.exposedModel.getElementValue("cntr") + 1 );
+                this.exposedModel.updateElement("ap_cntr", this.exposedModel.getElementValue("ap_cntr") + 1 );
             }
 
             if ( this._useBlending ) {
