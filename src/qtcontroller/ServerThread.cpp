@@ -67,14 +67,16 @@ class SnapshotAsTextFetcher : public QRunnable
 public:
     
     explicit SnapshotAsTextFetcher( QTextStream& reply,
-                              const QString& request,
-                              tinia::jobcontroller::Job* job,
-                              tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber )
+                                    const QString& request,
+                                    tinia::jobcontroller::Job* job,
+                                    tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
+                                    const bool getRBGsnapshot)
         : m_reply( reply ),
           m_request( request ),
           m_job( NULL ),
           m_gl_grabber( gl_grabber ),
-          m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() )
+          m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
+          m_getRGBsnapshot( getRBGsnapshot )
     {
         using namespace tinia::qtcontroller::impl;
         
@@ -82,7 +84,6 @@ public:
         if( m_job == NULL ) {
             throw std::invalid_argument("This is not an OpenGL job!");
         }
-        
         
         typedef boost::tuple<unsigned int, unsigned int, std::string> params_t;
         params_t arguments = parseGet<params_t >(decodeGetParameters(request),
@@ -110,19 +111,20 @@ public:
         img.save(&qBuffer, "png");
         //m_gl_grabber_locker.unlock();
         
-        m_reply << httpHeader(getMimeType("file.txt"));
         QString str( QByteArray( qBuffer.data(),
                                  int(qBuffer.size()) ).toBase64() );
-        m_reply << "\r\n"<<str;        
+        m_reply << str;
     }
     
     void
     run()
     {
-        m_gl_grabber->grab( m_job, m_width, m_height, m_key ); 
+        if ( m_getRGBsnapshot ) {
+            m_gl_grabber->grabRGB( m_job, m_width, m_height, m_key );
+        } else {
+            m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+        }
     }
-
-    
     
 protected:
     QTextStream&                                    m_reply;
@@ -133,6 +135,7 @@ protected:
     unsigned int                                    m_width;
     unsigned int                                    m_height;
     std::string                                     m_key;
+    bool                                            m_getRGBsnapshot;
 };
 
 
@@ -172,7 +175,6 @@ void ServerThread::run()
         //Now we have the whole header
         QRegExp contentLengthExpression("Content-Length: (\\d+)\\s*\\r\\n");
 
-        
         if (contentLengthExpression.indexIn(request) != -1) {
             QString contentLengthGroup = contentLengthExpression.cap(1);
             int contentLength = contentLengthGroup.toInt();
@@ -183,7 +185,9 @@ void ServerThread::run()
                 request += socket.readAll();
             }
         }
+
         QTextStream os(&socket);
+
         if(isLongPoll(request)) {
             LongPollHandler handler(os, request, m_job->getExposedModel());
             handler.handle();
@@ -205,21 +209,70 @@ void ServerThread::run()
     }
 }
 
+
 bool ServerThread::isLongPoll(const QString &request)
 {
     return getRequestURI(request) == "/getExposedModelUpdate.xml";
 }
 
 
+void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
+                                  tinia::jobcontroller::Job* job,
+                                  tinia::qtcontroller::impl::OpenGLServerGrabber* grabber)
+{
+    boost::tuple<unsigned int, unsigned int,
+            std::string> arguments =
+            parseGet<boost::tuple<unsigned int, unsigned int,
+            std::string> >(decodeGetParameters(request), "width height key");
+    std::string key = arguments.get<2>();
+    os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
+    {
+        SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
+        m_mainthread_invoker->invokeInMainThread( &f, true );
+    }
+    os << "\", \"depth\": \"";
+    {
+        SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
+        m_mainthread_invoker->invokeInMainThread( &f, true );
+    }
+    os << "\", \"view\": \"";
+    std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
+    tinia::model::Viewer viewer;
+    m_job->getExposedModel()->getElementValue( key, viewer );
+    {
+        for (size_t i=0; i<15; i++) {
+            os << viewer.modelviewMatrix[i] << " ";
+        }
+        os << viewer.modelviewMatrix[15];
+    }
+    os << "\", \"proj\": \"";
+    {
+        for (size_t i=0; i<15; i++) {
+            os << viewer.projectionMatrix[i] << " ";
+        }
+        os << viewer.projectionMatrix[15];
+    }
+    os << "\" }";
+}
+
 
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
-                                 const QString& request)
+                                   const QString& request)
 {
     try {
         if(file == "/snapshot.txt") {
             updateState(os, request);
-            SnapshotAsTextFetcher f( os, request, m_job, m_grabber );
-            m_mainthread_invoker->invokeInMainThread( &f, true );
+            os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
+            {
+                SnapshotAsTextFetcher f( os, request, m_job, m_grabber, true /* RGB requested */ );
+                m_mainthread_invoker->invokeInMainThread( &f, true );
+            }
+            os << "\" }";
+            return true;
+        }
+        else if ( file == "/snapshot_bundle.txt" ) {
+            updateState(os, request);
+            getSnapshotTxt( os, request, m_job, m_grabber );
             return true;
         }
         else if(file == "/getRenderList.xml") {
@@ -265,7 +318,7 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    QString fullPath = ":/javascript" + uri;
+    QString fullPath = ":javascript/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

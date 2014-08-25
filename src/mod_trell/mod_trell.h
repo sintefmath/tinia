@@ -98,6 +98,7 @@ typedef struct mod_trell_dispatch_info
     enum TrellComponent  m_component;
     enum TrellRequest    m_request;
     enum TrellModAction  m_mod_action;
+    enum TrellPixelFormat m_pixel_format;
     int                  m_revision;
     /** Send response as a base64 encoded string. */
     int                  m_base64;
@@ -275,7 +276,6 @@ int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info );
-
 
 
 int

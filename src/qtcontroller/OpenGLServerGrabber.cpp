@@ -9,7 +9,8 @@ namespace tinia {
 namespace qtcontroller {
 namespace impl {
 
-OpenGLServerGrabber::OpenGLServerGrabber( QObject *parent )
+
+OpenGLServerGrabber::OpenGLServerGrabber( QObject *parent)
     : QObject(parent),
       m_buffer( NULL ),
       m_buffer_size(0),
@@ -18,6 +19,7 @@ OpenGLServerGrabber::OpenGLServerGrabber( QObject *parent )
       m_height(500)
 {
 }
+
 
 OpenGLServerGrabber::~OpenGLServerGrabber()
 {
@@ -28,11 +30,12 @@ OpenGLServerGrabber::~OpenGLServerGrabber()
     }
 }
 
+
 void
-OpenGLServerGrabber::grab( jobcontroller::OpenGLJob *job,
-                           unsigned int width,
-                           unsigned int height,
-                           const std::string& key )
+OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
+                              unsigned int width,
+                              unsigned int height,
+                              const std::string& key)
 {
     if( !m_openglIsReady ) {
         setupOpenGL();
@@ -48,7 +51,7 @@ OpenGLServerGrabber::grab( jobcontroller::OpenGLJob *job,
     // QImage requires scanline size to be a multiple of 32 bits.
     size_t scanline_size = 4*((3*width+3)/4);
     glPixelStorei( GL_PACK_ALIGNMENT, 4 );
-    
+
     // make sure that buffer is large enough to hold raw image
     size_t req_buffer_size = scanline_size*height*3;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
@@ -58,13 +61,58 @@ OpenGLServerGrabber::grab( jobcontroller::OpenGLJob *job,
         m_buffer_size = req_buffer_size;
         m_buffer = new unsigned char[m_buffer_size];
     }
-    
+
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, m_buffer );
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
+void
+OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
+                                unsigned int width,
+                                unsigned int height,
+                                const std::string& key)
+{
+    if( !m_openglIsReady ) {
+        setupOpenGL();
+    }
+    if(m_width != width || m_height != height) {
+        resize(width, height);
+    }
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glViewport( 0, 0, width, height );
+    job->renderFrame( "session", key, m_fbo, width, height );
+
+    // QImage requires scanline size to be a multiple of 32 bits.
+    size_t scanline_size = 4*width;
+    glPixelStorei( GL_PACK_ALIGNMENT, 1 ); // 4 and 1 equally good, in this case?
+
+    // make sure that buffer is large enough to hold raw image
+    size_t req_buffer_size = scanline_size*height*4;
+    if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
+        if( m_buffer != NULL ) {
+            delete m_buffer;
+        }
+        m_buffer_size = req_buffer_size;
+        m_buffer = new unsigned char[m_buffer_size];
+    }
+
+    assert( sizeof(GL_FLOAT) == 4 );
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
+    // Depth encoded as 24 bit fixed point values.
+    for (size_t i=0; i<width*height; i++) {
+        float value = ((float *)m_buffer)[i];
+        for (size_t j=0; j<3; j++) {
+            ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+            value = 255.0*value - floor(value*255.0);
+        }
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
 
 void OpenGLServerGrabber::setupOpenGL()
@@ -76,6 +124,7 @@ void OpenGLServerGrabber::setupOpenGL()
     resize(m_width, m_height);
     m_openglIsReady = true;
 }
+
 
 void OpenGLServerGrabber::resize(unsigned int width, unsigned int height)
 {
@@ -136,6 +185,7 @@ void OpenGLServerGrabber::resize(unsigned int width, unsigned int height)
     m_width = width;
     m_height = height;
 }
+
 
 } // namespace impl
 } // namespace qtcontroller

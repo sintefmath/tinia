@@ -336,7 +336,7 @@ void TestJob::stateElementModified(tinia::model::StateElement *stateElement)
 bool TestJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
     glClearColor(0, 0, 0, 1);
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, width, height);
     tinia::model::Viewer viewer;

@@ -114,16 +114,16 @@ static int trell_handler_body(request_rec *r)
 #if 0
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                    "mod_trell: decode_path_info returned c=%d, r=%d, j='%s', s='%s', r='%s' rev=%d, ac=%d, key=%s, w=%d, h=%d",
-                   dispatch_info.m_component,
-                   dispatch_info.m_request,
-                   dispatch_info.m_jobid,
-                   dispatch_info.m_sessionid,
-                   dispatch_info.m_requestname,
-                   dispatch_info.m_revision,
-                   dispatch_info.m_mod_action,
-                   dispatch_info.m_key,
-                   dispatch_info.m_width,
-                   dispatch_info.m_height );
+                   dispatch_info->m_component,
+                   dispatch_info->m_request,
+                   dispatch_info->m_jobid,
+                   dispatch_info->m_sessionid,
+                   "na", // dispatch_info->m_requestname,
+                   dispatch_info->m_revision,
+                   dispatch_info->m_mod_action,
+                   dispatch_info->m_key,
+                   dispatch_info->m_width,
+                   dispatch_info->m_height );
 #endif
 
     
@@ -181,7 +181,7 @@ static int trell_handler_body(request_rec *r)
             }
             int rv = trell_handle_get_snapshot( sconf, r, dispatch_info );
             dispatch_info->m_exit = apr_time_now();
-            
+
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 
                            "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
                            apr_time_as_msec(dispatch_info->m_exit-dispatch_info->m_entry ),
