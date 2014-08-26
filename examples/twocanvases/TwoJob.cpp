@@ -50,18 +50,24 @@ bool TwoJob::init()
     
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
+#define USE_AUTO_P
+
+#ifdef USE_AUTO_P
     m_model->addElement<bool>( "ap_useAutoProxy", true );
 
     // To get a checkbox for turning on/off the autoProxy feature, choose this branch.
     m_model->addAnnotation("ap_useAutoProxy", "Automatically generated proxy geometry");
+#endif
 
     tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
     rootLayout->addChild( new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox") );
     rootLayout->addChild( new tinia::model::gui::Canvas("viewer2", "renderlist", "boundingbox") );
 
+#ifdef USE_AUTO_P
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(1, 1);
     mainGrid->setChild(0, 0, new tinia::model::gui::CheckBox("ap_useAutoProxy"));
     rootLayout->addChild(mainGrid);
+#endif
 
     m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
 
@@ -144,7 +150,7 @@ bool TwoJob::renderFrame(const std::string &session, const std::string &key, uns
     glVertex3f( -0.5, -0.5,  0.5 );
     glVertex3f( -0.5, -0.5, -0.5 );
     glEnd();
-    CHECK_GL;
+    // CHECK_GL;
 
     return true;
 }

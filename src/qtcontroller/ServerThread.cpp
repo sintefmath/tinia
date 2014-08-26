@@ -195,7 +195,7 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
 
-            std::cout << "\n\nrequest= '" << QString( request ).toStdString() << "'\n\n" << std::endl;
+            std::cout << "\nrequest= '" << QString( request ).toStdString() << "'\n" << std::endl; // @@@
 
             if(!handleNonStatic(os, getRequestURI(request), request)) {
                 os << getStaticContent(getRequestURI(request)) << "\r\n";
@@ -226,34 +226,85 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
     boost::tuple<unsigned int, unsigned int, std::string> arguments =
             parseGet< boost::tuple<unsigned int, unsigned int, std::string> >( decodeGetParameters(request), "width height key" );
     std::string key = arguments.get<2>();
-    os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
+    std::cout << "ServerThread::getSnapshotTxt(...) for key = " << key << std::endl;
+
+
+    os << httpHeader(getMimeType("file.txt")) << "\r\n";
+
+
+    os << "{ viewer: ";
+
     {
-        SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
-        m_mainthread_invoker->invokeInMainThread( &f, true );
-    }
-    os << "\", \"depth\": \"";
-    {
-        SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
-        m_mainthread_invoker->invokeInMainThread( &f, true );
-    }
-    os << "\", \"view\": \"";
-    std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
-    tinia::model::Viewer viewer;
-    m_job->getExposedModel()->getElementValue( key, viewer );
-    {
-        for (size_t i=0; i<15; i++) {
-            os << viewer.modelviewMatrix[i] << " ";
+        os << "{ \"rgb\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
         }
-        os << viewer.modelviewMatrix[15];
-    }
-    os << "\", \"proj\": \"";
-    {
-        for (size_t i=0; i<15; i++) {
-            os << viewer.projectionMatrix[i] << " ";
+        os << "\", \"depth\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
         }
-        os << viewer.projectionMatrix[15];
-    }
-    os << "\" }";
+        os << "\", \"view\": \"";
+        std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
+        tinia::model::Viewer viewer;
+        m_job->getExposedModel()->getElementValue( key, viewer );
+        {
+            for (size_t i=0; i<15; i++) {
+                os << viewer.modelviewMatrix[i] << " ";
+            }
+            os << viewer.modelviewMatrix[15];
+        }
+        os << "\", \"proj\": \"";
+        {
+            for (size_t i=0; i<15; i++) {
+                os << viewer.projectionMatrix[i] << " ";
+            }
+            os << viewer.projectionMatrix[15];
+        }
+        os << "\" }";
+     }
+
+    os << ", viewer2: ";
+
+
+
+    {
+        os << "{ \"rgb\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
+        }
+        os << "\", \"depth\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
+        }
+        os << "\", \"view\": \"";
+        std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
+        tinia::model::Viewer viewer;
+        m_job->getExposedModel()->getElementValue( key, viewer );
+        {
+            for (size_t i=0; i<15; i++) {
+                os << viewer.modelviewMatrix[i] << " ";
+            }
+            os << viewer.modelviewMatrix[15];
+        }
+        os << "\", \"proj\": \"";
+        {
+            for (size_t i=0; i<15; i++) {
+                os << viewer.projectionMatrix[i] << " ";
+            }
+            os << viewer.projectionMatrix[15];
+        }
+        os << "\" }";
+     }
+
+
+    os << "}";
+
+
+
 }
 
 

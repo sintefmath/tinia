@@ -194,7 +194,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        // console.log("/model/updateParsed: response = " + response);
+                        console.log("/model/updateParsed: response = " + response);
                         var response_obj = eval( '(' + response + ')' );
 //                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                         var viewer_key = "viewer2";
@@ -216,7 +216,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // Either way, we should show the image we just got from the server (it's newer than the one we have!).
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
-                // console.log("/model/updateSendPartialComplete: response = " + params.response);
+                console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
 //                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
