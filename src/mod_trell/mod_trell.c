@@ -110,10 +110,9 @@ static int trell_handler_body(request_rec *r)
     }
     dispatch_info->m_entry = apr_time_now();
 
-
-#if 0
+#if 1
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                   "mod_trell: decode_path_info returned c=%d, r=%d, j='%s', s='%s', r='%s' rev=%d, ac=%d, key=%s, w=%d, h=%d",
+                   "jny mod_trell: decode_path_info returned component=%d, request=%d, jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', width=%d, height=%d",
                    dispatch_info->m_component,
                    dispatch_info->m_request,
                    dispatch_info->m_jobid,
@@ -125,7 +124,6 @@ static int trell_handler_body(request_rec *r)
                    dispatch_info->m_width,
                    dispatch_info->m_height );
 #endif
-
     
     switch( dispatch_info->m_component ) {
 

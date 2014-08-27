@@ -344,9 +344,13 @@ trell_pass_reply_png_bundle( void*          data,
         const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height;
         const size_t buffer_img_padding = 4*( (buffer_img_size+3)/4 ) - buffer_img_size;
         const size_t matrix_size = sizeof(float) * 16;
-        encoder_state->buffer = apr_palloc( encoder_state->r->pool, 2*(buffer_img_size + buffer_img_padding) + 2*matrix_size );
+        encoder_state->buffer = apr_palloc( encoder_state->r->pool, 2 * ( 2*(buffer_img_size + buffer_img_padding) + 2*matrix_size ) );
         const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height;
         encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
+
+        // hmm... hvorfor var det ikke satt av plass til to filtrerte bilder over? Hvis et er nok, hvorfor var det da satt av plass til to matriser?
+        // Mistenker at det er en misforståelse å ta med de to matrisene
+
         encoder_state->bytes_read = 0;
         offset += sizeof(tinia_msg_image_t);
     }
@@ -362,7 +366,7 @@ trell_pass_reply_png_bundle( void*          data,
 
     if( more == 0 ) {
         // last invocation
-        const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height;
+        const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height; // Space for readPixel-produced packed data
         const size_t buffer_img_padding = 4*( (buffer_img_size+3)/4 ) - buffer_img_size;
         const size_t bytes_expected = 2*(buffer_img_size + buffer_img_padding) + 2*sizeof(float)*16;
         if( encoder_state->bytes_read != bytes_expected ) {
@@ -374,7 +378,7 @@ trell_pass_reply_png_bundle( void*          data,
         }
 
         uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16);
+        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16); // misforståelse her også?
         unsigned char* p = png;
 
         char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
@@ -387,6 +391,17 @@ trell_pass_reply_png_bundle( void*          data,
         ap_set_content_type( encoder_state->r, "text/plain" );
 
         struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool, encoder_state->r->connection->bucket_alloc );
+
+
+
+
+
+        char *json_prefix = "{ viewer: ";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( json_prefix, strlen(json_prefix), bb->bucket_alloc ) );
+
+
+
+
 
         // Header in front of the rgb-image
         char *rgb_prefix = "{ \"rgb\": \"";
@@ -438,7 +453,84 @@ trell_pass_reply_png_bundle( void*          data,
         assert( bytes_written2 < 1000 );
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written2, bb->bucket_alloc ) );
 
+
+
+
+
+        char *json_midfix = ", viewer2: ";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( json_midfix, strlen(json_midfix), bb->bucket_alloc ) );
+
+
+
+
+
+
+
+        // Header in front of the rgb-image
+        char *rgb_prefix_2 = "{ \"rgb\": \"";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( rgb_prefix_2, strlen(rgb_prefix_2), bb->bucket_alloc ) );
+
 #if 0
+        // Base64-encoded rgb-image
+        int rv = trell_png_encode( data, 0, &p );
+        if (rv!=OK)
+            return rv;
+        char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+        int base64_size = apr_base64_encode( base64, (char*)png, p-png );
+        // Seems like the zero-byte is included in the string size.
+        if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
+            base64_size--;
+        }
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
+#endif
+
+        // Header in front of the depth-image (and "footer" for previous rgb-image), typically '\", depth: \"'
+        char *depth_prefix_2 = "\", \"depth\": \"";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( depth_prefix_2, strlen(depth_prefix_2), bb->bucket_alloc ) );
+
+#if 0
+        // Base64-encoded depth buffer
+        p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
+        const size_t depth_offset = 4*( (buffer_img_size+3)/4 );
+        rv = trell_png_encode( data, depth_offset, &p );
+        if (rv!=OK)
+            return rv;
+        char* base642 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+        int base64_size2 = apr_base64_encode( base642, (char*)png, p-png );
+        // Seems like the zero-byte is included in the string size.
+        if( (base64_size2 > 0) && (base642[base64_size2-1] == '\0') ) {
+            base64_size2--;
+        }
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base642, base64_size2, bb->bucket_alloc ) );
+#endif
+
+        // View matrix
+        const float * const MV_2 = (const float * const)( encoder_state->buffer + 2*depth_offset );
+        char matrix_string_2[1000];
+        const int bytes_written_2 = snprintf(matrix_string_2, 1000, "\", \"view\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
+                                           MV_2[0], MV_2[1], MV_2[2], MV_2[3], MV_2[4], MV_2[5], MV_2[6], MV_2[7], MV_2[8], MV_2[9], MV_2[10], MV_2[11], MV_2[12], MV_2[13], MV_2[14], MV_2[15]);
+        assert( bytes_written_2 < 1000 );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string_2, bytes_written_2, bb->bucket_alloc ) );
+
+        // Projection matrix
+        const float * const PM_2 = (const float * const)( encoder_state->buffer + 2*depth_offset + sizeof(float)*16 );
+        char matrix_string2_2[1000];
+        const int bytes_written2_2 = snprintf(matrix_string2_2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
+                                            PM_2[0], PM_2[1], PM_2[2], PM_2[3], PM_2[4], PM_2[5], PM_2[6], PM_2[7], PM_2[8], PM_2[9], PM_2[10], PM_2[11], PM_2[12], PM_2[13], PM_2[14], PM_2[15]);
+        assert( bytes_written2_2 < 1000 );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2_2, bytes_written2_2, bb->bucket_alloc ) );
+
+
+
+
+
+
+
+        char *json_suffix = " }";
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( json_suffix, strlen(json_suffix), bb->bucket_alloc ) );
+
+
+#if 1
         // To inspect the resulting package
         struct apr_bucket *b;
         for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
