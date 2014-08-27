@@ -194,10 +194,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     url: this._urlHandler.getURL(),
                     preventCache: true,
                     load: dojo.hitch(this, function (response, ioArgs) {
-                        console.log("/model/updateParsed: response = " + response);
+//                        console.log("/model/updateParsed: response = " + response);
                         var response_obj = eval( '(' + response + ')' );
 //                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
-                        var viewer_key = "viewer2";
+                        // var viewer_key = "viewer2";
+                        var viewer_key = this._key;
+                        console.log("this._key = " + this._key);
                         this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
                     })
                 });
@@ -216,11 +218,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // Either way, we should show the image we just got from the server (it's newer than the one we have!).
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
-                console.log("/model/updateSendPartialComplete: response = " + params.response);
+//                console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
 //                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
-                    var viewer_key = "viewer2";
+                    // var viewer_key = "viewer2";
+                    var viewer_key = this._key;
+                    console.log("this._key = " + this._key);
                     this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
                 }
             } else {
@@ -580,21 +584,22 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._showCorrect();
     },
 
-    _makeImgURL: function () {
-        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
-            // @@@
-//            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+//    // NB! NB! This routine is not used
+//    _makeImgURL: function () {
+//        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+//            // @@@
+////            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+////                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
+//            var tmp =  this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
+//                    + "&timestamp=" + (new Date()).getTime() + "&key=" + "viewer2";
+//            console.log("img-url = " + tmp);
+//            return tmp;
+//        } else {
+//            console.log("_makeImgUrl for non-ap-moode");
+//            return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
 //                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
-            var tmp =  this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
-                    + "&timestamp=" + (new Date()).getTime() + "&key=" + "viewer2";
-            console.log("img-url = " + tmp);
-            return tmp;
-        } else {
-            console.log("_makeImgUrl for non-ap-moode");
-            return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
-                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
-        }
-    },
+//        }
+//    },
 
     _update: function () {
         //if(this._localMode) return;

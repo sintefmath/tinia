@@ -68,6 +68,7 @@ public:
     
     explicit SnapshotAsTextFetcher( QTextStream& reply,
                                     const QString& request,
+                                    const std::string &proper_key_to_use,
                                     tinia::jobcontroller::Job* job,
                                     tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
                                     const bool getRBGsnapshot)
@@ -90,7 +91,7 @@ public:
                                                  "width height key" );
         m_width  = arguments.get<0>();
         m_height = arguments.get<1>();
-        m_key    = arguments.get<2>();
+        m_key    = ( proper_key_to_use != "" ? proper_key_to_use : arguments.get<2>() );
     }
     
     ~SnapshotAsTextFetcher()
@@ -195,7 +196,7 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
 
-            std::cout << "\nrequest= '" << QString( request ).toStdString() << "'\n" << std::endl; // @@@
+            std::cout << "------------------------------------------------------------request = '" << QString( request ).toStdString() << "'\n---------------------------------------" << std::endl; // @@@
 
             if(!handleNonStatic(os, getRequestURI(request), request)) {
                 os << getStaticContent(getRequestURI(request)) << "\r\n";
@@ -231,24 +232,31 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n";
 
+    os << "{ ";
 
-    os << "{ viewer: ";
+    std::string tmp;
+    m_job->getExposedModel()->getElementValue( "viewer_keys", tmp );
+    std::cout << "tmp = " << tmp << std::endl;
+    QString viewer_keys(tmp.c_str());
+    QStringList vk_list = viewer_keys.split(' ');
+    for (int i=0; i<vk_list.size(); i++) {
+        QString k = vk_list[i];
+        std::cout << "  key[" << i << "] = " << k.toStdString() << std::endl;
 
-    {
-        os << "{ \"rgb\": \"";
+        // Now building the JSON entry for this viewer/key
+        os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\", \"depth\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\", \"view\": \"";
-        std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
         tinia::model::Viewer viewer;
-        m_job->getExposedModel()->getElementValue( key, viewer );
+        m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
         {
             for (size_t i=0; i<15; i++) {
                 os << viewer.modelviewMatrix[i] << " ";
@@ -263,48 +271,13 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
             os << viewer.projectionMatrix[15];
         }
         os << "\" }";
-     }
-
-    os << ", viewer2: ";
-
-
-
-    {
-        os << "{ \"rgb\": \"";
-        {
-            SnapshotAsTextFetcher f( os, request, job, grabber, true /* RGB requested */ );
-            m_mainthread_invoker->invokeInMainThread( &f, true );
+        if ( i < vk_list.size() - 1 ) {
+            os << ", ";
         }
-        os << "\", \"depth\": \"";
-        {
-            SnapshotAsTextFetcher f( os, request, job, grabber, false /* Depth requested */ );
-            m_mainthread_invoker->invokeInMainThread( &f, true );
-        }
-        os << "\", \"view\": \"";
-        std::string tmp = m_job->getExposedModel()->getElementValueAsString( key );
-        tinia::model::Viewer viewer;
-        m_job->getExposedModel()->getElementValue( key, viewer );
-        {
-            for (size_t i=0; i<15; i++) {
-                os << viewer.modelviewMatrix[i] << " ";
-            }
-            os << viewer.modelviewMatrix[15];
-        }
-        os << "\", \"proj\": \"";
-        {
-            for (size_t i=0; i<15; i++) {
-                os << viewer.projectionMatrix[i] << " ";
-            }
-            os << viewer.projectionMatrix[15];
-        }
-        os << "\" }";
-     }
+    }
 
 
     os << "}";
-
-
-
 }
 
 
@@ -316,7 +289,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
             updateState(os, request);
             os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, m_job, m_grabber, true /* RGB requested */ );
+                SnapshotAsTextFetcher f( os, request, "", m_job, m_grabber, true /* RGB requested */ );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\" }";
