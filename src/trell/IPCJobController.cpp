@@ -223,13 +223,25 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         session = std::string( q->session_id );
         key     = std::string( q->key );
 
+        m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle About to call onGetSnapshot, key = %s", key.c_str() );
+        std::string key_list_string;
+        m_job->getExposedModel()->getElementValue( "viewer_keys", key_list_string );
+        m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle key_list_string = %s", key_list_string.c_str() );
+        std::vector<std::string> key_list;
+        boost::split( key_list, key_list_string, boost::is_any_of(" ") );
+
         size_t data_size = 0;
         switch ( format ) {
             case TRELL_PIXEL_FORMAT_BGR8:
                 data_size = 3*w*h;
             break;
             case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
+                // We would really like to have the size of each canvas associated with the keys we have, but this information is currently
+                // not available. This will only work for equally sized canvases then, and no problem will be checked for or detected if it
+                // is not the case!
                 data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two padded images + 2 matrices
+                // ... times the number of keys:
+                data_size *= key_list.size();
             break;
             default:
                 m_logger_callback( m_logger_data, 0, package.c_str(),
@@ -247,46 +259,58 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             return sizeof(tinia_msg_t);
         }
 
-        if( onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
-                           format, w, h, session, key ) ) {
+        // Looping through all keys and grabbing GL-content
+        char *buf = (char*)msg + sizeof(tinia_msg_image_t);
+        for (size_t i=0; i<1; i++) { // key_list.size(); i++) {
+            key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
+            m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle   key[%d] = %s", i, key.c_str() );
+
+            if ( onGetSnapshot(buf, format, w, h, session, key) ) {
 #ifdef DEBUG
-            m_logger_callback( m_logger_data, 2, package.c_str(),
-                               "Queried for snapshot, ok. format = %d", format );
+                m_logger_callback( m_logger_data, 2, package.c_str(),
+                                   "Queried for snapshot, ok. format = %d", format );
 #endif
-            tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
-            reply->msg.type     = TRELL_MESSAGE_IMAGE;
-            reply->width        = w;
-            reply->height       = h;
-            if ( format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
-                // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
-                // latter two into the buffer.
-                tinia::model::Viewer viewer;
-                m_model->getElementValue( key, viewer );
-                if ( ( (unsigned long)((char*)msg + sizeof(tinia_msg_image_t)) ) % 4 != 0 ) {
-                    m_logger_callback( m_logger_data, 2, package.c_str(),
-                                       "Ouch. Non-aligned buffer %d", ( (unsigned long)((char*)msg + sizeof(tinia_msg_image_t)) ) % 4 );
+                if ( format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
+                    // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
+                    // latter two into the buffer.
+                    tinia::model::Viewer viewer;
+                    m_model->getElementValue( key, viewer );
+                    if ( ( (unsigned long)buf ) % 4 != 0 ) {
+                        m_logger_callback( m_logger_data, 2, package.c_str(), "Ouch. Non-aligned buffer %d", ( (unsigned long)buf ) % 4 );
+                    }
+                    buf += 4*((3*w*h+3)/4) * 2;
+                    float *float_buf = (float *)buf;
+                    for (size_t i=0; i<15; i++) {
+                        float_buf[   i] = viewer.modelviewMatrix[i];
+                    }
+                    for (size_t i=0; i<15; i++) {
+                        float_buf[16+i] = viewer.projectionMatrix[i];
+                    }
+                    buf += 2*16*sizeof(float); // Ready for the next canvas.
                 }
-                float * buf = (float *)( ((char*)msg + sizeof(tinia_msg_image_t)) + 4*((3*w*h+3)/4) * 2 );
-                for (size_t i=0; i<15; i++) {
-                    buf[i] = viewer.modelviewMatrix[i];
-                }
-                for (size_t i=0; i<15; i++) {
-                    buf[16+i] = viewer.projectionMatrix[i];
-                }
+            } else {
+                m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );
+                tinia_msg_t* reply = (tinia_msg_t*)msg;
+                reply->type = TRELL_MESSAGE_ERROR;
+                return sizeof(tinia_msg_t);
             }
-            reply->pixel_format = format;
-            m_logger_callback( m_logger_data, 2, package.c_str(), "data_size = %d", data_size );
-            return sizeof(tinia_msg_image_t) + data_size; // size of msg + payload
-        }
+        } // end of loop over keys
 
-        {
-            m_logger_callback( m_logger_data, 0, package.c_str(),
-                               "Queried for snapshot, rendering error." );
-
+        // Actually more of an assertion:
+        if ( buf > (char*)msg + sizeof(tinia_msg_image_t) + data_size ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(), "Buffer overflow, looks like a serious bug." );
             tinia_msg_t* reply = (tinia_msg_t*)msg;
             reply->type = TRELL_MESSAGE_ERROR;
             return sizeof(tinia_msg_t);
         }
+
+        tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
+        reply->msg.type     = TRELL_MESSAGE_IMAGE;
+        reply->width        = w;
+        reply->height       = h;
+        reply->pixel_format = format;
+        m_logger_callback( m_logger_data, 2, package.c_str(), "data_size = %d", data_size );
+        return sizeof(tinia_msg_image_t) + data_size; // size of msg + payload
     }
     break;
 

@@ -322,6 +322,9 @@ trell_pass_reply_png_bundle( void*          data,
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
+    // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: key=%s", encoder_state->dispatch_info->m_key );
+    // This key is not the "list of keys", so we cannot use it to detect how many images we are to encode.
+
     if ( encoder_state->dispatch_info->m_base64 == 0 ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
                        "This routine is not meant for sending of non-base64-encoded image data: %s:%s:%d",
@@ -368,10 +371,12 @@ trell_pass_reply_png_bundle( void*          data,
         // last invocation
         const size_t buffer_img_size = 3 * encoder_state->width * encoder_state->height; // Space for readPixel-produced packed data
         const size_t buffer_img_padding = 4*( (buffer_img_size+3)/4 ) - buffer_img_size;
-        const size_t bytes_expected = 2*(buffer_img_size + buffer_img_padding) + 2*sizeof(float)*16;
+        size_t bytes_expected = 2*(buffer_img_size + buffer_img_padding) + 2*sizeof(float)*16;
+        bytes_expected *= 2; // We don't yet have access to the whole list of keys, and therefore not the buffer size to expect. Hardcoding 2 buffers for testing
+
         if( encoder_state->bytes_read != bytes_expected ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
-                           "expected %d bytes, got %ld bytes.",
+                           "trell_pass_reply_png_bundle: expected %d bytes, got %ld bytes.",
                            (int)bytes_expected,
                            encoder_state->bytes_read );
             return -1;
@@ -425,8 +430,8 @@ trell_pass_reply_png_bundle( void*          data,
 
         // Base64-encoded depth buffer
         p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-        const size_t depth_offset = 4*( (buffer_img_size+3)/4 );
-        rv = trell_png_encode( data, depth_offset, &p );
+        const size_t padded_img_size = 4*( (buffer_img_size+3)/4 );
+        rv = trell_png_encode( data, padded_img_size, &p );
         if (rv!=OK)
             return rv;
         char* base642 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -438,7 +443,7 @@ trell_pass_reply_png_bundle( void*          data,
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base642, base64_size2, bb->bucket_alloc ) );
 
         // View matrix
-        const float * const MV = (const float * const)( encoder_state->buffer + 2*depth_offset );
+        const float * const MV = (const float * const)( encoder_state->buffer + 2*padded_img_size );
         char matrix_string[1000];
         const int bytes_written = snprintf(matrix_string, 1000, "\", \"view\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                            MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15]);
@@ -446,7 +451,7 @@ trell_pass_reply_png_bundle( void*          data,
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string, bytes_written, bb->bucket_alloc ) );
 
         // Projection matrix
-        const float * const PM = (const float * const)( encoder_state->buffer + 2*depth_offset + sizeof(float)*16 );
+        const float * const PM = (const float * const)( encoder_state->buffer + 2*padded_img_size + sizeof(float)*16 );
         char matrix_string2[1000];
         const int bytes_written2 = snprintf(matrix_string2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
                                             PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15]);
@@ -462,6 +467,11 @@ trell_pass_reply_png_bundle( void*          data,
 
 
 
+//        int ii;
+//        for (ii=0; ii<2*padded_img_size; ii++) {
+//            ((char *)data)[2*padded_img_size + 2*16*sizeof(float) + ii] = ((char *)data)[ii];
+//            assert( 2*padded_img_size + 2*16*sizeof(float) + ii < )
+//        }
 
 
 
@@ -470,42 +480,43 @@ trell_pass_reply_png_bundle( void*          data,
         char *rgb_prefix_2 = "{ \"rgb\": \"";
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( rgb_prefix_2, strlen(rgb_prefix_2), bb->bucket_alloc ) );
 
-#if 0
+#if 1
         // Base64-encoded rgb-image
-        int rv = trell_png_encode( data, 0, &p );
+        p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
+        const size_t canvas_size = 2*padded_img_size + 2*16*sizeof(float);
+        rv = trell_png_encode( data, 0, &p ); // canvas_size, &p );
         if (rv!=OK)
             return rv;
-        char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-        int base64_size = apr_base64_encode( base64, (char*)png, p-png );
+        char* base64_3 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+        int base64_size_3 = apr_base64_encode( base64_3, (char*)png, p-png );
         // Seems like the zero-byte is included in the string size.
-        if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
-            base64_size--;
+        if( (base64_size_3 > 0) && (base64_3[base64_size_3-1] == '\0') ) {
+            base64_size_3--;
         }
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64_3, base64_size_3, bb->bucket_alloc ) );
 #endif
 
         // Header in front of the depth-image (and "footer" for previous rgb-image), typically '\", depth: \"'
         char *depth_prefix_2 = "\", \"depth\": \"";
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( depth_prefix_2, strlen(depth_prefix_2), bb->bucket_alloc ) );
 
-#if 0
+#if 1
         // Base64-encoded depth buffer
         p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-        const size_t depth_offset = 4*( (buffer_img_size+3)/4 );
-        rv = trell_png_encode( data, depth_offset, &p );
+        rv = trell_png_encode( data, padded_img_size, &p ); // canvas_size + padded_img_size, &p );
         if (rv!=OK)
             return rv;
-        char* base642 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-        int base64_size2 = apr_base64_encode( base642, (char*)png, p-png );
+        char* base64_4 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+        int base64_size_4 = apr_base64_encode( base64_4, (char*)png, p-png );
         // Seems like the zero-byte is included in the string size.
-        if( (base64_size2 > 0) && (base642[base64_size2-1] == '\0') ) {
-            base64_size2--;
+        if( (base64_size_4 > 0) && (base64_4[base64_size_4-1] == '\0') ) {
+            base64_size_4--;
         }
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base642, base64_size2, bb->bucket_alloc ) );
+        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64_4, base64_size_4, bb->bucket_alloc ) );
 #endif
 
         // View matrix
-        const float * const MV_2 = (const float * const)( encoder_state->buffer + 2*depth_offset );
+        const float * const MV_2 = (const float * const)( encoder_state->buffer + canvas_size + 2*padded_img_size );
         char matrix_string_2[1000];
         const int bytes_written_2 = snprintf(matrix_string_2, 1000, "\", \"view\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                            MV_2[0], MV_2[1], MV_2[2], MV_2[3], MV_2[4], MV_2[5], MV_2[6], MV_2[7], MV_2[8], MV_2[9], MV_2[10], MV_2[11], MV_2[12], MV_2[13], MV_2[14], MV_2[15]);
@@ -513,7 +524,7 @@ trell_pass_reply_png_bundle( void*          data,
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string_2, bytes_written_2, bb->bucket_alloc ) );
 
         // Projection matrix
-        const float * const PM_2 = (const float * const)( encoder_state->buffer + 2*depth_offset + sizeof(float)*16 );
+        const float * const PM_2 = (const float * const)( encoder_state->buffer + canvas_size + 2*padded_img_size + sizeof(float)*16 );
         char matrix_string2_2[1000];
         const int bytes_written2_2 = snprintf(matrix_string2_2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
                                             PM_2[0], PM_2[1], PM_2[2], PM_2[3], PM_2[4], PM_2[5], PM_2[6], PM_2[7], PM_2[8], PM_2[9], PM_2[10], PM_2[11], PM_2[12], PM_2[13], PM_2[14], PM_2[15]);

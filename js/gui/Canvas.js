@@ -67,6 +67,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._eventHandlers[this._eventHandlers.length] = new (dojo.getObject(params.scripts[i].className()))(param);
             }
         }
+
+        console.log("Canvas-constructor: this._key=" + this._key);
     },
 
     resize: function (w, h) {
@@ -199,7 +201,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 //                        this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj  );
                         // var viewer_key = "viewer2";
                         var viewer_key = this._key;
-                        console.log("this._key = " + this._key);
+                        console.log("Canvas /model/updateParsed: this._key = " + this._key);
                         this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
                     })
                 });
@@ -211,6 +213,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._imageLoading = true;
             // Make sure we are showing the proxy geometry (if the mouse is over the canvas):
             this._showCorrect(); // Shows the correct image: either proxy or server image.
+            console.log("Canvas /model/updateSendStart: this._key=" + this._key);
         }));
 
         // We have sent a new update to the server.
@@ -224,7 +227,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 //                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
                     // var viewer_key = "viewer2";
                     var viewer_key = this._key;
-                    console.log("this._key = " + this._key);
+                    console.log("Canvas /model/updateSendPartialComplete: this._key = " + this._key);
                     this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );
                 }
             } else {

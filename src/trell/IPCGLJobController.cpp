@@ -392,6 +392,11 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                    const std::string&  session,
                                    const std::string&  key )
 {
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 99, package.c_str(),
+                           "jny IPCGLJobController::onGetSnapshot: key=%s", key.c_str() );
+    }
+
     // bind context
     if( !m_context.bindContext() ) {
         if( m_logger_callback != NULL ) {
@@ -491,14 +496,30 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     // --- read pixels ---------------------------------------------------------
     glBindFramebuffer( GL_FRAMEBUFFER, env_copy->m_fbo );
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+#if 1
+    if( m_logger_callback != NULL ) {
+        m_logger_callback( m_logger_data, 99, package.c_str(),
+                           "jny IPCGLJobController::onGetSnapshot: reading pixels for key = %s", key.c_str() );
+    }
+#endif
     switch( pixel_format ) {
     case TRELL_PIXEL_FORMAT_BGR8:
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
+//        for (int i=0; i<width*height*3; i+=3) {
+//            buffer[i  ] =   0;
+//            buffer[i+1] = 255;
+//            buffer[i+2] =   0;
+//        }
         break;
     case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
     {
         unsigned char *buffer_pos = (unsigned char *)buffer;
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer_pos );
+//        for (int i=0; i<width*height*3; i+=3) {
+//            buffer_pos[i  ] = 255;
+//            buffer_pos[i+1] =   0;
+//            buffer_pos[i+2] =   0;
+//        }
 #if 0
         static int cntr=0;
         {
