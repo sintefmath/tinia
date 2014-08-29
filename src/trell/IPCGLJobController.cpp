@@ -393,8 +393,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                    const std::string&  key )
 {
     if( m_logger_callback != NULL ) {
-        m_logger_callback( m_logger_data, 99, package.c_str(),
-                           "jny IPCGLJobController::onGetSnapshot: key=%s", key.c_str() );
+        m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: key=%s", key.c_str() );
     }
 
     // bind context
@@ -498,29 +497,26 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
 #if 1
     if( m_logger_callback != NULL ) {
-        m_logger_callback( m_logger_data, 99, package.c_str(),
-                           "jny IPCGLJobController::onGetSnapshot: reading pixels for key = %s", key.c_str() );
+        m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading pixels for key = %s", key.c_str() );
     }
 #endif
     switch( pixel_format ) {
     case TRELL_PIXEL_FORMAT_BGR8:
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
-//        for (int i=0; i<width*height*3; i+=3) {
-//            buffer[i  ] =   0;
-//            buffer[i+1] = 255;
-//            buffer[i+2] =   0;
-//        }
         break;
     case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
     {
         unsigned char *buffer_pos = (unsigned char *)buffer;
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading RGB pixels, w=%d, h=%d", width, height );
+        }
         glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer_pos );
 //        for (int i=0; i<width*height*3; i+=3) {
 //            buffer_pos[i  ] = 255;
 //            buffer_pos[i+1] =   0;
 //            buffer_pos[i+2] =   0;
 //        }
-#if 0
+#if 1
         static int cntr=0;
         {
             char fname[1000];
@@ -532,6 +528,10 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         }
 #endif
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
+        if( m_logger_callback != NULL ) {
+            m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading DEPTH pixels, w=%d, h=%d", width, height );
+        }
+        // NB! We read four bytes per pixel, then convert to three, meaning that the buffer must be large enough for four!!!
         glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
         // Depth encoded as 24 bit fixed point values.
         for (size_t i=0; i<width*height; i++) {
@@ -541,7 +541,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 value = 255.0*value - floor(value*255.0);
             }
         }
-#if 0
+#if 1
         {
             char fname[1000];
             sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
@@ -556,7 +556,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
         buffer_pos += 4*16;
         glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
-#if 0
+#if 1
         {
             char fname[1000];
             sprintf(fname, "/tmp/mat_%05d.txt", cntr);
