@@ -23,6 +23,7 @@
 #include <http_protocol.h>
 
 #include <apr_base64.h>
+#include <apr_strings.h>
 
 #include "mod_trell.h"
 #include "tinia/trell/trell.h"
@@ -510,7 +511,7 @@ trell_pass_reply_png_bundle( void*          data,
 
         // Projection matrix
         const float * const PM_2 = (const float * const)( encoder_state->buffer + canvas_size + 2*padded_img_size + sizeof(float)*16 );
-#if 1
+#if 0
         // works
         char matrix_string2_2[1000];
         bytes_written = snprintf(matrix_string2_2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
@@ -518,9 +519,15 @@ trell_pass_reply_png_bundle( void*          data,
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2_2, bytes_written, bb->bucket_alloc ) );
 #else
         // fails
-        bytes_written = snprintf(matrix_string2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
-                                 PM_2[0], PM_2[1], PM_2[2], PM_2[3], PM_2[4], PM_2[5], PM_2[6], PM_2[7], PM_2[8], PM_2[9], PM_2[10], PM_2[11], PM_2[12], PM_2[13], PM_2[14], PM_2[15]);
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written, bb->bucket_alloc ) );
+//        bytes_written = snprintf(matrix_string2, 1000, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
+//                                 PM_2[0], PM_2[1], PM_2[2], PM_2[3], PM_2[4], PM_2[5], PM_2[6], PM_2[7], PM_2[8], PM_2[9], PM_2[10], PM_2[11], PM_2[12], PM_2[13], PM_2[14], PM_2[15]);
+//        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( matrix_string2, bytes_written, bb->bucket_alloc ) );
+
+        {
+            char * tmp = apr_psprintf( encoder_state->r->pool, ", \"proj\": \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
+                                       PM_2[0], PM_2[1], PM_2[2], PM_2[3], PM_2[4], PM_2[5], PM_2[6], PM_2[7], PM_2[8], PM_2[9], PM_2[10], PM_2[11], PM_2[12], PM_2[13], PM_2[14], PM_2[15] );
+            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( tmp, strlen(tmp), bb->bucket_alloc ) );
+        }
 #endif
 
 
