@@ -47,8 +47,8 @@ trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
 static
 int
 trell_png_encode( void* data,
-                  size_t offset,
-                  unsigned char **p_ptr ) // Used both for input and output
+                  size_t unfiltered_offset,
+                  unsigned char **dst_ptr ) // *dst_ptr will be updated
 {
 
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
@@ -59,7 +59,7 @@ trell_png_encode( void* data,
 
     // apply png filter
     char* filtered = encoder_state->filtered;
-    char* unfiltered = encoder_state->buffer + offset;
+    char* unfiltered = encoder_state->buffer + unfiltered_offset;
 
     encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
     for( j=0; j<height; j++ ) {
@@ -75,7 +75,7 @@ trell_png_encode( void* data,
     uLong bound = compressBound( (3*width+1)*height );
     // unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 );
     // unsigned char* p = png;
-    unsigned char* p = *p_ptr;
+    unsigned char* p = *dst_ptr;
 
     // PNG signature, 8 bytes
     *p++ = 137;
@@ -159,7 +159,7 @@ trell_png_encode( void* data,
     *p++ = 96;
     *p++ = 130;
 
-    *p_ptr = p;
+    *dst_ptr = p;
     return OK;
 }
 
@@ -397,7 +397,8 @@ trell_pass_reply_png_bundle( void*          data,
         }
 
         uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16); // misforståelse her også?
+        const size_t total_bound = bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16; // misforståelse her også?
+        unsigned char* png = apr_palloc( encoder_state->r->pool, total_bound );
         unsigned char* p = png;
 
         char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
@@ -416,32 +417,41 @@ trell_pass_reply_png_bundle( void*          data,
 
         BB_APPEND_STRING( encoder_state->r->pool, bb, "{ " );
         for (i=0; i<num_of_keys; i++) {
-
-#if 0
-        static int cntr2=0;
-        {
+#if 1
+            static int cntr2=0;
             char fname[1000];
-            sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-            fwrite(data + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-            fclose(fp);
-        }
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/png_depth_%05d.ppm", cntr2);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-            fwrite(data + i*canvas_size + padded_img_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-            fclose(fp);
-        }
-        cntr2++;
+            {
+                sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
+                FILE *fp = fopen(fname, "w");
+                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
+                fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
+                fclose(fp);
+            }
+            {
+                sprintf(fname, "/tmp/png_depth_%05d.ppm", cntr2);
+                FILE *fp = fopen(fname, "w");
+                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
+                fwrite(encoder_state->buffer + i*canvas_size + padded_img_size, 1, 3*encoder_state->width*encoder_state->height, fp);
+                fclose(fp);
+            }
 #endif
-
             BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", viewer_key_list[i] );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
                 int rv = trell_png_encode( data, i*canvas_size, &p );
+                if ( p-png > total_bound ) {
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
+                    return -1;
+                }
+#if 1
+                {
+                    // This image gets corrupted occasionally! @@@
+                    sprintf(fname, "/tmp/png_rgb2_%05d.png", cntr2);
+                    FILE *fp = fopen(fname, "w");
+                    fwrite(png, 1, p-png, fp);
+                    fclose(fp);
+                }
+#endif
                 if (rv!=OK)
                     return rv;
                 char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -457,6 +467,19 @@ trell_pass_reply_png_bundle( void*          data,
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
                 int rv = trell_png_encode( data, i*canvas_size + padded_img_size , &p );
+                if ( p-png > total_bound ) {
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
+                    return -1;
+                }
+#if 1
+                {
+                    // This image gets corrupted occasionally! @@@
+                    sprintf(fname, "/tmp/png_depth2_%05d.png", cntr2);
+                    FILE *fp = fopen(fname, "w");
+                    fwrite(png, 1, p-png, fp);
+                    fclose(fp);
+                }
+#endif
                 if (rv!=OK)
                     return rv;
                 char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -477,6 +500,23 @@ trell_pass_reply_png_bundle( void*          data,
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
+#if 1
+            {
+                sprintf(fname, "/tmp/png_rgb2_%05d.ppm", cntr2);
+                FILE *fp = fopen(fname, "w");
+                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
+                fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
+                fclose(fp);
+            }
+            {
+                sprintf(fname, "/tmp/png_depth2_%05d.ppm", cntr2);
+                FILE *fp = fopen(fname, "w");
+                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
+                fwrite(encoder_state->buffer + i*canvas_size + padded_img_size, 1, 3*encoder_state->width*encoder_state->height, fp);
+                fclose(fp);
+            }
+            cntr2++;
+#endif
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 
