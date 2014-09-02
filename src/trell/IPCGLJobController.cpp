@@ -526,6 +526,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
             fwrite(buffer_pos, 1, 3*width*height, fp);
             fclose(fp);
         }
+        const unsigned char * const rgb_pos = buffer_pos;
 #endif
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
         if( m_logger_callback != NULL ) {
@@ -544,12 +545,19 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
 #if 1
         {
             char fname[1000];
+            sprintf(fname, "/tmp/rgb2_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+            fwrite(rgb_pos, 1, 3*width*height, fp);
+            fclose(fp);
+        }
+        {
+            char fname[1000];
             sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
             FILE *fp = fopen(fname, "w");
             fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
             fwrite(buffer_pos, 1, 3*width*height, fp);
             fclose(fp);
-            cntr++;
         }
 #endif
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
@@ -570,8 +578,8 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 fprintf(fp, "%g ", ((GLfloat *)buffer_pos)[i]);
             fprintf(fp, "\n");
             fclose(fp);
-            cntr++;
         }
+        cntr++;
 #endif
         break;
     }
