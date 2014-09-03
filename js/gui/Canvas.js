@@ -587,23 +587,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._showCorrect();
     },
 
-//    // NB! NB! This routine is not used
-//    _makeImgURL: function () {
-//        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
-//            // @@@
-////            return this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
-////                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
-//            var tmp =  this._snapshotBundleURL + "?width=" + this._width + "&height=" + this._height
-//                    + "&timestamp=" + (new Date()).getTime() + "&key=" + "viewer2";
-//            console.log("img-url = " + tmp);
-//            return tmp;
-//        } else {
-//            console.log("_makeImgUrl for non-ap-moode");
-//            return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
-//                    + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
-//        }
-//    },
-
     _update: function () {
         //if(this._localMode) return;
 
