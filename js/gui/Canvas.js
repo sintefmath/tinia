@@ -520,11 +520,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._showCorrect();
     },
 
-    _makeImgURL: function () {
-        return this._snapshotURL + "?width=" + this._width + "&height=" + this._height
-        + "&timestamp=" + (new Date()).getTime() + "&key=" + this._key;
-    },
-
     _update: function () {
         //if(this._localMode) return;
 

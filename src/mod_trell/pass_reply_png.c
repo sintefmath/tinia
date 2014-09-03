@@ -106,7 +106,7 @@ trell_pass_reply_png( void* data,
         
         encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
         for( j=0; j<h; j++ ) {
-            filtered[ 3*(w+1)*j + 0 ] = 0;
+            filtered[ (3*w+1)*j + 0 ] = 0;
             for( i=0; i<w; i++ ) {
                 filtered[ (3*w+1)*j + 1 + 3*i + 0 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 2 ];
                 filtered[ (3*w+1)*j + 1 + 3*i + 1 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 1 ];
