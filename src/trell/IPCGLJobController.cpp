@@ -516,7 +516,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
 //            buffer_pos[i+1] =   0;
 //            buffer_pos[i+2] =   0;
 //        }
-#if 1
+#if 0
         static int cntr=0;
         {
             char fname[1000];
@@ -542,7 +542,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 value = 255.0*value - floor(value*255.0);
             }
         }
-#if 1
+#if 0
         {
             char fname[1000];
             sprintf(fname, "/tmp/rgb2_%05d.ppm", cntr);
@@ -564,7 +564,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
         buffer_pos += 4*16;
         glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
-#if 1
+#if 0
         {
             char fname[1000];
             sprintf(fname, "/tmp/mat_%05d.txt", cntr);

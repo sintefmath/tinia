@@ -63,9 +63,10 @@ trell_png_encode( void* data,
 
     encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
     for( j=0; j<height; j++ ) {
-        filtered[ 3*(width+1)*j + 0 ] = 0;
+//        filtered[ 3*(width+1)*j + 0 ] = 0;
+        filtered[ (3*width+1)*j + 0 ] = 0;
 #if 0
-        if ( 3*(width+1)*j + 0 > (3*encoder_state->width+1)*encoder_state->height ) {
+        if ( 3*(width+1)*j + 0 >= (3*encoder_state->width+1)*encoder_state->height ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 1 encode-filtered-buffer overflow, size=%d, attempted access=%d",
                            (3*encoder_state->width+1)*encoder_state->height, 3*(width+1)*j + 0 );
             return -1;
@@ -76,12 +77,12 @@ trell_png_encode( void* data,
             filtered[ (3*width+1)*j + 1 + 3*i + 1 ] = unfiltered[ 3*width*(height-j-1) + 3*i + 1 ];
             filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = unfiltered[ 3*width*(height-j-1) + 3*i + 0 ];
 #if 0
-            if ( (3*width+1)*j + 1 + 3*i + 2 > (3*encoder_state->width+1)*encoder_state->height ) {
+            if ( (3*width+1)*j + 1 + 3*i + 2 >= (3*encoder_state->width+1)*encoder_state->height ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 2 encode-filtered-buffer overflow, size=%d, attempted access=%d",
                                (3*encoder_state->width+1)*encoder_state->height, (3*width+1)*j + 1 + 3*i + 2 );
                 return -1;
             }
-            if ( 3*width*(height-j-1) + 3*i + 2 > (3*encoder_state->width+1)*encoder_state->height ) {
+            if ( 3*width*(height-j-1) + 3*i + 2 >= (3*encoder_state->width+1)*encoder_state->height ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 3 encode-filtered-buffer overflow, size=%d, attempted access=%d",
                                (3*encoder_state->width+1)*encoder_state->height, 3*width*(height-j-1) + 3*i + 2 );
                 return -1;
@@ -382,7 +383,8 @@ trell_pass_reply_png_bundle( void*          data,
         padded_img_size       = 4*( (buffer_img_size+3)/4 );
         canvas_size           = 2*padded_img_size + 2*matrix_size;
         encoder_state->buffer = apr_palloc( encoder_state->r->pool, num_of_keys * canvas_size );
-        const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height;
+        const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // @@@ Why +1 and not +2, if this is scan-line-padding protection?
+//        encoder_state->filtered = apr_palloc( encoder_state->r->pool, 2*filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
         encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
 
         // hmm... hvorfor var det ikke satt av plass til to filtrerte bilder over? Hvis et er nok, hvorfor var det da satt av plass til to matriser?
@@ -428,8 +430,10 @@ trell_pass_reply_png_bundle( void*          data,
 
 
         int i;
+#if 0
         static int cntr2=0;
         char fname[1000];
+#endif
 
 
         BB_APPEND_STRING( encoder_state->r->pool, bb, "{ " );
@@ -437,7 +441,7 @@ trell_pass_reply_png_bundle( void*          data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", viewer_key_list[i] );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-#if 1
+#if 0
                 // Writing out the images grabbed with readpixels() somewhere
                 {
                     sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
@@ -460,7 +464,7 @@ trell_pass_reply_png_bundle( void*          data,
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
-#if 1
+#if 0
                 {
                     // Writing out the image immediately after png-encoding
                     // This image gets corrupted occasionally! @@@
@@ -489,7 +493,7 @@ trell_pass_reply_png_bundle( void*          data,
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
-#if 1
+#if 0
                 {
                     // This image gets corrupted occasionally! @@@
                     sprintf(fname, "/tmp/png_depth2_%05d.png", cntr2);
@@ -518,7 +522,7 @@ trell_pass_reply_png_bundle( void*          data,
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
-#if 1
+#if 0
             {
                 sprintf(fname, "/tmp/png_rgb2_%05d.ppm", cntr2);
                 FILE *fp = fopen(fname, "w");
@@ -539,7 +543,7 @@ trell_pass_reply_png_bundle( void*          data,
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 
 
-#if 1
+#if 0
         // To inspect the resulting package, see the apache error log
         struct apr_bucket *b;
         for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
