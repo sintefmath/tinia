@@ -167,7 +167,8 @@ trell_pass_reply_png_bundle( void*          data,
                              const char    *buffer,
                              const size_t   buffer_bytes,
                              const int      part,
-                             const int      more );
+                             const int      more,
+                             const char * const viewer_key_list );
 
 
 int
@@ -181,7 +182,7 @@ trell_pass_reply_png( void* data,
 
     if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
         // We escape into the new routine packaging both rgb, depth and transformation data
-        return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more );
+        return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more, encoder_state->dispatch_info->m_viewer_key_list );
     }
 
     size_t offset = 0;
@@ -326,7 +327,8 @@ trell_pass_reply_png_bundle( void*          data,
                              const char    *buffer,
                              const size_t   buffer_bytes,
                              const int      part,
-                             const int      more )
+                             const int      more,
+                             const char * const viewer_key_list )
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
@@ -340,13 +342,27 @@ trell_pass_reply_png_bundle( void*          data,
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    // We don't yet have access to the whole list of keys, and therefore not the buffer size to expect. Hardcoding 2 buffers for testing
-    const int num_of_keys = 2;
-    static const char * const viewer_key_list[2] = { "viewer", "viewer2" };
+    static int num_of_keys = 0;
     size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16, canvas_size;
 
     size_t offset = 0;
     if( part == 0 ) {
+
+        // Figuring out the number of keys, so that we can allocate appropriate buffers
+        {
+            num_of_keys = 1;
+            const char *p = viewer_key_list;
+            while ( (p-viewer_key_list<TRELL_VIEWER_KEY_LIST_MAXLENGTH) && (*p!=0) ) {
+                num_of_keys += ( *p == ',' );
+                p++;
+            }
+            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, encoder_state->r, "XXXXXXXXXXXX %d", num_of_keys );
+            if ( (*viewer_key_list==',') /* || ... other sensible tests to do? */ ) {
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Invalid list of viewer keys: %s", viewer_key_list );
+                return -1; // error
+            }
+        }
+
         encoder_state->dispatch_info->m_png_entry = apr_time_now();
         // first invocation
         tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
@@ -411,10 +427,13 @@ trell_pass_reply_png_bundle( void*          data,
         char fname[1000];
 #endif
 
+        char vkl_copy[TRELL_VIEWER_KEY_LIST_MAXLENGTH];
+        memcpy( vkl_copy, viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
+        const char * next_key = strtok( vkl_copy, "," );
 
         BB_APPEND_STRING( encoder_state->r->pool, bb, "{ " );
         for (i=0; i<num_of_keys; i++) {
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", viewer_key_list[i] );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", next_key );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
 #if 0
@@ -459,7 +478,6 @@ trell_pass_reply_png_bundle( void*          data,
                     base64_size--;
                 }
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-                // APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_flush_create( bb->bucket_alloc ) );
             }
             BB_APPEND_STRING( encoder_state->r->pool, bb, "\", \"depth\": \"" );
             {
@@ -487,7 +505,6 @@ trell_pass_reply_png_bundle( void*          data,
                     base64_size--;
                 }
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-                // APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_flush_create( bb->bucket_alloc ) );
             }
             const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size );
             BB_APPEND_STRING( encoder_state->r->pool, bb, "\", view: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
@@ -515,6 +532,11 @@ trell_pass_reply_png_bundle( void*          data,
             }
             cntr2++;
 #endif
+            next_key = strtok( NULL, "," );
+            if (   ( (i<num_of_keys-1) && (next_key==NULL) )   ||   ( (i==num_of_keys-1) && (next_key!=NULL) )   ) {
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
+                return -1;
+            }
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 

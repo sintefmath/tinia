@@ -116,7 +116,8 @@ static int trell_handler_body(request_rec *r)
 
 #if 1
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                   "jny mod_trell.c, trell_handler_body: decode_path_info returned component=%d, request=%d, jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', width=%d, height=%d",
+                   "jny mod_trell.c, trell_handler_body: trell_decode_path_info returned component=%d, request=%d, "
+                   "jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', width=%d, height=%d",
                    dispatch_info->m_component,
                    dispatch_info->m_request,
                    dispatch_info->m_jobid,
