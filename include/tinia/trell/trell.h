@@ -115,6 +115,7 @@ typedef struct tinia_msg_heartbeat
 
 
 /** Message struct for TRELL_MESSAGE_HEARTBEAT. */
+// Also for TRELL_MESSAGE_GET_SNAPSHOT
 typedef struct {
     tinia_msg_t             msg;
     enum TrellPixelFormat   pixel_format;
@@ -122,6 +123,7 @@ typedef struct {
     unsigned int            height;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+    char                    viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH + 1 ];
 } tinia_msg_get_snapshot_t;
 
 /** Message struct for TRELL_MESSAGE_GET_SCRIPTS. */

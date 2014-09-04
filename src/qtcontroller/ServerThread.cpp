@@ -234,11 +234,14 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
 
     os << "{ ";
 
+    // @@@
+    std::cout << "XXXXXXXXXXXXXXXXxx request=" << request.toStdString() << std::endl;
     std::string tmp;
     m_job->getExposedModel()->getElementValue( "viewer_keys", tmp );
     std::cout << "tmp = " << tmp << std::endl;
     QString viewer_keys(tmp.c_str());
     QStringList vk_list = viewer_keys.split(' ');
+
     for (int i=0; i<vk_list.size(); i++) {
         QString k = vk_list[i];
         std::cout << "  key[" << i << "] = " << k.toStdString() << std::endl;

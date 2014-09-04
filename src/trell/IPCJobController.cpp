@@ -224,11 +224,11 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         key     = std::string( q->key );
 
         m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle About to call onGetSnapshot, key = %s", key.c_str() );
-        std::string key_list_string;
-        m_job->getExposedModel()->getElementValue( "viewer_keys", key_list_string );
-        m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle key_list_string = %s", key_list_string.c_str() );
+
+        std::string key_list_string = std::string( q->viewer_key_list );
+        m_logger_callback( m_logger_data, 0, package.c_str(), "jny IPCJobController::handle key_list_string YYYY = %s", key_list_string.c_str() );
         std::vector<std::string> key_list;
-        boost::split( key_list, key_list_string, boost::is_any_of(" ") );
+        boost::split( key_list, key_list_string, boost::is_any_of(",") );
 
         size_t data_size=0, buf_size_required=0;
         switch ( format ) {

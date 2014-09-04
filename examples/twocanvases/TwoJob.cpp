@@ -50,8 +50,6 @@ bool TwoJob::init()
     
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
-    m_model->addElement<std::string>( "viewer_keys", "viewer viewer2" );
-
 #define USE_AUTO_P
 
 #ifdef USE_AUTO_P

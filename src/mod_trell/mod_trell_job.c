@@ -144,6 +144,9 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     memcpy( query.key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
     query.key[ TRELL_KEYID_MAXLENGTH ] = '\0';
     ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: %s: KEY=%s.", r->path_info, query.key );
+    memcpy( query.viewer_key_list, dispatch_info->m_viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
+    query.viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH ] = '\0';
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: %s: VIEWER_KEY_LIST=%s.", r->path_info, query.viewer_key_list );
 
     // create data for pass_query_msg_post
     trell_pass_query_msg_post_data_t pass_query_data;
@@ -182,26 +185,6 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
         ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: failed.", r->path_info );
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-
-
-#if 0
-    rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
-                                                trell_messenger_log_wrapper, r,
-                                                trell_pass_query_msg_post, &pass_query_data,
-                                                trell_pass_reply_png, &encode_png_state,
-                                                0 );
-    if( rv == 0 ) {
-        return OK;
-    }
-    else if( rv == -1 ) {
-        return HTTP_REQUEST_TIME_OUT;
-    }
-    else {
-        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "second bundle: %s: failed.", r->path_info );
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-#endif
-
 
 }
 
