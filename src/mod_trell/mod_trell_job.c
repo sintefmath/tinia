@@ -161,7 +161,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
 
     tinia_msg_get_snapshot_t query;
     query.msg.type     = TRELL_MESSAGE_GET_SNAPSHOT;
-    query.pixel_format = TRELL_PIXEL_FORMAT_BGR8;
+    query.pixel_format = TRELL_PIXEL_FORMAT_RGB;
     query.width        = dispatch_info->m_width;
     query.height       = dispatch_info->m_height;
     memcpy( query.session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );

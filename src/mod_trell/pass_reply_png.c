@@ -96,7 +96,7 @@ trell_pass_reply_png( void* data,
         }
         
         
-        int i,j;
+        int j;
         int w = encoder_state->width;
         int h = encoder_state->height;
         
@@ -105,13 +105,10 @@ trell_pass_reply_png( void* data,
         char* unfiltered = encoder_state->buffer;
         
         encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
+        // We use png filter "none", and do a vertical flipping of the image
         for( j=0; j<h; j++ ) {
             filtered[ (3*w+1)*j + 0 ] = 0;
-            for( i=0; i<w; i++ ) {
-                filtered[ (3*w+1)*j + 1 + 3*i + 0 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 2 ];
-                filtered[ (3*w+1)*j + 1 + 3*i + 1 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 1 ];
-                filtered[ (3*w+1)*j + 1 + 3*i + 2 ] = unfiltered[ 3*w*(h-j-1) + 3*i + 0 ];
-            }
+            memcpy( filtered + (3*w+1)*j + 1, unfiltered + 3*w*(h-j-1), w*3 );
         }
         encoder_state->dispatch_info->m_png_filter_exit = apr_time_now();
         

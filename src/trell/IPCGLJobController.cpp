@@ -492,8 +492,8 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     glBindFramebuffer( GL_FRAMEBUFFER, env_copy->m_fbo );
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
     switch( pixel_format ) {
-    case TRELL_PIXEL_FORMAT_BGR8:
-        glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
+    case TRELL_PIXEL_FORMAT_RGB:
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
         break;
     default:
         if( m_logger_callback != NULL ) {

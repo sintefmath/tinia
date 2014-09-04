@@ -48,6 +48,7 @@ const module* tinia_get_module()
     return &trell_module;
 }
 
+#if 0
 static int
 tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
 {
@@ -74,6 +75,7 @@ tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, co
     }
     return 0;
 }
+#endif
 
 //trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
