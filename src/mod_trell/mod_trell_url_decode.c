@@ -353,7 +353,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot.png ----------------------------------------------------
     else if( strcmp( request, "snapshot.png" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
-        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_BGR8;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
         dispatch_info->m_base64 = 0;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0)
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0)
@@ -367,7 +367,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot.txt----------------------------------------------------
     else if( strcmp( request, "snapshot.txt" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
-        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_BGR8;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
         dispatch_info->m_base64 = 1;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
@@ -381,7 +381,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot_bundle.txt----------------------------------------------------
     else if( strcmp( request, "snapshot_bundle.txt" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
-        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH;
         dispatch_info->m_base64 = 1;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )

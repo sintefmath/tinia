@@ -163,6 +163,10 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     encode_png_state.height        = 0;
     encode_png_state.buffer        = NULL;
     
+
+    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
+
+
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,
                                                     trell_pass_query_msg_post, &pass_query_data,

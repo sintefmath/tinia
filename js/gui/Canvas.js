@@ -57,6 +57,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._urlHandler.updateParams({
             "key": this._key
         });
+        console.log("********** Canvas-constructor: this._key=" + this._key);
+        // It is possible that this new URL-parameter will (or should, maybe) make the old 'key' parameter obsolete.
+        this._urlHandler.addToParams({
+            "viewer_key_list": this._key
+        });
+        console.log("********** Canvas constructor: new viewer_key_list for this._urlHandler: " + this._urlHandler._params.viewer_key_list);
+
         this._onLoadFunction = dojo.hitch(this, this._loadComplete);
 
         this._eventHandlers = Array();
@@ -67,8 +74,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._eventHandlers[this._eventHandlers.length] = new (dojo.getObject(params.scripts[i].className()))(param);
             }
         }
-
-        console.log("Canvas-constructor: this._key=" + this._key);
     },
 
     resize: function (w, h) {
@@ -225,7 +230,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 var response_obj = eval( '(' + params.response + ')' );
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
 //                    this._setImageFromText( response_obj.rgb, response_obj.depth, response_obj.view, response_obj.proj );
-                    // var viewer_key = "viewer2";
                     var viewer_key = this._key;
                     console.log("Canvas /model/updateSendPartialComplete: this._key = " + this._key);
                     this._setImageFromText( response_obj[viewer_key].rgb, response_obj[viewer_key].depth, response_obj[viewer_key].view, response_obj[viewer_key].proj );

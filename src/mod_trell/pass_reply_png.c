@@ -53,7 +53,7 @@ trell_png_encode( void* data,
 
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    int i,j;
+    int j;
     int width = encoder_state->width;
     int height = encoder_state->height;
 
@@ -62,33 +62,10 @@ trell_png_encode( void* data,
     char* unfiltered = encoder_state->buffer + unfiltered_offset;
 
     encoder_state->dispatch_info->m_png_filter_entry = apr_time_now();
+    // We use png filter "none", and do a vertical flipping of the image
     for( j=0; j<height; j++ ) {
-//        filtered[ 3*(width+1)*j + 0 ] = 0;
         filtered[ (3*width+1)*j + 0 ] = 0;
-#if 0
-        if ( 3*(width+1)*j + 0 >= (3*encoder_state->width+1)*encoder_state->height ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 1 encode-filtered-buffer overflow, size=%d, attempted access=%d",
-                           (3*encoder_state->width+1)*encoder_state->height, 3*(width+1)*j + 0 );
-            return -1;
-        }
-#endif
-        for( i=0; i<width; i++ ) {
-            filtered[ (3*width+1)*j + 1 + 3*i + 0 ] = unfiltered[ 3*width*(height-j-1) + 3*i + 2 ];
-            filtered[ (3*width+1)*j + 1 + 3*i + 1 ] = unfiltered[ 3*width*(height-j-1) + 3*i + 1 ];
-            filtered[ (3*width+1)*j + 1 + 3*i + 2 ] = unfiltered[ 3*width*(height-j-1) + 3*i + 0 ];
-#if 0
-            if ( (3*width+1)*j + 1 + 3*i + 2 >= (3*encoder_state->width+1)*encoder_state->height ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 2 encode-filtered-buffer overflow, size=%d, attempted access=%d",
-                               (3*encoder_state->width+1)*encoder_state->height, (3*width+1)*j + 1 + 3*i + 2 );
-                return -1;
-            }
-            if ( 3*width*(height-j-1) + 3*i + 2 >= (3*encoder_state->width+1)*encoder_state->height ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "xxx 3 encode-filtered-buffer overflow, size=%d, attempted access=%d",
-                               (3*encoder_state->width+1)*encoder_state->height, 3*width*(height-j-1) + 3*i + 2 );
-                return -1;
-            }
-#endif
-        }
+        memcpy( filtered + (3*width+1)*j + 1, unfiltered + 3*width*(height-j-1), width*3 );
     }
     encoder_state->dispatch_info->m_png_filter_exit = apr_time_now();
 
@@ -202,7 +179,7 @@ trell_pass_reply_png( void* data,
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
+    if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
         // We escape into the new routine packaging both rgb, depth and transformation data
         return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more );
     }
@@ -383,8 +360,7 @@ trell_pass_reply_png_bundle( void*          data,
         padded_img_size       = 4*( (buffer_img_size+3)/4 );
         canvas_size           = 2*padded_img_size + 2*matrix_size;
         encoder_state->buffer = apr_palloc( encoder_state->r->pool, num_of_keys * canvas_size );
-        const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // @@@ Why +1 and not +2, if this is scan-line-padding protection?
-//        encoder_state->filtered = apr_palloc( encoder_state->r->pool, 2*filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
+        const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // The +1 is for the png filter flag
         encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
 
         // hmm... hvorfor var det ikke satt av plass til to filtrerte bilder over? Hvis et er nok, hvorfor var det da satt av plass til to matriser?

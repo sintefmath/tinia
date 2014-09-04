@@ -23,6 +23,8 @@
 
 
 dojo.declare("model.URLHandler", null, {
+
+
     constructor: function(url, params) {
         this._url = "";
         if(params === undefined) {
@@ -31,6 +33,7 @@ dojo.declare("model.URLHandler", null, {
         this._params = params;
     },
     
+
     setURL: function(url) {
         this._url = url;
     },
@@ -42,6 +45,18 @@ dojo.declare("model.URLHandler", null, {
         }
     },
     
+
+    addToParams:  function(params) {
+        for( var key in params ) {
+            if (this._params[key]) {
+                this._params[key] = this._params[key] + "," + params[key];
+            } else {
+                this._params[key] = params[key];
+            }
+        }
+    },
+
+
     getURL: function() {
         var url = this._url;
         if(url.indexOf("?") < 0 ) {
@@ -58,4 +73,6 @@ dojo.declare("model.URLHandler", null, {
         console.log("          url = '" + url + "'");
         return url;
     }
+
+
 })

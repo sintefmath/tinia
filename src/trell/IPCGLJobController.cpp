@@ -501,16 +501,16 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     }
 #endif
     switch( pixel_format ) {
-    case TRELL_PIXEL_FORMAT_BGR8:
-        glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
+    case TRELL_PIXEL_FORMAT_RGB:
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
         break;
-    case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
+    case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
     {
         unsigned char *buffer_pos = (unsigned char *)buffer;
         if( m_logger_callback != NULL ) {
             m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading RGB pixels, w=%d, h=%d", width, height );
         }
-        glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer_pos );
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
 //        for (int i=0; i<width*height*3; i+=3) {
 //            buffer_pos[i  ] = 255;
 //            buffer_pos[i+1] =   0;
@@ -538,7 +538,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         for (size_t i=0; i<width*height; i++) {
             float value = (float)( ((GLfloat *)buffer_pos)[i] );
             for (size_t j=0; j<3; j++) {
-                (buffer_pos)[3*i+(2-j)] = (unsigned char)( floor(value*255.0) );
+                (buffer_pos)[3*i+j] = (unsigned char)( floor(value*255.0) );
                 value = 255.0*value - floor(value*255.0);
             }
         }

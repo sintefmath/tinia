@@ -232,10 +232,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 
         size_t data_size=0, buf_size_required=0;
         switch ( format ) {
-            case TRELL_PIXEL_FORMAT_BGR8:
+            case TRELL_PIXEL_FORMAT_RGB:
                 buf_size_required = data_size = 3*w*h;
             break;
-            case TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH:
+            case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
                 // We would really like to have the size of each canvas associated with the keys we have, but this information is currently
                 // not available. This will only work for equally sized canvases then, and no problem will be checked for or detected if it
                 // is not the case!
@@ -272,7 +272,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok. format = %d", format );
 #endif
-                if ( format == TRELL_PIXEL_FORMAT_BGR8_CUSTOM_DEPTH ) {
+                if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
                     // In order to let trell_pass_reply_png_bundle() package both images and the transformation matrices, we now write the
                     // latter two into the buffer.
                     tinia::model::Viewer viewer;

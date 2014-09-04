@@ -107,6 +107,7 @@ typedef struct mod_trell_dispatch_info
     char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
     char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
     char                 m_key[TRELL_KEYID_MAXLENGTH];
+    char                 m_viewer_key_list[TRELL_VIEWER_KEY_LIST_MAXLENGTH]; // comma-separated list
     char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
     char*                m_static_path;
     apr_time_t           m_entry;

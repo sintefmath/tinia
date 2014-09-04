@@ -48,6 +48,8 @@ const module* tinia_get_module()
     return &trell_module;
 }
 
+
+#if 0
 static int
 tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
 {
@@ -74,6 +76,8 @@ tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, co
     }
     return 0;
 }
+#endif
+
 
 //trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
 
@@ -112,7 +116,7 @@ static int trell_handler_body(request_rec *r)
 
 #if 1
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                   "jny mod_trell: decode_path_info returned component=%d, request=%d, jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', width=%d, height=%d",
+                   "jny mod_trell.c, trell_handler_body: decode_path_info returned component=%d, request=%d, jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', width=%d, height=%d",
                    dispatch_info->m_component,
                    dispatch_info->m_request,
                    dispatch_info->m_jobid,
@@ -121,6 +125,7 @@ static int trell_handler_body(request_rec *r)
                    dispatch_info->m_revision,
                    dispatch_info->m_mod_action,
                    dispatch_info->m_key,
+                   dispatch_info->m_viewer_key_list,
                    dispatch_info->m_width,
                    dispatch_info->m_height );
 #endif
