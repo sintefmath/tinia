@@ -33,8 +33,8 @@ extern "C" {
 
 /** The pixel formats that is used in the trell system. */
 enum TrellPixelFormat {
-    /** 8-bit normalized bgr data. */
-    TRELL_PIXEL_FORMAT_BGR8
+    /** 8-bit normalized rgb data. */
+    TRELL_PIXEL_FORMAT_RGB
 };
 
 /** States that a MessageBox/Master/Job/InteractiveJob can be in */

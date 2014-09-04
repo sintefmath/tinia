@@ -223,7 +223,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             session = std::string( q->session_id );
             key     = std::string( q->key );
             
-            if( format != TRELL_PIXEL_FORMAT_BGR8 ) {
+            if( format != TRELL_PIXEL_FORMAT_RGB ) {
                 m_logger_callback( m_logger_data, 0, package.c_str(),
                                    "Queried for snapshot, unsupported image format %d.", (int)format );
 
