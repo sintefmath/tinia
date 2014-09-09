@@ -234,9 +234,12 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         switch ( format ) {
             case TRELL_PIXEL_FORMAT_RGB:
                 buf_size_required = data_size = 3*w*h;
+                data_size         *= key_list.size();
+                buf_size_required *= key_list.size();
+                m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle  TRELL_PIXEL_FORMAT_RGB  buf_size_required = %lu", buf_size_required );
             break;
             case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
-                // We would really like to have the size of each canvas associated with the keys we have, but this information is currently
+                // We could have the size of each canvas associated with the keys we have, but this information is currently
                 // not available. This will only work for equally sized canvases then, and no problem will be checked for or detected if it
                 // is not the case!
                 data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two long word aligned images + 2 matrices
@@ -244,8 +247,8 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 data_size *= key_list.size();
                 buf_size_required = 4*((3*w*h+3)/4) + 4*w*h + sizeof(float)*16*2; // One long word aligned image + one depth buffer (with floats) + 2 matrices
                 // ... times the number of keys:
-                buf_size_required *= key_list.size(); // This becomes larger than really necessary, but let's keep it simple.
-                m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle   buf_size_required = %lu", buf_size_required );
+                buf_size_required *= key_list.size(); // This becomes larger than strictly necessary, but let's keep it simple.
+                m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle  TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH  buf_size_required = %lu", buf_size_required );
             break;
             default:
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, unsupported image format %d.", (int)format );
@@ -267,28 +270,16 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
             m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle   key[%d] = %s", i, key.c_str() );
 
-            if ( onGetSnapshot(buf, format, w, h, session, key) ) {
+            if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() grabs pixels and matrices for one key
 #ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok. format = %d", format );
 #endif
-                if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
-                    // In order to let trell_pass_reply_png_bundle() package both images and the transformation matrices, we now write the
-                    // latter two into the buffer.
-                    tinia::model::Viewer viewer;
-                    m_model->getElementValue( key, viewer );
-                    if ( ( (unsigned long)buf ) % 4 != 0 ) {
-                        m_logger_callback( m_logger_data, 2, package.c_str(), "Ouch. Non-aligned buffer %d", ( (unsigned long)buf ) % 4 );
-                    }
-                    buf += 4*((3*w*h+3)/4) * 2; // Size of two images padded to be long word aligned.
-                    float *float_buf = (float *)buf;
-                    for (size_t i=0; i<16; i++) {
-                        float_buf[   i] = viewer.modelviewMatrix[i];
-                    }
-                    for (size_t i=0; i<16; i++) {
-                        float_buf[16+i] = viewer.projectionMatrix[i];
-                    }
-                    buf += 2*16*sizeof(float); // Ready for the next canvas.
+                if ( format == TRELL_PIXEL_FORMAT_RGB ) {
+                    buf += 4*((3*w*h+3)/4);
+                } else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
+                    buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned.
+                    buf += 16*sizeof(float) * 2;    // + two matrices
                 }
             } else {
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );

@@ -452,7 +452,7 @@ static int trell_pass_reply_png_bundle( void*          data,
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
 #if 0
-                // Writing out the images grabbed with readpixels() somewhere
+                // Writing out the images grabbed with readpixels() somewhere (IPCGLJobController.cpp probably)
                 {
                     sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
                     FILE *fp = fopen(fname, "w");
@@ -699,7 +699,7 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
 #if 0
-                // Writing out the images grabbed with readpixels() somewhere
+                // Writing out the images grabbed with readpixels() somewhere (IPCGLJobController.cpp probably)
                 {
                     sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
                     FILE *fp = fopen(fname, "w");
