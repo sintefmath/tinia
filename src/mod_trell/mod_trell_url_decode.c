@@ -371,6 +371,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     }
     // --- snapshot.txt----------------------------------------------------
     else if( strcmp( request, "snapshot.txt" ) == 0 ) {
+        ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "%s: ER HER 2 request=%s", r->handler, request );
         dispatch_info->m_request = TRELL_REQUEST_PNG;
         dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
         dispatch_info->m_base64 = 1;
@@ -380,6 +381,10 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed.",
                            r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_viewer_key_list, form, "viewer_key_list", TRELL_VIEWER_KEY_LIST_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list 2.", r->handler, request );
             return HTTP_BAD_REQUEST;
         }
     }
