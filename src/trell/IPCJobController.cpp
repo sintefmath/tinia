@@ -277,7 +277,8 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 #endif
                 if ( format == TRELL_PIXEL_FORMAT_RGB ) {
                     buf += 4*((3*w*h+3)/4);
-                } else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
+                }
+                else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
                     buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned.
                     buf += 16*sizeof(float) * 2;    // + two matrices
                 }

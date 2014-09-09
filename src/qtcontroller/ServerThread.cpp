@@ -196,7 +196,7 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
 
-            std::cout << "------------------------------------------------------------request = '" << QString( request ).toStdString() << "'\n---------------------------------------" << std::endl; // @@@
+            // std::cout << "------------------------------------------------------------request = '" << QString( request ).toStdString() << "'\n---------------------------------------" << std::endl; // @@@
 
             if(!handleNonStatic(os, getRequestURI(request), request)) {
                 os << getStaticContent(getRequestURI(request)) << "\r\n";
@@ -220,27 +220,20 @@ bool ServerThread::isLongPoll(const QString &request)
 }
 
 
-void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
-                                  tinia::jobcontroller::Job* job,
-                                  tinia::qtcontroller::impl::OpenGLServerGrabber* grabber)
+void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
+                                   tinia::jobcontroller::Job* job,
+                                   tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
+                                   const bool with_depth )
 {
-    boost::tuple<unsigned int, unsigned int, std::string> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string> >( decodeGetParameters(request), "width height key" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
     std::string key = arguments.get<2>();
-    std::cout << "ServerThread::getSnapshotTxt(...) for key = " << key << std::endl;
+    std::string viewer_key_list = arguments.get<3>();
 
+    os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
-    os << httpHeader(getMimeType("file.txt")) << "\r\n";
-
-    os << "{ ";
-
-    // @@@
-    std::cout << "XXXXXXXXXXXXXXXXxx request=" << request.toStdString() << std::endl;
-    std::string tmp;
-    m_job->getExposedModel()->getElementValue( "viewer_keys", tmp );
-    std::cout << "tmp = " << tmp << std::endl;
-    QString viewer_keys(tmp.c_str());
-    QStringList vk_list = viewer_keys.split(' ');
+    QString viewer_keys(viewer_key_list.c_str());
+    QStringList vk_list = viewer_keys.split(',');
 
     for (int i=0; i<vk_list.size(); i++) {
         QString k = vk_list[i];
@@ -252,33 +245,36 @@ void ServerThread::getSnapshotTxt(QTextStream &os, const QString &request,
             SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
-        os << "\", \"depth\": \"";
-        {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
-            m_mainthread_invoker->invokeInMainThread( &f, true );
-        }
-        os << "\", \"view\": \"";
-        tinia::model::Viewer viewer;
-        m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
-        {
-            for (size_t i=0; i<15; i++) {
-                os << viewer.modelviewMatrix[i] << " ";
+        os << "\"";
+        if (with_depth) {
+            os << ", \"depth\": \"";
+            {
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
+                m_mainthread_invoker->invokeInMainThread( &f, true );
             }
-            os << viewer.modelviewMatrix[15];
-        }
-        os << "\", \"proj\": \"";
-        {
-            for (size_t i=0; i<15; i++) {
-                os << viewer.projectionMatrix[i] << " ";
+            os << "\", \"view\": \"";
+            tinia::model::Viewer viewer;
+            m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
+            {
+                for (size_t i=0; i<15; i++) {
+                    os << viewer.modelviewMatrix[i] << " ";
+                }
+                os << viewer.modelviewMatrix[15];
             }
-            os << viewer.projectionMatrix[15];
+            os << "\", \"proj\": \"";
+            {
+                for (size_t i=0; i<15; i++) {
+                    os << viewer.projectionMatrix[i] << " ";
+                }
+                os << viewer.projectionMatrix[15];
+            }
+            os << "\"";
         }
-        os << "\" }";
+        os << " }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
     }
-
 
     os << "}";
 }
@@ -288,19 +284,14 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
                                    const QString& request)
 {
     try {
-        if(file == "/snapshot.txt") {
+        if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
             updateState(os, request);
-            os << httpHeader(getMimeType("file.txt")) << "\r\n{ \"rgb\": \"";
-            {
-                SnapshotAsTextFetcher f( os, request, "", m_job, m_grabber, true /* RGB requested */ );
-                m_mainthread_invoker->invokeInMainThread( &f, true );
-            }
-            os << "\" }";
+            getSnapshotTxt( os, request, m_job, m_grabber, false );
             return true;
         }
-        else if ( file == "/snapshot_bundle.txt" ) {
+        else if ( file == "/snapshot_bundle.txt" ) { // Will be used when in autoProxy-mode
             updateState(os, request);
-            getSnapshotTxt( os, request, m_job, m_grabber );
+            getSnapshotTxt( os, request, m_job, m_grabber, true );
             return true;
         }
         else if(file == "/getRenderList.xml") {
@@ -346,8 +337,8 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-//    QString fullPath = ":javascript/" + uri;
-    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
+    QString fullPath = ":javascript/" + uri;
+//    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {
