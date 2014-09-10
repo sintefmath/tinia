@@ -511,13 +511,10 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
             m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading RGB pixels, w=%d, h=%d", width, height );
         }
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
-//        for (int i=0; i<width*height*3; i+=3) {
-//            buffer_pos[i  ] = 255;
-//            buffer_pos[i+1] =   0;
-//            buffer_pos[i+2] =   0;
-//        }
-#if 0
+#if 1
         static int cntr=0;
+#endif
+#if 0
         {
             char fname[1000];
             sprintf(fname, "/tmp/rgb_%05d.ppm", cntr);
@@ -561,10 +558,11 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         }
 #endif
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
-        glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
+        // glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
         buffer_pos += 4*16;
-        glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
-#if 0
+        // glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
+#if 1
+        // buffer_pos now points at the second matrix
         {
             char fname[1000];
             sprintf(fname, "/tmp/mat_%05d.txt", cntr);

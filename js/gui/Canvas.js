@@ -234,6 +234,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // image we received is a perfect match for our current exposedmodel.
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
             this._imageLoading = false;
+            console.log("Canvas /model/updateSendComplete: this._key=" + this._key);
             this._showCorrect();
         }));
 

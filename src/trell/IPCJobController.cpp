@@ -270,7 +270,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
             m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle   key[%d] = %s", i, key.c_str() );
 
-            if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() grabs pixels and matrices for one key
+            if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
 #ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok. format = %d", format );
@@ -279,8 +279,25 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                     buf += 4*((3*w*h+3)/4);
                 }
                 else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
+#if 0
+                    // this branch is for picking out the matrices from GL
                     buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned.
                     buf += 16*sizeof(float) * 2;    // + two matrices
+#else
+                    // and this for using the ExposedModel
+
+                    // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
+                    // latter two into the buffer.
+                    tinia::model::Viewer viewer;
+                    m_model->getElementValue( key, viewer );
+                    buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned...
+                    float * float_buf = (float *)buf;
+                    for (size_t i=0; i<15; i++) {
+                        float_buf[   i] = viewer.modelviewMatrix[i];
+                        float_buf[16+i] = viewer.projectionMatrix[i];
+                    }
+                    buf += 16*sizeof(float) * 2;    // ... + two matrices
+#endif
                 }
             } else {
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );
