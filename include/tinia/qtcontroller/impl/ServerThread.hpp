@@ -24,7 +24,7 @@ private:
 
     bool isLongPoll(const QString& request);
 
-    /** Collects the rgb buffer data and returns it as text.
+    /** Collects the rgb buffer data and returns it as text. Optionally also collects depth and transformation data.
      */
     void getSnapshotTxt( QTextStream &os, const QString &request,
                          tinia::jobcontroller::Job* job,

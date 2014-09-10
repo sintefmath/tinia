@@ -143,10 +143,8 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     query.session_id[TRELL_SESSIONID_MAXLENGTH] = '\0';
     memcpy( query.key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );
     query.key[ TRELL_KEYID_MAXLENGTH ] = '\0';
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: %s: KEY=%s.", r->path_info, query.key );
     memcpy( query.viewer_key_list, dispatch_info->m_viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
     query.viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH ] = '\0';
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: %s: VIEWER_KEY_LIST=%s.", r->path_info, query.viewer_key_list );
 
     // create data for pass_query_msg_post
     trell_pass_query_msg_post_data_t pass_query_data;
@@ -166,9 +164,7 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     encode_png_state.height        = 0;
     encode_png_state.buffer        = NULL;
     
-
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "jny trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
-
+    // ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
 
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,

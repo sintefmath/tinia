@@ -563,7 +563,7 @@ static int trell_pass_reply_png_bundle( void*          data,
             const char *buf;
             size_t bytes;
             apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny bucket content (%lu bytes): '%s'", bytes, buf);
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "bucket content (%lu bytes): '%s'", bytes, buf);
         }
 #endif
 
