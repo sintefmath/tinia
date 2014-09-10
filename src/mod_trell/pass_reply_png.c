@@ -30,6 +30,7 @@
 
 
 
+
 static
 unsigned int
 trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
@@ -42,6 +43,8 @@ trell_png_crc( const unsigned int* crc_table, unsigned char* p, size_t length )
     }
     return ~crc;
 }
+
+
 
 
 static
@@ -161,6 +164,8 @@ trell_png_encode( void* data,
 }
 
 
+
+
 static
 int
 trell_pass_reply_png_bundle( void*          data,
@@ -168,17 +173,10 @@ trell_pass_reply_png_bundle( void*          data,
                              const size_t   buffer_bytes,
                              const int      part,
                              const int      more,
-                             const char * const viewer_key_list );
+                             const char * const viewer_key_list,
+                             const int      w_depth );
 
 
-static
-int
-trell_pass_reply_png_bundle_wo_depth( void*          data,
-                                      const char    *buffer,
-                                      const size_t   buffer_bytes,
-                                      const int      part,
-                                      const int      more,
-                                      const char * const viewer_key_list );
 
 
 int
@@ -191,105 +189,17 @@ trell_pass_reply_png( void* data,
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
     if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
-        // We escape into the new routine packaging both rgb, depth and transformation data
-        return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more, encoder_state->dispatch_info->m_viewer_key_list );
+        // We escape into the new routine packaging both rgb, depth and transformation data, for a list of viewers
+        return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more, encoder_state->dispatch_info->m_viewer_key_list, 1 );
     }
 
     if ( encoder_state->dispatch_info->m_pixel_format == TRELL_PIXEL_FORMAT_RGB ) {
         // We escape into the new routine packaging only rgb data, but for a list of viewers
-        return trell_pass_reply_png_bundle_wo_depth( data, buffer, buffer_bytes, part, more, encoder_state->dispatch_info->m_viewer_key_list );
+        return trell_pass_reply_png_bundle( data, buffer, buffer_bytes, part, more, encoder_state->dispatch_info->m_viewer_key_list, 0 );
     }
 
-    // ... falling back to old routine. Should probably never end up here from now on. (140908)
-
-    size_t offset = 0;
-    if( part == 0 ) {
-        encoder_state->dispatch_info->m_png_entry = apr_time_now();
-        // first invocation
-        tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
-        if( msg->msg.type != TRELL_MESSAGE_IMAGE ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
-                           "got reply of type %d.", msg->msg.type );
-            return -1; // error
-        }
-
-        encoder_state->width  = msg->width;
-        encoder_state->height = msg->height;
-        encoder_state->buffer = apr_palloc( encoder_state->r->pool,
-                                            3*encoder_state->width*encoder_state->height );
-        encoder_state->filtered = apr_palloc( encoder_state->r->pool,
-                                              (3*encoder_state->width+1)*encoder_state->height );
-        encoder_state->bytes_read = 0;
-
-        offset += sizeof(tinia_msg_image_t);
-    }
-
-    if( offset < buffer_bytes ) {
-        // we have data to copy.
-        size_t bytes = buffer_bytes - offset;
-        memcpy( encoder_state->buffer + encoder_state->bytes_read,
-                buffer + offset,
-                bytes );
-        encoder_state->bytes_read += bytes;
-
-    }
-
-    if( more == 0 ) {
-        // last invocation
-        if( encoder_state->bytes_read != 3*encoder_state->width*encoder_state->height ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
-                           "expected %d bytes, got %ld bytes.",
-                           3*encoder_state->width*encoder_state->height,
-                           encoder_state->bytes_read );
-            return -1;
-        }
-
-        uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-        unsigned char* png = apr_palloc( encoder_state->r->pool, bound + 8 + 25 + 12 + 12 + 12 );
-        unsigned char* p = png;
-        trell_png_encode( data, 0, &p ); // This updates *p
-
-        char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
-        apr_rfc822_date( datestring, apr_time_now() );
-        apr_table_setn( encoder_state->r->headers_out, "Last-Modified", datestring );
-        apr_table_setn( encoder_state->r->headers_out, "Cache-Control", "no-cache" );
-
-        struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool,
-                                                            encoder_state->r->connection->bucket_alloc );
-        if( encoder_state->dispatch_info->m_base64 == 0 ) {
-            // Send as plain png image
-            ap_set_content_type( encoder_state->r, "image/png" );
-            ap_set_content_length( encoder_state->r, p-png );
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( (char*)png, p-png, bb->bucket_alloc ) );
-        }
-        else {
-            // Encode png as base64 and send as string
-            apr_table_setn( encoder_state->r->headers_out, "Content-Type", "text/plain" );
-            ap_set_content_type( encoder_state->r, "text/plain" );
-            char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-            int base64_size = apr_base64_encode( base64, (char*)png, p-png );
-            // Seems like the zero-byte is included in the string size.
-            if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
-                base64_size--;
-            }
-            char *prefix = "{ \"rgb\": \"";
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( prefix, strlen(prefix), bb->bucket_alloc ) );
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_immortal_create( base64, base64_size, bb->bucket_alloc ) );
-            char *suffix = "\"}";
-            APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( suffix, strlen(suffix), bb->bucket_alloc ) );
-        }
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
-
-        apr_status_t rv = ap_pass_brigade( encoder_state->r->output_filters, bb );
-        encoder_state->dispatch_info->m_png_exit = apr_time_now();
-
-        if( rv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, rv, encoder_state->r,
-                           "ap_pass_brigade failed." );
-            return -1; // error
-        }
-    }
-    return 0;   // success
+    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Unknown trell pixel format: %d.", encoder_state->dispatch_info->m_pixel_format );
+    return -1;
 }
 
 
@@ -309,187 +219,12 @@ static int trell_pass_reply_png_bundle( void*          data,
                                         const size_t   buffer_bytes,
                                         const int      part,
                                         const int      more,
-                                        const char * const viewer_key_list )
+                                        const char * const viewer_key_list,
+                                        const int      w_depth )
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
     // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: key=%s", encoder_state->dispatch_info->m_key );
-    // This key is not the "list of keys", so we cannot use it to detect how many images we are to encode.
-
-    if ( encoder_state->dispatch_info->m_base64 == 0 ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
-                       "This routine is not meant for sending of non-base64-encoded image data: %s:%s:%d",
-                       encoder_state->r->handler, __FILE__, __LINE__ );
-        return HTTP_INTERNAL_SERVER_ERROR;
-    }
-
-    static int num_of_keys = 0;
-    size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16, canvas_size;
-
-    size_t offset = 0;
-    if( part == 0 ) {
-
-        // Figuring out the number of keys, so that we can allocate appropriate buffers
-        {
-            num_of_keys = 1;
-            const char *p = viewer_key_list;
-            while ( (p-viewer_key_list<TRELL_VIEWER_KEY_LIST_MAXLENGTH) && (*p!=0) ) {
-                num_of_keys += ( *p == ',' );
-                p++;
-            }
-            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, encoder_state->r, "XXXXXXXXXXXX %d", num_of_keys );
-            if ( (*viewer_key_list==',') /* || ... other sensible tests to do? */ ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Invalid list of viewer keys: %s", viewer_key_list );
-                return -1; // error
-            }
-        }
-
-        encoder_state->dispatch_info->m_png_entry = apr_time_now();
-        // first invocation
-        tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
-        if( msg->msg.type != TRELL_MESSAGE_IMAGE ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "got reply of type %d.", msg->msg.type );
-            return -1; // error
-        }
-        encoder_state->width  = msg->width;
-        encoder_state->height = msg->height;
-        buffer_img_size       = 3 * encoder_state->width * encoder_state->height;
-        padded_img_size       = 4*( (buffer_img_size+3)/4 );
-        canvas_size           = 2*padded_img_size + 2*matrix_size;
-        encoder_state->buffer = apr_palloc( encoder_state->r->pool, num_of_keys * canvas_size );
-        const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // The +1 is for the png filter flag
-        encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + 2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
-
-        // hmm... hvorfor var det ikke satt av plass til to filtrerte bilder over? Hvis et er nok, hvorfor var det da satt av plass til to matriser?
-        // Mistenker at det er en misforståelse å ta med de to matrisene
-
-        encoder_state->bytes_read = 0;
-        offset += sizeof(tinia_msg_image_t);
-    }
-
-    if( offset < buffer_bytes ) {
-        // we have data to copy.
-        size_t bytes = buffer_bytes - offset;
-        memcpy( encoder_state->buffer + encoder_state->bytes_read,
-                buffer + offset,
-                bytes );
-        encoder_state->bytes_read += bytes;
-    }
-
-    if( more == 0 ) {
-        // last invocation
-        const size_t bytes_expected = num_of_keys*canvas_size;
-        if( encoder_state->bytes_read != bytes_expected ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: expected %d bytes, got %ld bytes.",
-                           (int)bytes_expected, encoder_state->bytes_read );
-            return -1;
-        }
-
-        uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-        const size_t total_bound = bound + 8 + 25 + 12 + 12 + 12 + 2*sizeof(float)*16; // misforståelse her også?
-        unsigned char* png = apr_palloc( encoder_state->r->pool, total_bound );
-        unsigned char* p = png;
-
-        char* datestring = apr_palloc( encoder_state->r->pool, APR_RFC822_DATE_LEN );
-        apr_rfc822_date( datestring, apr_time_now() );
-        apr_table_setn( encoder_state->r->headers_out, "Last-Modified", datestring );
-        apr_table_setn( encoder_state->r->headers_out, "Cache-Control", "no-cache" );
-
-        // Encode png as base64 and send as string
-        apr_table_setn( encoder_state->r->headers_out, "Content-Type", "text/plain" );
-        ap_set_content_type( encoder_state->r, "text/plain" );
-
-        struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool, encoder_state->r->connection->bucket_alloc );
-
-        int i;
-        char vkl_copy[TRELL_VIEWER_KEY_LIST_MAXLENGTH];
-        memcpy( vkl_copy, viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
-        const char * next_key = strtok( vkl_copy, "," );
-
-        BB_APPEND_STRING( encoder_state->r->pool, bb, "{ " );
-        for (i=0; i<num_of_keys; i++) {
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", next_key );
-            {
-                p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-                int rv = trell_png_encode( data, i*canvas_size, &p );
-                if ( p-png > total_bound ) {
-                    // @@@ This test should not be needed, the encoding routine checks this
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
-                    return -1;
-                }
-                if (rv!=OK)
-                    return rv;
-                char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-                int base64_size = apr_base64_encode( base64, (char*)png, p-png );
-                // Seems like the zero-byte is included in the string size.
-                if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
-                    base64_size--;
-                }
-                APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-            }
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "\", \"depth\": \"" );
-            {
-                p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-                int rv = trell_png_encode( data, i*canvas_size + padded_img_size , &p );
-                if ( p-png > total_bound ) {
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
-                    return -1;
-                }
-                if (rv!=OK)
-                    return rv;
-                char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
-                int base64_size = apr_base64_encode( base64, (char*)png, p-png );
-                // Seems like the zero-byte is included in the string size.
-                if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
-                    base64_size--;
-                }
-                APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-            }
-            const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size );
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "\", view: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
-                              MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15] );
-            const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size + sizeof(float)*16 );
-            BB_APPEND_STRING( encoder_state->r->pool, bb, ", proj: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\" }",
-                              PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15] );
-            if (i<num_of_keys-1) {
-                BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
-            }
-            next_key = strtok( NULL, "," );
-            if (   ( (i<num_of_keys-1) && (next_key==NULL) )   ||   ( (i==num_of_keys-1) && (next_key!=NULL) )   ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
-                return -1;
-            }
-        }
-        BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
-
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
-        apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );
-
-        if( arv != APR_SUCCESS ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, arv, encoder_state->r, "ap_pass_brigade failed." );
-            return -1;
-        }
-
-    }
-    return 0;   // success
-
-}
-
-
-
-
-static int trell_pass_reply_png_bundle_wo_depth( void*          data,
-                                                 const char    *buffer,
-                                                 const size_t   buffer_bytes,
-                                                 const int      part,
-                                                 const int      more,
-                                                 const char * const viewer_key_list )
-{
-    const int w_depth = 0;
-
-    trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
-
-    // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: key=%s", encoder_state->dispatch_info->m_key );
     // This key is not the "list of keys", so we cannot use it to detect how many images we are to encode.
 
     if ( encoder_state->dispatch_info->m_base64 == 0 ) {
@@ -513,7 +248,6 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
                 num_of_keys += ( *p == ',' );
                 p++;
             }
-            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, encoder_state->r, "XXXXXXXXXXXX 2 %d", num_of_keys );
             if ( (*viewer_key_list==',') /* || ... other sensible tests to do? */ ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Invalid list of viewer keys: %s", viewer_key_list );
                 return -1; // error
@@ -556,7 +290,7 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
         // last invocation
         const size_t bytes_expected = num_of_keys*canvas_size;
         if( encoder_state->bytes_read != bytes_expected ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: expected %d bytes, got %ld bytes.",
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: expected %d bytes, got %ld bytes.",
                            (int)bytes_expected, encoder_state->bytes_read );
             return -1;
         }
@@ -591,7 +325,7 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
                 int rv = trell_png_encode( data, i*canvas_size, &p );
                 if ( p-png > total_bound ) {
                     // @@@ This test should not be needed, the encoding routine checks this
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: encoder has overrun the buffer!" );
+                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
                 if (rv!=OK)
@@ -604,13 +338,40 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
                 }
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
             }
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "\" }" );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, "\" " );
+            if (w_depth) {
+                BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depth\": \"" );
+                {
+                    p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
+                    int rv = trell_png_encode( data, i*canvas_size + padded_img_size , &p );
+                    if ( p-png > total_bound ) {
+                        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
+                        return -1;
+                    }
+                    if (rv!=OK)
+                        return rv;
+                    char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
+                    int base64_size = apr_base64_encode( base64, (char*)png, p-png );
+                    // Seems like the zero-byte is included in the string size.
+                    if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
+                        base64_size--;
+                    }
+                    APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
+                }
+                const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size );
+                BB_APPEND_STRING( encoder_state->r->pool, bb, "\", view: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
+                                  MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15] );
+                const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size + sizeof(float)*16 );
+                BB_APPEND_STRING( encoder_state->r->pool, bb, ", proj: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
+                                  PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15] );
+            }
+            BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
             next_key = strtok( NULL, "," );
             if (   ( (i<num_of_keys-1) && (next_key==NULL) )   ||   ( (i==num_of_keys-1) && (next_key!=NULL) )   ) {
-                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
+                ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
                 return -1;
             }
         }
