@@ -70,13 +70,11 @@ IF(Tinia_AMAZON)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
-    SET(CMAKE_CXX_FLAGS "-O0 -g -ggdb -Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" )
+    SET(CMAKE_CXX_FLAGS "-Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" )
     IF( Tinia_IPC_LOG_TRACE )
         add_definitions( -DTINIA_IPC_LOG_TRACE )
     ENDIF( Tinia_IPC_LOG_TRACE )
 ENDIF()
-
-    SET(CMAKE_CXX_FLAGS "-O0 -g -ggdb -Wall -fPIC -std=c++0x ${CMAKE_CXX_FLAGS}" )
 
 IF(MSVC10)
         #Enable multiprocessor compilation for speed
