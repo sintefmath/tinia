@@ -290,40 +290,6 @@ trell_pass_reply_png( void* data,
         }
     }
     return 0;   // success
-    /*
-
-
-        request_rec* r = encoder_state->m_r;
-
-        tinia_msg_t* msg = (tinia_msg_t*)buffer;
-        if( msg->type == TRELL_MESSAGE_IMAGE ) {
-            tinia_msg_image_t* m = (tinia_msg_image_t*)buffer;
-            int width = m->width;
-            int height = m->height;
-
-
-            char* payload = (char*)buffer + sizeof(*m);
-
-
-
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->m_r,
-                           "%s.pass_reply_png: w=%d, h=%d, l=%d.", encoder_state->m_r->handler,
-                           width, height, (int)buffer_bytes );
-            return 0;
-
-            int i, j;
-
-            const unsigned int* crc_table = encoder_state->m_sconf->m_crc_table;
-
-
-
-
-        }
-        else {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "got reply of type %d.", msg->type );
-            return -1; // error
-        }
-        */
 }
 
 
@@ -435,13 +401,7 @@ static int trell_pass_reply_png_bundle( void*          data,
 
         struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool, encoder_state->r->connection->bucket_alloc );
 
-
         int i;
-#if 0
-        static int cntr2=0;
-        char fname[1000];
-#endif
-
         char vkl_copy[TRELL_VIEWER_KEY_LIST_MAXLENGTH];
         memcpy( vkl_copy, viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
         const char * next_key = strtok( vkl_copy, "," );
@@ -451,39 +411,12 @@ static int trell_pass_reply_png_bundle( void*          data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", next_key );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-#if 0
-                // Writing out the images grabbed with readpixels() somewhere (IPCGLJobController.cpp probably)
-                {
-                    sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                    fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                    fclose(fp);
-                }
-                {
-                    sprintf(fname, "/tmp/png_depth_%05d.ppm", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                    fwrite(encoder_state->buffer + i*canvas_size + padded_img_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                    fclose(fp);
-                }
-#endif
                 int rv = trell_png_encode( data, i*canvas_size, &p );
                 if ( p-png > total_bound ) {
                     // @@@ This test should not be needed, the encoding routine checks this
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
-#if 0
-                {
-                    // Writing out the image immediately after png-encoding
-                    // This image gets corrupted occasionally! @@@
-                    sprintf(fname, "/tmp/png_rgb2_%05d.png", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fwrite(png, 1, p-png, fp);
-                    fclose(fp);
-                }
-#endif
                 if (rv!=OK)
                     return rv;
                 char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -502,15 +435,6 @@ static int trell_pass_reply_png_bundle( void*          data,
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
-#if 0
-                {
-                    // This image gets corrupted occasionally! @@@
-                    sprintf(fname, "/tmp/png_depth2_%05d.png", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fwrite(png, 1, p-png, fp);
-                    fclose(fp);
-                }
-#endif
                 if (rv!=OK)
                     return rv;
                 char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -530,23 +454,6 @@ static int trell_pass_reply_png_bundle( void*          data,
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
-#if 0
-            {
-                sprintf(fname, "/tmp/png_rgb2_%05d.ppm", cntr2);
-                FILE *fp = fopen(fname, "w");
-                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                fclose(fp);
-            }
-            {
-                sprintf(fname, "/tmp/png_depth2_%05d.ppm", cntr2);
-                FILE *fp = fopen(fname, "w");
-                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                fwrite(encoder_state->buffer + i*canvas_size + padded_img_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                fclose(fp);
-            }
-            cntr2++;
-#endif
             next_key = strtok( NULL, "," );
             if (   ( (i<num_of_keys-1) && (next_key==NULL) )   ||   ( (i==num_of_keys-1) && (next_key!=NULL) )   ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
@@ -554,18 +461,6 @@ static int trell_pass_reply_png_bundle( void*          data,
             }
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
-
-
-#if 1
-        // To inspect the resulting package, see the apache error log
-        struct apr_bucket *b;
-        for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
-            const char *buf;
-            size_t bytes;
-            apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "bucket content (%lu bytes): '%s'", bytes, buf);
-        }
-#endif
 
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
         apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );
@@ -684,11 +579,6 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
 
 
         int i;
-#if 0
-        static int cntr2=0;
-        char fname[1000];
-#endif
-
         char vkl_copy[TRELL_VIEWER_KEY_LIST_MAXLENGTH];
         memcpy( vkl_copy, viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
         const char * next_key = strtok( vkl_copy, "," );
@@ -698,32 +588,12 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", next_key );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-#if 0
-                // Writing out the images grabbed with readpixels() somewhere (IPCGLJobController.cpp probably)
-                {
-                    sprintf(fname, "/tmp/png_rgb_%05d.ppm", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                    fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                    fclose(fp);
-                }
-#endif
                 int rv = trell_png_encode( data, i*canvas_size, &p );
                 if ( p-png > total_bound ) {
                     // @@@ This test should not be needed, the encoding routine checks this
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: encoder has overrun the buffer!" );
                     return -1;
                 }
-#if 0
-                {
-                    // Writing out the image immediately after png-encoding
-                    // This image gets corrupted occasionally! @@@
-                    sprintf(fname, "/tmp/png_rgb2_%05d.png", cntr2);
-                    FILE *fp = fopen(fname, "w");
-                    fwrite(png, 1, p-png, fp);
-                    fclose(fp);
-                }
-#endif
                 if (rv!=OK)
                     return rv;
                 char* base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( p-png ) );
@@ -738,16 +608,6 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
-#if 0
-            {
-                sprintf(fname, "/tmp/png_rgb2_%05d.ppm", cntr2);
-                FILE *fp = fopen(fname, "w");
-                fprintf(fp, "P6\n%d\n%d\n255\n", encoder_state->width, encoder_state->height);
-                fwrite(encoder_state->buffer + i*canvas_size, 1, 3*encoder_state->width*encoder_state->height, fp);
-                fclose(fp);
-            }
-            cntr2++;
-#endif
             next_key = strtok( NULL, "," );
             if (   ( (i<num_of_keys-1) && (next_key==NULL) )   ||   ( (i==num_of_keys-1) && (next_key!=NULL) )   ) {
                 ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle_wo_depth: strtok has not worked as expected. Problem with the viewer_key_list? (%s)", viewer_key_list );
@@ -755,18 +615,6 @@ static int trell_pass_reply_png_bundle_wo_depth( void*          data,
             }
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
-
-
-#if 0
-        // To inspect the resulting package, see the apache error log
-        struct apr_bucket *b;
-        for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
-            const char *buf;
-            size_t bytes;
-            apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "jny trell_pass_reply_png_bundle_wo_depth bucket content (%lu bytes): '%s'", bytes, buf);
-        }
-#endif
 
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
         apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );

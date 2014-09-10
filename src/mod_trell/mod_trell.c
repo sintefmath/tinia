@@ -49,40 +49,6 @@ const module* tinia_get_module()
 }
 
 
-#if 0
-static int
-tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
-{
-    if( src == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is an empty string.",
-                       r->handler, what );
-        return -1;
-    }
-    int i;
-    for(i=0; (src[i]!='\0') && (i<maxlen); i++) {
-        if( !( apr_isalnum(src[i]) || (src[i]=='_' ) ) ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s contains illegal char '%c'.",
-                           r->handler, what, dst[i] );
-            dst[0] = '\0';
-            return -1;
-        }
-        dst[i] = src[i];
-    }
-    if( dst[i] != '\0' ) {
-        dst[0] = '\0';
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is too long.",
-                       r->handler, what );
-        return -1;
-    }
-    return 0;
-}
-#endif
-
-
-//trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
-
-
-
 /** Apache's entry-point to mod_trell. */
 static int trell_handler_body(request_rec *r)
 {

@@ -212,7 +212,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._imageLoading = true;
             // Make sure we are showing the proxy geometry (if the mouse is over the canvas):
             this._showCorrect(); // Shows the correct image: either proxy or server image.
-            console.log("Canvas /model/updateSendStart: this._key=" + this._key);
         }));
 
         // We have sent a new update to the server.
@@ -234,7 +233,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // image we received is a perfect match for our current exposedmodel.
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
             this._imageLoading = false;
-            console.log("Canvas /model/updateSendComplete: this._key=" + this._key);
             this._showCorrect();
         }));
 
