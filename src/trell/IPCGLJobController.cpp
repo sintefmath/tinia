@@ -392,10 +392,6 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                    const std::string&  session,
                                    const std::string&  key )
 {
-    if( m_logger_callback != NULL ) {
-        m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: key=%s", key.c_str() );
-    }
-
     // bind context
     if( !m_context.bindContext() ) {
         if( m_logger_callback != NULL ) {
@@ -495,11 +491,6 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     // --- read pixels ---------------------------------------------------------
     glBindFramebuffer( GL_FRAMEBUFFER, env_copy->m_fbo );
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-#if 1
-    if( m_logger_callback != NULL ) {
-        m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading pixels for key = %s", key.c_str() );
-    }
-#endif
     switch( pixel_format ) {
     case TRELL_PIXEL_FORMAT_RGB:
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
@@ -507,28 +498,8 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
     {
         unsigned char *buffer_pos = (unsigned char *)buffer;
-        if( m_logger_callback != NULL ) {
-            m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading RGB pixels, w=%d, h=%d", width, height );
-        }
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
-#if 1
-        static int cntr=0;
-#endif
-#if 0
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/rgb_%05d.ppm", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
-            fwrite(buffer_pos, 1, 3*width*height, fp);
-            fclose(fp);
-        }
-        const unsigned char * const rgb_pos = buffer_pos;
-#endif
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
-        if( m_logger_callback != NULL ) {
-            m_logger_callback( m_logger_data, 99, package.c_str(), "jny IPCGLJobController::onGetSnapshot: reading DEPTH pixels, w=%d, h=%d", width, height );
-        }
         // NB! We read four bytes per pixel, then convert to three, meaning that the buffer must be large enough for four!!!
         glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
         // Depth encoded as 24 bit fixed point values.
@@ -539,46 +510,6 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 value = 255.0*value - floor(value*255.0);
             }
         }
-#if 0
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/rgb2_%05d.ppm", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
-            fwrite(rgb_pos, 1, 3*width*height, fp);
-            fclose(fp);
-        }
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
-            fwrite(buffer_pos, 1, 3*width*height, fp);
-            fclose(fp);
-        }
-#endif
-        buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
-        // glGetFloatv(GL_MODELVIEW_MATRIX, (GLfloat *)buffer_pos);
-        buffer_pos += 4*16;
-        // glGetFloatv(GL_PROJECTION_MATRIX, (GLfloat *)buffer_pos);
-#if 1
-        // buffer_pos now points at the second matrix
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/mat_%05d.txt", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "MV: ");
-            for (int i=0; i<16; i++)
-                fprintf(fp, "%g ", ((GLfloat *)buffer_pos)[-16+i]);
-            fprintf(fp, "\n");
-            fprintf(fp, "PM: ");
-            for (int i=0; i<16; i++)
-                fprintf(fp, "%g ", ((GLfloat *)buffer_pos)[i]);
-            fprintf(fp, "\n");
-            fclose(fp);
-        }
-        cntr++;
-#endif
         break;
     }
     default:

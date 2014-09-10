@@ -196,8 +196,6 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
 
-            // std::cout << "------------------------------------------------------------request = '" << QString( request ).toStdString() << "'\n---------------------------------------" << std::endl; // @@@
-
             if(!handleNonStatic(os, getRequestURI(request), request)) {
                 os << getStaticContent(getRequestURI(request)) << "\r\n";
             }
@@ -237,7 +235,6 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
     for (int i=0; i<vk_list.size(); i++) {
         QString k = vk_list[i];
-        std::cout << "  key[" << i << "] = " << k.toStdString() << std::endl;
 
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
@@ -338,7 +335,6 @@ QString ServerThread::getStaticContent(const QString &uri)
 {
 
     QString fullPath = ":javascript/" + uri;
-//    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

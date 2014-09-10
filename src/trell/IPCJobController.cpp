@@ -223,10 +223,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         session = std::string( q->session_id );
         key     = std::string( q->key );
 
-        m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle About to call onGetSnapshot, key = %s", key.c_str() );
-
         std::string key_list_string = std::string( q->viewer_key_list );
-        m_logger_callback( m_logger_data, 0, package.c_str(), "jny IPCJobController::handle key_list_string YYYY = %s", key_list_string.c_str() );
         std::vector<std::string> key_list;
         boost::split( key_list, key_list_string, boost::is_any_of(",") );
 
@@ -236,7 +233,6 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 buf_size_required = data_size = 3*w*h;
                 data_size         *= key_list.size();
                 buf_size_required *= key_list.size();
-                m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle  TRELL_PIXEL_FORMAT_RGB  buf_size_required = %lu", buf_size_required );
             break;
             case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
                 // We could have the size of each canvas associated with the keys we have, but this information is currently
@@ -248,7 +244,6 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 buf_size_required = 4*((3*w*h+3)/4) + 4*w*h + sizeof(float)*16*2; // One long word aligned image + one depth buffer (with floats) + 2 matrices
                 // ... times the number of keys:
                 buf_size_required *= key_list.size(); // This becomes larger than strictly necessary, but let's keep it simple.
-                m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle  TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH  buf_size_required = %lu", buf_size_required );
             break;
             default:
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, unsupported image format %d.", (int)format );
@@ -268,7 +263,6 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         char *buf = (char*)msg + sizeof(tinia_msg_image_t);
         for (size_t i=0; i<key_list.size(); i++) {
             key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
-            m_logger_callback( m_logger_data, 2, package.c_str(), "jny IPCJobController::handle   key[%d] = %s", i, key.c_str() );
 
             if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
 #ifdef DEBUG
@@ -279,13 +273,6 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                     buf += 4*((3*w*h+3)/4);
                 }
                 else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
-#if 0
-                    // this branch is for picking out the matrices from GL
-                    buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned.
-                    buf += 16*sizeof(float) * 2;    // + two matrices
-#else
-                    // and this for using the ExposedModel
-
                     // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
                     // latter two into the buffer.
                     tinia::model::Viewer viewer;
@@ -297,7 +284,6 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                         float_buf[16+i] = viewer.projectionMatrix[i];
                     }
                     buf += 16*sizeof(float) * 2;    // ... + two matrices
-#endif
                 }
             } else {
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );
