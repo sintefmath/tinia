@@ -331,11 +331,12 @@ ipc_msg_client_send( char* errnobuf,
 }
 
 int
-ipc_msg_client_recv( char* errnobuf,
-                     size_t errnobuf_size,
-                     struct timespec* timeout,
-                     tinia_ipc_msg_client_t* client,
-                     tinia_ipc_msg_consumer_func_t consumer, void* consumer_data )
+ipc_msg_client_recv( char*                          errnobuf,
+                     size_t                         errnobuf_size,
+                     struct timespec*               timeout,
+                     tinia_ipc_msg_client_t*        client,
+                     tinia_ipc_msg_consumer_func_t  consumer,
+                     void*                          consumer_data )
 {
     static const char* who = "tinia.ipc.msg.client.recv";
     

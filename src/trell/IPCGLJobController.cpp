@@ -386,11 +386,11 @@ IPCGLJobController::getRenderEnvironment( GLsizei width, GLsizei height, GLsizei
 
 bool
 IPCGLJobController::onGetSnapshot( char*               buffer,
-                                 TrellPixelFormat    pixel_format,
-                                 const size_t        width,
-                                 const size_t        height,
-                                 const std::string&  session,
-                                 const std::string&  key )
+                                   TrellPixelFormat    pixel_format,
+                                   const size_t        width,
+                                   const size_t        height,
+                                   const std::string&  session,
+                                   const std::string&  key )
 {
     // bind context
     if( !m_context.bindContext() ) {
@@ -492,9 +492,26 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     glBindFramebuffer( GL_FRAMEBUFFER, env_copy->m_fbo );
     glPixelStorei( GL_PACK_ALIGNMENT, 1 );
     switch( pixel_format ) {
-    case TRELL_PIXEL_FORMAT_BGR8:
-        glReadPixels( 0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, buffer );
+    case TRELL_PIXEL_FORMAT_RGB:
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
         break;
+    case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
+    {
+        unsigned char *buffer_pos = (unsigned char *)buffer;
+        glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
+        buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
+        // NB! We read four bytes per pixel, then convert to three, meaning that the buffer must be large enough for four!!!
+        glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
+        // Depth encoded as 24 bit fixed point values.
+        for (size_t i=0; i<width*height; i++) {
+            float value = (float)( ((GLfloat *)buffer_pos)[i] );
+            for (size_t j=0; j<3; j++) {
+                (buffer_pos)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                value = 255.0*value - floor(value*255.0);
+            }
+        }
+        break;
+    }
     default:
         if( m_logger_callback != NULL ) {
             m_logger_callback( m_logger_data, 0, package.c_str(),

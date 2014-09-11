@@ -135,6 +135,10 @@ trell_check_and_copy_id( request_rec*r,
     return 0;
 }
 
+
+// The parameter 'key' is looked up in the URL, and if found, the value of the parameter is copied to 'dst'.
+// If not, 0 is returned. If the string is not 0-terminated or too long, 0 is also returned, otherwise 1 is returned.
+
 static
 int
 trell_hash_strncpy( request_rec* r, char* dst, apr_hash_t* args, const char* key, int max_length )
@@ -226,9 +230,11 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     dispatch_info->m_component = TRELL_COMPONENT_NONE;
     dispatch_info->m_request = TRELL_REQUEST_NONE;
     dispatch_info->m_mod_action = TRELL_MOD_ACTION_NONE;
+    dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_UNDEFINED;
     dispatch_info->m_jobid[0] = '\0';
     dispatch_info->m_sessionid[0] = '\0';
     dispatch_info->m_key[0] ='\0';
+    dispatch_info->m_viewer_key_list[0] ='\0';
     dispatch_info->m_timestamp[0] = '\0';
     dispatch_info->m_revision = 0;
     dispatch_info->m_base64 = 0;
@@ -307,7 +313,6 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 
     const char* request = APR_ARRAY_IDX( path_items, o, char*);
 
-
     // --- rpc.xml ---------------------------------------------------------
     if( apr_strnatcmp( request, "rpc.xml" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_RPC_XML;
@@ -353,6 +358,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot.png ----------------------------------------------------
     else if( strcmp( request, "snapshot.png" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
         dispatch_info->m_base64 = 0;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0)
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0)
@@ -366,6 +372,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     // --- snapshot.txt----------------------------------------------------
     else if( strcmp( request, "snapshot.txt" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
         dispatch_info->m_base64 = 1;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
@@ -373,6 +380,27 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed.",
                            r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_viewer_key_list, form, "viewer_key_list", TRELL_VIEWER_KEY_LIST_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list 2.", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+    }
+    // --- snapshot_bundle.txt----------------------------------------------------
+    else if( strcmp( request, "snapshot_bundle.txt" ) == 0 ) {
+        dispatch_info->m_request = TRELL_REQUEST_PNG;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH;
+        dispatch_info->m_base64 = 1;
+        if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
+                || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
+                || (trell_hash_atoi( r, component, request, &dispatch_info->m_height, form, "height", 1 ) == 0 ) )
+        {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed.", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_viewer_key_list, form, "viewer_key_list", TRELL_VIEWER_KEY_LIST_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list.", r->handler, request );
             return HTTP_BAD_REQUEST;
         }
     }

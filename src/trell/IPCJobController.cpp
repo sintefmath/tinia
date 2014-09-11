@@ -214,54 +214,102 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         break;
 
     case TRELL_MESSAGE_GET_SNAPSHOT:
-        if( 1 ) {
-            tinia_msg_get_snapshot_t* q = (tinia_msg_get_snapshot_t*)msg;
+    {
+        tinia_msg_get_snapshot_t* q = (tinia_msg_get_snapshot_t*)msg;
 
-            format  = q->pixel_format;
-            w       = q->width;
-            h       = q->height;
-            session = std::string( q->session_id );
-            key     = std::string( q->key );
-            
-            if( format != TRELL_PIXEL_FORMAT_BGR8 ) {
-                m_logger_callback( m_logger_data, 0, package.c_str(),
-                                   "Queried for snapshot, unsupported image format %d.", (int)format );
+        format  = q->pixel_format;
+        w       = q->width;
+        h       = q->height;
+        session = std::string( q->session_id );
+        key     = std::string( q->key );
 
+        std::string key_list_string = std::string( q->viewer_key_list );
+        std::vector<std::string> key_list;
+        boost::split( key_list, key_list_string, boost::is_any_of(",") );
+
+        size_t data_size=0, buf_size_required=0;
+        switch ( format ) {
+            case TRELL_PIXEL_FORMAT_RGB:
+                buf_size_required = data_size = 3*w*h;
+                data_size         *= key_list.size();
+                buf_size_required *= key_list.size();
+            break;
+            case TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH:
+                // We could have the size of each canvas associated with the keys we have, but this information is currently
+                // not available. This will only work for equally sized canvases then, and no problem will be checked for or detected if it
+                // is not the case!
+                data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two long word aligned images + 2 matrices
+                // ... times the number of keys:
+                data_size *= key_list.size();
+                buf_size_required = 4*((3*w*h+3)/4) + 4*w*h + sizeof(float)*16*2; // One long word aligned image + one depth buffer (with floats) + 2 matrices
+                // ... times the number of keys:
+                buf_size_required *= key_list.size(); // This becomes larger than strictly necessary, but let's keep it simple.
+            break;
+            default:
+                m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, unsupported image format %d.", (int)format );
                 tinia_msg_t* reply = (tinia_msg_t*)msg;
                 reply->type = TRELL_MESSAGE_ERROR;
-                return sizeof(tinia_msg_t);
-            }
-            else if( buf_size <= 3*w*h+sizeof(tinia_msg_image_t) ) {
-                m_logger_callback( m_logger_data, 0, package.c_str(),
-                                   "Queried for snapshot, buffer too small." );
+            return sizeof(tinia_msg_t);
+        }
 
-                tinia_msg_t* reply = (tinia_msg_t*)msg;
-                reply->type = TRELL_MESSAGE_ERROR;
-                return sizeof(tinia_msg_t);
-            }
-            else if( onGetSnapshot( (char*)msg + sizeof(tinia_msg_image_t),
-                                     format, w, h, session, key ) ) {
+        if ( buf_size <= buf_size_required + sizeof(tinia_msg_image_t) ) {
+            m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, buffer too small." );
+            tinia_msg_t* reply = (tinia_msg_t*)msg;
+            reply->type = TRELL_MESSAGE_ERROR;
+            return sizeof(tinia_msg_t);
+        }
+
+        // Looping through all keys and grabbing GL-content
+        char *buf = (char*)msg + sizeof(tinia_msg_image_t);
+        for (size_t i=0; i<key_list.size(); i++) {
+            key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
+
+            if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
 #ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
-                                   "Queried for snapshot, ok." );
+                                   "Queried for snapshot, ok. format = %d", format );
 #endif
-                tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
-                reply->msg.type     = TRELL_MESSAGE_IMAGE;
-                reply->width        = w;
-                reply->height       = h;
-                reply->pixel_format = format;
-                return sizeof(tinia_msg_image_t) + 3*w*h; // size of msg + payload
-            }
-            else {
-                m_logger_callback( m_logger_data, 0, package.c_str(),
-                                   "Queried for snapshot, rendering error." );
-
+                if ( format == TRELL_PIXEL_FORMAT_RGB ) {
+                    buf += 4*((3*w*h+3)/4);
+                }
+                else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
+                    // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
+                    // latter two into the buffer.
+                    tinia::model::Viewer viewer;
+                    m_model->getElementValue( key, viewer );
+                    buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned...
+                    float * float_buf = (float *)buf;
+                    for (size_t i=0; i<15; i++) {
+                        float_buf[   i] = viewer.modelviewMatrix[i];
+                        float_buf[16+i] = viewer.projectionMatrix[i];
+                    }
+                    buf += 16*sizeof(float) * 2;    // ... + two matrices
+                }
+            } else {
+                m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );
                 tinia_msg_t* reply = (tinia_msg_t*)msg;
                 reply->type = TRELL_MESSAGE_ERROR;
                 return sizeof(tinia_msg_t);
             }
+        } // end of loop over keys
+
+        // Actually more of an assertion:
+        if ( buf > (char*)msg + sizeof(tinia_msg_image_t) + data_size ) { // 'data_size' and not 'buf_size_required' correct here, post-compression of depth buffers.
+            m_logger_callback( m_logger_data, 0, package.c_str(), "Buffer overflow, looks like a serious bug." );
+            tinia_msg_t* reply = (tinia_msg_t*)msg;
+            reply->type = TRELL_MESSAGE_ERROR;
+            return sizeof(tinia_msg_t);
         }
-        break;
+
+        tinia_msg_image_t* reply = (tinia_msg_image_t*)msg;
+        reply->msg.type     = TRELL_MESSAGE_IMAGE;
+        reply->width        = w;
+        reply->height       = h;
+        reply->pixel_format = format;
+        m_logger_callback( m_logger_data, 2, package.c_str(), "data_size = %d", data_size );
+        return sizeof(tinia_msg_image_t) + data_size; // size of msg + payload
+    }
+    break;
 
     case TRELL_MESSAGE_GET_RENDERLIST:
     {

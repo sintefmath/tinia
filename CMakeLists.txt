@@ -238,8 +238,10 @@ IF( Tinia_BUILD_EXAMPLES )
     ADD_SUBDIRECTORY( "examples/fpsviewer" )
   ENDIF()
   ADD_SUBDIRECTORY( "examples/cuberenderer")
+  ADD_SUBDIRECTORY( "examples/auto_proxy_test")
   ADD_SUBDIRECTORY( "examples/changerestrictions")
   ADD_SUBDIRECTORY( "examples/clock_example")
+  ADD_SUBDIRECTORY( "examples/twocanvases") 
 ENDIF()
 
 

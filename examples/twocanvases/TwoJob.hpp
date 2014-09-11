@@ -23,14 +23,13 @@
 #include "tinia/model/StateListener.hpp"
 namespace tinia {
 namespace example {
-class TestJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
+class TwoJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
 {
 public:
-    TestJob();
-    ~TestJob();
+    TwoJob();
+    ~TwoJob();
     void stateElementModified(tinia::model::StateElement *stateElement);
     bool init();
-    bool initGL() { glEnable(GL_DEPTH_TEST); return true; }
     bool renderFrame(const std::string &session, const std::string &key,
                      unsigned int fbo, const size_t width, const size_t height);
 

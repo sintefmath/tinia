@@ -48,36 +48,6 @@ const module* tinia_get_module()
     return &trell_module;
 }
 
-static int
-tinia_check_and_copy( char* dst, const char* src, int maxlen, request_rec* r, const char* what )
-{
-    if( src == NULL ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is an empty string.",
-                       r->handler, what );
-        return -1;
-    }
-    int i;
-    for(i=0; (src[i]!='\0') && (i<maxlen); i++) {
-        if( !( apr_isalnum(src[i]) || (src[i]=='_' ) ) ) {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s contains illegal char '%c'.",
-                           r->handler, what, dst[i] );
-            dst[0] = '\0';
-            return -1;
-        }
-        dst[i] = src[i];
-    }
-    if( dst[i] != '\0' ) {
-        dst[0] = '\0';
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: %s is too long.",
-                       r->handler, what );
-        return -1;
-    }
-    return 0;
-}
-
-//trell_sconf_t* sconf = ap_get_module_config( f->r->server->module_config, &trell_module );
-
-
 
 /** Apache's entry-point to mod_trell. */
 static int trell_handler_body(request_rec *r)
@@ -110,22 +80,22 @@ static int trell_handler_body(request_rec *r)
     }
     dispatch_info->m_entry = apr_time_now();
 
-
 #if 0
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                   "mod_trell: decode_path_info returned c=%d, r=%d, j='%s', s='%s', r='%s' rev=%d, ac=%d, key=%s, w=%d, h=%d",
-                   dispatch_info.m_component,
-                   dispatch_info.m_request,
-                   dispatch_info.m_jobid,
-                   dispatch_info.m_sessionid,
-                   dispatch_info.m_requestname,
-                   dispatch_info.m_revision,
-                   dispatch_info.m_mod_action,
-                   dispatch_info.m_key,
-                   dispatch_info.m_width,
-                   dispatch_info.m_height );
+                   "mod_trell.c, trell_handler_body: trell_decode_path_info returned component=%d, request=%d, "
+                   "jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', width=%d, height=%d",
+                   dispatch_info->m_component,
+                   dispatch_info->m_request,
+                   dispatch_info->m_jobid,
+                   dispatch_info->m_sessionid,
+                   "na", // dispatch_info->m_requestname,
+                   dispatch_info->m_revision,
+                   dispatch_info->m_mod_action,
+                   dispatch_info->m_key,
+                   dispatch_info->m_viewer_key_list,
+                   dispatch_info->m_width,
+                   dispatch_info->m_height );
 #endif
-
     
     switch( dispatch_info->m_component ) {
 
@@ -181,7 +151,7 @@ static int trell_handler_body(request_rec *r)
             }
             int rv = trell_handle_get_snapshot( sconf, r, dispatch_info );
             dispatch_info->m_exit = apr_time_now();
-            
+
             ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r, 
                            "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
                            apr_time_as_msec(dispatch_info->m_exit-dispatch_info->m_entry ),

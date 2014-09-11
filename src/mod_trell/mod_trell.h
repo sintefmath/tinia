@@ -98,6 +98,7 @@ typedef struct mod_trell_dispatch_info
     enum TrellComponent  m_component;
     enum TrellRequest    m_request;
     enum TrellModAction  m_mod_action;
+    enum TrellPixelFormat m_pixel_format;
     int                  m_revision;
     /** Send response as a base64 encoded string. */
     int                  m_base64;
@@ -106,6 +107,7 @@ typedef struct mod_trell_dispatch_info
     char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
     char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
     char                 m_key[TRELL_KEYID_MAXLENGTH];
+    char                 m_viewer_key_list[TRELL_VIEWER_KEY_LIST_MAXLENGTH]; // comma-separated list
     char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
     char*                m_static_path;
     apr_time_t           m_entry;
@@ -275,7 +277,6 @@ int
 trell_handle_get_renderlist( trell_sconf_t*          sconf,
                              request_rec*            r,
                              trell_dispatch_info_t*  dispatch_info );
-
 
 
 int

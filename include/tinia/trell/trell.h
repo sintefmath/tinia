@@ -30,11 +30,16 @@ extern "C" {
 #define TRELL_REQUESTNAME_MAXLENGTH 128
 #define TRELL_KEYID_MAXLENGTH 64
 #define TRELL_TIMESTAMP_MAXLENGTH 128
+#define TRELL_VIEWER_KEY_LIST_MAXLENGTH (10*(TRELL_KEYID_MAXLENGTH))
 
 /** The pixel formats that is used in the trell system. */
 enum TrellPixelFormat {
-    /** 8-bit normalized bgr data. */
-    TRELL_PIXEL_FORMAT_BGR8
+    /** Trap for unset format */
+    TRELL_PIXEL_FORMAT_UNDEFINED,
+    /** 8-bit normalized rgb data. */
+    TRELL_PIXEL_FORMAT_RGB,
+    /** 8-bit normalized rgb data + 24-bit fixed point depth. */
+    TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH
 };
 
 /** States that a MessageBox/Master/Job/InteractiveJob can be in */
@@ -110,6 +115,7 @@ typedef struct tinia_msg_heartbeat
 
 
 /** Message struct for TRELL_MESSAGE_HEARTBEAT. */
+// Also for TRELL_MESSAGE_GET_SNAPSHOT
 typedef struct {
     tinia_msg_t             msg;
     enum TrellPixelFormat   pixel_format;
@@ -117,6 +123,7 @@ typedef struct {
     unsigned int            height;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
+    char                    viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH + 1 ];
 } tinia_msg_get_snapshot_t;
 
 /** Message struct for TRELL_MESSAGE_GET_SCRIPTS. */

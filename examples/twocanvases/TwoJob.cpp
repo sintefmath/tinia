@@ -31,60 +31,67 @@
 #include <tinia/renderlist/SetPixelState.hpp>
 #include <tinia/renderlist/SetRasterState.hpp>
 #include "utils.hpp"
-#include "CubeJob.hpp"
+#include "TwoJob.hpp"
 #include "tinia/model/GUILayout.hpp"
 #include <iostream>
 #include "tinia/model/File.hpp"
 
 namespace tinia {
 namespace example {
-CubeJob::CubeJob()
+TwoJob::TwoJob()
 {
 }
 
-bool CubeJob::init()
+bool TwoJob::init()
 {
     tinia::model::Viewer viewer;
     m_model->addElement("viewer", viewer);
+    m_model->addElement("viewer2", tinia::model::Viewer());
+    
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
-    // To use the autoProxy mode, enable this line
-    // m_model->addElement<bool>( "ap_useAutoProxy", true );
+#define USE_AUTO_P
 
-#if 0
+#ifdef USE_AUTO_P
+    m_model->addElement<bool>( "ap_useAutoProxy", true );
+
     // To get a checkbox for turning on/off the autoProxy feature, choose this branch.
     m_model->addAnnotation("ap_useAutoProxy", "Automatically generated proxy geometry");
+#endif
 
     tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
     rootLayout->addChild( new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox") );
+    rootLayout->addChild( new tinia::model::gui::Canvas("viewer2", "renderlist", "boundingbox") );
 
+#ifdef USE_AUTO_P
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(1, 1);
     mainGrid->setChild(0, 0, new tinia::model::gui::CheckBox("ap_useAutoProxy"));
     rootLayout->addChild(mainGrid);
+#endif
 
     m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
-#else
-    // This dead simple version only contains the canvas itself.
-    m_model->setGUILayout(new tinia::model::gui::Canvas("viewer", "renderlist", "boundingbox"),
-                          tinia::model::gui::DESKTOP);
-#endif
 
     return true;
 }
 
-CubeJob::~CubeJob()
+TwoJob::~TwoJob()
 {
 }
 
-void CubeJob::stateElementModified(tinia::model::StateElement *stateElement)
+void TwoJob::stateElementModified(tinia::model::StateElement *stateElement)
 {
 }
 
-bool CubeJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
+bool TwoJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0, 0, 0, 1);
+    if  (key =="viewer") {
+        glClearColor(0.2, 0, 0, 1);
+    } else {
+        glClearColor(0, 0.2, 0, 1);
+    }
+    
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, width, height);
@@ -143,13 +150,13 @@ bool CubeJob::renderFrame(const std::string &session, const std::string &key, un
     glVertex3f( -0.5, -0.5,  0.5 );
     glVertex3f( -0.5, -0.5, -0.5 );
     glEnd();
-    CHECK_GL;
+    // CHECK_GL;
 
     return true;
 }
 
 const tinia::renderlist::DataBase*
-CubeJob::getRenderList( const std::string& session, const std::string& key )
+TwoJob::getRenderList( const std::string& session, const std::string& key )
 {
     return &m_renderlist_db;
 }
