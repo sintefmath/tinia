@@ -70,6 +70,29 @@ dojo.declare("gui.ProxyRenderer", null, {
     },
 
 
+    _setNumOfSplats: function(splats) {
+        var splats = this.exposedModel.getElementValue("ap_splats");
+        if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
+            this._splats_x = splats;
+            this._splats_y = splats;
+            // We must re-initialize the vertex buffer!
+            this._splatVertexBuffer = this.gl.createBuffer();
+            this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
+            this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
+            for (var i=0; i<this._splats_y; i++) {
+                var v = (i+0.5)/this._splats_y;
+                var ycoo = -1.0*(1.0-v) + 1.0*v;
+                for (var j=0; j<this._splats_x; j++) {
+                    var u = (j+0.5)/this._splats_x;
+                    this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                    this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = ycoo;
+                }
+            }
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
+        }
+    },
+
+
     constructor: function(glContext, exposedModel, viewerKey) {
 
 
@@ -143,12 +166,16 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
 
+        this._shaderSourceLoaded = false;
         this._loadShaders();
 
         // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
         // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
         // these.
-        if (this._debugging) {
+        // 140911: Allowing these listeners even without debugging mode being enabled, so that applications may set their own values.
+        //         Not adding a test for construction-time setting of all of these, just a subset.
+        if (true) { // if (this._debugging) {
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener("ap_reloadShader", dojo.hitch(this, function(event) {
                 if(this.exposedModel.getElementValue("ap_reloadShader")) {
                     this._loadShaders();
@@ -156,71 +183,116 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.exposedModel.updateElement("ap_reloadShader", false);
                 }
             }));
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_alwaysShowMostRecent") ) {
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_alwaysShowMostRecent") ? 1 : 0;
+            }
             this.exposedModel.addLocalListener( "ap_alwaysShowMostRecent", dojo.hitch(this, function(event) {
                 this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_alwaysShowMostRecent") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_overlap") ) {
+                this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_overlap") / 100.0;
+            }
             this.exposedModel.addLocalListener( "ap_overlap", dojo.hitch(this, function(event) {
                 this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_splats") ) {
+                this._setNumOfSplats( this.exposedModel.getElementValue("ap_splats") );
+            }
             this.exposedModel.addLocalListener( "ap_splats", dojo.hitch(this, function(event) {
-                var splats = this.exposedModel.getElementValue("ap_splats");
-                if ( (this._splats_x!=splats) || (this._splats_y!=splats) ) {
-                    this._splats_x = splats;
-                    this._splats_y = splats;
-                    // We must re-initialize the vertex buffer!
-                    this._splatVertexBuffer = this.gl.createBuffer();
-                    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._splatVertexBuffer);
-                    this._splatCoordinates = new Float32Array( this._splats_x*this._splats_y*2 );
-                    for (var i=0; i<this._splats_y; i++) {
-                        for (var j=0; j<this._splats_x; j++) {
-                            var u = (j+0.5)/this._splats_x;
-                            var v = (i+0.5)/this._splats_y;
-                            this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
-                            this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
-                        }
-                    }
-                    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this._splatCoordinates), this.gl.STATIC_DRAW);
-                }
+                this._setNumOfSplats( this.exposedModel.getElementValue("ap_splats") );
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_debugSplatCol") ) {
+                this._debugSplatCol = this.exposedModel.getElementValue("ap_debugSplatCol") ? 1 : 0;
+                console.log("construction: ap_debugSplatCol = " + this._debugSplatCol);
+            }
             this.exposedModel.addLocalListener( "ap_debugSplatCol", dojo.hitch(this, function(event) {
                 this._debugSplatCol = this.exposedModel.getElementValue("ap_debugSplatCol") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener( "ap_decayMode", dojo.hitch(this, function(event) {
                 this._decayMode = this.exposedModel.getElementValue("ap_decayMode") ? 1: 0;
             }) );
+
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener( "ap_roundSplats", dojo.hitch(this, function(event) {
                 this._roundSplats = this.exposedModel.getElementValue("ap_roundSplats") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_screenSpaceSized") ) {
+                this._screenSpaceSized = this.exposedModel.getElementValue("ap_screenSpaceSized") ? 1 : 0;
+            }
             this.exposedModel.addLocalListener( "ap_screenSpaceSized", dojo.hitch(this, function(event) {
                 this._screenSpaceSized = this.exposedModel.getElementValue("ap_screenSpaceSized") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener( "ap_useISTC", dojo.hitch(this, function(event) {
                 this._useISTC = this.exposedModel.getElementValue("ap_useISTC") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_splatOutline") ) {
+                this._splatOutline = this.exposedModel.getElementValue("ap_splatOutline") ? 1 : 0;
+                console.log("ap_splatOutline=" + this._splatOutline);
+            }
             this.exposedModel.addLocalListener( "ap_splatOutline", dojo.hitch(this, function(event) {
                 this._splatOutline = this.exposedModel.getElementValue("ap_splatOutline") ? 1 : 0;
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_useFragExt") ) {
+                this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
+                //console.log("xxxxxxxxxxxxxxxx compiling shaders because initial ap_useFragExt exists...");
+                this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            }
             this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
-                this._compileShaders();
+                this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
             }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_autoProxyAlgo") ) {
+                console.log("new algo: " + this.exposedModel.getElementValue("ap_autoProxyAlgo") );
+                this._initProxyCoverage( this.exposedModel.getElementValue("ap_autoProxyAlgo"), this.gl );
+            }
             this.exposedModel.addLocalListener( "ap_autoProxyAlgo", dojo.hitch(this, function(event) {
                 //this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 //this._compileShaders();
                 console.log("new algo: " + this.exposedModel.getElementValue("ap_autoProxyAlgo") );
                 this._initProxyCoverage( this.exposedModel.getElementValue("ap_autoProxyAlgo"), this.gl );
             }) );
+
             // Here we should have a listener for backgroundCol, but does Tinia support the type "vec3"?
+            //-------------------------------------------------------
         }
 
         // Listeners that are not for debugging only. Currently we use this only to clear the buffer in the event
         // that autoProxy has been enabled, but was then disabled. It could be that this is not needed if the clear-colours
         // used are set otherwise, for instance to the same value as the caller (Canvas-object) is using?!
+
+        //-------------------------------------------------------
+        if ( this.exposedModel.hasKey("ap_autoProxyDebugging") ) {
+            this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
+            console.log("xxxxxxxxxxxxxxxx Recompiling shaders with/without DEBUG set...");
+            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+        }
         this.exposedModel.addLocalListener( "ap_autoProxyDebugging", dojo.hitch(this, function(event) {
             this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
-            console.log("Recompiling shaders without DEBUG set...");
-            this._compileShaders();
+            console.log("Recompiling shaders with/without DEBUG set...");
+            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
         }) );
+
+        //-------------------------------------------------------
         this.exposedModel.addLocalListener( "ap_useAutoProxy", dojo.hitch(this, function(event) {
             var tmp = this.exposedModel.getElementValue("ap_useAutoProxy");
             if (!tmp) {
@@ -265,7 +337,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
 
     _compileShaders: function() {
-        console.log("Shader source should now have been read from files, compiling and linking program...");
+        console.log("******************** Shader source should now have been read from files, compiling and linking program...");
 
         var splat_vs_src = this._splat_vs_src;
         var splat_fs_src = this._splat_fs_src;
@@ -307,6 +379,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
             alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
+            console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
             return null;
         }
 
