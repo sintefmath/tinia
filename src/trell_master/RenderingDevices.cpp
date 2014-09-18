@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
 #include <dirent.h>
@@ -37,7 +38,7 @@ static const std::string package = "RenderingDevices";
 
 RenderingDevices::RenderingDevices(void (*logger)( void* data, int level, const char* who, const char* message, ... ),
                                    void* logger_data )
-    : m_display_name( ":0.0" ),
+    : m_display_name( ":6.0" ),
       m_logger( logger ),
       m_logger_data( logger_data ),
       m_hasRenderingInformation(false)
@@ -90,6 +91,9 @@ RenderingDevices::xml()
             if( entry->d_name[0] != 'X' ) {
                 continue;
             }
+	    if ( std::string(entry->d_name ).substr(1) != std::string("24")) {
+		continue;
+}
             std::string display_id = ":" + std::string( entry->d_name ).substr(1);
     
     
