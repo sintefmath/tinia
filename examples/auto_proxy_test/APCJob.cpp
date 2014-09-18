@@ -68,7 +68,7 @@ bool APCJob::init()
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
         m_model->addElement<bool>( "ap_useAutoProxy", true );          // This turns on the new autoProxy
-        m_model->addElement<bool>( "ap_autoProxyDebugging", true );    // Should not be modified through the GUI. Not defining equals "false". (Is it ok to toggle this? Not sure. Maybe.)
+        m_model->addElement<bool>( "ap_autoProxyDebugging", true );
         m_model->addAnnotation("ap_autoProxyDebugging", "Debug mode");
         int algos=0;
         while ( allowed_auto_proxy_algos[algos] != NULL ) {
@@ -88,7 +88,7 @@ bool APCJob::init()
         m_model->addAnnotation("ap_overlap", "Overlap factor)");
         m_model->addElement<bool>( "ap_alwaysShowMostRecent", true );
         m_model->addAnnotation("ap_alwaysShowMostRecent", "Most recent model in front");
-        m_model->addConstrainedElement<int>("ap_splats", 64, 2, 512); // NB! The initial value will be overridden by the one in Tinia if different!
+        m_model->addConstrainedElement<int>("ap_splats", 64, 2, 512);
         m_model->addAnnotation("ap_splats", "Number of splats)");
         m_model->addElement<bool>( "ap_resetAllModels", false );
         m_model->addAnnotation("ap_resetAllModels", "Remove all models, update now");
