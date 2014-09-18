@@ -50,13 +50,45 @@ bool TwoJob::init()
     
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
-#define USE_AUTO_P
+#define USE_AUTO_P // Enable this to turn this into a "dual canvas autoProxy example" and not only a "dual canvas" example!
 
 #ifdef USE_AUTO_P
     m_model->addElement<bool>( "ap_useAutoProxy", true );
-
-    // To get a checkbox for turning on/off the autoProxy feature, choose this branch.
     m_model->addAnnotation("ap_useAutoProxy", "Automatically generated proxy geometry");
+
+    // The rest of these lines are not needed, default values will be used if they are not explicitly set
+    // Some of these (those setting uniforms and in other ways affecting the shaders) will need the debugging to be turned on for having any effect.
+    // Note that turning debugging on may also have other side effects.
+
+    m_model->addElement<bool>( "ap_autoProxyDebugging", true ); // Turning this on for demonstration of the shader modifications "ap_debugSplatCol" enabled below.
+    m_model->addAnnotation("ap_autoProxyDebugging", "Debug mode");
+//    const char *allowed_auto_proxy_algos[] = { "0) AngleCoverage-5",
+//                                               "1) AngleCoverage-2",
+//                                               "2) OnlyMostRecent",
+//                                               "3) ReplaceOldestWhenDifferent-5",
+//                                               "4) ReplaceOldest-5",
+//                                               NULL }; // NB! This list must match the one in ProxyRenderer.js, exactly! (I think...)
+//    int algos=0;
+//    while ( allowed_auto_proxy_algos[algos] != NULL ) {
+//        algos++;
+//    }
+//    m_model->addElementWithRestriction<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[2], &allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0]+algos );
+//    m_model->addAnnotation("ap_autoProxyAlgo", "Proxy model replacement algo");
+    m_model->addElement<bool>( "ap_debugSplatCol", true );
+    m_model->addAnnotation("ap_debugSplatCol", "Index coloring (r, g, b, y, c, m)");
+//    m_model->addElement<bool>( "ap_screenSpaceSized", true );
+//    m_model->addAnnotation("ap_screenSpaceSized", "Screen-space-sized splats");
+//    m_model->addConstrainedElement<int>("ap_overlap", 200, 1, 300);
+//    m_model->addAnnotation("ap_overlap", "Overlap factor)");
+//    m_model->addElement<bool>( "ap_alwaysShowMostRecent", true );
+//    m_model->addAnnotation("ap_alwaysShowMostRecent", "Most recent model in front");
+    m_model->addConstrainedElement<int>("ap_splats", 15, 2, 512);
+    m_model->addAnnotation("ap_splats", "Number of splats)");
+//    m_model->addElement<bool>( "ap_splatOutline", true );
+//    m_model->addAnnotation("ap_splatOutline", "Square splat outline");
+//    m_model->addElement<bool>( "ap_useFragExt", true );
+//    m_model->addAnnotation("ap_useFragExt", "Use FragDepthExt if available");
+
 #endif
 
     tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
@@ -64,8 +96,11 @@ bool TwoJob::init()
     rootLayout->addChild( new tinia::model::gui::Canvas("viewer2", "renderlist", "boundingbox") );
 
 #ifdef USE_AUTO_P
-    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(1, 1);
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(2, 3);
     mainGrid->setChild(0, 0, new tinia::model::gui::CheckBox("ap_useAutoProxy"));
+    mainGrid->setChild(1, 0, new tinia::model::gui::HorizontalSlider("ap_splats"));
+    mainGrid->setChild(1, 1, new tinia::model::gui::Label("ap_splats", false));
+    mainGrid->setChild(1, 2, new tinia::model::gui::Label("ap_splats", true));
     rootLayout->addChild(mainGrid);
 #endif
 
