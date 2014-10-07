@@ -510,7 +510,27 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                 value = 255.0*value - floor(value*255.0);
             }
         }
-        break;
+#if 0
+        static int cntr=0;
+        {
+            char fname[1000];
+            sprintf(fname, "/tmp/rgb_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+            fwrite(buffer_pos - 4*((width*height*3 + 3)/4), 1, 3*width*height, fp);
+            fclose(fp);
+        }
+        {
+            char fname[1000];
+            sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+            fwrite(buffer_pos, 1, 3*width*height, fp);
+            fclose(fp);
+        }
+        cntr++;
+#endif
+       break;
     }
     default:
         if( m_logger_callback != NULL ) {
