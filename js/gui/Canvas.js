@@ -201,6 +201,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     load: dojo.hitch(this, function (response, ioArgs) {
 //                        console.log("/model/updateParsed: response = " + response);
                         var response_obj = eval( '(' + response + ')' );
+//                        console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
+//                        console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                         this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                     })
                 });
@@ -221,6 +223,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
 //                console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
+//                console.log("/model/updateSendPartialComplete: response[" + this._key + "].view = " + response_obj[this._key].view);
+//                console.log("/model/updateSendPartialComplete: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                 }

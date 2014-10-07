@@ -377,6 +377,17 @@ static int trell_pass_reply_png_bundle( void*          data,
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 
+#if 0
+        // To inspect the resulting package, see the apache error log
+        struct apr_bucket *b;
+        for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
+            const char *buf;
+            size_t bytes;
+            apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "bucket content (%lu bytes): '%s'", bytes, buf);
+        }
+#endif
+
         APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_eos_create( bb->bucket_alloc ) );
         apr_status_t arv = ap_pass_brigade( encoder_state->r->output_filters, bb );
 

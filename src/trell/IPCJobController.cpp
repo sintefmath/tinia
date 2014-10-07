@@ -279,7 +279,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                     m_model->getElementValue( key, viewer );
                     buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned...
                     float * float_buf = (float *)buf;
-                    for (size_t i=0; i<15; i++) {
+                    for (size_t i=0; i<16; i++) {
                         float_buf[   i] = viewer.modelviewMatrix[i];
                         float_buf[16+i] = viewer.projectionMatrix[i];
                     }

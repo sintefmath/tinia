@@ -563,7 +563,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                     this.gl.drawArrays(this.gl.POINTS, 0, this._splats_x*this._splats_y);
                 }
             }
-            // Currently, the "most recent model" looks awful if we use it without an offset to get it in front, and it it looks awful with offset, *if* we
+            // Currently, the "most recent model" looks awful if we use it without an offset to get it in front, and it looks awful with offset, *if* we
             // don't have the FragDepthExtension, so in this latter case, we disable it altogether.
             if ( (this._alwaysShowMostRecent) ) { // && (this._useFragDepthAndAvailable) ) {
                 if (this._proxyModelCoverage.mostRecentModel.state==2) {
@@ -582,6 +582,8 @@ dojo.declare("gui.ProxyRenderer", null, {
                         mat4.multiply( A, this._proxyModelCoverage.mostRecentModel.to_world, B );
                         mat4.multiply( B, this._proxyModelCoverage.mostRecentModel.projection_inverse, A );
                         this.gl.uniformMatrix4fv( this.gl.getUniformLocation(this._splatProgram, "projUnproj"), false, A );
+                    } else {
+                        console.log("Huh?! Should not happen...");
                     }
                     if (this.gl.getUniformLocation(this._splatProgram, "camDir")) {
                         var A = mat4.create();
