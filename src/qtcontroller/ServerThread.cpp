@@ -62,6 +62,7 @@ protected:
 };
 
 
+// @@@ next: make this work for both png and jpg
 class SnapshotAsTextFetcher : public QRunnable
 {
 public:
@@ -71,13 +72,15 @@ public:
                                     const std::string &proper_key_to_use,
                                     tinia::jobcontroller::Job* job,
                                     tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
-                                    const bool getRBGsnapshot)
+                                    const bool getRBGsnapshot,
+                                    const bool pngMode ) // Could have used TrellRequest, but then we would have to drag in mod_trell.h...
         : m_reply( reply ),
           m_request( request ),
           m_job( NULL ),
           m_gl_grabber( gl_grabber ),
           m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
-          m_getRGBsnapshot( getRBGsnapshot )
+          m_getRGBsnapshot( getRBGsnapshot ),
+          m_pngMode( pngMode )
     {
         using namespace tinia::qtcontroller::impl;
         
@@ -137,6 +140,7 @@ protected:
     unsigned int                                    m_height;
     std::string                                     m_key;
     bool                                            m_getRGBsnapshot;
+    bool                                            m_pngMode;
 };
 
 
@@ -239,14 +243,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */  );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\"";
         if (with_depth) {
             os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */  );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\", \"view\": \"";
@@ -277,6 +281,40 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 }
 
 
+void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
+                                      tinia::jobcontroller::Job* job,
+                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber )
+{
+    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
+    std::string key = arguments.get<2>();
+    std::string viewer_key_list = arguments.get<3>();
+
+    os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
+
+    QString viewer_keys(viewer_key_list.c_str());
+    QStringList vk_list = viewer_keys.split(',');
+
+    for (int i=0; i<vk_list.size(); i++) {
+        QString k = vk_list[i];
+
+        // Now building the JSON entry for this viewer/key
+        os << k << ": { \"rgb\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */  );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
+        }
+        os << "\"";
+        os << " }";
+        if ( i < vk_list.size() - 1 ) {
+            os << ", ";
+        }
+    }
+
+    os << "}";
+}
+
+
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
                                    const QString& request)
 {
@@ -284,6 +322,11 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
             updateState(os, request);
             getSnapshotTxt( os, request, m_job, m_grabber, false );
+            return true;
+        }
+        else if ( file == "/jpg_snapshot.txt" ) {
+            updateState(os, request);
+            getJpgSnapshotTxt( os, request, m_job, m_grabber );
             return true;
         }
         else if ( file == "/snapshot_bundle.txt" ) { // Will be used when in autoProxy-mode
@@ -334,7 +377,8 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    QString fullPath = ":javascript/" + uri;
+    //QString fullPath = ":javascript/" + uri;
+    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

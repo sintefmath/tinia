@@ -38,6 +38,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         if (!params.snapshotURL) {
             params.snapshotURL = "snapshot.txt";
+            // @@@
+            params.snapshotURL = "jpg_snapshot.txt";
         }
         this._showRenderList = params.showRenderList;
         this._urlHandler = params.urlHandler;
