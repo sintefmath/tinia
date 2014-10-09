@@ -27,6 +27,8 @@ dojo.require("gui.TrackBallViewer");
 dojo.require("dojo.touch");
 dojo.require("gui.ProxyRenderer");
 
+
+
 dojo.declare("gui.Canvas", [dijit._Widget], {
     constructor: function (params) {
 
@@ -76,6 +78,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
     },
 
+
     resize: function (w, h) {
         this._width = w;
         this._height = h;
@@ -83,26 +86,23 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._setAttrWidthHeight(this._img);
         this._setAttrWidthHeight(this._canvas);
         this._placeImage();
-
         this._urlHandler.updateParams({
             "width": w,
             "height": h
         });
-
         var viewer = this._modelLib.getValue(this._key);
         viewer.updateElement("width", w);
         viewer.updateElement("height", h);
         this._modelLib.updateElement(this._key, viewer);
     },
 
+
     buildRendering: function () {
         this.domNode = dojo.create("div");
         dojo.style(this.domNode, "background", "black");
         dojo.style(this.domNode, "margin", "10px");
         dojo.style(this.domNode, "padding", "0px");
-
         dojo.addClass(this.domNode, "unselectable");
-
 
         this._setWidthHeight(this.domNode);
         this._canvas = dojo.create("canvas");
@@ -120,7 +120,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this.domNode.appendChild(this._canvas);
         }
 
-
         this._img = dojo.create("img");
         dojo.attr(this._img, "src", "image/canvas_backdrop.jpg");
         dojo.attr(this._img, "alt", "Image from server");
@@ -136,13 +135,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         this.domNode.appendChild(this._img);
 
-
         // Create loading-div
         this._loadingDiv = dojo.create("div");
         dojo.style(this._loadingDiv, "position", "relative");
         dojo.style(this._loadingDiv, "float", "none");
         dojo.style(this._loadingDiv, "z-index", "3");
-
 
         dojo.style(this._loadingDiv, "padding", 0);
         dojo.style(this._loadingDiv, "margin", 0);
@@ -163,15 +160,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._setWidthHeight(this._loadingDiv);
         this.domNode.appendChild(this._loadingDiv);
 
-
         this._placeImage();
         this._update();
-
 
         this._modelLib.addLocalListener(this._renderlistKey, function (key, value) {
             this._getRenderList();
         }, this);
-
 
         // We always want to update after the first parsing
         this._shouldUpdate = true;
@@ -188,7 +182,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._urlHandler.setURL(this._snapshotURL);
             }
         }) );
-
 
         // This gets called when the SERVER has initiated a change in the model.
         // This could for instance be a simulation and the server updates the current
@@ -242,12 +235,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._showCorrect();
         }));
 
-
-
         this.resize(this._width, this._height);
         this._updateMatrices();
     },
-
 
 
     startup: function () {
@@ -282,12 +272,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             return false;
         });
 
-
         // Resizing.
         dojo.connect(document, "onmousedown", dojo.hitch(this, this._mouseDownResize));
         dojo.connect(document, "onmouseup", dojo.hitch(this, this._mouseUpResize));
         dojo.connect(document, "onmousemove", dojo.hitch(this, this._mouseMoveResize));
-
 
         // Keyboard press
         this.domNode.setAttribute("tabindex", 0);
@@ -297,6 +285,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this.on("keydown", dojo.hitch(this, this._keyPress));
 
     },
+
 
     _touchstart: function (event) {
         this._active = true;
@@ -322,6 +311,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._showCorrect();
         event.preventDefault();
     },
+
 
     _touchend: function (event) {
         this._active = false;
@@ -352,6 +342,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
     },
 
+
     _touchmove: function (event) {
         this._touch_prev = event;
         for(var i = 0; i < event.touches.length; ++i) {
@@ -375,6 +366,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
     },
 
+
     _keyPress: function (event) {
         if (event.key === undefined) {
             event.key = event.keyCode ? event.keyCode : event.charCode;
@@ -387,10 +379,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
     },
 
+
     _placeImage: function () {
         this._img.style.top = (-this._height) + "px";
         this._loadingDiv.style.top = (-2 * this._height) + "px";
     },
+
 
     _setImageFromText: function (response_rgb, response_depth, response_view, response_proj) {
         if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) { // @@@ What is this about?
@@ -404,31 +398,27 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         return response_rgb;
     },
 
+
     _touchGestureBegin: function (event) {
-
         if (event && event.scale) {
-
             this._trackball.zoomFactorBegin(event.scale);
-
         }
         event.preventDefault();
     },
 
+
     _touchGesture: function (event) {
-
         if (event && event.scale && event.scale != 1) {
-
             this._trackball.zoomFactor(event.scale);
-
             this._updateMatrices();
             this._showCorrect();
         }
-
         event.preventDefault();
     },
+
+
     _mousedown: function (event) {
         this._active = true;
-
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
         event.relativeX = x;
@@ -440,13 +430,18 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
 
     },
+
+
     _placementX: function () {
         return dojo.position(this._canvas).x;
     },
 
+
     _placementY: function () {
         return dojo.position(this._canvas).y;
     },
+
+
     _mouseup: function (event) {
         this._active = false;
         var x = event.pageX - this._placementX();
@@ -460,6 +455,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
     },
 
+
     _mousemove: function (event) {
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
@@ -468,10 +464,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseMoveEvent(event);
         }
-
         event.preventDefault();
-
     },
+
 
     _updateMatrices: function () {
         return;
@@ -480,25 +475,26 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._modelLib.updateElement(this._key, viewer);
     },
 
+
     _setAttrWidthHeight: function (node) {
         dojo.attr(node, "width", this._width + "px");
         dojo.attr(node, "height", this._height + "px");
     },
+
 
     _setWidthHeight: function (node) {
         dojo.style(node, "width", this._width + "px");
         dojo.style(node, "height", this._height + "px");
     },
 
-    _startGL: function () {
 
+    _startGL: function () {
         if (window.WebGLRenderingContext) {
             // browser supports WebGL
             // console.log("The browser should support WebGL.");
         } else {
             console.log("The browser doesn't seem to support WebGL. Have you turned on necessary flags? Recent enough version? Chrome and Firefox should work.");
         }
-
         this._gl = WebGLUtils.setupWebGL(this._canvas);
         if (this._gl) {
             this._proxyRenderer = new gui.ProxyRenderer(this._gl, this._modelLib, this._key);
@@ -517,7 +513,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (this._render_list_store === undefined) {
             return;
         }
-
         dojo.xhrGet(
         {
             url: this._renderListURL + "?key=" + this._key + "&timestamp=" + this._render_list_store.revision(),
@@ -538,7 +533,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 			window.requestAnimFrame(dojo.hitch(this, function () {
 				this._render();
 			}));
-
         var viewer = this._modelLib.getElementValue(this._key);
         var view_coord_sys = {
             m_projection: viewer.getElementValue("projection"),
@@ -546,13 +540,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             m_to_world: mat4.inverse(mat4.create(viewer.getElementValue("modelview"))),
             m_from_world: viewer.getElementValue("modelview")
         }
-
         if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             this._proxyRenderer.render(view_coord_sys);
         } else {
             this._render_list_renderer.render(this._render_list_store, view_coord_sys);
         }
-
     },
 
 
@@ -561,11 +553,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (this._updatingBeforeLoad || this._localMode || this._active) {
             return;
         }
-
         console.log("trying to load image");
         this._loadImageAgain = 0;
         this._loadImageStage2();
     },
+
 
     _loadImageStage2: function () {
         this._DEBUG_imageLoadStart = (new Date()).getTime();
@@ -575,58 +567,53 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // dojo.attr(this._img, "src", this._makeImgURL());
     },
 
+
     _loadComplete: function () {
         console.log("Time taken to load image: ", (new Date()).getTime() - this._DEBUG_imageLoadStart);
         this._imageLoading = false;
-
         if (this._loadImageAgain--) {
             this._loadImageStage2();
-        } else {
         }
-
         this._showCorrect();
     },
 
+
     _update: function () {
         //if(this._localMode) return;
-
         this._showCorrect();
         this._loadImage();
     },
 
-    _showCorrect: function () {
 
+    _showCorrect: function () {
         if (this._localMode || (this._showRenderList && this._active) ||
             (this._imageLoading && this._mouseOver)) {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
-        }
-        else {
+        } else {
             dojo.style(this._img, "z-index", "2");
             this._img.style.zIndex = "2";
         }
-
         if (this._loadingDiv) {
             if (this._imageLoading && !this._active) {
                 this._loadingDiv.style.zIndex = "3";
                 //  dojo.style(this._loadingDiv, "z-index", "3");
-            }
-            else {
+            } else {
                 this._loadingDiv.style.zIndex = "0";
                 //dojo.style(this._loadingDiv, "z-index", "0");
             }
         }
     },
 
+
     _mouseMoveResize: function (event) {
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
-
         if (this._isResizing) {
             this.resize(x, y);
         }
-
     },
+
 
     _mouseDownResize: function (event) {
         if (event.button != 0) return;
@@ -636,6 +623,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._isResizing = true;
         }
     },
+
 
     _mouseUpResize: function (event) {
         this._isResizing = false;
