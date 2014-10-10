@@ -62,7 +62,6 @@ protected:
 };
 
 
-// @@@ next: make this work for both png and jpg
 class SnapshotAsTextFetcher : public QRunnable
 {
 public:
@@ -73,14 +72,16 @@ public:
                                     tinia::jobcontroller::Job* job,
                                     tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
                                     const bool getRBGsnapshot,
-                                    const bool pngMode ) // Could have used TrellRequest, but then we would have to drag in mod_trell.h...
+                                    const bool pngMode, // Could have used TrellRequest, but then we would have to drag in mod_trell.h...
+                                    const int jpg_quality )
         : m_reply( reply ),
           m_request( request ),
           m_job( NULL ),
           m_gl_grabber( gl_grabber ),
           m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
           m_getRGBsnapshot( getRBGsnapshot ),
-          m_pngMode( pngMode )
+          m_pngMode( pngMode ),
+          m_jpg_quality( jpg_quality )
     {
         using namespace tinia::qtcontroller::impl;
         
@@ -112,11 +113,13 @@ public:
                                       0, m_height);
         img = img.transformed(flipTransformation);
         QBuffer qBuffer;
-        img.save(&qBuffer, "png");
-        //m_gl_grabber_locker.unlock();
+        if (m_pngMode) {
+            img.save(&qBuffer, "png");
+        } else {
+            img.save(&qBuffer, "jpg", m_jpg_quality);
+        }
         
-        QString str( QByteArray( qBuffer.data(),
-                                 int(qBuffer.size()) ).toBase64() );
+        QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
         m_reply << str;
     }
     
@@ -141,6 +144,7 @@ protected:
     std::string                                     m_key;
     bool                                            m_getRGBsnapshot;
     bool                                            m_pngMode;
+    int                                             m_jpg_quality;
 };
 
 
@@ -243,14 +247,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */  );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */, 0 );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\"";
         if (with_depth) {
             os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */  );
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0  );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\", \"view\": \"";
@@ -301,7 +305,11 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */  );
+            int q = 5; // -1 is Qt QImage default quality setting, 5 to make sure we see the JPGs for debugging and testing purposes.
+            if ( m_job->getExposedModel()->hasElement("ap_jpgQuality")) {
+                m_job->getExposedModel()->getElementValue("ap_jpgQuality", q);
+            }
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */, q );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\"";
@@ -377,8 +385,7 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    //QString fullPath = ":javascript/" + uri;
-    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_140409/tinia/js/" + uri;
+    QString fullPath = ":javascript/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

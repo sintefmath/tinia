@@ -68,8 +68,10 @@ bool JPCJob::init()
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
         m_model->addElement<bool>( "ap_useJpgProxy", true );            // This turns on the new "proxy mode", for which speedier jpg-snapshots are used
+        m_model->addConstrainedElement<int>("ap_jpgQuality", 5, 0, 100);
+        m_model->addAnnotation("ap_jpgQuality", "Jpg compression q)");
 
-        m_model->addElement<bool>( "ap_useAutoProxy", true );          // This turns on the new autoProxy
+        m_model->addElement<bool>( "ap_useAutoProxy", true );          // This turns on the new autoProxy. It will override useJpgProxy.
         m_model->addElement<bool>( "ap_autoProxyDebugging", true );
         m_model->addAnnotation("ap_autoProxyDebugging", "Debug mode");
         int algos=0;
@@ -112,6 +114,10 @@ bool JPCJob::init()
     {
         int row = 0;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useJpgProxy"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_jpgQuality"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_jpgQuality", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_jpgQuality", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useAutoProxy"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_autoProxyDebugging"));

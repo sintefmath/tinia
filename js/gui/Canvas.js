@@ -30,6 +30,8 @@ dojo.require("gui.ProxyRenderer");
 
 
 dojo.declare("gui.Canvas", [dijit._Widget], {
+
+
     constructor: function (params) {
 
         if (!params.renderListURL) {
@@ -37,11 +39,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         if (!params.snapshotBundleURL) {
             params.snapshotBundleURL = "snapshot_bundle.txt";
-        }
-        if (!params.snapshotURL) {
-            params.snapshotURL = "snapshot.txt";
-            // @@@
-            params.snapshotURL = "jpg_snapshot.txt";
         }
         this._showRenderList = params.showRenderList;
         this._urlHandler = params.urlHandler;
@@ -53,6 +50,19 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._width = 512;
         this._height = 512;
         this._modelLib = params.modelLib;
+        // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
+        // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
+        if (!params.snapshotURL) {
+            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+                    params.snapshotURL = "snapshot_bundle.txt";
+                } else {
+                    params.snapshotURL = "jpg_snapshot.txt";
+                }
+            } else {
+                params.snapshotURL = "snapshot.txt";
+            }
+        }
         this._snapshotBundleURL = params.snapshotBundleURL;
         this._snapshotURL = params.snapshotURL;
 
@@ -97,11 +107,30 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    _loadImageIfNotBusy: function() {
+        if (!this._imageLoading) {
+            console.log("Getting new image");
+            dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
+                            url: this._urlHandler.getURL(),
+                            preventCache: true,
+                            load: dojo.hitch(this, function (response, ioArgs) {
+                                // console.log("/model/updateParsed: response = " + response);
+                                var response_obj = eval( '(' + response + ')' );
+                                // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
+                                // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
+                                this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
+                            })
+                        });
+        }
+    },
+
+
     buildRendering: function () {
         this.domNode = dojo.create("div");
         dojo.style(this.domNode, "background", "black");
         dojo.style(this.domNode, "margin", "10px");
         dojo.style(this.domNode, "padding", "0px");
+
         dojo.addClass(this.domNode, "unselectable");
 
         this._setWidthHeight(this.domNode);
@@ -141,6 +170,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         dojo.style(this._loadingDiv, "float", "none");
         dojo.style(this._loadingDiv, "z-index", "3");
 
+
         dojo.style(this._loadingDiv, "padding", 0);
         dojo.style(this._loadingDiv, "margin", 0);
 
@@ -168,6 +198,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }, this);
 
         // We always want to update after the first parsing
+        // This variable is never referenced by our code. Is it something forgotten and obsolete?
         this._shouldUpdate = true;
 
         if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
@@ -182,26 +213,28 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._urlHandler.setURL(this._snapshotURL);
             }
         }) );
+        this._modelLib.addLocalListener( "ap_useJpgProxy", dojo.hitch(this, function(event) {
+            if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
+                // We have decided to let ap_useAutoProxy override ap_useJpgProxy
+                if ( this._modelLib.getElementValue("ap_useJpgProxy") ) {
+                    this._snapshotURL = "jpg_snapshot.txt";
+                } else {
+                    this._snapshotURL = "snapshot.txt";
+                }
+            } else {
+                // If we get here, jpg mode has just been turned off, while ap mode has been on, i.e., this._snapshotURL should
+                // already have been set to "snapshot_bundle.txt".
+                // this._snapshotURL = "snapshot_bundle.txt";
+            }
+            this._urlHandler.setURL(this._snapshotURL);
+        }) );
 
         // This gets called when the SERVER has initiated a change in the model.
         // This could for instance be a simulation and the server updates the current
         // simulation time.
         // We need to fetch a new image.
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
-            if (!this._imageLoading) {
-                console.log("Getting new image");
-                dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
-                    url: this._urlHandler.getURL(),
-                    preventCache: true,
-                    load: dojo.hitch(this, function (response, ioArgs) {
-//                        console.log("/model/updateParsed: response = " + response);
-                        var response_obj = eval( '(' + response + ')' );
-//                        console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
-//                        console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
-                        this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
-                    })
-                });
-            }
+            this._loadImageIfNotBusy();
         }));
 
         // We are initiating a new update TO the server.
@@ -290,7 +323,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _touchstart: function (event) {
         this._active = true;
         this._touch_prev = event;
-
         // We need to add the relative placement informatoin to all touch events
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
@@ -302,7 +334,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.pageY = event.touches[0].pageY;
         event.relativeX = event.touches[0].relativeX;
         event.relativeY = event.touches[0].relativeY;
-
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].touchStartEvent) {
                 this._eventHandlers[i].touchStartEvent(event);
@@ -319,20 +350,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // Use last active position
             event = this._touch_prev;
         }
-
         for(var i = 0; i < event.touches.length; ++i) {
             var x = event.touches[i].pageX - this._placementX();
             var y = event.touches[i].pageY - this._placementY();
             event.touches[i].relativeX = x;
             event.touches[i].relativeY = y;
         }
-
         // We need to add the relative placement informatoin to all touch events
         event.pageX = event.touches[0].pageX;
         event.pageY = event.touches[0].pageY;
         event.relativeX = event.touches[0].relativeX;
         event.relativeY = event.touches[0].relativeY;
-
          for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].touchEndEvent) {
                 this._eventHandlers[i].touchEndEvent(event);
@@ -351,18 +379,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             event.touches[i].relativeX = x;
             event.touches[i].relativeY = y;
         }
-
         event.pageX = event.touches[0].pageX;
         event.pageY = event.touches[0].pageY;
         event.relativeX = event.touches[0].relativeX;
         event.relativeY = event.touches[0].relativeY;
-
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].touchMoveEvent) {
                 this._eventHandlers[i].touchMoveEvent(event);
             }
         }
-        
         event.preventDefault();
     },
 
@@ -371,7 +396,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (event.key === undefined) {
             event.key = event.keyCode ? event.keyCode : event.charCode;
         }
-
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             if (this._eventHandlers[i].keyPressEvent) {
                 this._eventHandlers[i].keyPressEvent(event);
@@ -391,8 +415,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
         this._img.src = "data:image/png;base64," + response_rgb;
-        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) && (this._proxyRenderer) ) {
-            this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+            if (this._proxyRenderer) {
+                this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
+            }
+        } else {
+            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                this._img.src = "data:image/jpg;base64," + response_rgb;
+            }
         }
         this._showCorrect();
         return response_rgb;
@@ -426,9 +456,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mousePressEvent(event);
         }
+        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
+            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                this._snapshotURL = "jpg_snapshot.txt";
+                this._urlHandler.setURL(this._snapshotURL);
+                // console.log("Mouse down: Setting JPG mode");
+            }
+        }
         this._showCorrect();
         event.preventDefault();
-
     },
 
 
@@ -450,6 +486,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.relativeY = y;
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseReleaseEvent(event);
+        }
+        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
+            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                // console.log("Mouse up:   Setting PNG mode");
+                this._snapshotURL = "snapshot.txt";
+                this._urlHandler.setURL(this._snapshotURL);
+                this._loadImageIfNotBusy();
+            }
         }
         this._showCorrect();
         event.preventDefault();
@@ -530,9 +574,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _render: function () {
-			window.requestAnimFrame(dojo.hitch(this, function () {
-				this._render();
-			}));
+        window.requestAnimFrame(dojo.hitch(this, function () {
+            this._render();
+        }));
         var viewer = this._modelLib.getElementValue(this._key);
         var view_coord_sys = {
             m_projection: viewer.getElementValue("projection"),
@@ -543,7 +587,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             this._proxyRenderer.render(view_coord_sys);
         } else {
-            this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                // console.log("Jpg-proxy! Should not do anything at all...")
+            } else {
+                // Neither autoProxy nor jpgProxy, fall back to render list
+                this._render_list_renderer.render(this._render_list_store, view_coord_sys);
+            }
         }
     },
 
@@ -586,21 +635,27 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _showCorrect: function () {
-        if (this._localMode || (this._showRenderList && this._active) ||
-            (this._imageLoading && this._mouseOver)) {
+        if ( (this._localMode) || (this._showRenderList && this._active) || (this._imageLoading && this._mouseOver) ) {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
+            // We will always get here, while holding a mouse button down inside the canvas.
+            // Also when the mouse is inside the canvas and a button is pushed.
         } else {
             dojo.style(this._img, "z-index", "2");
             this._img.style.zIndex = "2";
+            // We get here when the mouse is crossing the border to the canvas while no button is pressed.
+            // Also when the mouse is inside and a button is released.
         }
         if (this._loadingDiv) {
             if (this._imageLoading && !this._active) {
                 this._loadingDiv.style.zIndex = "3";
                 //  dojo.style(this._loadingDiv, "z-index", "3");
+                // Have only seen this occasionally when double-clicking inside the canvas. Not consistently.
             } else {
                 this._loadingDiv.style.zIndex = "0";
                 //dojo.style(this._loadingDiv, "z-index", "0");
+                // We get here while button is pressed and mouse is moving inside the canvas.
+                // Also when crossing the canvas border, irrespective of button state.
             }
         }
     },
@@ -628,7 +683,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     _mouseUpResize: function (event) {
         this._isResizing = false;
     }
-
 
 
 })
