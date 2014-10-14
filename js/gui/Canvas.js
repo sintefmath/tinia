@@ -75,6 +75,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._urlHandler.addToParams({
             "viewer_key_list": this._key
         });
+        if ( this._modelLib.hasKey("ap_jpgQuality") ) {
+            this._urlHandler.addToParams({
+                "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality")
+            });
+        } else {
+            this._urlHandler.addToParams({
+                "jpeg_quality": 50
+            });
+        }
 
         this._onLoadFunction = dojo.hitch(this, this._loadComplete);
 
@@ -109,7 +118,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _loadImageIfNotBusy: function() {
         if (!this._imageLoading) {
-            console.log("Getting new image");
+            //console.log("Getting new image");
+            console.log("Getting new image, url=" + this._urlHandler.getURL());
             dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                             url: this._urlHandler.getURL(),
                             preventCache: true,
@@ -227,6 +237,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 // this._snapshotURL = "snapshot_bundle.txt";
             }
             this._urlHandler.setURL(this._snapshotURL);
+        }) );
+        this._modelLib.addLocalListener( "ap_jpgQuality", dojo.hitch(this, function(event) {
+            this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
 
         // This gets called when the SERVER has initiated a change in the model.
@@ -460,7 +473,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
                 this._snapshotURL = "jpg_snapshot.txt";
                 this._urlHandler.setURL(this._snapshotURL);
-                // console.log("Mouse down: Setting JPG mode");
+                console.log("Mouse down: Setting JPG mode, new URL=" + this._urlHandler.getURL());
             }
         }
         this._showCorrect();

@@ -231,8 +231,8 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
                                    tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                    const bool with_depth )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int> >( decodeGetParameters(request), "width height key viewer_key_list jpeg_quality" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
 
@@ -247,14 +247,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */, 0 );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\"";
         if (with_depth) {
             os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0  );
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */ );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\", \"view\": \"";
@@ -289,10 +289,11 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
                                       tinia::jobcontroller::Job* job,
                                       tinia::qtcontroller::impl::OpenGLServerGrabber* grabber )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int> >( decodeGetParameters(request), "width height key viewer_key_list jpeg_quality" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
+    int q = arguments.get<4>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -305,10 +306,14 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
+#if 0
             int q = 5; // -1 is Qt QImage default quality setting, 5 to make sure we see the JPGs for debugging and testing purposes.
             if ( m_job->getExposedModel()->hasElement("ap_jpgQuality")) {
                 m_job->getExposedModel()->getElementValue("ap_jpgQuality", q);
             }
+#else
+            // New scheme, q as url-parameter
+#endif
             SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */, q );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }

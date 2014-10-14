@@ -67,11 +67,11 @@ bool JPCJob::init()
     // Note that these values are not communicated to the ProxyRenderer until they are actually changed, due to the use
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
-        m_model->addElement<bool>( "ap_useJpgProxy", true );            // This turns on the new "proxy mode", for which speedier jpg-snapshots are used
-        m_model->addConstrainedElement<int>("ap_jpgQuality", 5, 0, 100);
+        m_model->addElement<bool>( "ap_useJpgProxy", false );            // This turns on the new "proxy mode", for which speedier jpg-snapshots are used
+        m_model->addConstrainedElement<int>("ap_jpgQuality", 11, 0, 100);
         m_model->addAnnotation("ap_jpgQuality", "Jpg compression q)");
 
-        m_model->addElement<bool>( "ap_useAutoProxy", true );          // This turns on the new autoProxy. It will override useJpgProxy.
+        m_model->addElement<bool>( "ap_useAutoProxy", false );          // This turns on the new autoProxy. It will override useJpgProxy.
         m_model->addElement<bool>( "ap_autoProxyDebugging", true );
         m_model->addAnnotation("ap_autoProxyDebugging", "Debug mode");
         int algos=0;

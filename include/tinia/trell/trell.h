@@ -31,6 +31,7 @@ extern "C" {
 #define TRELL_KEYID_MAXLENGTH 64
 #define TRELL_TIMESTAMP_MAXLENGTH 128
 #define TRELL_VIEWER_KEY_LIST_MAXLENGTH (10*(TRELL_KEYID_MAXLENGTH))
+#define TRELL_JPEG_QUALITY_STRING_MAXLENGTH 8
 
 /** The pixel formats that is used in the trell system. */
 enum TrellPixelFormat {
@@ -39,7 +40,9 @@ enum TrellPixelFormat {
     /** 8-bit normalized rgb data. */
     TRELL_PIXEL_FORMAT_RGB,
     /** 8-bit normalized rgb data + 24-bit fixed point depth. */
-    TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH
+    TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH,
+    /** 8-bit normalized rgb data */
+    TRELL_PIXEL_FORMAT_RGB_JPG_VERSION // @@@ possibly not an optimal idea, alternative is to add a TRELL_REQUEST_JPG similar to TRELL_REQUEST_JPG
 };
 
 /** States that a MessageBox/Master/Job/InteractiveJob can be in */

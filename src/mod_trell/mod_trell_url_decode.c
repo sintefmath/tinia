@@ -164,7 +164,7 @@ trell_hash_strncpy( request_rec* r, char* dst, apr_hash_t* args, const char* key
         }
     }
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
-                   "%s: args[%s]: string too long.", r->handler, key );
+                   "%s: args[%s]: string too long, max_length=%d.", r->handler, key, max_length );
     return 0;
 }
 
@@ -228,6 +228,10 @@ trell_hash_atoi( request_rec* r,
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 {
+
+    // @@@
+    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: 1 decode start...", r->handler );
+
     dispatch_info->m_component = TRELL_COMPONENT_NONE;
     dispatch_info->m_request = TRELL_REQUEST_NONE;
     dispatch_info->m_mod_action = TRELL_MOD_ACTION_NONE;
@@ -236,6 +240,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     dispatch_info->m_sessionid[0] = '\0';
     dispatch_info->m_key[0] ='\0';
     dispatch_info->m_viewer_key_list[0] ='\0';
+    dispatch_info->m_jpeg_quality = 100;
     dispatch_info->m_timestamp[0] = '\0';
     dispatch_info->m_revision = 0;
     dispatch_info->m_base64 = 0;
@@ -391,8 +396,10 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     }
     // --- jpg_snapshot.txt----------------------------------------------------
     else if( strcmp( request, "jpg_snapshot.txt" ) == 0 ) {
-        dispatch_info->m_request = TRELL_REQUEST_JPG;
-        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB;
+        // @@@
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: 1 parsing %s commencing...", r->handler, request );
+        dispatch_info->m_request = TRELL_REQUEST_PNG; // JPG;
+        dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB_JPG_VERSION;
         dispatch_info->m_base64 = 1;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
                 || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
@@ -404,6 +411,13 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         if ( trell_hash_strncpy( r, dispatch_info->m_viewer_key_list, form, "viewer_key_list", TRELL_VIEWER_KEY_LIST_MAXLENGTH-1 ) == 0 ) {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list 2.", r->handler, request );
             return HTTP_BAD_REQUEST;
+        }
+        if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "jpeg_quality", TRELL_JPEG_QUALITY_STRING_MAXLENGTH-1 ) == 0 )
+                || (trell_hash_atoi( r, component, request, &dispatch_info->m_jpeg_quality, form, "jpeg_quality", 1 ) == 0 ) ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing jpeg_quality URL parameter.", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        } else {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsed %s and found jpeg_quality URL parameter = %d.", r->handler, request, dispatch_info->m_jpeg_quality );
         }
     }
     // --- snapshot_bundle.txt----------------------------------------------------

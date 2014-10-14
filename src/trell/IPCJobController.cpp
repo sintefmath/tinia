@@ -229,6 +229,9 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 
         size_t data_size=0, buf_size_required=0;
         switch ( format ) {
+            // @@@
+            case TRELL_PIXEL_FORMAT_RGB_JPG_VERSION:
+                m_logger_callback( m_logger_data, 2, package.c_str(), "Queried for snapshot, image format TRELL_PIXEL_FORMAT_RGB_JPG_VERSION.");
             case TRELL_PIXEL_FORMAT_RGB:
                 buf_size_required = data_size = 3*w*h;
                 data_size         *= key_list.size();
@@ -249,7 +252,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, unsupported image format %d.", (int)format );
                 tinia_msg_t* reply = (tinia_msg_t*)msg;
                 reply->type = TRELL_MESSAGE_ERROR;
-            return sizeof(tinia_msg_t);
+                return sizeof(tinia_msg_t);
         }
 
         if ( buf_size <= buf_size_required + sizeof(tinia_msg_image_t) ) {
@@ -271,6 +274,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
 #endif
                 if ( format == TRELL_PIXEL_FORMAT_RGB ) {
                     buf += 4*((3*w*h+3)/4);
+                }
+                else if ( format == TRELL_PIXEL_FORMAT_RGB_JPG_VERSION ) { // @@@
+                    buf += 4*((3*w*h+3)/4);
+                    m_logger_callback( m_logger_data, 2, package.c_str(), "Queried for snapshot, image format TRELL_PIXEL_FORMAT_RGB_JPG_VERSION, advancing buffer after onGetSnapshot-grabbing");
                 }
                 else if ( format == TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH ) {
                     // In order to let trell_pass_reply_png_bundle() pacakge both images and the transformation matrices, we now write the
