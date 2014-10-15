@@ -377,7 +377,7 @@ static int trell_pass_reply_png_bundle( void*          data,
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 
-#if 1
+#if 0
         // To inspect the resulting package, see the apache error log
         struct apr_bucket *b;
         for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {

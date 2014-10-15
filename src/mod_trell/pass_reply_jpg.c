@@ -16,7 +16,6 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include <zlib.h>
 #include <turbojpeg.h>
 
 #include <httpd.h>
@@ -35,46 +34,42 @@
 static int trell_jpg_encode( void *data,
                              size_t unfiltered_offset,
                              unsigned char **dst_ptr, // *dst_ptr will be updated
+                             const unsigned long bound,
                              const int jpeg_quality )
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    int width = encoder_state->width;
-    int height = encoder_state->height;
-
-
-
-    const int JPEG_QUALITY = jpeg_quality; // <0 ? 0 : (jpeg_quality>99 ? 99 : jpeg_quality);
-    long unsigned int _jpegSize = 0;
-    unsigned char* _compressedImage = NULL; //!< Memory is allocated by tjCompress2 if _jpegSize == 0
-    //unsigned char buffer[_width*_height*COLOR_COMPONENTS]; //!< Contains the uncompressed image
+    long unsigned jpeg_size = 0;
+    unsigned char* compressed_image = NULL; //!< Memory is allocated by tjCompress2 if _jpegSize == 0
     char *buffer = encoder_state->buffer + unfiltered_offset;
 
-    tjhandle _jpegCompressor = tjInitCompress();
+    tjhandle jpeg_compressor = tjInitCompress();
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx q = %d.", JPEG_QUALITY );
+    tjCompress2( jpeg_compressor,
+                 (unsigned char *)buffer,
+                 encoder_state->width,
+                 0,
+                 encoder_state->height,
+                 TJPF_RGB,
+                 &compressed_image,
+                 &jpeg_size,                        // Initialized to 0, so that tjCompress2 will allocate memory. Resulting size returned.
+                 TJSAMP_444,
+                 jpeg_quality,
+                 TJFLAG_FASTDCT | TJXOP_VFLIP );
 
-    tjCompress2(_jpegCompressor, (unsigned char *)buffer, width, 0, height, TJPF_RGB,
-              &_compressedImage, &_jpegSize, TJSAMP_444, JPEG_QUALITY,
-              TJFLAG_FASTDCT | TJXOP_VFLIP);
+    if ( jpeg_size > bound ) {
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_jpg_encode: Not enough memory reserved for compressed jpeg!" );
+        return -1;
+    }
+    memcpy(*dst_ptr, compressed_image, jpeg_size);
 
-    memcpy(*dst_ptr, _compressedImage, _jpegSize);
+    tjDestroy(jpeg_compressor);
+    tjFree(compressed_image);
 
-    tjDestroy(_jpegCompressor);
-
-    //to free the memory allocated by TurboJPEG (either by tjAlloc(),
-    //or by the Compress/Decompress) after you are done working on it:
-    tjFree(_compressedImage);
-
-    *dst_ptr += _jpegSize;
-
-
+    *dst_ptr += jpeg_size;
 
     return OK;
 }
-
-
-
 
 
 
@@ -99,16 +94,12 @@ trell_pass_reply_jpg_main( void* data,
 {
     trell_encode_png_state_t* encoder_state = (trell_encode_png_state_t*)data;
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: pixel_format = %d.", encoder_state->dispatch_info->m_pixel_format );
+    // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: pixel_format = %d.", encoder_state->dispatch_info->m_pixel_format );
 
     if ( encoder_state->dispatch_info->m_pixel_format != TRELL_PIXEL_FORMAT_RGB_JPG_VERSION ) { // @@@
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "Unknown trell pixel format: %d.", encoder_state->dispatch_info->m_pixel_format );
         return -1;
     }
-
-
-    // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: key=%s", encoder_state->dispatch_info->m_key );
-    // This key is not the "list of keys", so we cannot use it to detect how many images we are to encode.
 
     if ( encoder_state->dispatch_info->m_base64 == 0 ) {
         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
@@ -117,12 +108,8 @@ trell_pass_reply_jpg_main( void* data,
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 1" );
-
-    const int w_depth = 0;
-
     static int num_of_keys = 0;
-    size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16*w_depth, canvas_size=0;
+    size_t buffer_img_size=0, padded_img_size=0, canvas_size=0;
 
     size_t offset = 0;
     if( part == 0 ) {
@@ -152,14 +139,10 @@ trell_pass_reply_jpg_main( void* data,
         encoder_state->height = msg->height;
         buffer_img_size       = 3 * encoder_state->width * encoder_state->height;
         padded_img_size       = 4*( (buffer_img_size+3)/4 );
-        canvas_size           = padded_img_size + w_depth*( padded_img_size + 2*matrix_size );
+        canvas_size           = padded_img_size;
         encoder_state->buffer = apr_palloc( encoder_state->r->pool, num_of_keys * canvas_size );
         const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // The +1 is for the png filter flag
-        encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + w_depth*2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
-
-        // hmm... hvorfor var det ikke satt av plass til to filtrerte bilder over? Hvis et er nok, hvorfor var det da satt av plass til to matriser?
-        // Mistenker at det er en misforståelse å ta med de to matrisene
-
+        encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound ); // Just in case the image is smaller than 4*16 bytes!
         encoder_state->bytes_read = 0;
         offset += sizeof(tinia_msg_image_t);
     }
@@ -173,9 +156,7 @@ trell_pass_reply_jpg_main( void* data,
         encoder_state->bytes_read += bytes;
     }
 
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 2" );
     if( more == 0 ) {
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 3" );
         // last invocation
         const size_t bytes_expected = num_of_keys*canvas_size;
         if( encoder_state->bytes_read != bytes_expected ) {
@@ -184,16 +165,8 @@ trell_pass_reply_jpg_main( void* data,
             return -1;
         }
 
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 4" );
-
-        // uLong bound = compressBound( (3*encoder_state->width+1)*encoder_state->height );
-
-        unsigned long bound = (3*encoder_state->width+1)*encoder_state->height + 10000; // @@@
-
-
-
-
-        const size_t total_bound = bound + 8 + 25 + 12 + 12 + 12 + w_depth*2*sizeof(float)*16; // misforståelse her også?
+        const unsigned long bound = (3*encoder_state->width+1)*encoder_state->height + 1000; // @@@ Just adding some, in case JPG needs it for a header or something
+        const size_t total_bound = bound + 8 + 25 + 12 + 12 + 12; // @@@ Don't know where these amounts come from. encoder_state-header? png-specifics? ??
         unsigned char* png = apr_palloc( encoder_state->r->pool, total_bound );
         unsigned char* p = png;
 
@@ -202,41 +175,11 @@ trell_pass_reply_jpg_main( void* data,
         apr_table_setn( encoder_state->r->headers_out, "Last-Modified", datestring );
         apr_table_setn( encoder_state->r->headers_out, "Cache-Control", "no-cache" );
 
-        // Encode png as base64 and send as string
+        // Encode as base64 and send as string
         apr_table_setn( encoder_state->r->headers_out, "Content-Type", "text/plain" );
         ap_set_content_type( encoder_state->r, "text/plain" );
 
         struct apr_bucket_brigade* bb = apr_brigade_create( encoder_state->r->pool, encoder_state->r->connection->bucket_alloc );
-
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 5" );
-
-
-#if 0
-
-        BB_APPEND_STRING( encoder_state->r->pool, bb, "{ viewer: { \"rgb\": \"" );
-
-        char *raw_jpg = apr_palloc( encoder_state->r->pool, 7730 + 1000 );
-        FILE *f = fopen("/home/jnygaard/test.jpg", "r");
-        fread( raw_jpg, 7730, 1, f );
-        fclose( f );
-
-        char *base64 = apr_palloc( encoder_state->r->pool, apr_base64_encode_len( 7730 ) );
-        int base64_size = apr_base64_encode( base64, (char*)raw_jpg, 7730 );
-        // Seems like the zero-byte is included in the string size.
-        if( (base64_size > 0) && (base64[base64_size-1] == '\0') ) {
-            base64_size--;
-        }
-        APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
-
-        BB_APPEND_STRING( encoder_state->r->pool, bb, "\" } }" );
-
-
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 6" );
-
-
-#else
-
-
 
         int i;
         char vkl_copy[TRELL_VIEWER_KEY_LIST_MAXLENGTH];
@@ -248,8 +191,9 @@ trell_pass_reply_jpg_main( void* data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, "%s: { \"rgb\": \"", next_key );
             {
                 p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
-                int rv = trell_jpg_encode( data, i*canvas_size, &p, jpeg_quality );
+                int rv = trell_jpg_encode( data, i*canvas_size, &p, total_bound, jpeg_quality );
                 if ( p-png > total_bound ) {
+                    // @@@ This test should not be needed, the encoding routine checks this
                     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
                     return -1;
                 }
@@ -263,8 +207,7 @@ trell_pass_reply_jpg_main( void* data,
                 }
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
             }
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "\" " );
-            BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, "\" }" );
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
@@ -276,14 +219,7 @@ trell_pass_reply_jpg_main( void* data,
         }
         BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
 
-#endif
-
-
-
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_jpg_main: er her 7" );
-
-
-#if 1
+#if 0
         // To inspect the resulting package, see the apache error log
         struct apr_bucket *b;
         for ( b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb); b = APR_BUCKET_NEXT(b) ) {
@@ -310,11 +246,7 @@ trell_pass_reply_jpg_main( void* data,
 
 
 
-
-
 #undef BB_APPEND_STRING
-
-
 
 
 

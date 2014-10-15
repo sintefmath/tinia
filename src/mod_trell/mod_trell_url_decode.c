@@ -228,10 +228,6 @@ trell_hash_atoi( request_rec* r,
 int
 trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
 {
-
-    // @@@
-    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: 1 decode start...", r->handler );
-
     dispatch_info->m_component = TRELL_COMPONENT_NONE;
     dispatch_info->m_request = TRELL_REQUEST_NONE;
     dispatch_info->m_mod_action = TRELL_MOD_ACTION_NONE;
@@ -396,8 +392,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     }
     // --- jpg_snapshot.txt----------------------------------------------------
     else if( strcmp( request, "jpg_snapshot.txt" ) == 0 ) {
-        // @@@
-        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: 1 parsing %s commencing...", r->handler, request );
+        // ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: 1 parsing %s commencing...", r->handler, request );
         dispatch_info->m_request = TRELL_REQUEST_PNG; // JPG;
         dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB_JPG_VERSION;
         dispatch_info->m_base64 = 1;
@@ -417,7 +412,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing jpeg_quality URL parameter.", r->handler, request );
             return HTTP_BAD_REQUEST;
         } else {
-            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsed %s and found jpeg_quality URL parameter = %d.", r->handler, request, dispatch_info->m_jpeg_quality );
+//            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsed %s and found jpeg_quality URL parameter = %d.", r->handler, request, dispatch_info->m_jpeg_quality );
         }
     }
     // --- snapshot_bundle.txt----------------------------------------------------

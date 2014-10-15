@@ -166,9 +166,9 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     encode_png_state.height        = 0;
     encode_png_state.buffer        = NULL;
     
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: pixel_format=%d", dispatch_info->m_pixel_format );
-    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: jpeg_quality=%d", dispatch_info->m_jpeg_quality );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: pixel_format=%d", dispatch_info->m_pixel_format );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: jpeg_quality=%d", dispatch_info->m_jpeg_quality );
 
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,

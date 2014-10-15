@@ -118,8 +118,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _loadImageIfNotBusy: function() {
         if (!this._imageLoading) {
-            //console.log("Getting new image");
-            console.log("Getting new image, url=" + this._urlHandler.getURL());
+            // console.log("Getting new image, url=" + this._urlHandler.getURL());
             dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                             url: this._urlHandler.getURL(),
                             preventCache: true,
@@ -232,9 +231,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     this._snapshotURL = "snapshot.txt";
                 }
             } else {
-                // If we get here, jpg mode has just been turned off, while ap mode has been on, i.e., this._snapshotURL should
+                // If we get here, jpg mode has just been toggled, while ap mode has been on, i.e., this._snapshotURL should
                 // already have been set to "snapshot_bundle.txt".
-                // this._snapshotURL = "snapshot_bundle.txt";
+                // Hmm. This seems not to be true. How can it be set to "snapshot.txt", when ap mode should be taking precedence??!!
+                this._snapshotURL = "snapshot_bundle.txt";
             }
             this._urlHandler.setURL(this._snapshotURL);
         }) );
@@ -473,7 +473,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
                 this._snapshotURL = "jpg_snapshot.txt";
                 this._urlHandler.setURL(this._snapshotURL);
-                console.log("Mouse down: Setting JPG mode, new URL=" + this._urlHandler.getURL());
+                // console.log("Mouse down: Setting JPG mode, new URL=" + this._urlHandler.getURL());
             }
         }
         this._showCorrect();
