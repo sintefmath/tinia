@@ -154,7 +154,7 @@ static int trell_handler_body(request_rec *r)
             dispatch_info->m_exit = apr_time_now();
 
 //            ap_log_rerror( APLOG_MARK, APLOG_NOTICE, rv, r,
-//                           "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy dette er etter trell_handle_get_snapshot mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
+//                           "mod_trell: request=%ldms, png=%ldms, filter=%ldms, compact=%ldms.",
 //                           apr_time_as_msec(dispatch_info->m_exit-dispatch_info->m_entry ),
 //                           apr_time_as_msec(dispatch_info->m_png_exit-dispatch_info->m_png_entry),
 //                           apr_time_as_msec(dispatch_info->m_png_filter_exit-dispatch_info->m_png_filter_entry),

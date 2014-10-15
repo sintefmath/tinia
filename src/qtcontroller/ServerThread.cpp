@@ -293,7 +293,7 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
             parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int> >( decodeGetParameters(request), "width height key viewer_key_list jpeg_quality" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
-    int q = arguments.get<4>();
+    const int q = arguments.get<4>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -306,14 +306,6 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-#if 0
-            int q = 5; // -1 is Qt QImage default quality setting, 5 to make sure we see the JPGs for debugging and testing purposes.
-            if ( m_job->getExposedModel()->hasElement("ap_jpgQuality")) {
-                m_job->getExposedModel()->getElementValue("ap_jpgQuality", q);
-            }
-#else
-            // New scheme, q as url-parameter
-#endif
             SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */, q );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }

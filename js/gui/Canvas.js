@@ -234,6 +234,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 // If we get here, jpg mode has just been toggled, while ap mode has been on, i.e., this._snapshotURL should
                 // already have been set to "snapshot_bundle.txt".
                 // Hmm. This seems not to be true. How can it be set to "snapshot.txt", when ap mode should be taking precedence??!!
+                // Aha. Probably because the "mouse-up" routine does this.
+                // No. Shouldn't be that.
+                // Seems that when we are in JPG-mode, and switch on AP mode, the mouse-down-up cycle happens (makes sense) and on the mouse-up-exit
+                // the url is set to be "snapshot.txt", since we are detected to not be in AP mode (this probably happens before the exposed model
+                // round trip with the element for this) and also releasing the mouse. Thus, we end up in AP mode with url=snapshot.txt.
+                // Should probably be ok, but we then need to set it here, after all...
+                // console.log("old url was: " + this._snapshotURL);
                 this._snapshotURL = "snapshot_bundle.txt";
             }
             this._urlHandler.setURL(this._snapshotURL);
@@ -500,8 +507,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseReleaseEvent(event);
         }
+        // console.log("Mouse up:   Should we be here?");
         if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
+            // console.log("Mouse up:   Not in AP mode");
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                // console.log("Mouse up:   In JPG mode");
                 // console.log("Mouse up:   Setting PNG mode");
                 this._snapshotURL = "snapshot.txt";
                 this._urlHandler.setURL(this._snapshotURL);

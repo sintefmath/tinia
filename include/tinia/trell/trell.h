@@ -42,7 +42,7 @@ enum TrellPixelFormat {
     /** 8-bit normalized rgb data + 24-bit fixed point depth. */
     TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH,
     /** 8-bit normalized rgb data */
-    TRELL_PIXEL_FORMAT_RGB_JPG_VERSION // @@@ possibly not an optimal idea, alternative is to add a TRELL_REQUEST_JPG similar to TRELL_REQUEST_JPG
+    TRELL_PIXEL_FORMAT_RGB_JPG_VERSION // @@@ possibly not an optimal idea, alternative is to add a TRELL_REQUEST_JPG similar to TRELL_REQUEST_PNG
 };
 
 /** States that a MessageBox/Master/Job/InteractiveJob can be in */
