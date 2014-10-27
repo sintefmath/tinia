@@ -279,8 +279,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
             }
             os << "\"";
         }
-
-        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\"_ }";
+        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\" }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
