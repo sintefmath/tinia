@@ -237,6 +237,7 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     dispatch_info->m_key[0] ='\0';
     dispatch_info->m_viewer_key_list[0] ='\0';
     dispatch_info->m_jpeg_quality = 100;
+    dispatch_info->m_snaptype[0] = '\0';
     dispatch_info->m_timestamp[0] = '\0';
     dispatch_info->m_revision = 0;
     dispatch_info->m_base64 = 0;
@@ -389,6 +390,14 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list 2.", r->handler, request );
             return HTTP_BAD_REQUEST;
         }
+        if ( trell_hash_strncpy( r, dispatch_info->m_timestamp, form, "timestamp", TRELL_TIMESTAMP_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing timestamp", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_snaptype, form, "snaptype", TRELL_SNAPTYPE_STRING_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing snaptype", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
     }
     // --- jpg_snapshot.txt----------------------------------------------------
     else if( strcmp( request, "jpg_snapshot.txt" ) == 0 ) {
@@ -414,6 +423,14 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         } else {
 //            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsed %s and found jpeg_quality URL parameter = %d.", r->handler, request, dispatch_info->m_jpeg_quality );
         }
+        if ( trell_hash_strncpy( r, dispatch_info->m_timestamp, form, "timestamp", TRELL_TIMESTAMP_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing timestamp", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_snaptype, form, "snaptype", TRELL_SNAPTYPE_STRING_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing snaptype", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
     }
     // --- snapshot_bundle.txt----------------------------------------------------
     else if( strcmp( request, "snapshot_bundle.txt" ) == 0 ) {
@@ -431,12 +448,20 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing viewer_key_list.", r->handler, request );
             return HTTP_BAD_REQUEST;
         }
+        if ( trell_hash_strncpy( r, dispatch_info->m_timestamp, form, "timestamp", TRELL_TIMESTAMP_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing timestamp", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
+        if ( trell_hash_strncpy( r, dispatch_info->m_snaptype, form, "snaptype", TRELL_SNAPTYPE_STRING_MAXLENGTH-1 ) == 0 ) {
+            ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed, missing snaptype", r->handler, request );
+            return HTTP_BAD_REQUEST;
+        }
     }
     // --- getRenderList.xml -----------------------------------------------
     else if( strcmp( request, "getRenderList.xml" ) == 0 ) {
         dispatch_info->m_request = TRELL_REQUEST_GET_RENDERLIST;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
-                || (trell_hash_strncpy( r, dispatch_info->m_timestamp, form, "timestamp", TRELL_KEYID_MAXLENGTH-1 ) == 0) )
+                || (trell_hash_strncpy( r, dispatch_info->m_timestamp, form, "timestamp", TRELL_TIMESTAMP_MAXLENGTH-1 ) == 0) )
         {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                            "%s: parsing %s failed.",

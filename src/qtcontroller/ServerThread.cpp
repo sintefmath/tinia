@@ -231,10 +231,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
                                    tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                    const bool with_depth )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string, int> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int> >( decodeGetParameters(request), "width height key viewer_key_list jpeg_quality" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> >(
+                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
+    const long revision = arguments.get<5>();
+    const long timestamp = arguments.get<6>();
+    const std::string snaptype = arguments.get<7>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -275,7 +279,8 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
             }
             os << "\"";
         }
-        os << " }";
+
+        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\"_ }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
@@ -289,11 +294,15 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
                                       tinia::jobcontroller::Job* job,
                                       tinia::qtcontroller::impl::OpenGLServerGrabber* grabber )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string, int> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int> >( decodeGetParameters(request), "width height key viewer_key_list jpeg_quality" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> >(
+                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
     const int q = arguments.get<4>();
+    const long revision = arguments.get<5>();
+    const long timestamp = arguments.get<6>();
+    const std::string snaptype = arguments.get<7>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -302,15 +311,13 @@ void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
 
     for (int i=0; i<vk_list.size(); i++) {
         QString k = vk_list[i];
-
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
             SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */, q );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
-        os << "\"";
-        os << " }";
+        os << "\",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\" }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }

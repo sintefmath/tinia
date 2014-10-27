@@ -26,6 +26,7 @@ dojo.require("dijit._Widget");
 dojo.require("gui.TrackBallViewer");
 dojo.require("dojo.touch");
 dojo.require("gui.ProxyRenderer");
+dojo.require("gui.SnapshotTimings");
 
 
 
@@ -34,11 +35,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     constructor: function (params) {
 
+        // Available snapshot signatures
+        this._snapshotStrings = { png: "snapshot.txt", jpg: "jpg_snapshot.txt" ,ap: "snapshot_bundle.txt" };
+
         if (!params.renderListURL) {
             params.renderListURL = "xml/getRenderList.xml";
         }
         if (!params.snapshotBundleURL) {
-            params.snapshotBundleURL = "snapshot_bundle.txt";
+            params.snapshotBundleURL = this._snapshotStrings.ap;
         }
         this._showRenderList = params.showRenderList;
         this._urlHandler = params.urlHandler;
@@ -47,20 +51,20 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 512;
-        this._height = 512;
+        this._width = 1024;
+        this._height = 1024;
         this._modelLib = params.modelLib;
         // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
         // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
         if (!params.snapshotURL) {
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
                 if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
-                    params.snapshotURL = "snapshot_bundle.txt";
+                    params.snapshotURL = this._snapshotStrings.ap;
                 } else {
-                    params.snapshotURL = "jpg_snapshot.txt";
+                    params.snapshotURL = this._snapshotStrings.jpg;
                 }
             } else {
-                params.snapshotURL = "snapshot.txt";
+                params.snapshotURL = this._snapshotStrings.png;
             }
         }
         this._snapshotBundleURL = params.snapshotBundleURL;
@@ -85,7 +89,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             });
         }
 
-        this._onLoadFunction = dojo.hitch(this, this._loadComplete);
+        // This is not in use
+        // this._onLoadFunction = dojo.hitch(this, this._loadComplete);
 
         this._eventHandlers = Array();
         if (params.scripts) {
@@ -94,6 +99,41 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 param.exposedModel = this._modelLib;
                 this._eventHandlers[this._eventHandlers.length] = new (dojo.getObject(params.scripts[i].className()))(param);
             }
+        }
+
+        // We must keep track of the timing details for the various snapshot methods
+        this._snapshotTimings = new gui.SnapshotTimings();
+
+        // Automatic adjustment of simulated latency every second
+        setInterval(dojo.hitch(this, this._adjustSimulatedLatency), 1000);
+    },
+
+
+    _snapShotStringToType: function( url_type )
+    {
+        var snapType = "unknown";
+        if ( url_type.substring(0, this._snapshotStrings.png.length) == this._snapshotStrings.png ) {
+            snapType = "png";
+        }
+        else if ( url_type.substring(0, this._snapshotStrings.jpg.length) == this._snapshotStrings.jpg ) {
+            snapType = "jpg";
+        }
+        else if ( url_type.substring(0, this._snapshotStrings.ap.length) == this._snapshotStrings.ap ) {
+            snapType = "ap";
+        }
+        return snapType;
+    },
+
+
+    _adjustSimulatedLatency: function() {
+        if ( (this._modelLib.hasKey("simulatedAdditionalLatency")) && (this._modelLib.hasKey("simulatedAdditionalLatencyDecay")) ) {
+            var ms = this._modelLib.getElementValue("simulatedAdditionalLatency");
+            var delta = this._modelLib.getElementValue("simulatedAdditionalLatencyDecay");
+            ms = ms + delta;
+            if (ms<0) {
+                ms = 0;
+            }
+            this._modelLib.updateElement("simulatedAdditionalLatency", ms);
         }
     },
 
@@ -116,18 +156,27 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
-    _loadImageIfNotBusy: function() {
+    _requestImageIfNotBusy: function() {
         if (!this._imageLoading) {
-            // console.log("Getting new image, url=" + this._urlHandler.getURL());
+            // console.log("_requestImageIfNotBusy (/model/updateParsed or mouseUp): Getting new image, url=" + this._urlHandler.getURL());
+            var startTime = Date.now();
+
+            // Should this be done? It is done in ExposedModelSender._makeURL(), which is used when posting with dojo.rawXhrPost()!
+            this._urlHandler.updateParams( { "revision" : this._modelLib.getRevision(), "timestamp" : (new Date()).getTime() } );
+            var url_used = this._urlHandler.getURL();
+
             dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                             url: this._urlHandler.getURL(),
                             preventCache: true,
                             load: dojo.hitch(this, function (response, ioArgs) {
-                                // console.log("/model/updateParsed: response = " + response);
+                                var t0 = Date.now();
+                                // console.log("_requestImageIfNotBusy: response = " + response);
                                 var response_obj = eval( '(' + response + ')' );
                                 // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
                                 // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                                 this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
+                                this._snapshotTimings.update( response_obj[this._key].snaptype, (t0 - response_obj[this._key].timestamp) );
+                                this._snapshotTimings.print();
                             })
                         });
         }
@@ -167,7 +216,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
         dojo.style(this._img, "padding", 0);
         dojo.style(this._img, "margin", 0);
-        dojo.connect(this._img, "onload", dojo.hitch(this, this._loadComplete()));
+
+        // 141024: This syntax is buggy, the function is not registered, but no error is induced either! Commenting this out.
+        // dojo.connect(this._img, "onload", dojo.hitch(this, this._loadComplete()));
 
         this._setAttrWidthHeight(this._img);
 
@@ -215,20 +266,22 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         } else {
             this._urlHandler.setURL(this._snapshotURL);
         }
+        this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
         this._modelLib.addLocalListener( "ap_useAutoProxy", dojo.hitch(this, function(event) {
             if ( this._modelLib.getElementValue("ap_useAutoProxy") ) {
                 this._urlHandler.setURL(this._snapshotBundleURL);
             } else {
                 this._urlHandler.setURL(this._snapshotURL);
             }
+            this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
         }) );
         this._modelLib.addLocalListener( "ap_useJpgProxy", dojo.hitch(this, function(event) {
             if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
                 // We have decided to let ap_useAutoProxy override ap_useJpgProxy
                 if ( this._modelLib.getElementValue("ap_useJpgProxy") ) {
-                    this._snapshotURL = "jpg_snapshot.txt";
+                    this._snapshotURL = this._snapshotStrings.jpg;
                 } else {
-                    this._snapshotURL = "snapshot.txt";
+                    this._snapshotURL = this._snapshotStrings.png;
                 }
             } else {
                 // If we get here, jpg mode has just been toggled, while ap mode has been on, i.e., this._snapshotURL should
@@ -241,27 +294,65 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 // round trip with the element for this) and also releasing the mouse. Thus, we end up in AP mode with url=snapshot.txt.
                 // Should probably be ok, but we then need to set it here, after all...
                 // console.log("old url was: " + this._snapshotURL);
-                this._snapshotURL = "snapshot_bundle.txt";
+                this._snapshotURL = this._snapshotStrings.ap;
             }
             this._urlHandler.setURL(this._snapshotURL);
+            this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
         }) );
         this._modelLib.addLocalListener( "ap_jpgQuality", dojo.hitch(this, function(event) {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
+
+
+        // Some timing issues:
+        //
+        // Note that "updateSendStart" is generated when the client sends an update to the server. This is not the same as the client asking for a new image,
+        // which is actually what happens when the *server* sends an update to the *client*. When this happens, "updateParsed" is generated.
+        // (Why do we observe "updateParsed" so often then, for a dumb server not initiating much at all, just rendering a static scene?)
+        //
+        // If we update the server (will happen during mouse activity, the "mouse-move events" are sent as such updates?!) an "updateSendStart" is
+        // produced. This happens for instance when the mouse button is pressed. If the mouse is moved at once, and continuously, we get a stream of
+        // updates from the client to the server, accompanied by a stream of "updateSendPartialComplete". When things settle down (mouse kept still or
+        // button released) we get an "updateSendComplete".
+        //
+        // In order to time the production and sending of an image from the server, it seems that the safest way is to measure the time from "updateSendStart"
+        // to "updateSendPartialComplete" and/or "updateSendComplete" for the first image, and from "updateSendPartialComplete" to "updateSendPartialComplete"
+        // and/or "updateSendComplete" for subsequent images. (It seems we get an "updateSendComplete" immediately after an "updateSendPartialComplete", so that
+        // the time between the last "updateSendPartialComplete" and the final "updateSendComplete" is not so interesting...)
+        //
+        // Note that we cannot rely on timing the xhrGet() call from issuing it to its load-method completion, since so many received images are not the
+        // result of a server-initiated image production.
+        //
+        // Note also that one advantage of using "updateSendPartialComplete" to mark the end of a timed interval is that this ensures that we are in a
+        // continuous stream of snapshots, meaning that we have less probability of a "singular" snapshot taking additional time for instance in connection
+        // with long-polling or something, or the opposite, like in the case of the "updateSendComplete".
+
+        // There *may* be a problem with how URLs are handled, specifically in how the URLs are set in the URLHandler object.
+        // The problem is that this has gotten a bit convoluted, and that the URL and the other fields (like revision and timestamp for instance)
+        // are not set at the same time. This makes it very bug-prone to examine the URLHandler state to deduce anything wrt. the received responses!
+        // A cleanup would be nice, but the problem could also be alleviated by relying on comparing fields in URL requested and snapshot received.
+        // (Will do this (first) for timing purposes.)
+
+
+
+
+
 
         // This gets called when the SERVER has initiated a change in the model.
         // This could for instance be a simulation and the server updates the current
         // simulation time.
         // We need to fetch a new image.
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
-            this._loadImageIfNotBusy();
+            this._requestImageIfNotBusy();
         }));
 
         // We are initiating a new update TO the server.
         dojo.subscribe("/model/updateSendStart", dojo.hitch(this, function (xml) {
             this._imageLoading = true;
+            // console.log("/model/updateSendStart: ******************* url = " + this._urlHandler.getURL());
             // Make sure we are showing the proxy geometry (if the mouse is over the canvas):
             this._showCorrect(); // Shows the correct image: either proxy or server image.
+            this._timeAtLastCompletedImageLoad = Date.now();
         }));
 
         // We have sent a new update to the server.
@@ -269,12 +360,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // Either way, we should show the image we just got from the server (it's newer than the one we have!).
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
-//                console.log("/model/updateSendPartialComplete: response = " + params.response);
+                // console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].view = " + response_obj[this._key].view);
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
+                    var tmp = Date.now();
+                    this._snapshotTimings.update( response_obj[this._key].snaptype, (tmp - response_obj[this._key].timestamp) );
+                    this._snapshotTimings.print();
                 }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
@@ -445,7 +539,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             }
         }
         this._showCorrect();
-        return response_rgb;
     },
 
 
@@ -478,8 +571,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
-                this._snapshotURL = "jpg_snapshot.txt";
+                this._snapshotURL = this._snapshotStrings.jpg;
                 this._urlHandler.setURL(this._snapshotURL);
+                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
                 // console.log("Mouse down: Setting JPG mode, new URL=" + this._urlHandler.getURL());
             }
         }
@@ -513,9 +607,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
                 // console.log("Mouse up:   In JPG mode");
                 // console.log("Mouse up:   Setting PNG mode");
-                this._snapshotURL = "snapshot.txt";
+                this._snapshotURL = this._snapshotStrings.png;
                 this._urlHandler.setURL(this._snapshotURL);
-                this._loadImageIfNotBusy();
+                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
+                this._requestImageIfNotBusy();
             }
         }
         this._showCorrect();
@@ -620,45 +715,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
-    _loadImage: function () {
-        return;
-        if (this._updatingBeforeLoad || this._localMode || this._active) {
-            return;
-        }
-        console.log("trying to load image");
-        this._loadImageAgain = 0;
-        this._loadImageStage2();
-    },
-
-
-    _loadImageStage2: function () {
-        this._DEBUG_imageLoadStart = (new Date()).getTime();
-        this._imageLoading = true;
-        this._showCorrect();
-        //dojo.connect(this._img, "onload", this._onLoadFunction);
-        // dojo.attr(this._img, "src", this._makeImgURL());
-    },
-
-
-    _loadComplete: function () {
-        console.log("Time taken to load image: ", (new Date()).getTime() - this._DEBUG_imageLoadStart);
-        this._imageLoading = false;
-        if (this._loadImageAgain--) {
-            this._loadImageStage2();
-        }
-        this._showCorrect();
-    },
-
-
     _update: function () {
         //if(this._localMode) return;
         this._showCorrect();
-        this._loadImage();
     },
 
 
     _showCorrect: function () {
-        if ( (this._localMode) || (this._showRenderList && this._active) || (this._imageLoading && this._mouseOver) ) {
+        if ( (this._localMode) || (this._showRenderList && this._active) || (this._imageLoading ) ) {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
             // We will always get here, while holding a mouse button down inside the canvas.

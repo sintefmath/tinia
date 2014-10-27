@@ -24,6 +24,7 @@
         <file>gui/autoProxy.fs</file>
         <file>gui/Label.js</file>
         <file>gui/RadioButtonWithLabel.js</file>
+        <file>gui/SnapshotTimings.js</file>
         <file>gui/TrackBallViewer.js</file>
         <file>gui/VerticalLayout.js</file>
         <file>model/ExposedModel.js</file>

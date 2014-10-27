@@ -67,6 +67,11 @@ bool JPCJob::init()
     // Note that these values are not communicated to the ProxyRenderer until they are actually changed, due to the use
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
+        m_model->addConstrainedElement<int>("simulatedAdditionalLatency", 0, 0, 1000);
+        m_model->addAnnotation("simulatedAdditionalLatency", "ms per frame)");
+        m_model->addConstrainedElement<int>("simulatedAdditionalLatencyDecay", 0, -100, 100);
+        m_model->addAnnotation("simulatedAdditionalLatencyDecay", "ms per sec)");
+
         m_model->addElement<bool>( "ap_useJpgProxy", false );            // This turns on the new "proxy mode", for which speedier jpg-snapshots are used
         m_model->addConstrainedElement<int>("ap_jpgQuality", 11, 0, 100);
         m_model->addAnnotation("ap_jpgQuality", "Jpg compression q)");
@@ -113,6 +118,16 @@ bool JPCJob::init()
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
     {
         int row = 0;
+
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("simulatedAdditionalLatency"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("simulatedAdditionalLatency", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("simulatedAdditionalLatency", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("simulatedAdditionalLatencyDecay"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("simulatedAdditionalLatencyDecay", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("simulatedAdditionalLatencyDecay", true));
+        row++;
+
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_useJpgProxy"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_jpgQuality"));
@@ -219,7 +234,14 @@ bool JPCJob::renderFrame(const std::string &session, const std::string &key, uns
     }
 
     // Simulated high latency
-    // usleep(200000);
+    if (m_model->hasElement("simulatedAdditionalLatency")) {
+        int ms;
+        m_model->getElementValue("simulatedAdditionalLatency", ms);
+        if (ms>0) {
+            std::cout << "Sleeping for " << ms << " ms." << std::endl;
+            usleep( 1000 * ms );
+        }
+    }
 
     glEnable(GL_DEPTH_TEST);
 

@@ -111,6 +111,7 @@ typedef struct mod_trell_dispatch_info
     char                 m_viewer_key_list[TRELL_VIEWER_KEY_LIST_MAXLENGTH]; // comma-separated list
     int                  m_jpeg_quality;
     char                 m_timestamp[ TRELL_TIMESTAMP_MAXLENGTH ];
+    char                 m_snaptype[ TRELL_SNAPTYPE_STRING_MAXLENGTH ];
     char*                m_static_path;
     apr_time_t           m_entry;
     apr_time_t           m_exit;

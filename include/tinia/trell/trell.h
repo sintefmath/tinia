@@ -32,6 +32,7 @@ extern "C" {
 #define TRELL_TIMESTAMP_MAXLENGTH 128
 #define TRELL_VIEWER_KEY_LIST_MAXLENGTH (10*(TRELL_KEYID_MAXLENGTH))
 #define TRELL_JPEG_QUALITY_STRING_MAXLENGTH 8
+#define TRELL_SNAPTYPE_STRING_MAXLENGTH 8
 
 /** The pixel formats that is used in the trell system. */
 enum TrellPixelFormat {

@@ -83,7 +83,7 @@ static int trell_handler_body(request_rec *r)
 #if 0
     ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r,
                    "mod_trell.c, trell_handler_body: trell_decode_path_info returned component=%d, request=%d, "
-                   "jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', jpeg_quality=%d, width=%d, height=%d",
+                   "jobid='%s', sessionid='%s', requestname='%s' revision=%d, action=%d, key='%s', viewer_key_list='%s', jpeg_quality=%d, timestamp='%s', snaptype='%s', width=%d, height=%d",
                    dispatch_info->m_component,
                    dispatch_info->m_request,
                    dispatch_info->m_jobid,
@@ -94,6 +94,8 @@ static int trell_handler_body(request_rec *r)
                    dispatch_info->m_key,
                    dispatch_info->m_viewer_key_list,
                    dispatch_info->m_jpeg_quality,
+                   dispatch_info->m_timestamp,
+                   dispatch_info->m_snaptype,
                    dispatch_info->m_width,
                    dispatch_info->m_height );
 #endif

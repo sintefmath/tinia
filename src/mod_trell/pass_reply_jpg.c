@@ -207,7 +207,13 @@ trell_pass_reply_jpg_main( void* data,
                 }
                 APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
             }
-            BB_APPEND_STRING( encoder_state->r->pool, bb, "\" }" );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, "\"" );
+
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"revision\" : \"%d\"", encoder_state->dispatch_info->m_revision );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"timestamp\" : \"%s\"", encoder_state->dispatch_info->m_timestamp );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"snaptype\" : \"%s\"", encoder_state->dispatch_info->m_snaptype );
+
+            BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
             }
