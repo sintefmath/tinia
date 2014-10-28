@@ -67,14 +67,20 @@ bool JPCJob::init()
     // Note that these values are not communicated to the ProxyRenderer until they are actually changed, due to the use
     // of listeners. (Should maybe fix this, by some initialization routine.)
     {
+        m_model->addElement<bool>( "ap_autoSelect", false );            // Selects whatever proxy method works fastest.
+        m_model->addElement<bool>( "ap_autoSelectSampleAll", false );
+        m_model->addAnnotation("ap_autoSelectSampleAll", "Sample all snapshot types");
+        m_model->addConstrainedElement<int>("ap_autoSelectTargetTime", 100, 0, 200);
+        m_model->addAnnotation("ap_autoSelectTargetTime", "Target time:");
+
         m_model->addConstrainedElement<int>("simulatedAdditionalLatency", 0, 0, 1000);
-        m_model->addAnnotation("simulatedAdditionalLatency", "ms per frame)");
+        m_model->addAnnotation("simulatedAdditionalLatency", "ms per frame:");
         m_model->addConstrainedElement<int>("simulatedAdditionalLatencyDecay", 0, -100, 100);
-        m_model->addAnnotation("simulatedAdditionalLatencyDecay", "ms per sec)");
+        m_model->addAnnotation("simulatedAdditionalLatencyDecay", "ms per sec:");
 
         m_model->addElement<bool>( "ap_useJpgProxy", false );            // This turns on the new "proxy mode", for which speedier jpg-snapshots are used
-        m_model->addConstrainedElement<int>("ap_jpgQuality", 11, 0, 100);
-        m_model->addAnnotation("ap_jpgQuality", "Jpg compression q)");
+        m_model->addConstrainedElement<int>("ap_jpgQuality", 0, 0, 99);
+        m_model->addAnnotation("ap_jpgQuality", "Jpg compression q:");
 
         m_model->addElement<bool>( "ap_useAutoProxy", false );          // This turns on the new autoProxy. It will override useJpgProxy.
         m_model->addElement<bool>( "ap_autoProxyDebugging", true );
@@ -94,11 +100,11 @@ bool JPCJob::init()
         m_model->addElement<bool>( "ap_screenSpaceSized", true );
         m_model->addAnnotation("ap_screenSpaceSized", "Screen-space-sized splats");
         m_model->addConstrainedElement<int>("ap_overlap", 200, 1, 300);
-        m_model->addAnnotation("ap_overlap", "Overlap factor)");
+        m_model->addAnnotation("ap_overlap", "Overlap factor:");
         m_model->addElement<bool>( "ap_alwaysShowMostRecent", true );
         m_model->addAnnotation("ap_alwaysShowMostRecent", "Most recent model in front");
         m_model->addConstrainedElement<int>("ap_splats", 64, 2, 512);
-        m_model->addAnnotation("ap_splats", "Number of splats)");
+        m_model->addAnnotation("ap_splats", "Number of splats:");
         m_model->addElement<bool>( "ap_resetAllModels", false );
         m_model->addAnnotation("ap_resetAllModels", "Remove all models, update now");
         m_model->addElement<bool>( "ap_useISTC", true );
@@ -118,6 +124,14 @@ bool JPCJob::init()
     tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
     {
         int row = 0;
+
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_autoSelect"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_autoSelectSampleAll"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_autoSelectTargetTime"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_autoSelectTargetTime", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_autoSelectTargetTime", true));
+        row++;
 
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("simulatedAdditionalLatency"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("simulatedAdditionalLatency", false));

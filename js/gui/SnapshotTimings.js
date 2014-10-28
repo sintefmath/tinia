@@ -70,10 +70,11 @@ dojo.declare("gui.SnapshotTimings", null, {
 //        for (var i=0; i<this._n; i++) {
 //            console.log( this._timingList[i] );
 //        }
-        console.log("##### timing averages:");
+        var console_string = "##### timing averages: ";
         for ( var snapType in this._listCursors ) {
-            console.log( snapType + ": " + this.getAvgTime(snapType) );
+            console_string = console_string + snapType + ": " + this.getAvgTime(snapType) + " ";
         }
+        console.log(console_string);
     },
 
 
@@ -93,6 +94,36 @@ dojo.declare("gui.SnapshotTimings", null, {
         } else {
             // console.log( "returning t=" + t + " divided by n=" + n + ", =" + t/n );
             return t/n;
+        }
+    },
+
+
+    // Returning the key for the highest time lower than the target time, excluding those with avg time zero.
+    // If there are no times lower than the target, returning the over all lowest time.
+    getFastest: function(targetTime) {
+        var bestType = "";
+        var lowestType = "";
+        var best = 0;
+        var lowest = 999999;
+        for ( var snaptype in this._listCursors ) {
+            var t = this.getAvgTime(snaptype);
+            if (t!=0) {
+                if ( (t>best) && (t<targetTime) ) {
+                    best = t;
+                    bestType = snaptype;
+                    // console.log("  new best: " + bestType + " (" + best + ")");
+                }
+                if ( t < lowest ) {
+                    lowest = t;
+                    lowestType = snaptype;
+                    // console.log("  new lowest: " + lowestType + " (" + lowest + ")");
+                }
+            }
+        }
+        if (best>0) {
+            return bestType;
+        } else {
+            return lowestType;
         }
     },
 

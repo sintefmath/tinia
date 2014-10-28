@@ -51,8 +51,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 512;
-        this._height = 512;
+        this._width = 1024;
+        this._height = 1024;
         this._modelLib = params.modelLib;
         // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
         // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
@@ -156,6 +156,16 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    _autoSelectSnapshotType: function(timings) {
+        if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) ) {
+            console.log("Should select method now");
+            var targetTime = this._modelLib.getElementValue("ap_autoSelectTargetTime");
+            var bestType = timings.getFastest( targetTime );
+            console.log("Best Type: " + bestType);
+        }
+    },
+
+
     _requestImageIfNotBusy: function() {
         if (!this._imageLoading) {
             // console.log("_requestImageIfNotBusy (/model/updateParsed or mouseUp): Getting new image, url=" + this._urlHandler.getURL());
@@ -175,8 +185,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
                                 // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                                 this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
-                                this._snapshotTimings.update( response_obj[this._key].snaptype, (t0 - response_obj[this._key].timestamp) );
+                                var snaptype = response_obj[this._key].snaptype;
+                                if (response_obj[this._key].snaptype == "jpg") {
+                                    snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+                                }
+                                console.log("new snaptype = " + snaptype);
+                                this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
                                 this._snapshotTimings.print();
+                                this._autoSelectSnapshotType(this._snapshotTimings);
                             })
                         });
         }
@@ -303,6 +319,23 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
 
+        this._modelLib.addLocalListener( "ap_autoSelectSampleAll", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("ap_autoSelectSampleAll") ) {
+                console.log("Should now sample all snapshot types to obtain timing results");
+
+                for (var k=0; k<this._snapshotTimings._n; k++) { // To fill the ring buffers used for averaging
+                    for (var i=0; i<10; i++) {
+                        this._snapshotTimings.update( "jpg" + i, 50 + 5 * i );
+                    }
+                    this._snapshotTimings.update( "png", 100 );
+                    this._snapshotTimings.update( "ap", 200 );
+                }
+                this._snapshotTimings.print();
+
+            }
+        }) );
+
+
 
         // Some timing issues:
         //
@@ -352,7 +385,6 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // console.log("/model/updateSendStart: ******************* url = " + this._urlHandler.getURL());
             // Make sure we are showing the proxy geometry (if the mouse is over the canvas):
             this._showCorrect(); // Shows the correct image: either proxy or server image.
-            this._timeAtLastCompletedImageLoad = Date.now();
         }));
 
         // We have sent a new update to the server.
@@ -367,8 +399,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                     var tmp = Date.now();
-                    this._snapshotTimings.update( response_obj[this._key].snaptype, (tmp - response_obj[this._key].timestamp) );
+                    var snaptype = response_obj[this._key].snaptype;
+                    if (response_obj[this._key].snaptype == "jpg") {
+                        snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+                    }
+                    console.log("new snaptype = " + snaptype);
+                    this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
                     this._snapshotTimings.print();
+                    this._autoSelectSnapshotType(this._snapshotTimings);
                 }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
