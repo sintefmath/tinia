@@ -72,7 +72,7 @@ dojo.declare("gui.SnapshotTimings", null, {
 //        }
         var console_string = "##### timing averages: ";
         for ( var snapType in this._listCursors ) {
-            console_string = console_string + snapType + ": " + this.getAvgTime(snapType) + " ";
+            console_string = console_string + snapType + ": " + this.getAvgTime(snapType) + "   ";
         }
         console.log(console_string);
     },

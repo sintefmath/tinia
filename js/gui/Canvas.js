@@ -158,10 +158,25 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _autoSelectSnapshotType: function(timings) {
         if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) ) {
-            console.log("Should select method now");
+            // console.log("Should select method now");
             var targetTime = this._modelLib.getElementValue("ap_autoSelectTargetTime");
             var bestType = timings.getFastest( targetTime );
-            console.log("Best Type: " + bestType);
+            console.log("Best snaptype: " + bestType);
+            if (bestType=="") {
+                // Could happen if there are no timing-results
+                bestType = "png";
+                console.log("  Overriding with " + bestType);
+            }
+            if ( bestType.substr(0, 3) == "jpg" ) {
+                var qq = 10 * bestType.substr(3, 1);
+                bestType = "jpg";
+                this._modelLib.updateElement("ap_jpgQuality", qq);
+                console.log("Setting to jpg with q = " + qq);
+            }
+            console.log("Setting snaptype: " + bestType + "\n");
+            this._snapshotURL = this._snapshotStrings[bestType];
+            this._urlHandler.setURL(this._snapshotURL);
+            this._urlHandler.updateParams( { snaptype: bestType } );
         }
     },
 
@@ -642,8 +657,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // console.log("Mouse up:   Should we be here?");
         if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
             // console.log("Mouse up:   Not in AP mode");
-            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
-                // console.log("Mouse up:   In JPG mode");
+            if (   ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) ||
+                   ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
+                // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
                 // console.log("Mouse up:   Setting PNG mode");
                 this._snapshotURL = this._snapshotStrings.png;
                 this._urlHandler.setURL(this._snapshotURL);
