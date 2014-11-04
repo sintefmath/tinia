@@ -72,6 +72,8 @@ bool JPCJob::init()
         m_model->addAnnotation("ap_autoSelectSampleAll", "Sample all snapshot types");
         m_model->addConstrainedElement<int>("ap_autoSelectTargetTime", 100, 0, 200);
         m_model->addAnnotation("ap_autoSelectTargetTime", "Target time:");
+        m_model->addConstrainedElement<int>("ap_autoSelectTargetTimeSlack", 20, 0, 200);
+        m_model->addAnnotation("ap_autoSelectTargetTimeSlack", "Target time slack:");
 
         m_model->addConstrainedElement<int>("simulatedAdditionalLatency", 0, 0, 1000);
         m_model->addAnnotation("simulatedAdditionalLatency", "ms per frame:");
@@ -131,6 +133,10 @@ bool JPCJob::init()
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_autoSelectTargetTime"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_autoSelectTargetTime", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_autoSelectTargetTime", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_autoSelectTargetTimeSlack"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_autoSelectTargetTimeSlack", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_autoSelectTargetTimeSlack", true));
         row++;
 
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("simulatedAdditionalLatency"));

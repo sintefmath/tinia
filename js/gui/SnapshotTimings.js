@@ -41,7 +41,9 @@ dojo.declare("gui.SnapshotTimings", null, {
         for (var i=0; i<this._n; i++) {
             this._timingList[i] = {};
         }
-
+        // Currently not in use:
+//        this._currentSnapType = "";
+//        this.currentSnapTypeCntr = 0;
     },
 
 
@@ -60,20 +62,43 @@ dojo.declare("gui.SnapshotTimings", null, {
 //        for (var i=0; i<5; i++) {
 //            console.log( this._timingList[i] );
 //        }
+
+        // All different snapshot types mixed together:
+        if (this._listCursors.all) {
+            // This type already exists
+        } else {
+            this._listCursors.all = 0;
+        }
+        this._timingList[this._listCursors.all].all = time;
+        this._listCursors.all = ( this._listCursors.all + 1 ) % this._n;
+
+        // Keeping track of changing types
+//        if ( snapType == this._currentSnapType ) {
+//            this.currentSnapTypeCntr++;
+//        } else {
+//            this.currentSnapTypeCntr = 1;
+//            this._currentSnapType = snapType;
+//        }
+
+        if ( snapType == "ap" ) {
+            if ( this._remainingFramesForAPrecording ) {
+                if ( this._remainingFramesForAPrecording == 1 ) {
+                    this._recordedAPtime = this.getAvgTime( snapType ); // We store this time for usage by the auto-select stuff in Canvas.js
+                }
+                if ( this._remainingFramesForAPrecording > 0 ) {
+                    this._remainingFramesForAPrecording--;
+                }
+            }
+        }
     },
 
 
     print: function() {
-//        console.log("##### cursors:");
-//        console.log( this._listCursors );
-//        console.log("##### timings:");
-//        for (var i=0; i<this._n; i++) {
-//            console.log( this._timingList[i] );
-//        }
         var console_string = "##### timing averages: ";
         for ( var snapType in this._listCursors ) {
-            console_string = console_string + snapType + ": " + this.getAvgTime(snapType) + "   ";
+            console_string = console_string + snapType + ": " + this.getAvgTime(snapType) + "  ";
         }
+        // console_string = console_string + " (ap/png=" + (this.getAvgTime("ap")/this.getAvgTime("png")) + ")";
         console.log(console_string);
     },
 
@@ -94,6 +119,17 @@ dojo.declare("gui.SnapshotTimings", null, {
         } else {
             // console.log( "returning t=" + t + " divided by n=" + n + ", =" + t/n );
             return t/n;
+        }
+    },
+
+
+    // Returning 0 if we don't have any results.
+    getLatestTime: function(snapType) {
+        if (this._listCursors[snapType]) {
+            // This type exists
+            return this._timingList[ ( this._listCursors[snapType] - 1 + this._n ) % this._n ][ snapType ];
+        } else {
+            return 0;
         }
     },
 
@@ -126,6 +162,33 @@ dojo.declare("gui.SnapshotTimings", null, {
             return lowestType;
         }
     },
+
+
+    initiateAPrecording: function() {
+//        console.log("initiateAPrecording starting ********************************");
+        this._remainingFramesForAPrecording = this._n;
+//        console.log("initiateAPrecording returning");
+    },
+
+
+    // Returning 0 if no average yet obtained
+    getRecordedAPtime: function() {
+        // console.log("getRecordedAPtime starting");
+        // if ( !(this._remainingFramesForAPrecording) ) {
+        if ( typeof(this._remainingFramesForAPrecording) === 'undefined' ) {
+//            console.log(".......... Strange! Requesting APtime before initiateAPrecording has been called?!?!");
+//            console.log( this );
+            return 0;
+        } else {
+            if ( this._remainingFramesForAPrecording == 0 ) {
+//                console.log(".......... Returning time " + this._recordedAPtime);
+                return this._recordedAPtime;
+            } else {
+//                console.log(".......... _remainingFramesForAPrecording = " + _remainingFramesForAPrecording + ", returning zero for time");
+                return 0;
+            }
+        }
+    }
 
 
 });

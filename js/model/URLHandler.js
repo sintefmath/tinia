@@ -68,6 +68,7 @@ dojo.declare("model.URLHandler", null, {
         for( var key in this._params) {
             url +=key+"="+this._params[key]+"&";
         }
+        // console.log("url = " + url);
         return url;
     }
 

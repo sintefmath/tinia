@@ -125,6 +125,84 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    // When this is working, it should replace testing of both Exposed Model "magic" variables and current URLs (in this._urlHandler for instance.)
+    // Modes: 0) png, 10-19) jpg with quality 0 to 90, 20) autoProxy ("ap")
+    _getSnapshotMode: function() {
+
+        // temporary solution:
+
+//        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+//            // ap should override jpg
+//            return 20;
+//        }
+//        if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.hasKey("ap_jpgQuality")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+//            // "jpg" + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10) );
+//            return 10 + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+//        }
+//        return 0;
+
+        // later:
+
+        if ( this._snapshotMode === undefined ) {
+            // Has not yet been set, this means that we are entering autoSelect mode for the first time.
+            if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+                // ap should override jpg
+                this._snapshotMode = 20;
+            }
+            else if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.hasKey("ap_jpgQuality")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+                // "jpg" + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10) );
+                this._snapshotMode = 10 + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+            }
+            else {
+                this._snapshotMode = 0; // png
+            }
+        }
+        return this._snapshotMode;
+
+    },
+
+
+    _setSnapshotMode: function(mode) {
+
+        // temporary:
+
+        if (mode==20) {
+            // ap should override jpg
+            if (this._modelLib.hasKey("ap_useAutoProxy")) {
+                 this._modelLib.updateElement("ap_useAutoProxy", true);
+            }
+            if (this._modelLib.hasKey("ap_useJpgProxy")) {
+                 this._modelLib.updateElement("ap_useJpgProxy", false);
+            }
+        }
+        else if (mode==0) {
+            // png
+            if (this._modelLib.hasKey("ap_useAutoProxy")) {
+                 this._modelLib.updateElement("ap_useAutoProxy", false);
+            }
+            if (this._modelLib.hasKey("ap_useJpgProxy")) {
+                 this._modelLib.updateElement("ap_useJpgProxy", false);
+            }
+        }
+        else {
+            // jpg
+            if (this._modelLib.hasKey("ap_useAutoProxy")) {
+                 this._modelLib.updateElement("ap_useAutoProxy", false);
+            }
+            if (this._modelLib.hasKey("ap_useJpgProxy")) {
+                 this._modelLib.updateElement("ap_useJpgProxy", true);
+            }
+            if (this._modelLib.hasKey("ap_jpgQuality")) {
+                 this._modelLib.updateElement("ap_jpgQuality", (mode-10)*10);
+            }
+        }
+
+        // later:
+        this._snapshotMode = mode;
+
+    },
+
+
     _adjustSimulatedLatency: function() {
         if ( (this._modelLib.hasKey("simulatedAdditionalLatency")) && (this._modelLib.hasKey("simulatedAdditionalLatencyDecay")) ) {
             var ms = this._modelLib.getElementValue("simulatedAdditionalLatency");
@@ -156,27 +234,170 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    // New attempt: We do not change type unless we have at least this._snapshotTimings._n timings of the current type.
+    // Also: We only change type "one step in one direction" at a time, i.e., we go from jpg with quality q to q+delta or q-delta,
+    // or we go from coarsest jpg to autoProxy, or from finest jpg to png. From png we go to finest jpg, and from autoProxy we go to
+    // coarsest jpg.
+
     _autoSelectSnapshotType: function(timings) {
-        if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) ) {
-            // console.log("Should select method now");
+        if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) &&
+                (this._modelLib.hasKey("ap_jpgQuality")) &&
+                (this._modelLib.hasKey("ap_autoSelectTargetTime")) &&
+                (this._modelLib.hasKey("ap_autoSelectTargetTimeSlack")) &&
+                (this._mouseDownOrTouching) ) {
+
+            // Setting up the current type of snapshot, same string as used in the timing object
+            var currentSnapType = "unknown";
+            var currentJpgQuality = -10;
+            if ( this._urlHandler._url == this._snapshotStrings.png ) {
+                currentSnapType = "png";
+            }
+            else if ( this._urlHandler._url == this._snapshotStrings.jpg ) {
+                currentSnapType = "jpg";
+                currentJpgQuality = this._modelLib.getElementValue("ap_jpgQuality");
+            }
+            else if ( this._urlHandler._url == this._snapshotStrings.ap ) {
+                currentSnapType = "ap";
+            }
+
+
+            // Nytt:
+var currentMode = this._getSnapshotMode();
+if (currentMode==0) {
+    currentSnapType = "png";
+}
+else if ( (currentMode>=10) && (currentMode<20) ) {
+    currentSnapType = "jpg";
+    currentJpgQuality = (currentMode-10) * 10;
+}
+else if (currentMode==20) {
+    currentSnapType = "ap";
+}
+else {
+    alert("Should not happen. Unknown mode");
+}
+
+
+
+            // det er greiene over som må endre med nytt opplegg! ikke lese av url men bruke den nye get-metoden! (som først skal lese state variabler i exposedmodel, så egen
+            // variabel etter hgvert...)
+
+
+            // Getting the various times to use
             var targetTime = this._modelLib.getElementValue("ap_autoSelectTargetTime");
-            var bestType = timings.getFastest( targetTime );
-            console.log("Best snaptype: " + bestType);
-            if (bestType=="") {
-                // Could happen if there are no timing-results
-                bestType = "png";
-                console.log("  Overriding with " + bestType);
+            var targetTimeSlack = this._modelLib.getElementValue("ap_autoSelectTargetTimeSlack");
+            var currentTime = 0;
+            if ( currentSnapType == "jpg" ) {
+                currentTime = this._snapshotTimings.getAvgTime( "jpg" + parseInt(currentJpgQuality/10) );
+            } else {
+                currentTime = this._snapshotTimings.getAvgTime( currentSnapType );
             }
-            if ( bestType.substr(0, 3) == "jpg" ) {
-                var qq = 10 * bestType.substr(3, 1);
-                bestType = "jpg";
-                this._modelLib.updateElement("ap_jpgQuality", qq);
-                console.log("Setting to jpg with q = " + qq);
+
+            console.log("_autoSelectSnapshotType: currentSnapType = " + currentSnapType + " (jpg q = " + currentJpgQuality + "), currentTime = " + currentTime);
+            if (currentTime==0) {
+                console.log("  Returning early, we don't have timing information, yet...");
+                return; // We don't want to change method until we have some more samples, so we just exit early.
             }
-            console.log("Setting snaptype: " + bestType + "\n");
-            this._snapshotURL = this._snapshotStrings[bestType];
-            this._urlHandler.setURL(this._snapshotURL);
-            this._urlHandler.updateParams( { snaptype: bestType } );
+
+            var newSnapType = "unknown";
+
+            // Testing if we should go faster, slower or stay
+            // Note that we cannot use the simple time comparison to determine whether or not to go from "ap" to "jp0", since "ap" will
+            // always be very slow in the timings, although snappy in feel.
+            if ( currentSnapType == "ap" ) {
+                // Special treatment.
+
+                var apTimeAtTransitionFromJPG0 = timings.getRecordedAPtime();
+                console.log("  We are in ap-mode, apTimeAtTransitionFromJPG0 (in reality, 5 frames after transition!) = " + apTimeAtTransitionFromJPG0 + ", and currentTime is still = " + currentTime);
+                newSnapType = "ap";
+                if ( apTimeAtTransitionFromJPG0 == 0 ) {
+                    // We do not have at least timings._n ap-frames since the transition, so we do nothing
+                }
+                else if ( currentTime < apTimeAtTransitionFromJPG0 - 2*targetTimeSlack ) {
+                    console.log("We have enough frames, and time has been reduced, so we go up to jpg0");
+                    // Ok, in this case, we go back to jpg0. The rationale behind this:
+                    // We go down, from jpg0 to ap, when jpg0-time > targetTime + slack. After the first _n ap-frames,
+                    // we get an ap-time, which we store and use for subsequent time comparisons, let this be named ap-time-0.
+                    // We go up from ap to jpg0 again when ap-time < ap-time-0 - 2*slack, i.e., we have a time reduction
+                    // approximately equal to 2*slack.
+                    newSnapType = "jpg";
+                    this._modelLib.updateElement("ap_jpgQuality", 0);
+                    console.log("--------------- updating jpg q 0 ---------------------");
+this._setSnapshotMode(10);
+                } else {
+                    // Do nothing. We stay with "ap", we don't have a faster alternative.
+                    console.log("Staying in ap");
+                }
+            } else {
+                // We are in a position in which we can use the current timings, current snap type is either a "version" of jpg or png.
+
+                if ( currentTime < targetTime-targetTimeSlack) {
+                    console.log("  We can afford to go for higher quality, i.e., slower");
+
+                    // argh... ble dette riktig?? kvalitetsmessig: ap         <   jpg0 < ... < jpg9 < png
+                    //  båndbredde- og latencykrav:                lav        |        middels      | høyt
+                    //           tid:                          "special case"     very low      low | high
+
+                    if ( currentSnapType == "ap" ) {
+                        alert("should not happen");
+                    }
+                    else if ( currentSnapType == "jpg" ) {
+                        if ( currentJpgQuality < 90 ) {
+                            newSnapType = "jpg";
+                            this._modelLib.updateElement("ap_jpgQuality", currentJpgQuality + 10);
+                            console.log("--------------- updating jpg q " + (currentJpgQuality+10) + " ---------------------");
+this._setSnapshotMode(10 + parseInt((currentJpgQuality+10)/10));
+                        } else {
+                            newSnapType = "png";
+this._setSnapshotMode(0);
+                        }
+                    }
+                    else {
+                        newSnapType = "png"; // best we have... no change
+this._setSnapshotMode(0);
+                    }
+                }
+                else if ( currentTime > targetTime+targetTimeSlack ) {
+                    console.log("  We should go for faster method");
+                    if ( currentSnapType == "png" ) {
+                        newSnapType = "jpg";
+                        this._modelLib.updateElement("ap_jpgQuality", 90);
+                        console.log("--------------- updating jpg q 90 ---------------------");
+this._setSnapshotMode(19);
+                    }
+                    else if ( currentSnapType == "jpg" ) {
+                        if ( currentJpgQuality >= 10 ) {
+                            newSnapType = "jpg";
+                            this._modelLib.updateElement("ap_jpgQuality", currentJpgQuality - 10);
+                            console.log("--------------- updating jpg q " + (currentJpgQuality-10) + " ---------------------");
+this._setSnapshotMode(10 + parseInt((currentJpgQuality-10)/10));
+                        } else {
+//newSnapType = "ap";
+// ignoring this for now, during debugging. The problem is that we get into some kind of lock/freeze when this is allowed. Happens when mouse is released in ap-mode?!
+                            // Switching from jpg0 to ap, must initiate the ap-time-recording
+                            timings.initiateAPrecording();
+                        }
+                    }
+                    else {
+                        alert("should not happen 2");
+                    }
+                }
+                else {
+                    console.log("  time within tolerances, not changing snaptype");
+                    newSnapType = currentSnapType;
+                }
+            }
+
+
+            // neste: kalle _setSnapshotMode her, men ikke i mouse-up, sjekke at jpg ikke rutcher til bunnen...
+
+            console.log("_autoSelectSnapshotType done. New snapType = " + newSnapType);
+            if ( newSnapType != "unknown" ) {
+                this._snapshotURL = this._snapshotStrings[newSnapType];
+                this._urlHandler.setURL(this._snapshotURL);
+                this._urlHandler.updateParams( { snaptype: newSnapType } );
+                console.log("--------------- updating url params with new snaptype " + newSnapType + " ---------------------");
+            }
         }
     },
 
@@ -189,6 +410,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // Should this be done? It is done in ExposedModelSender._makeURL(), which is used when posting with dojo.rawXhrPost()!
             this._urlHandler.updateParams( { "revision" : this._modelLib.getRevision(), "timestamp" : (new Date()).getTime() } );
             var url_used = this._urlHandler.getURL();
+
 
             dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                             url: this._urlHandler.getURL(),
@@ -203,8 +425,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 var snaptype = response_obj[this._key].snaptype;
                                 if (response_obj[this._key].snaptype == "jpg") {
                                     snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+                                    // @@@ ARGH! This is not correct, we should also record the quality in the url and response!!!
                                 }
-                                console.log("new snaptype = " + snaptype);
+                                console.log("_requestImageIfNotBusy: receieved snaptype = " + snaptype);
                                 this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
                                 this._snapshotTimings.print();
                                 this._autoSelectSnapshotType(this._snapshotTimings);
@@ -418,7 +641,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     if (response_obj[this._key].snaptype == "jpg") {
                         snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
                     }
-                    console.log("new snaptype = " + snaptype);
+                    console.log("/model/updateSendPartialComplete: received snaptype = " + snaptype);
                     this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
                     this._snapshotTimings.print();
                     this._autoSelectSnapshotType(this._snapshotTimings);
@@ -488,7 +711,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _touchstart: function (event) {
-        this._active = true;
+        this._mouseDownOrTouching = true;
         this._touch_prev = event;
         // We need to add the relative placement informatoin to all touch events
         for(var i = 0; i < event.touches.length; ++i) {
@@ -512,7 +735,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _touchend: function (event) {
-        this._active = false;
+        this._mouseDownOrTouching = false;
         if( event.touches.length == 0 ) {
             // Use last active position
             event = this._touch_prev;
@@ -614,7 +837,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _mousedown: function (event) {
-        this._active = true;
+        this._mouseDownOrTouching = true;
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
         event.relativeX = x;
@@ -646,7 +869,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _mouseup: function (event) {
-        this._active = false;
+        console.log("================================================ mouse up ========================================================");
+        this._mouseDownOrTouching = false;
         var x = event.pageX - this._placementX();
         var y = event.pageY - this._placementY();
         event.relativeX = x;
@@ -655,18 +879,32 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._eventHandlers[i].mouseReleaseEvent(event);
         }
         // console.log("Mouse up:   Should we be here?");
-        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
-            // console.log("Mouse up:   Not in AP mode");
-            if (   ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) ||
-                   ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
-                // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
-                // console.log("Mouse up:   Setting PNG mode");
-                this._snapshotURL = this._snapshotStrings.png;
-                this._urlHandler.setURL(this._snapshotURL);
-                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
-                this._requestImageIfNotBusy();
-            }
+//        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
+//            // console.log("Mouse up:   Not in AP mode");
+//            if (   ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) ||
+//                   ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
+//                // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
+//                // console.log("Mouse up:   Setting PNG mode");
+//                this._snapshotURL = this._snapshotStrings.png;
+//                this._urlHandler.setURL(this._snapshotURL);
+//                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
+//                this._requestImageIfNotBusy(); // @@@ It could be that when we observe that we don't end up with a png, it is because this issued request is canceled due to "being busy"...?!
+//            }
+//        }
+
+
+        if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) ) {
+            //this._setSnapshotMode(0);
+            this._snapshotURL = this._snapshotStrings.png;
+            this._urlHandler.setURL(this._snapshotURL);
+            this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
+            console.log("--------------- updating url with snaptype " + this._snapShotStringToType( this._urlHandler.getURL() ) + " ---------------------");
+
+            // Why do we do this? Should this be necessary? Is this a workaround to get a png after the last jpg?
+            this._requestImageIfNotBusy(); // @@@ It could be that when we observe that we don't end up with a png, it is because this issued request is canceled due to "being busy"...?!
         }
+
+
         this._showCorrect();
         event.preventDefault();
     },
@@ -776,7 +1014,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     _showCorrect: function () {
-        if ( (this._localMode) || (this._showRenderList && this._active) || (this._imageLoading ) ) {
+        if ( (this._localMode) || (this._showRenderList && this._mouseDownOrTouching) || (this._imageLoading ) ) {
             dojo.style(this._img, "z-index", "0");
             this._img.style.zIndex = "0";
             // We will always get here, while holding a mouse button down inside the canvas.
@@ -788,7 +1026,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // Also when the mouse is inside and a button is released.
         }
         if (this._loadingDiv) {
-            if (this._imageLoading && !this._active) {
+            if (this._imageLoading && !this._mouseDownOrTouching) {
                 this._loadingDiv.style.zIndex = "3";
                 //  dojo.style(this._loadingDiv, "z-index", "3");
                 // Have only seen this occasionally when double-clicking inside the canvas. Not consistently.
