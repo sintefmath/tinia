@@ -61,7 +61,7 @@ protected:
     QString                                 m_update;
 };
 
-
+// Need a copy of this class that can take a snapshot of the screen and store it as binary data.
 class SnapshotAsTextFetcher : public QRunnable
 {
 public:
@@ -159,6 +159,8 @@ ServerThread::ServerThread(OpenGLServerGrabber* grabber,
 {
 }
 
+// This is the caller for where we create the JSON (protobuf object to be).
+// This should perhaps be duplicated as "runBinary()"
 void ServerThread::run()
 {
     QTcpSocket socket;
@@ -275,6 +277,69 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
     os << "}";
 }
+
+// This should be something similar to the gtetSnapshotTxt, but with binary data instead.
+// This function should return a google protocol buffer, which should be used instead of the QTextStream object.
+void ServerThread::getSnapshotBytes( QTextStream &os, const QString &request,
+                                     tinia::jobcontroller::Job* job,
+                                     tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
+                                     const bool with_depth )
+{
+    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
+    std::string key = arguments.get<2>();
+    std::string viewer_key_list = arguments.get<3>();
+
+    // os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
+    // httpHeader should be attached at a later stage, from this function's caller.
+    // Binary body will require that we know the size of blob.
+
+    QString viewer_keys(viewer_key_list.c_str());
+    QStringList vk_list = viewer_keys.split(',');
+
+    for (int i=0; i<vk_list.size(); i++) {
+        QString k = vk_list[i];
+
+        // Now building the JSON entry for this viewer/key
+        os << k << ": { \"rgb\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
+        }
+        os << "\"";
+        if (with_depth) {
+            os << ", \"depth\": \"";
+            {
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
+                m_mainthread_invoker->invokeInMainThread( &f, true );
+            }
+            os << "\", \"view\": \"";
+            tinia::model::Viewer viewer;
+            m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
+            {
+                for (size_t i=0; i<15; i++) {
+                    os << viewer.modelviewMatrix[i] << " ";
+                }
+                os << viewer.modelviewMatrix[15];
+            }
+            os << "\", \"proj\": \"";
+            {
+                for (size_t i=0; i<15; i++) {
+                    os << viewer.projectionMatrix[i] << " ";
+                }
+                os << viewer.projectionMatrix[15];
+            }
+            os << "\"";
+        }
+        os << " }";
+        if ( i < vk_list.size() - 1 ) {
+            os << ", ";
+        }
+    }
+
+    os << "}";
+}
+
 
 
 bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,

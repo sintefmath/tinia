@@ -31,6 +31,15 @@ private:
                          tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                          const bool with_depth );
 
+    /** Collects a rgb buffer data and returns it in a google protocol buffer TiniaProtoBuf object. This object can also
+     *  contain depth and transformation data (optional proto buffer fields).
+     *  getSnapshotBundleTxt() seems not to be used, and we therefore do not need a replica of it.
+     */
+    void getSnapshotBytes( const QString &request,
+                           tinia::jobcontroller::Job* job,
+                           tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
+                           const bool with_depth );
+
     /** Collects view matrix, projection matrix, rgb buffer and depth buffer, and writes them out as a JSON object.
      */
     void getSnapshotBundleTxt(QTextStream &os, const QString &request,
