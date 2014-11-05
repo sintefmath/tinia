@@ -438,13 +438,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         event.preventDefault();
 
     },
+
+
+    // The conversion to integer here seems not to have been required earlier. This may have to do with an upgrade of Dojo.
     _placementX: function () {
-        return dojo.position(this._canvas).x;
+        return parseInt( dojo.position(this._canvas).x );
+    },
+    _placementY: function () {
+        return parseInt( dojo.position(this._canvas).y );
     },
 
-    _placementY: function () {
-        return dojo.position(this._canvas).y;
-    },
+
     _mouseup: function (event) {
         this._active = false;
         var x = event.pageX - this._placementX();
@@ -616,19 +620,21 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
     },
 
-    _mouseMoveResize: function (event) {
-        var x = event.pageX - this._placementX();
-        var y = event.pageY - this._placementY();
 
+    // The required four-pixel alignments below may have to do with png-encoding requirements, it may also  be
+    // an unneccessary restriction which produces a misleading (http request timeout) error message when not met.
+
+    _mouseMoveResize: function (event) {
+        var x = parseInt( (event.pageX - this._placementX()) / 4 ) * 4;
+        var y = event.pageY - this._placementY();
         if (this._isResizing) {
             this.resize(x, y);
         }
-
     },
 
     _mouseDownResize: function (event) {
         if (event.button != 0) return;
-        var x = event.pageX - this._placementX();
+        var x = parseInt( (event.pageX - this._placementX()) / 4 ) * 4;
         var y = event.pageY - this._placementY();
         if (Math.max(Math.abs(this._width - x), Math.abs(this._height - y)) < 20) {
             this._isResizing = true;
