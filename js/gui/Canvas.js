@@ -111,7 +111,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _snapShotStringToType: function( url_type )
     {
-        var snapType = "unknown";
+        var snapType = "huh?";
         if ( url_type.substring(0, this._snapshotStrings.png.length) == this._snapshotStrings.png ) {
             snapType = "png";
         }
@@ -128,23 +128,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     // When this is working, it should replace testing of both Exposed Model "magic" variables and current URLs (in this._urlHandler for instance.)
     // Modes: 0) png, 10-19) jpg with quality 0 to 90, 20) autoProxy ("ap")
     _getSnapshotMode: function() {
-
-        // temporary solution:
-
-//        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
-//            // ap should override jpg
-//            return 20;
-//        }
-//        if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.hasKey("ap_jpgQuality")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
-//            // "jpg" + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10) );
-//            return 10 + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
-//        }
-//        return 0;
-
-        // later:
-
         if ( this._snapshotMode === undefined ) {
             // Has not yet been set, this means that we are entering autoSelect mode for the first time.
+            // For this special case, we consult the ap_*-variables.
             if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
                 // ap should override jpg
                 this._snapshotMode = 20;
@@ -157,14 +143,39 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._snapshotMode = 0; // png
             }
         }
-        return this._snapshotMode;
 
+        // We also produce a proper string and jpg-quality number for the current mode
+        var currentSnapType = "huh?";
+        var currentJpgQuality = -10;
+        if ( this._snapshotMode == 0 ) {
+            currentSnapType = "png";
+        }
+        else if ( (this._snapshotMode>=10) && (this._snapshotMode<20) ) {
+            currentSnapType = "jpg";
+            currentJpgQuality = (this._snapshotMode-10) * 10;
+        }
+        else if (this._snapshotMode==20) {
+            currentSnapType = "ap";
+        }
+        else {
+            throw "Should not happen. Unknown mode: " + this._snapshotMode;
+        }
+
+// @@@ Hvorfor funker ikke testen under når variabelen bare defineres i en av branchene over???!!! Får en merkelig oppførsel, ingen feilmelding.
+//        if ( ! ( (currentJpgQuality==='undefined') || (currentJpgQuality===null) ) ) {
+//            console.log(currentJpgQuality);
+//        }
+
+        return { mode: this._snapshotMode, snaptype: currentSnapType, jpgq: currentJpgQuality };
     },
 
 
+    // @@@ Should be renamed to "setAutoSelectSnapshotMode", since this is to be used by that mode. It will for instance not be set to 'png' when a png is
+    // requested at "mouse up".
     _setSnapshotMode: function(mode) {
 
         // temporary:
+        // @@@ check now if it is safe to remove these, i.e., om removal breaks the autoselect mode
 
         if (mode==20) {
             // ap should override jpg
@@ -197,9 +208,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             }
         }
 
-        // later:
         this._snapshotMode = mode;
-
     },
 
 
@@ -246,42 +255,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 (this._modelLib.hasKey("ap_autoSelectTargetTimeSlack")) &&
                 (this._mouseDownOrTouching) ) {
 
-            // Setting up the current type of snapshot, same string as used in the timing object
-            var currentSnapType = "unknown";
-            var currentJpgQuality = -10;
-            if ( this._urlHandler._url == this._snapshotStrings.png ) {
-                currentSnapType = "png";
-            }
-            else if ( this._urlHandler._url == this._snapshotStrings.jpg ) {
-                currentSnapType = "jpg";
-                currentJpgQuality = this._modelLib.getElementValue("ap_jpgQuality");
-            }
-            else if ( this._urlHandler._url == this._snapshotStrings.ap ) {
-                currentSnapType = "ap";
-            }
-
-
-            // Nytt:
-var currentMode = this._getSnapshotMode();
-if (currentMode==0) {
-    currentSnapType = "png";
-}
-else if ( (currentMode>=10) && (currentMode<20) ) {
-    currentSnapType = "jpg";
-    currentJpgQuality = (currentMode-10) * 10;
-}
-else if (currentMode==20) {
-    currentSnapType = "ap";
-}
-else {
-    alert("Should not happen. Unknown mode");
-}
-
-
-
-            // det er greiene over som må endre med nytt opplegg! ikke lese av url men bruke den nye get-metoden! (som først skal lese state variabler i exposedmodel, så egen
-            // variabel etter hgvert...)
-
+            // Setting up parameters for the current type of auto-selected snapshot
+            var newJpgQuality = -10; // Just to catch bugs. Should never be allowed to be used
+            var currentModeDetails = this._getSnapshotMode();
+            var currentMode = currentModeDetails.mode;
+            var currentSnapType = currentModeDetails.snaptype;
+            var currentJpgQuality = currentModeDetails.jpgq;
 
             // Getting the various times to use
             var targetTime = this._modelLib.getElementValue("ap_autoSelectTargetTime");
@@ -299,7 +278,7 @@ else {
                 return; // We don't want to change method until we have some more samples, so we just exit early.
             }
 
-            var newSnapType = "unknown";
+            var newSnapType = "huh?";
 
             // Testing if we should go faster, slower or stay
             // Note that we cannot use the simple time comparison to determine whether or not to go from "ap" to "jp0", since "ap" will
@@ -314,7 +293,7 @@ else {
                     // We do not have at least timings._n ap-frames since the transition, so we do nothing
                 }
                 else if ( currentTime < apTimeAtTransitionFromJPG0 - 2*targetTimeSlack ) {
-                    console.log("We have enough frames, and time has been reduced, so we go up to jpg0");
+                    // console.log("We have enough frames, and time has been reduced, so we go up to jpg0");
                     // Ok, in this case, we go back to jpg0. The rationale behind this:
                     // We go down, from jpg0 to ap, when jpg0-time > targetTime + slack. After the first _n ap-frames,
                     // we get an ap-time, which we store and use for subsequent time comparisons, let this be named ap-time-0.
@@ -322,59 +301,52 @@ else {
                     // approximately equal to 2*slack.
                     newSnapType = "jpg";
                     this._modelLib.updateElement("ap_jpgQuality", 0);
-                    console.log("--------------- updating jpg q 0 ---------------------");
-this._setSnapshotMode(10);
+                    this._setSnapshotMode(10);
                 } else {
                     // Do nothing. We stay with "ap", we don't have a faster alternative.
-                    console.log("Staying in ap");
+                    // console.log("Staying in ap");
                 }
             } else {
                 // We are in a position in which we can use the current timings, current snap type is either a "version" of jpg or png.
 
                 if ( currentTime < targetTime-targetTimeSlack) {
-                    console.log("  We can afford to go for higher quality, i.e., slower");
-
-                    // argh... ble dette riktig?? kvalitetsmessig: ap         <   jpg0 < ... < jpg9 < png
-                    //  båndbredde- og latencykrav:                lav        |        middels      | høyt
-                    //           tid:                          "special case"     very low      low | high
-
+                    // console.log("  We can afford to go for higher quality, i.e., slower");
                     if ( currentSnapType == "ap" ) {
                         alert("should not happen");
                     }
                     else if ( currentSnapType == "jpg" ) {
                         if ( currentJpgQuality < 90 ) {
                             newSnapType = "jpg";
-                            this._modelLib.updateElement("ap_jpgQuality", currentJpgQuality + 10);
-                            console.log("--------------- updating jpg q " + (currentJpgQuality+10) + " ---------------------");
-this._setSnapshotMode(10 + parseInt((currentJpgQuality+10)/10));
+                            newJpgQuality = currentJpgQuality + 10;
+                            this._modelLib.updateElement("ap_jpgQuality", newJpgQuality);
+                            this._setSnapshotMode(10 + parseInt(newJpgQuality/10));
                         } else {
                             newSnapType = "png";
-this._setSnapshotMode(0);
+                            this._setSnapshotMode(0);
                         }
                     }
                     else {
                         newSnapType = "png"; // best we have... no change
-this._setSnapshotMode(0);
+                        this._setSnapshotMode(0);
                     }
                 }
                 else if ( currentTime > targetTime+targetTimeSlack ) {
-                    console.log("  We should go for faster method");
+                    // console.log("  We should go for faster method");
                     if ( currentSnapType == "png" ) {
                         newSnapType = "jpg";
-                        this._modelLib.updateElement("ap_jpgQuality", 90);
-                        console.log("--------------- updating jpg q 90 ---------------------");
-this._setSnapshotMode(19);
+                        newJpgQuality = 90;
+                        this._modelLib.updateElement("ap_jpgQuality", newJpgQuality);
+                        this._setSnapshotMode(19);
                     }
                     else if ( currentSnapType == "jpg" ) {
                         if ( currentJpgQuality >= 10 ) {
                             newSnapType = "jpg";
-                            this._modelLib.updateElement("ap_jpgQuality", currentJpgQuality - 10);
-                            console.log("--------------- updating jpg q " + (currentJpgQuality-10) + " ---------------------");
-this._setSnapshotMode(10 + parseInt((currentJpgQuality-10)/10));
+                            newJpgQuality = currentJpgQuality - 10;
+                            this._modelLib.updateElement("ap_jpgQuality", newJpgQuality);
+                            this._setSnapshotMode(10 + parseInt(newJpgQuality/10));
                         } else {
-//newSnapType = "ap";
-// ignoring this for now, during debugging. The problem is that we get into some kind of lock/freeze when this is allowed. Happens when mouse is released in ap-mode?!
-                            // Switching from jpg0 to ap, must initiate the ap-time-recording
+                            newSnapType = "ap";
+                            // Switching from jpg0 to ap, must initiate the ap-time-recording. We need this to determine when to leave ap again.
                             timings.initiateAPrecording();
                         }
                     }
@@ -385,18 +357,33 @@ this._setSnapshotMode(10 + parseInt((currentJpgQuality-10)/10));
                 else {
                     console.log("  time within tolerances, not changing snaptype");
                     newSnapType = currentSnapType;
+                    newJpgQuality = currentJpgQuality;
                 }
             }
 
 
-            // neste: kalle _setSnapshotMode her, men ikke i mouse-up, sjekke at jpg ikke rutcher til bunnen...
+            if (this._modelLib.hasKey("ap_autoSelectIndicator")) {
+                if ( newSnapType == "jpg" ) {
+                    this._modelLib.updateElement( "ap_autoSelectIndicator", newSnapType + parseInt(newJpgQuality/10) );
+                } else {
+                    this._modelLib.updateElement( "ap_autoSelectIndicator", newSnapType );
+                }
+            }
 
-            console.log("_autoSelectSnapshotType done. New snapType = " + newSnapType);
-            if ( newSnapType != "unknown" ) {
+
+
+            // console.log("_autoSelectSnapshotType done. New snapType = " + newSnapType);
+
+            if ( newSnapType != "huh?" ) {
                 this._snapshotURL = this._snapshotStrings[newSnapType];
                 this._urlHandler.setURL(this._snapshotURL);
                 this._urlHandler.updateParams( { snaptype: newSnapType } );
-                console.log("--------------- updating url params with new snaptype " + newSnapType + " ---------------------");
+                // console.log("--------------- updating url params with new snaptype " + newSnapType + " ---------------------");
+                if ( newSnapType == "ap" ) {
+                    this._modelLib.updateElement( "ap_useAutoProxy", true );
+                    // Need this to make sure proxy is rendered during mouse-down. Can this have other, unwanted effects? If so,
+                    // this must be changed. (I.e., autoProxy-rendering must not test on this variable (only.)
+                }
             }
         }
     },
@@ -878,32 +865,16 @@ this._setSnapshotMode(10 + parseInt((currentJpgQuality-10)/10));
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mouseReleaseEvent(event);
         }
-        // console.log("Mouse up:   Should we be here?");
-//        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
-//            // console.log("Mouse up:   Not in AP mode");
-//            if (   ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) ||
-//                   ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
-//                // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
-//                // console.log("Mouse up:   Setting PNG mode");
-//                this._snapshotURL = this._snapshotStrings.png;
-//                this._urlHandler.setURL(this._snapshotURL);
-//                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
-//                this._requestImageIfNotBusy(); // @@@ It could be that when we observe that we don't end up with a png, it is because this issued request is canceled due to "being busy"...?!
-//            }
-//        }
-
-
         if ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) ) {
-            //this._setSnapshotMode(0);
+            // When the autoSelect mode is enabled, we want an additional, and final, snapshot from the server, which should be of the png kind.
             this._snapshotURL = this._snapshotStrings.png;
             this._urlHandler.setURL(this._snapshotURL);
             this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
             console.log("--------------- updating url with snaptype " + this._snapShotStringToType( this._urlHandler.getURL() ) + " ---------------------");
-
-            // Why do we do this? Should this be necessary? Is this a workaround to get a png after the last jpg?
-            this._requestImageIfNotBusy(); // @@@ It could be that when we observe that we don't end up with a png, it is because this issued request is canceled due to "being busy"...?!
+            this._requestImageIfNotBusy();
+            // @@@ It happens from time to time that we do not get a final png. To trigger, move mouse while releasing. Not consistent, but happens more often then.
+            // @@@ Could the reason be that this issued request is canceled due to "being busy"...?! So that the "jpg snapshot in flight" takes precedence?
         }
-
 
         this._showCorrect();
         event.preventDefault();
