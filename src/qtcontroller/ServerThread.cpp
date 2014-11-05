@@ -10,6 +10,7 @@
 #include <QMutexLocker>
 #include "tinia/qtcontroller/moc/LongPollHandler.hpp"
 #include "tinia/model/ExposedModelLock.hpp"
+#include "tinia/protobuf/TiniaProtoBuf.pb.h"
 
 namespace {
 
@@ -294,6 +295,12 @@ void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request
     // os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
     // httpHeader should be attached at a later stage, from this function's caller.
     // Binary body will require that we know the size of blob.
+
+
+    tinia::protobuf::TiniaProtoBuf proto;
+    tinia::protobuf::TiniaProtoBuf_Viewer *viewer = proto.add_viewer();
+    viewer->set_viewer_key("hei!");
+
 
     QString viewer_keys(viewer_key_list.c_str());
     QStringList vk_list = viewer_keys.split(',');

@@ -1,5 +1,5 @@
-FILE(GLOB_RECURSE qtcontroller_HEADERS "../../include/tinia/qtcontroller/*.h" "../../include/tinia/qtcontroller/*.hpp")
-FILE(GLOB_RECURSE qtcontroller_SOURCES "*.c" "*.cpp")
+FILE(GLOB_RECURSE qtcontroller_HEADERS "../../include/tinia/qtcontroller/*.h" "../../include/tinia/qtcontroller/*.hpp" "../../include/tinia/protobuf/*.h")
+FILE(GLOB_RECURSE qtcontroller_SOURCES "*.c" "*.cpp" "*.cc")
 
 
 FILE(GLOB qtcontroller_RESOURCES "*.qrc")
@@ -46,6 +46,7 @@ target_link_libraries ( tinia_qtcontroller
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
+    ${PROTOBUF_LIBRARIES}
 )
 ELSe()
 target_link_libraries ( tinia_qtcontroller
@@ -60,6 +61,7 @@ target_link_libraries ( tinia_qtcontroller
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
+    ${PROTOBUF_LIBRARIES}
 )
 ENDIF()
 # The reason for the development name to be <component>_dev is
