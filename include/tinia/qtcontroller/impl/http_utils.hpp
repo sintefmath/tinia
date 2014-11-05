@@ -21,7 +21,7 @@ QMap<QString, QString> decodeGetParameters(const QString& request);
 
 QString getPostContent(const QString& request);
 
-QString httpHeader(const QString& mime, unsigned int code = 200, const QString& encoding = "utf-8");
+QString httpHeader(const QString& mime, unsigned int code = 200, const QString& encoding = "utf-8", const unsigned int size = 0);
 
 template<unsigned int i>
 struct ParseGetHelper {

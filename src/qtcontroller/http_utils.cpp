@@ -76,9 +76,12 @@ QString getPostContent(const QString& request) {
     return request.mid(request.indexOf(QRegExp("\r\n[ ]*\r\n"))).trimmed();
 }
 
-QString httpHeader(const QString& mime, unsigned int code, const QString& encoding) {
+QString httpHeader(const QString& mime, unsigned int code, const QString& encoding, const unsigned int size) {
     QString result = "HTTP/1.1 " + QString::number(code) + " OK\r\n" +
             + "Content-Type: " + mime + "; charset=\"" + encoding + "\"\r\n";
+    if ( size != 0 ) {
+        result += "Content-Length: " + size + "\r\n";
+    }
     return result;
 }
 
