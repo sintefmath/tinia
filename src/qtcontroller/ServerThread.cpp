@@ -280,7 +280,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
 // This should be something similar to the gtetSnapshotTxt, but with binary data instead.
 // This function should return a google protocol buffer, which should be used instead of the QTextStream object.
-void ServerThread::getSnapshotBytes( QTextStream &os, const QString &request,
+void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request,
                                      tinia::jobcontroller::Job* job,
                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                      const bool with_depth )
@@ -290,6 +290,7 @@ void ServerThread::getSnapshotBytes( QTextStream &os, const QString &request,
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
 
+    QTextStream os;
     // os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
     // httpHeader should be attached at a later stage, from this function's caller.
     // Binary body will require that we know the size of blob.

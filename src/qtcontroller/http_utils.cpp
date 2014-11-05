@@ -80,7 +80,7 @@ QString httpHeader(const QString& mime, unsigned int code, const QString& encodi
     QString result = "HTTP/1.1 " + QString::number(code) + " OK\r\n" +
             + "Content-Type: " + mime + "; charset=\"" + encoding + "\"\r\n";
     if ( size != 0 ) {
-        result += "Content-Length: " + size + "\r\n";
+        result += "Content-Length: " + QString::number(size) + "\r\n";
     }
     return result;
 }
