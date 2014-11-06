@@ -252,6 +252,8 @@ void ServerThread::run()
     socket.setSocketDescriptor(m_socket);
     socket.waitForReadyRead();
 
+    QByteArray* responseBuffer = nullptr;
+
     if (socket.canReadLine()) {
 
         QByteArray request = socket.readAll();
@@ -282,12 +284,11 @@ void ServerThread::run()
 
             QString requestURI = getRequestURI(request); // Should return a filename with .txt or .xml
             if (requestURI.split('.').last() == "txt") {
-                QByteArray* byteArray = nullptr;
 
                 // Still need a QTextStream in case handleNonStatic throws an error, but it should not be connected on socket yet!
                 QString errorString;
                 QTextStream textStream(&errorString);
-                if (!handleNonStatic(byteArray, textStream, requestURI, request)) {
+                if (!handleNonStatic(responseBuffer, textStream, requestURI, request)) {
                     //QTextStream os(&socket);
                     textStream.setAutoDetectUnicode(true);
                     textStream << getStaticContent(getRequestURI(request)) << "\r\n";
@@ -296,7 +297,7 @@ void ServerThread::run()
                 }
                 else {
                     QDataStream ds(&socket);
-                    ds << byteArray;
+                    ds << responseBuffer;
                 }
 
             }
@@ -315,6 +316,10 @@ void ServerThread::run()
         socket.close();
         socket.waitForDisconnected();
 
+        // Since we allocate memory on the heap for the protocol buffer:
+        if ( responseBuffer != nullptr ) {
+            delete(responseBuffer);
+        }
     }
 }
 
