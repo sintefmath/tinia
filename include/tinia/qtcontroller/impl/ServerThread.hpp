@@ -52,6 +52,12 @@ private:
     bool handleNonStatic(QTextStream& os, const QString& file,
                          const QString& request);
 
+    /** Handles non-static content where we want to sent raw bytes of images, if applicable.
+     * @returns true if the file is non-static, false otherwise.
+     */
+    bool handleNonStatic(QDataStream& ds, const QString& file,
+                         const QString& request);
+
     void updateState(QTextStream& os, const QString& request);
 
     /** Writes the error code to the stream formated as HTTP requires,

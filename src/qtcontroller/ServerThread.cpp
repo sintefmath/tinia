@@ -141,6 +141,90 @@ protected:
 };
 
 
+/** This will be an almost copy of the above class SnapshotAsTextFetcher.
+ *  It will get the snapshot of the sceen as but not do the base 64 encoding,
+ *  but rather store it in its binary form.
+ */
+class SnapshotAsBytesFetcher : public QRunnable
+{
+public:
+
+    explicit SnapshotAsTextFetcher( QTextStream& reply,
+                                    const QString& request,
+                                    const std::string &proper_key_to_use,
+                                    tinia::jobcontroller::Job* job,
+                                    tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
+                                    const bool getRBGsnapshot)
+        : m_reply( reply ),
+          m_request( request ),
+          m_job( NULL ),
+          m_gl_grabber( gl_grabber ),
+          m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
+          m_getRGBsnapshot( getRBGsnapshot )
+    {
+        using namespace tinia::qtcontroller::impl;
+
+        m_job = dynamic_cast<tinia::jobcontroller::OpenGLJob*>( job );
+        if( m_job == NULL ) {
+            throw std::invalid_argument("This is not an OpenGL job!");
+        }
+
+        typedef boost::tuple<unsigned int, unsigned int, std::string> params_t;
+        params_t arguments = parseGet<params_t >(decodeGetParameters(request),
+                                                 "width height key" );
+        m_width  = arguments.get<0>();
+        m_height = arguments.get<1>();
+        m_key    = ( proper_key_to_use != "" ? proper_key_to_use : arguments.get<2>() );
+    }
+
+    ~SnapshotAsTextFetcher()
+    {
+        using namespace tinia::qtcontroller::impl;
+        QImage img( m_gl_grabber->imageBuffer(),
+                    m_width,
+                    m_height,
+                    QImage::Format_RGB888 );
+
+        // This is a temporary fix. The image is reflected through the horizontal
+        // line y=height ((x, y) |--> (x, h-y) ).
+        QTransform flipTransformation(1, 0,
+                                      0, -1,
+                                      0, m_height);
+        img = img.transformed(flipTransformation);
+        QBuffer qBuffer;
+        img.save(&qBuffer, "png");
+        //m_gl_grabber_locker.unlock();
+
+        QString str( QByteArray( qBuffer.data(),
+                                 int(qBuffer.size()) ).toBase64() );
+        m_reply << str;
+    }
+
+    void
+    run()
+    {
+        if ( m_getRGBsnapshot ) {
+            m_gl_grabber->grabRGB( m_job, m_width, m_height, m_key );
+        } else {
+            m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+        }
+    }
+
+protected:
+    QTextStream&                                    m_reply;
+    const QString&                                  m_request;
+    tinia::jobcontroller::OpenGLJob*                m_job;
+    tinia::qtcontroller::impl::OpenGLServerGrabber* m_gl_grabber;
+    QMutexLocker                                    m_gl_grabber_locker;
+    unsigned int                                    m_width;
+    unsigned int                                    m_height;
+    std::string                                     m_key;
+    bool                                            m_getRGBsnapshot;
+};
+
+
+
+
 }
 
 
@@ -191,6 +275,7 @@ void ServerThread::run()
         }
 
         QTextStream os(&socket);
+        QDataStream ds();
 
         if(isLongPoll(request)) {
             LongPollHandler handler(os, request, m_job->getExposedModel());
@@ -199,10 +284,17 @@ void ServerThread::run()
         else if (isGetOrPost(request)) {
             os.setAutoDetectUnicode(true);
 
-            if(!handleNonStatic(os, getRequestURI(request), request)) {
-                os << getStaticContent(getRequestURI(request)) << "\r\n";
+            QString requestURI = getRequestURI(request); // Should return a filename with .txt or .xml
+            if (requestURI.split('.').last() == "txt") {
+                if (!handleNonStatic(ds, requestURI, request)) {
+                    os << getStaticContent(getRequestURI(request)) << "\r\n";
+                }
             }
-
+            else {
+                if(!handleNonStatic(os, getRequestURI(request), request)) {
+                    os << getStaticContent(getRequestURI(request)) << "\r\n";
+                }
+            }
            // socket.disconnectFromHost();
 
         }
@@ -292,7 +384,7 @@ void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request
     std::string viewer_key_list = arguments.get<3>();
 
     QTextStream os;
-    // os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
+    // os << httpHeader(getMimeType("file.bin")) << "\r\n{ ";
     // httpHeader should be attached at a later stage, from this function's caller.
     // Binary body will require that we know the size of blob.
 
@@ -349,9 +441,9 @@ void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request
 }
 
 
+bool ServerThread::handleNonStatic(QDataStream &ds, const QString &file,
+                                   const QString &request)
 
-bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
-                                   const QString& request)
 {
     try {
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
@@ -364,7 +456,21 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
             getSnapshotTxt( os, request, m_job, m_grabber, true );
             return true;
         }
-        else if(file == "/getRenderList.xml") {
+
+    } catch(std::invalid_argument& e) {
+        errorCode(os, 400, e.what());
+        return true;
+    }
+
+   return false;
+}
+
+
+bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
+                                   const QString& request)
+{
+    try {
+        if(file == "/getRenderList.xml") {
             RenderListFetcher f( os, request, m_job );
             m_mainthread_invoker->invokeInMainThread( &f, true );
             return true;
