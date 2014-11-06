@@ -55,7 +55,7 @@ private:
     /** Handles non-static content where we want to sent raw bytes of images, if applicable.
      * @returns true if the file is non-static, false otherwise.
      */
-    bool handleNonStatic(QByteArray *protoBytes, const QString& file,
+    bool handleNonStatic(QByteArray *protoBytes, QTextStream& os, const QString& file,
                          const QString& request);
 
     void updateState(const QString& request);

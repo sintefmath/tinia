@@ -282,16 +282,23 @@ void ServerThread::run()
 
             QString requestURI = getRequestURI(request); // Should return a filename with .txt or .xml
             if (requestURI.split('.').last() == "txt") {
-                QByteArray byteArray;
-                if (!handleNonStatic(byteArray, requestURI, request)) {
+                QByteArray* byteArray = nullptr;
+
+                // Still need a QTextStream in case handleNonStatic throws an error, but it should not be connected on socket yet!
+                QString errorString;
+                QTextStream textStream(&errorString);
+                if (!handleNonStatic(byteArray, textStream, requestURI, request)) {
+                    //QTextStream os(&socket);
+                    textStream.setAutoDetectUnicode(true);
+                    textStream << getStaticContent(getRequestURI(request)) << "\r\n";
                     QTextStream os(&socket);
-                    os.setAutoDetectUnicode(true);
-                    os << getStaticContent(getRequestURI(request)) << "\r\n";
+                    os << errorString;
                 }
                 else {
                     QDataStream ds(&socket);
                     ds << byteArray;
                 }
+
             }
             else {
                 QTextStream os(&socket);
@@ -458,20 +465,19 @@ void ServerThread::getSnapshotBytes( QByteArray* protoBytes, const QString &requ
 }
 
 
-bool ServerThread::handleNonStatic(QByteArray* protoBytes, const QString &file,
+bool ServerThread::handleNonStatic(QByteArray* protoBytes, QTextStream &os, const QString &file,
                                    const QString &request)
 
 {
-    QTextStream os;
     try {
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
             updateState(request);
-            getSnapshotTxt( os, request, m_job, m_grabber, false );
+            getSnapshotBytes( protoBytes, request, m_job, m_grabber, false );
             return true;
         }
         else if ( file == "/snapshot_bundle.txt" ) { // Will be used when in autoProxy-mode
             updateState(request);
-            getSnapshotTxt( os, request, m_job, m_grabber, true );
+            getSnapshotBytes( protoBytes, request, m_job, m_grabber, true );
             return true;
         }
 
