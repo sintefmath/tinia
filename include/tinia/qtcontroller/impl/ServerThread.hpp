@@ -35,7 +35,7 @@ private:
      *  contain depth and transformation data (optional proto buffer fields).
      *  getSnapshotBundleTxt() seems not to be used, and we therefore do not need a replica of it.
      */
-    void getSnapshotBytes( QByteArray &protoBuf, const QString &request,
+    void getSnapshotBytes( QByteArray* protoBytes, const QString &request,
                            tinia::jobcontroller::Job* job,
                            tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                            const bool with_depth );
@@ -55,7 +55,7 @@ private:
     /** Handles non-static content where we want to sent raw bytes of images, if applicable.
      * @returns true if the file is non-static, false otherwise.
      */
-    bool handleNonStatic(QByteArray bytes, const QString& file,
+    bool handleNonStatic(QByteArray *protoBytes, const QString& file,
                          const QString& request);
 
     void updateState(const QString& request);

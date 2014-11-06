@@ -378,7 +378,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
 // This should be something similar to the gtetSnapshotTxt, but with binary data instead.
 // This function should return a google protocol buffer, which should be used instead of the QTextStream object.
-void ServerThread::getSnapshotBytes( QByteArray &protoBuf, const QString &request,
+void ServerThread::getSnapshotBytes( QByteArray* protoBytes, const QString &request,
                                      tinia::jobcontroller::Job* job,
                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                      const bool with_depth )
@@ -388,65 +388,77 @@ void ServerThread::getSnapshotBytes( QByteArray &protoBuf, const QString &reques
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
 
-    QTextStream os;
+    // QTextStream os;
     // os << httpHeader(getMimeType("file.bin")) << "\r\n{ ";
     // httpHeader should be attached at a later stage, from this function's caller.
     // Binary body will require that we know the size of blob.
 
 
     tinia::protobuf::TiniaProtoBuf proto;
-    tinia::protobuf::TiniaProtoBuf_Viewer *viewer = proto.add_viewer();
-    viewer->set_viewer_key("hei!");
-
 
     QString viewer_keys(viewer_key_list.c_str());
     QStringList vk_list = viewer_keys.split(',');
 
     for (int i=0; i<vk_list.size(); i++) {
         QString k = vk_list[i];
+        tinia::protobuf::TiniaProtoBuf_Viewer *proto_viewer = proto.add_viewer();
+        proto_viewer->set_viewer_key(k.toStdString());
 
         // Now building the JSON entry for this viewer/key
-        os << k << ": { \"rgb\": \"";
+        //os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
+            QByteArray rgb_bytes;
+            QDataStream rgb_ds(&rgb_bytes, QIODevice::ReadWrite);
+            SnapshotAsBytesFetcher f( rgb_ds, request, k.toStdString(), job, grabber, true /* RGB requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
+            proto_viewer->set_rgb(rgb_bytes, rgb_bytes.size());
         }
-        os << "\"";
+        // os << "\"";
         if (with_depth) {
-            os << ", \"depth\": \"";
+            //os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
+                QByteArray depth_bytes;
+                QDataStream depth_ds(&depth_bytes, QIODevice::ReadWrite);
+                SnapshotAsBytesFetcher f( depth_ds, request, k.toStdString(), job, grabber, false /* Depth requested */ );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
+                proto_viewer->set_depth(depth_bytes, depth_bytes.size());
             }
-            os << "\", \"view\": \"";
+            //os << "\", \"view\": \"";
             tinia::model::Viewer viewer;
             m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
             {
+                QString view_qString;
+                QTextStream view_stream(&view_qString);
                 for (size_t i=0; i<15; i++) {
-                    os << viewer.modelviewMatrix[i] << " ";
+                    view_stream << viewer.modelviewMatrix[i] << " ";
                 }
-                os << viewer.modelviewMatrix[15];
+                view_stream << viewer.modelviewMatrix[15];
+                proto_viewer->set_view(view_qString.toStdString());
             }
-            os << "\", \"proj\": \"";
+            //os << "\", \"proj\": \"";
             {
+                QString proj_qString;
+                QTextStream proj_stream(&proj_qString);
                 for (size_t i=0; i<15; i++) {
-                    os << viewer.projectionMatrix[i] << " ";
+                    proj_stream << viewer.projectionMatrix[i] << " ";
                 }
-                os << viewer.projectionMatrix[15];
+                proj_stream << viewer.projectionMatrix[15];
+                proto_viewer->set_proj(proj_qString.toStdString());
             }
-            os << "\"";
+            //os << "\"";
         }
-        os << " }";
-        if ( i < vk_list.size() - 1 ) {
-            os << ", ";
-        }
+        //os << " }";
+        //if ( i < vk_list.size() - 1 ) {
+        //    os << ", ";
+        //}
     }
 
-    os << "}";
+    protoBytes = new QByteArray(proto.SerializeAsString().c_str(), proto.ByteSize());
+    //os << "}";
 }
 
 
-bool ServerThread::handleNonStatic(QByteArray, const QString &file,
+bool ServerThread::handleNonStatic(QByteArray* protoBytes, const QString &file,
                                    const QString &request)
 
 {
