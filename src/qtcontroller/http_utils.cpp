@@ -44,6 +44,7 @@ QString getMimeType(const QString& file) {
     extensions["txt"] = "text/plain";
     extensions["xml"] = "application/xml";
     extensions["css"] = "text/css";
+    extensions["bin"] = "application/octet-stream";
 
     return extensions[extension];
 }
