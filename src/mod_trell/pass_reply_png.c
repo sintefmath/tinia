@@ -235,7 +235,7 @@ static int trell_pass_reply_png_bundle( void*          data,
     }
 
     static int num_of_keys = 0;
-    size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16*w_depth, canvas_size;
+    size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16*w_depth, canvas_size=0;
 
     size_t offset = 0;
     if( part == 0 ) {
@@ -365,6 +365,11 @@ static int trell_pass_reply_png_bundle( void*          data,
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", proj: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                   PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15] );
             }
+
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"revision\" : \"%d\"", encoder_state->dispatch_info->m_revision );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"timestamp\" : \"%s\"", encoder_state->dispatch_info->m_timestamp );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"snaptype\" : \"%s\"", encoder_state->dispatch_info->m_snaptype );
+
             BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
             if (i<num_of_keys-1) {
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", " );
@@ -400,3 +405,10 @@ static int trell_pass_reply_png_bundle( void*          data,
     return 0;   // success
 
 }
+
+
+
+
+
+
+#undef BB_APPEND_STRING

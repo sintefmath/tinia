@@ -239,7 +239,7 @@ void main(void)
     //----------------------------------------------------------------------------------------------------
 
 #ifdef DEBUG
-    if (screenSpaceSized>0) {
+        if (screenSpaceSized>0) {
 #else
     if (true) {
 #endif
@@ -258,50 +258,35 @@ void main(void)
         // to evade our other measures for removing "outside silhouette" fragments.
         //
         // We combine discarding of very large splats with a reduction of the size of "just large" splats.
+        
+        // 141027: Abandoning special treatment of the "most recent proxy model".
 
-        if ( splatSetIndex >= 0 ) {
-            // The "ordinary" proxy model splat sets
-            
-            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.5; // splatOverlap;
-            //actualSplatOverlap = max( length(scr_dx), length(scr_dy) )/1.41 / splatSize * 1.0; // splatOverlap;
-            // It is probably not important to have this as large as 2.0. Using 1.0 seems to leave unnecessary gaps. Maybe 1.5 is an ok compromise.
-	    // On the other hand, the "non-mostRecentModel" is only to be shown a brief period of time, so it may actually
-	    // be better to have a larger value to avoid noticeable gaps, rather than having a perfect texturing. Trying 2.5.
+        actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.5; // splatOverlap;
+        //actualSplatOverlap = max( length(scr_dx), length(scr_dy) )/1.41 / splatSize * 1.0; // splatOverlap;
+        // It is probably not important to have this as large as 2.0. Using 1.0 seems to leave unnecessary gaps. Maybe 1.5 is an ok compromise.
+        // On the other hand, the "non-mostRecentModel" is only to be shown a brief period of time, so it may actually
+        // be better to have a larger value to avoid noticeable gaps, rather than having a perfect texturing. Trying 2.5.
 
-            if ( actualSplatOverlap > 10.0 ) {
-                // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside
-                // the splats, and tricky to crop them along the scene silhouettes. Also, danger of those "bad and
-                // large" splats shadowing better and smaller ones. Not easy to handle the last one. (Maybe with a
-                // multi-pass algorithm.) Pros: Better coverage
+        if ( actualSplatOverlap > 100.0 ) {
+            // Such huge splats we simply get rid of. Cons for keeping large splats: Bad texture resolution inside
+            // the splats, and tricky to crop them along the scene silhouettes. Also, danger of those "bad and
+            // large" splats shadowing better and smaller ones. Not easy to handle the last one. (Maybe with a
+            // multi-pass algorithm.) Pros: Better coverage
+            // 141021: Increasing this threshold from 10 to 100, to avoid "large blank regions" when running only with "most recent model".
 #ifdef VS_DISCARD_DEBUG
-                debugCol = vec4(1.0, 0.0, 0.0, 1.0); // Not discarding, colouring the fragment red instead
+            debugCol = vec4(1.0, 0.0, 0.0, 1.0); // Not discarding, colouring the fragment red instead
 #else
-                gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
+            gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
 #endif
-                return;
-            }
-            // We restrict the size of these splats to avoid "silhouette overshooting". We need at least 2.0 to get nice
-            // silhouettes when MV*MV_depth_inv == id, which is only relevant for the "most recent proxy", so we treat this specially below.
-	    // 140617: Changing this from 1.5 (used together with 1.5 above) to 2.5 (with 2.5 above.) Hopefully, this would give better
-	    //         coverage during interaction, while still keeping the "silhouette overshooting artifacts" small enough to be
-	    //         overwritten by the "most recent model".
-	    actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0);
-        } else {
-            // Special values for the "most recent splat set".
-
-            actualSplatOverlap = max( max(abs(scr_dx.x), abs(scr_dx.y)), max(abs(scr_dy.x), abs(scr_dy.y)) ) / splatSize * 2.0;
-
-            if ( actualSplatOverlap > 3.0 ) { // It is not likely that these get very large.
-#ifdef VS_DISCARD_DEBUG
-		debugCol = vec4(0.8, 1.0, 0.8, 1.0); // Not discarding, colouring the fragment green instead
-#else
-                gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
-#endif
-                return;
-            }
-            actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 3.0); // Need at least 2.0 for the "most recent", >= the one in the test
-                                                                      // above is meaningless.
+            return;
         }
+        // We restrict the size of these splats to avoid "silhouette overshooting". We need at least 2.0 to get nice
+        // silhouettes when MV*MV_depth_inv == id, which is only relevant for the "most recent proxy", so we treat this specially below.
+        // 140617: Changing this from 1.5 (used together with 1.5 above) to 2.5 (with 2.5 above.) Hopefully, this would give better
+        //         coverage during interaction, while still keeping the "silhouette overshooting artifacts" small enough to be
+        //         overwritten by the "most recent model".
+        // 141021: Also increasing this, to better match the new threshold above. (From 3.0 to 5.0)
+        actualSplatOverlap = clamp(actualSplatOverlap, 0.0, 5.0);
     } else {
         actualSplatOverlap = splatOverlap;
     }

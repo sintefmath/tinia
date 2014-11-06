@@ -146,6 +146,8 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     memcpy( query.viewer_key_list, dispatch_info->m_viewer_key_list, TRELL_VIEWER_KEY_LIST_MAXLENGTH );
     query.viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH ] = '\0';
 
+    // 141014: It may be redundant to copy data from the dispatch_info to the query, since the dispatch_info is also passed along!!
+
     // create data for pass_query_msg_post
     trell_pass_query_msg_post_data_t pass_query_data;
     pass_query_data.sconf          = sconf;
@@ -164,12 +166,15 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     encode_png_state.height        = 0;
     encode_png_state.buffer        = NULL;
     
-    // ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: viewer_key_list=%s", dispatch_info->m_viewer_key_list );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: pixel_format=%d", dispatch_info->m_pixel_format );
+//    ap_log_rerror( APLOG_MARK, APLOG_NOTICE, 0, r, "trell_handle_get_snapshot: jpeg_quality=%d", dispatch_info->m_jpeg_quality );
 
     int rv = tinia_ipc_msg_client_sendrecv_by_name( dispatch_info->m_jobid,
                                                     trell_messenger_log_wrapper, r,
                                                     trell_pass_query_msg_post, &pass_query_data,
-                                                    trell_pass_reply_png, &encode_png_state,
+                                                    dispatch_info->m_pixel_format==TRELL_PIXEL_FORMAT_RGB_JPG_VERSION ? trell_pass_reply_jpg : trell_pass_reply_png,
+                                                    &encode_png_state,
                                                     0 );
     if( rv == 0 ) {
         return OK;

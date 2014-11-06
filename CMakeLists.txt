@@ -130,6 +130,7 @@ FIND_PACKAGE( GLM REQUIRED )
 
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
 IF(Tinia_SERVER)
+
     IF( Tinia_IPC_VALGRIND_ANNOTATIONS )
         FIND_PATH(
             VALGRIND_INCLUDE_DIR valgrind.h
@@ -138,28 +139,42 @@ IF(Tinia_SERVER)
         ADD_DEFINITIONS( -DTINIA_IPC_VALGRIND_ANNOTATIONS )
     ENDIF( Tinia_IPC_VALGRIND_ANNOTATIONS )
 
-  FIND_PATH( APACHE_INCLUDE_DIR httpd.h
-    HINTS "/usr/include/apache2" "/usr/include/httpd/"
-  )
-
-  FIND_LIBRARY( RT
-    NAMES rt
-    PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
+    FIND_PATH( APACHE_INCLUDE_DIR httpd.h
+        HINTS "/usr/include/apache2" "/usr/include/httpd/"
     )
 
-  FIND_LIBRARY(LIB_APR
-    NAMES apr-1
-    PATHS "/usr/lib/"
+    FIND_LIBRARY( RT
+        NAMES rt
+        PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
     )
-  FIND_PACKAGE( Threads )
 
-  FIND_PATH(APR_INCLUDE_DIR "apr.h"
-HINTS   "/usr/include/apr-1.0"
-        "/usr/include/apr-1"
-        "apr-1/"
-        "apr-1.0")
-    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIB_APR})
+    FIND_LIBRARY(LIB_APR
+        NAMES apr-1
+        PATHS "/usr/lib/"
+    )
+
+    FIND_LIBRARY(LIB_TURBOJPEG
+        NAMES turbojpeg
+        HINTS "/usr/lib/" "/opt/libjpeg-turbo/lib64/"
+    )
+    FIND_PATH(TURBOJPEG_INCLUDE_DIR "turbojpeg.h"
+        HINTS "/usr/include/" "/usr/local/include/"
+              "/opt/" "/opt/libjpeg-turbo/" "/opt/libjpeg-turbo/include/"
+    )
+
+    FIND_PACKAGE( Threads )
+
+    FIND_PATH(APR_INCLUDE_DIR "apr.h"
+        HINTS   "/usr/include/apr-1.0"
+                "/usr/include/apr-1"
+                "apr-1/"
+                "apr-1.0"
+    )
+
+    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIB_APR} ${LIB_TURBOJPEG})
+
 ENDIF()
+
 
 SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${LIBXML2_INCLUDE_DIR}
@@ -168,6 +183,7 @@ SET(TINIA_EXTERNAL_INCLUDE_DIRS
   ${APACHE_INCLUDE_DIR}
   ${VALGRIND_INCLUDE_DIR}
   ${APR_INCLUDE_DIR}
+  ${TURBOJPEG_INCLUDE_DIR}
   ${QT_INCLUDE_DIR}
   ${QT_QTOPENGL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS})
@@ -239,6 +255,7 @@ IF( Tinia_BUILD_EXAMPLES )
   ENDIF()
   ADD_SUBDIRECTORY( "examples/cuberenderer")
   ADD_SUBDIRECTORY( "examples/auto_proxy_test")
+  ADD_SUBDIRECTORY( "examples/jpg_proxy_test")
   ADD_SUBDIRECTORY( "examples/changerestrictions")
   ADD_SUBDIRECTORY( "examples/clock_example")
   ADD_SUBDIRECTORY( "examples/twocanvases") 

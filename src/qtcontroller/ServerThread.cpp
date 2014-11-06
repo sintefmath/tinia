@@ -71,13 +71,17 @@ public:
                                     const std::string &proper_key_to_use,
                                     tinia::jobcontroller::Job* job,
                                     tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
-                                    const bool getRBGsnapshot)
+                                    const bool getRBGsnapshot,
+                                    const bool pngMode, // Could have used TrellRequest, but then we would have to drag in mod_trell.h...
+                                    const int jpg_quality )
         : m_reply( reply ),
           m_request( request ),
           m_job( NULL ),
           m_gl_grabber( gl_grabber ),
           m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
-          m_getRGBsnapshot( getRBGsnapshot )
+          m_getRGBsnapshot( getRBGsnapshot ),
+          m_pngMode( pngMode ),
+          m_jpg_quality( jpg_quality )
     {
         using namespace tinia::qtcontroller::impl;
         
@@ -109,11 +113,13 @@ public:
                                       0, m_height);
         img = img.transformed(flipTransformation);
         QBuffer qBuffer;
-        img.save(&qBuffer, "png");
-        //m_gl_grabber_locker.unlock();
+        if (m_pngMode) {
+            img.save(&qBuffer, "png");
+        } else {
+            img.save(&qBuffer, "jpg", m_jpg_quality);
+        }
         
-        QString str( QByteArray( qBuffer.data(),
-                                 int(qBuffer.size()) ).toBase64() );
+        QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
         m_reply << str;
     }
     
@@ -137,6 +143,8 @@ protected:
     unsigned int                                    m_height;
     std::string                                     m_key;
     bool                                            m_getRGBsnapshot;
+    bool                                            m_pngMode;
+    int                                             m_jpg_quality;
 };
 
 
@@ -223,10 +231,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
                                    tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                    const bool with_depth )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string> >( decodeGetParameters(request), "width height key viewer_key_list" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> >(
+                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
+    const long revision = arguments.get<5>();
+    const long timestamp = arguments.get<6>();
+    const std::string snaptype = arguments.get<7>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -239,14 +251,14 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
         // Now building the JSON entry for this viewer/key
         os << k << ": { \"rgb\": \"";
         {
-            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */ );
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
         }
         os << "\"";
         if (with_depth) {
             os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */ );
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */ );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\", \"view\": \"";
@@ -267,7 +279,44 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
             }
             os << "\"";
         }
-        os << " }";
+        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\" }";
+        if ( i < vk_list.size() - 1 ) {
+            os << ", ";
+        }
+    }
+
+    os << "}";
+}
+
+
+void ServerThread::getJpgSnapshotTxt( QTextStream &os, const QString &request,
+                                      tinia::jobcontroller::Job* job,
+                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber )
+{
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> >(
+                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype" );
+    std::string key = arguments.get<2>();
+    std::string viewer_key_list = arguments.get<3>();
+    const int q = arguments.get<4>();
+    const long revision = arguments.get<5>();
+    const long timestamp = arguments.get<6>();
+    const std::string snaptype = arguments.get<7>();
+
+    os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
+
+    QString viewer_keys(viewer_key_list.c_str());
+    QStringList vk_list = viewer_keys.split(',');
+
+    for (int i=0; i<vk_list.size(); i++) {
+        QString k = vk_list[i];
+        // Now building the JSON entry for this viewer/key
+        os << k << ": { \"rgb\": \"";
+        {
+            SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, true /* RGB requested */, false /* jpg mode */, q );
+            m_mainthread_invoker->invokeInMainThread( &f, true );
+        }
+        os << "\",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\" }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
@@ -284,6 +333,11 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
             updateState(os, request);
             getSnapshotTxt( os, request, m_job, m_grabber, false );
+            return true;
+        }
+        else if ( file == "/jpg_snapshot.txt" ) {
+            updateState(os, request);
+            getJpgSnapshotTxt( os, request, m_job, m_grabber );
             return true;
         }
         else if ( file == "/snapshot_bundle.txt" ) { // Will be used when in autoProxy-mode
