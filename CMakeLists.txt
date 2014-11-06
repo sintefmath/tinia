@@ -205,6 +205,8 @@ SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
   ADD_SUBDIRECTORY( "src/mod_trell" )
   ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
+ADD_SUBDIRECTORY( "src/utils" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_utils)
 
 # --- The rest are built as applications using tinia ---------------------------
 SET( TINIA_LIBRARIES ${TINIA_LIBRARIES_FOR_CONFIG} )
@@ -277,19 +279,19 @@ SET(TINIA_TARGETS_APPEND "")
 # This is for local build directory:
 IF(Tinia_DESKTOP)
 	IF(Tinia_SERVER)
-		export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tiniaipc tinia_trell
+		export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tiniaipc tinia_trell tinia_utils
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 	ELSE()
 	   IF(LIBXML2_FOUND)
-			export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
+			export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tinia_utils
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 		ELSE()
-						export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript
+						export(TARGETS tinia_model tinia_jobcontroller tinia_qtcontroller tinia_renderlist tinia_renderlistgl tinia_javascript tinia_utils
 					FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 		ENDIF()
 	ENDIF()
 ELSE()
-	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tiniaipc tinia_trell
+	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tiniaipc tinia_trell tinia_utils
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 ENDIF()
 
