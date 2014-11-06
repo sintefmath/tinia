@@ -149,7 +149,7 @@ class SnapshotAsBytesFetcher : public QRunnable
 {
 public:
 
-    explicit SnapshotAsTextFetcher( QTextStream& reply,
+    explicit SnapshotAsBytesFetcher( QTextStream& reply,
                                     const QString& request,
                                     const std::string &proper_key_to_use,
                                     tinia::jobcontroller::Job* job,
@@ -177,7 +177,7 @@ public:
         m_key    = ( proper_key_to_use != "" ? proper_key_to_use : arguments.get<2>() );
     }
 
-    ~SnapshotAsTextFetcher()
+    ~SnapshotAsBytesFetcher()
     {
         using namespace tinia::qtcontroller::impl;
         QImage img( m_gl_grabber->imageBuffer(),
@@ -274,23 +274,29 @@ void ServerThread::run()
             }
         }
 
-        QTextStream os(&socket);
-        QDataStream ds();
-
         if(isLongPoll(request)) {
+            QTextStream os(&socket);
             LongPollHandler handler(os, request, m_job->getExposedModel());
             handler.handle();
         }
         else if (isGetOrPost(request)) {
-            os.setAutoDetectUnicode(true);
 
             QString requestURI = getRequestURI(request); // Should return a filename with .txt or .xml
             if (requestURI.split('.').last() == "txt") {
-                if (!handleNonStatic(ds, requestURI, request)) {
+                QByteArray byteArray;
+                if (!handleNonStatic(byteArray, requestURI, request)) {
+                    QTextStream os(&socket);
+                    os.setAutoDetectUnicode(true);
                     os << getStaticContent(getRequestURI(request)) << "\r\n";
+                }
+                else {
+                    QDataStream ds(&socket);
+                    ds << byteArray;
                 }
             }
             else {
+                QTextStream os(&socket);
+                os.setAutoDetectUnicode(true);
                 if(!handleNonStatic(os, getRequestURI(request), request)) {
                     os << getStaticContent(getRequestURI(request)) << "\r\n";
                 }
@@ -441,10 +447,11 @@ void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request
 }
 
 
-bool ServerThread::handleNonStatic(QDataStream &ds, const QString &file,
+bool ServerThread::handleNonStatic(QByteArray, const QString &file,
                                    const QString &request)
 
 {
+    QTextStream os;
     try {
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
             updateState(os, request);
