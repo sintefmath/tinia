@@ -149,7 +149,7 @@ class SnapshotAsBytesFetcher : public QRunnable
 {
 public:
 
-    explicit SnapshotAsBytesFetcher( QTextStream& reply,
+    explicit SnapshotAsBytesFetcher( QDataStream& reply,
                                     const QString& request,
                                     const std::string &proper_key_to_use,
                                     tinia::jobcontroller::Job* job,
@@ -195,8 +195,7 @@ public:
         img.save(&qBuffer, "png");
         //m_gl_grabber_locker.unlock();
 
-        QString str( QByteArray( qBuffer.data(),
-                                 int(qBuffer.size()) ).toBase64() );
+        QByteArray str( qBuffer.data(), int(qBuffer.size()) );
         m_reply << str;
     }
 
@@ -211,7 +210,7 @@ public:
     }
 
 protected:
-    QTextStream&                                    m_reply;
+    QDataStream&                                    m_reply;
     const QString&                                  m_request;
     tinia::jobcontroller::OpenGLJob*                m_job;
     tinia::qtcontroller::impl::OpenGLServerGrabber* m_gl_grabber;
@@ -379,7 +378,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
 // This should be something similar to the gtetSnapshotTxt, but with binary data instead.
 // This function should return a google protocol buffer, which should be used instead of the QTextStream object.
-void ServerThread::getSnapshotBytes( /*Missing protobuf?*/const QString &request,
+void ServerThread::getSnapshotBytes( QByteArray &protoBuf, const QString &request,
                                      tinia::jobcontroller::Job* job,
                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                      const bool with_depth )

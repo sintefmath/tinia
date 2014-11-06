@@ -35,7 +35,7 @@ private:
      *  contain depth and transformation data (optional proto buffer fields).
      *  getSnapshotBundleTxt() seems not to be used, and we therefore do not need a replica of it.
      */
-    void getSnapshotBytes( const QString &request,
+    void getSnapshotBytes( QByteArray &protoBuf, const QString &request,
                            tinia::jobcontroller::Job* job,
                            tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                            const bool with_depth );
