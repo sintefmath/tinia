@@ -297,6 +297,8 @@ void ServerThread::run()
                 }
                 else {
                     QDataStream ds(&socket);
+                    ds << httpHeader(getMimeType("file.bin"), 200, QString("utf-8"), (unsigned int)(responseBuffer->size())).toLocal8Bit();
+                    ds << QString("\r\n").toLocal8Bit();
                     ds << responseBuffer;
                 }
 
