@@ -129,26 +129,26 @@ class TiniaProtoBuf_Viewer : public ::google::protobuf::Message {
   inline ::std::string* release_depth();
   inline void set_allocated_depth(::std::string* depth);
 
-  // optional bytes view = 4;
+  // optional string view = 4;
   inline bool has_view() const;
   inline void clear_view();
   static const int kViewFieldNumber = 4;
   inline const ::std::string& view() const;
   inline void set_view(const ::std::string& value);
   inline void set_view(const char* value);
-  inline void set_view(const void* value, size_t size);
+  inline void set_view(const char* value, size_t size);
   inline ::std::string* mutable_view();
   inline ::std::string* release_view();
   inline void set_allocated_view(::std::string* view);
 
-  // optional bytes proj = 5;
+  // optional string proj = 5;
   inline bool has_proj() const;
   inline void clear_proj();
   static const int kProjFieldNumber = 5;
   inline const ::std::string& proj() const;
   inline void set_proj(const ::std::string& value);
   inline void set_proj(const char* value);
-  inline void set_proj(const void* value, size_t size);
+  inline void set_proj(const char* value, size_t size);
   inline ::std::string* mutable_proj();
   inline ::std::string* release_proj();
   inline void set_allocated_proj(::std::string* proj);
@@ -488,7 +488,7 @@ inline void TiniaProtoBuf_Viewer::set_allocated_depth(::std::string* depth) {
   }
 }
 
-// optional bytes view = 4;
+// optional string view = 4;
 inline bool TiniaProtoBuf_Viewer::has_view() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -521,7 +521,7 @@ inline void TiniaProtoBuf_Viewer::set_view(const char* value) {
   }
   view_->assign(value);
 }
-inline void TiniaProtoBuf_Viewer::set_view(const void* value, size_t size) {
+inline void TiniaProtoBuf_Viewer::set_view(const char* value, size_t size) {
   set_has_view();
   if (view_ == &::google::protobuf::internal::kEmptyString) {
     view_ = new ::std::string;
@@ -558,7 +558,7 @@ inline void TiniaProtoBuf_Viewer::set_allocated_view(::std::string* view) {
   }
 }
 
-// optional bytes proj = 5;
+// optional string proj = 5;
 inline bool TiniaProtoBuf_Viewer::has_proj() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -591,7 +591,7 @@ inline void TiniaProtoBuf_Viewer::set_proj(const char* value) {
   }
   proj_->assign(value);
 }
-inline void TiniaProtoBuf_Viewer::set_proj(const void* value, size_t size) {
+inline void TiniaProtoBuf_Viewer::set_proj(const char* value, size_t size) {
   set_has_proj();
   if (proj_ == &::google::protobuf::internal::kEmptyString) {
     proj_ = new ::std::string;

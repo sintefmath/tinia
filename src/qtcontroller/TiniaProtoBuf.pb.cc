@@ -109,7 +109,7 @@ void protobuf_AddDesc_TiniaProtoBuf_2eproto() {
     "\n\rTiniaProtoBuf\0224\n\006viewer\030\001 \003(\n2$.tinia."
     "protobuf.TiniaProtoBuf.Viewer\032T\n\006Viewer\022"
     "\022\n\nviewer_key\030\001 \002(\t\022\013\n\003rgb\030\002 \002(\014\022\r\n\005dept"
-    "h\030\003 \001(\014\022\014\n\004view\030\004 \001(\014\022\014\n\004proj\030\005 \001(\014", 195);
+    "h\030\003 \001(\014\022\014\n\004view\030\004 \001(\t\022\014\n\004proj\030\005 \001(\t", 195);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "TiniaProtoBuf.proto", &protobuf_RegisterTypes);
   TiniaProtoBuf::default_instance_ = new TiniaProtoBuf();
@@ -287,13 +287,16 @@ bool TiniaProtoBuf_Viewer::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bytes view = 4;
+      // optional string view = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_view:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_view()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->view().data(), this->view().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -301,13 +304,16 @@ bool TiniaProtoBuf_Viewer::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bytes proj = 5;
+      // optional string proj = 5;
       case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_proj:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_proj()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->proj().data(), this->proj().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -354,15 +360,21 @@ void TiniaProtoBuf_Viewer::SerializeWithCachedSizes(
       3, this->depth(), output);
   }
 
-  // optional bytes view = 4;
+  // optional string view = 4;
   if (has_view()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->view().data(), this->view().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       4, this->view(), output);
   }
 
-  // optional bytes proj = 5;
+  // optional string proj = 5;
   if (has_proj()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->proj().data(), this->proj().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       5, this->proj(), output);
   }
 
@@ -398,17 +410,23 @@ void TiniaProtoBuf_Viewer::SerializeWithCachedSizes(
         3, this->depth(), target);
   }
 
-  // optional bytes view = 4;
+  // optional string view = 4;
   if (has_view()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->view().data(), this->view().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         4, this->view(), target);
   }
 
-  // optional bytes proj = 5;
+  // optional string proj = 5;
   if (has_proj()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->proj().data(), this->proj().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         5, this->proj(), target);
   }
 
@@ -444,17 +462,17 @@ int TiniaProtoBuf_Viewer::ByteSize() const {
           this->depth());
     }
 
-    // optional bytes view = 4;
+    // optional string view = 4;
     if (has_view()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
+        ::google::protobuf::internal::WireFormatLite::StringSize(
           this->view());
     }
 
-    // optional bytes proj = 5;
+    // optional string proj = 5;
     if (has_proj()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
+        ::google::protobuf::internal::WireFormatLite::StringSize(
           this->proj());
     }
 

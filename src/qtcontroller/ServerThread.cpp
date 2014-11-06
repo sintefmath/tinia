@@ -454,12 +454,12 @@ bool ServerThread::handleNonStatic(QByteArray, const QString &file,
     QTextStream os;
     try {
         if(file == "/snapshot.txt") { // Will be used for non-autoProxy mode
-            updateState(os, request);
+            updateState(request);
             getSnapshotTxt( os, request, m_job, m_grabber, false );
             return true;
         }
         else if ( file == "/snapshot_bundle.txt" ) { // Will be used when in autoProxy-mode
-            updateState(os, request);
+            updateState(request);
             getSnapshotTxt( os, request, m_job, m_grabber, true );
             return true;
         }
@@ -483,7 +483,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
             return true;
         }
         else if(file =="/updateState.xml") {
-            updateState(os, request);
+            updateState(request);
             os << httpHeader("application/xml") << "\r\n";
             return true;
         }
@@ -497,7 +497,7 @@ bool ServerThread::handleNonStatic(QTextStream &os, const QString& file,
 }
 
 
-void ServerThread::updateState(QTextStream &os, const QString &request)
+void ServerThread::updateState(const QString &request)
 {
 	tinia::model::ExposedModelLock lock(m_job->getExposedModel());
     std::string content = getPostContent(request).toStdString();

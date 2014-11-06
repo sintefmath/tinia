@@ -58,7 +58,7 @@ private:
     bool handleNonStatic(QByteArray bytes, const QString& file,
                          const QString& request);
 
-    void updateState(QTextStream& os, const QString& request);
+    void updateState(const QString& request);
 
     /** Writes the error code to the stream formated as HTTP requires,
      * with the optional message formated in HTML

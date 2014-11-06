@@ -6,8 +6,8 @@ message TiniaProtoBuf {
             required string viewer_key = 1;
             required bytes rgb = 2;
             optional bytes depth = 3;
-            optional bytes view = 4;
-            optional bytes proj = 5;
+            optional string view = 4;
+            optional string proj = 5;
         }
 
 }
