@@ -313,7 +313,6 @@ void ServerThread::run()
            // socket.disconnectFromHost();
 
         }
-            
 
         socket.close();
         socket.waitForDisconnected();
