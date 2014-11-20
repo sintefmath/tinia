@@ -44,5 +44,9 @@
         <file>xml/updateState.xml</file>
         <file>shared/utils.js</file>
         <file>css/text.css</file>
+        <file>3rdparty/ByteBufferAB.min.js</file>
+        <file>3rdparty/Long.min.js</file>
+        <file>3rdparty/ProtoBuf.min.js</file>
+        <file>3rdparty/TiniaProtoBuf.proto</file>
     </qresource>
 </RCC>

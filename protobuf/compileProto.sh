@@ -14,3 +14,11 @@ mv TiniaProtoBuf.pb.h ../include/tinia/protobuf/
 sed -i 's/TiniaProtoBuf.pb.h/..\/include\/tinia\/protobuf\/TiniaProtoBuf.pb.h/g' TiniaProtoBuf.pb.cc
 mv TiniaProtoBuf.pb.cc ../src/qtcontroller/
 
+
+if python js_compiler.py TiniaProtoBuf.proto
+then
+    echo "javascript friendly version created in js folder"
+else 
+    echo "Failed creating a javascript friendly version"
+    exit 1
+fi

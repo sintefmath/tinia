@@ -1,0 +1,10 @@
+message TiniaProtoBuf {
+        repeated group Viewer = 1 {
+            required string viewer_key = 1;
+            required bytes rgb = 2;
+            optional bytes depth = 3;
+            optional string view = 4;
+            optional string proj = 5;
+        }
+}
+

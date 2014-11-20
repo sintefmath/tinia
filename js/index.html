@@ -41,6 +41,15 @@ and open the template in the editor.
         <script type="text/javascript" src="shared/DSRV.js"></script>
         <script type="text/javascript" src="getScript.js"></script>
 
+        <!-- Google protocol buffers dependencies and declaration of variable -->
+        <script src="3rdparty/Long.min.js"></script>
+        <script src="3rdparty/ByteBufferAB.min.js"></script>
+        <script src="3rdparty/ProtoBuf.min.js"></script>
+        <script type="text/javascript">
+            var ProtoBuf = dcodeIO.ProtoBuf;
+            var TiniaProtoBuf = ProtoBuf.loadProtoFile("../3rdparty/TiniaProtoBuf.proto").build("TiniaProtoBuf");
+        </script>
+
         
         <!--<script src="compiled/dojo/dojo.js"></script>-->
         <script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.3/dojo/dojo.js"></script>
