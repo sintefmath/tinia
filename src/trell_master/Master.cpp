@@ -856,8 +856,9 @@ Master::addJob( const std::string& id,
             }
             
             for( int i=0; environ[i] != NULL; i++ ) {
-                if( strncmp( environ[i], "TINIA_", 6 ) != 0 ) {
-                    env.push_back( strdup( environ[i] ) );
+                if( (strncmp( environ[i], "TINIA_", 6 ) != 0 ) ||
+                    (strncmp( environ[i], "TINIA_APP_ROOT=", 15) == 0 )) {
+                        env.push_back( strdup( environ[i] ) );
                 }
             }
             env.push_back( NULL );
