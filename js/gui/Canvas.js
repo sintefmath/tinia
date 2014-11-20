@@ -51,8 +51,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 1024;
-        this._height = 1024;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
         // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
         // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
@@ -635,13 +635,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    // The conversion to integer here seems not to have been required earlier. This may have to do with an upgrade of Dojo.
     _placementX: function () {
-        return dojo.position(this._canvas).x;
+        return parseInt( dojo.position(this._canvas).x );
     },
-
-
     _placementY: function () {
-        return dojo.position(this._canvas).y;
+        return parseInt( dojo.position(this._canvas).y );
     },
 
 
@@ -802,8 +801,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
     },
 
 
+    // The required four-pixel alignments below may have to do with png-encoding requirements, it may also  be
+    // an unneccessary restriction which produces a misleading (http request timeout) error message when not met.
+
     _mouseMoveResize: function (event) {
-        var x = event.pageX - this._placementX();
+        var x = parseInt( (event.pageX - this._placementX()) / 4 ) * 4;
         var y = event.pageY - this._placementY();
         if (this._isResizing) {
             this.resize(x, y);
@@ -813,7 +815,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
     _mouseDownResize: function (event) {
         if (event.button != 0) return;
-        var x = event.pageX - this._placementX();
+        var x = parseInt( (event.pageX - this._placementX()) / 4 ) * 4;
         var y = event.pageY - this._placementY();
         if (Math.max(Math.abs(this._width - x), Math.abs(this._height - y)) < 20) {
             this._isResizing = true;
