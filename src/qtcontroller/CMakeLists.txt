@@ -17,9 +17,9 @@ IF(NOT LIBXML2_FOUND)
     LIST(REMOVE_ITEM qtcontroller_HEADERS ${serverToRemove})
 
 ENDIF()
-QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
-QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
-QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
+QT5_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
+QT5_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
+QT5_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
 
  add_library( tinia_qtcontroller
     ${qtcontroller_QRC_SOURCES}
@@ -29,7 +29,7 @@ QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
     #${qtcontroller_SOURCES_TO_BE_MOCED} # Was removed on Win32
     ${qtcontroller_FORMS_HEADERS}
     )
-
+qt5_use_modules( tinia_qtcontroller OpenGL Xml Script Network Gui Core Widgets)
 IF(LIBXML2_FOUND)
 target_link_libraries ( tinia_qtcontroller
     tinia_renderlist
@@ -47,7 +47,7 @@ target_link_libraries ( tinia_qtcontroller
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
 )
-ELSe()
+ELSE()
 target_link_libraries ( tinia_qtcontroller
     tinia_renderlist
     tinia_renderlistgl

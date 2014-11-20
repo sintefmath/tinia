@@ -4,7 +4,7 @@ FILE( GLOB tutorial_DOC "*.md" )
 FILE( GLOB tutorial_JS_SOURCES "*.js" )
 
 FILE(GLOB tutorial_RESOURCES "*.qrc" )
-QT4_ADD_RESOURCES( tutorial_QRC_SOURCES ${tutorial_RESOURCES} )
+QT5_ADD_RESOURCES( tutorial_QRC_SOURCES ${tutorial_RESOURCES} )
 
 
 IF(Tinia_DESKTOP)
