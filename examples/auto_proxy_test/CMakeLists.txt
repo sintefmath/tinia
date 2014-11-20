@@ -17,6 +17,7 @@ IF(Tinia_DESKTOP)
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     tinia_model
+    tinia_utils
     tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
@@ -50,6 +51,7 @@ IF(Tinia_SERVER)
     tinia_model 
     tinia_modelxml
     tinia_renderlist
+    tinia_utils
     tinia_renderlistgl
     tinia_jobcontroller
     tinia_trell
