@@ -1,3 +1,4 @@
+IF( TINIA_SERVER)
 SET( LIB_TRELL_SRC
     "IPCGLJobController.cpp"
     "IPCController.cpp"
@@ -24,3 +25,12 @@ INSTALL( FILES
   DESTINATION include/tinia/trell
   COMPONENT libtrell-dev
 )
+ENDIF( TINIA_SERVER )
+
+FIND_PACKAGE( Freeglut REQUIRED )
+INCLUDE_DIRECTORIES( ${Freeglut_INCLUDE_DIR} )
+SET( FRV_HEADERS "../../include/tinia/trell/FRVGLJobController.hpp" "../../include/tinia/jobcontroller/Controller.hpp")
+SET( FRV_SRC "FRVGLJobController.cpp" )
+ADD_LIBRARY( tinia_frvController ${FRV_HEADERS} ${FRV_SRC})
+TARGET_LINK_LIBRARIES( tinia_frvController ${GLEW_LIBRARY} tinia_jobcontroller tinia_model ${Freeglut_LIBRARY})
+

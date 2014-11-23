@@ -53,7 +53,9 @@ MARK_AS_ADVANCED( Tinia_EXTEND_CMAKE_MODULE_PATH )
 
 IF( Tinia_EXTEND_CMAKE_MODULE_PATH )
     SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                           ${CMAKE_SOURCE_DIR}/cmake/Modules )
+      ${CMAKE_SOURCE_DIR}/cmake/Modules 
+    "C:/Dependencies/cmake/Modules"
+)
 ENDIF()
 
 
@@ -143,51 +145,6 @@ FIND_PACKAGE( GLEW REQUIRED )
 FIND_PACKAGE( GLM REQUIRED )
 
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
-IF(Tinia_SERVER)
-
-    IF( Tinia_IPC_VALGRIND_ANNOTATIONS )
-        FIND_PATH(
-            VALGRIND_INCLUDE_DIR valgrind.h
-            HINTS   "/usr/include/valgrind"
-        )
-        ADD_DEFINITIONS( -DTINIA_IPC_VALGRIND_ANNOTATIONS )
-    ENDIF( Tinia_IPC_VALGRIND_ANNOTATIONS )
-
-    FIND_PATH( APACHE_INCLUDE_DIR httpd.h
-        HINTS "/usr/include/apache2" "/usr/include/httpd/"
-    )
-
-    FIND_LIBRARY( RT
-        NAMES rt
-        PATHS "/usr/lib/x86_64-linux-gnu/" "/usr/lib/"
-    )
-
-    FIND_LIBRARY(LIB_APR
-        NAMES apr-1
-        PATHS "/usr/lib/"
-    )
-
-    FIND_LIBRARY(LIB_TURBOJPEG
-        NAMES turbojpeg
-        HINTS "/usr/lib/" "/opt/libjpeg-turbo/lib64/"
-    )
-    FIND_PATH(TURBOJPEG_INCLUDE_DIR "turbojpeg.h"
-        HINTS "/usr/include/" "/usr/local/include/"
-              "/opt/" "/opt/libjpeg-turbo/" "/opt/libjpeg-turbo/include/"
-    )
-
-    FIND_PACKAGE( Threads )
-
-    FIND_PATH(APR_INCLUDE_DIR "apr.h"
-        HINTS   "/usr/include/apr-1.0"
-                "/usr/include/apr-1"
-                "apr-1/"
-                "apr-1.0"
-    )
-
-    SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${RT} ${CMAKE_THREAD_LIBS_INIT} ${LIB_APR} ${LIB_TURBOJPEG})
-
-ENDIF()
 
 
 SET(TINIA_EXTERNAL_INCLUDE_DIRS
@@ -222,18 +179,13 @@ ADD_SUBDIRECTORY( "src/renderlistgl" )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_renderlistgl)
 ADD_SUBDIRECTORY( "src/jobcontroller" )
 SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_jobcontroller)
+ADD_SUBDIRECTORY( "src/trell" )
+SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_frvController)
 IF(Tinia_DESKTOP)
   ADD_SUBDIRECTORY( "js")
   SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_javascript)
   ADD_SUBDIRECTORY( "src/qtcontroller" )
   SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_qtcontroller)
-ENDIF()
-IF(Tinia_SERVER)
-  ADD_SUBDIRECTORY( "src/ipc" )
-  ADD_SUBDIRECTORY( "src/trell" )
-SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} tinia_trell)
-  ADD_SUBDIRECTORY( "src/mod_trell" )
-  ADD_SUBDIRECTORY( "src/trell_master" )
 ENDIF()
 
 # --- The rest are built as applications using tinia ---------------------------
@@ -259,33 +211,6 @@ IF( Tinia_BUILD_EXAMPLES )
 ENDIF()
 
 
-#Tutorials
-IF( Tinia_BUILD_TUTORIALS )
-  ADD_SUBDIRECTORY( "tutorials/tutorial1/")
-  ADD_SUBDIRECTORY( "tutorials/tutorial2/")
-  ADD_SUBDIRECTORY( "tutorials/tutorial3/")
-  ADD_SUBDIRECTORY( "tutorials/tutorial4/")
-  IF(Tinia_DESKTOP)
-    ADD_SUBDIRECTORY( "tutorials/tutorial5/")
-  ENDIF()
-ENDIF()
-
-FILE(GLOB tinia_headerFiles "include/tinia/*.hpp")
-install( FILES
-	${tinia_headerFiles}
-    DESTINATION include/tinia/
-    COMPONENT tinia_dev)
-
-#SET( CPACK_DEB_COMPONENT_INSTALL ON)
-
-SET(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/agpl-3.0.txt)
-
-SET(CPACK_PACKAGE_VENDOR "SINTEF ICT")
-
-SET(CPACK_PACKAGE_VERSION ${version_number} )
-
-
-SET(TINIA_TARGETS_APPEND "")
 
 
 # This is for local build directory:
