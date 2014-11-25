@@ -1,0 +1,135 @@
+% ---------------------------------------------------------------------------
+% Author guideline and sample document for EG publication using LaTeX2e input
+% D.Fellner, v1.13, Jul 31, 2008
+
+\documentclass{egpubl}
+\usepackage{eg2015}
+
+% --- for  Annual CONFERENCE
+% \ConferenceSubmission   % uncomment for Conference submission
+% \ConferencePaper        % uncomment for (final) Conference Paper
+% \STAR                   % uncomment for STAR contribution
+% \Tutorial               % uncomment for Tutorial contribution
+ \ShortPresentation      % uncomment for (final) Short Conference Presentation
+% \Areas                  % uncomment for Areas contribution
+% \MedicalPrize           % uncomment for Medical Prize contribution
+% \Education              % uncomment for Education contribution
+%
+% --- for  CGF Journal
+% \JournalSubmission    % uncomment for submission to Computer Graphics Forum
+% \JournalPaper         % uncomment for final version of Journal Paper
+%
+% --- for  CGF Journal: special issue
+% \SpecialIssueSubmission    % uncomment for submission to Computer Graphics Forum, special issue
+% \SpecialIssuePaper         % uncomment for final version of Journal Paper, special issue
+%
+% --- for  EG Workshop Proceedings
+% \WsSubmission    % uncomment for submission to EG Workshop
+% \WsPaper         % uncomment for final version of EG Workshop contribution
+%
+ \electronicVersion % can be used both for the printed and electronic version
+
+% !! *please* don't change anything above
+% !! unless you REALLY know what you are doing
+% ------------------------------------------------------------------------
+
+% for including postscript figures
+% mind: package option 'draft' will replace PS figure by a filname within a frame
+\ifpdf \usepackage[pdftex]{graphicx} \pdfcompresslevel=9
+\else \usepackage[dvips]{graphicx} \fi
+
+\PrintedOrElectronic
+
+% prepare for electronic version of your document
+\usepackage{t1enc,dfadobe}
+
+\usepackage{egweblnk}
+\usepackage{cite}
+
+% For backwards compatibility to old LaTeX type font selection.
+% Uncomment if your document adheres to LaTeX2e recommendations.
+% \let\rm=\rmfamily    \let\sf=\sffamily    \let\tt=\ttfamily
+% \let\it=\itshape     \let\sl=\slshape     \let\sc=\scshape
+% \let\bf=\bfseries
+
+% end of prologue
+
+
+
+% ---------- my stuff ----------
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes}
+\usetikzlibrary{positioning}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{calc}
+\usepackage{3dplot}
+\usetikzlibrary{trees}
+\usetikzlibrary{chains,fit,shapes,intersections}
+
+\usepackage[plain]{algorithm}
+%\usepackage[noend]{algorithmic}
+\usepackage{algorithmic}
+
+%\usepackage[]{algorithm2e}
+\usepackage{subfigure}
+
+\newcommand{\ga}{{\gamma}}
+
+
+
+%\newcommand{\xv}{\mbox{\boldmath $x$}} % funker ikke lenger...!?
+
+\newcommand{\bv}{\mathbf{b}}
+\newcommand{\cv}{\mathbf{c}}
+\newcommand{\dv}{\mathbf{d}}
+\newcommand{\ev}{\mathbf{e}}
+\newcommand{\mv}{\mathbf{m}}
+\newcommand{\pv}{\mathbf{p}}
+\newcommand{\uv}{\mathbf{u}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\xv}{\mathbf{x}}		% Works, but seems more Roman than italics!
+
+\newcommand{\ub}{\bar{u}}
+
+\newcommand{\evh}{\hat{\mathbf{e}}}
+
+\newcommand{\Ev}{\mathbf{E}}
+\newcommand{\Fv}{\mathbf{F}}
+\newcommand{\Tv}{\mathbf{T}}
+\newcommand{\Nv}{\mathbf{N}}
+\newcommand{\Bv}{\mathbf{B}}
+
+\newcommand{\Tvh}{\hat{\mathbf{T}}}
+\newcommand{\Nvh}{\hat{\mathbf{N}}}
+\newcommand{\Bvh}{\hat{\mathbf{B}}}
+
+\newcommand{\Tvb}{\bar{\mathbf{T}}}
+\newcommand{\Nvb}{\bar{\mathbf{N}}}
+\newcommand{\Bvb}{\bar{\mathbf{B}}}
+
+%\newcommand{\Tvd}{\dot{\mathbf{T}}}
+\newcommand{\Tvd}{\mathbf{T}'}
+
+\newcommand{\zev}{\mathbf{0}}
+
+\newcommand{\ra}{\rightarrow}
+\newcommand{\la}{\leftarrow}
+
+%\newcommand{\gav}{\mathbf{\gamma}} % funker heller ikke!
+\newcommand{\gav}{\boldsymbol{\gamma}} % Works only when bm.sty is used. If it is not, we get an ordinary symbol, but no warning/error!
+\newcommand{\nuv}{\boldsymbol{\nu}}
+\newcommand{\nuvh}{\boldsymbol{\nu}}
+
+\newcommand{\xvv}{\boldsymbol{x}}	% Strange. This looks like a ``poor mans bold'', i.e., a couple of superimposed
+	                                % and slightly offset x'es...
+
+\newcommand{\ie}{{\em i.e.}}
+\newcommand{\eg}{{\em e.g.}}
+\newcommand{\etal}{{\em et~al.}}
+
+
+% ------------------------------
+
+%\input{EGauthorGuidelines-body.inc}
+\input{body.tex}

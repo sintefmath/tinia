@@ -1,0 +1,84 @@
+%\begin{tikzpicture}[ scale=.25, show background rectangle]
+\begin{tikzpicture}[scale=0.32, >=triangle 45, show background rectangle,
+  declare function = {
+    rotx(\x,\y,\th) = cos(\th)*\x - sin(\th)*\y; % NB! Cannot have space between parameters it seems!
+    roty(\x,\y,\th) = sin(\th)*\x + cos(\th)*\y;
+  }
+  ]
+
+  % View frustum
+  \fill[fill=gray!20] (1, 0) -- (9, 0) -- (10, 5) -- (0, 5) -- cycle;
+  % \clip (1, 0) -- (9, 0) -- (10, 5) -- (0, 5) -- cycle;
+  % Clipping looks ok, but clipped content still expands bbox!! Solving this by reducing \pixels below from 13 to 11...
+
+
+  % Defining some figure params
+
+  \def \pixelwidth  {0.4}
+  \def \pixelheight {0.3}
+  \def \redstart    {2.2}
+  \def \redpixels   {5}
+  \def \pixels      {11}
+  \def \linewidth   {1.25pt}
+  \def \theta       {25}
+  \def \cx          {5}
+  \def \cy          {3}
+  \def \rightcol    {red!100}
+  \def \leftcolL    {blue!100}
+  %\def \leftcolR    {red!100!blue!0} % Why doesn't this work?! (The color becomes white)
+  \def \leftcolR    {red!100}
+
+
+  % The scene, using same coordinate calculations as in the loop below
+
+  \foreach \t in {0, ..., 4} {
+
+    \pgfmathsetmacro\theta{25*\t}
+
+    \ifthenelse{ \t = 0 \OR \t = 2 \OR \t = 4} {
+      \def \rightcolToUse {\rightcol}
+      \def \leftcolLToUse {\leftcolL}
+      \def \leftcolRToUse {\leftcolR}
+    }{
+      \def \rightcolToUse {red!10}
+      \def \leftcolLToUse {blue!10}
+      \def \leftcolRToUse {red!10}
+    }
+
+    \pgfmathsetmacro\s{1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (left) at ( \posxRot, \posyRot );
+    
+    \pgfmathsetmacro\s{\redpixels - 1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (middle) at ( \posxRot, \posyRot );
+    
+    % The offset necessary for the red and green lines to meet properly
+    \pgfmathsetmacro\redgreenintersection{3.5 -(0.6+0.2)*(\s-1)}
+    
+    \pgfmathsetmacro\s{\pixels}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (right) at ( \posxRot, \posyRot );
+    
+    % The "server-rendered model"
+    \fill[left color=\leftcolLToUse, right color=\leftcolRToUse, draw=none]
+    (left) -- (middle) -- +(0, 3*\linewidth) -- ($ (left) + (0, 3*\linewidth) $) -- cycle;
+    % Why is the factor 3 needed here?!?!
+    % And why is there a (very thin) border?
+    % And why is it not equally thick everywhere?
+
+    \draw[\rightcolToUse, line width=\linewidth] (middle) -- (right);
+
+  }
+
+
+\end{tikzpicture}

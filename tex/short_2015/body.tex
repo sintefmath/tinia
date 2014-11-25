@@ -1,0 +1,368 @@
+% ---------------------------------------------------------------------
+% EG author guidelines plus sample file for EG publication using LaTeX2e input
+% D.Fellner, v1.17, Sep 23, 2010
+
+
+\title[Automatic Proxy Geometry]%
+      {Automatic Proxy Geometry}
+
+% for anonymous conference submission please enter your SUBMISSION ID
+% instead of the author's name (and leave the affiliation blank) !!
+\author[J.\,O. Nygaard \& J. Mikkelsen]
+       {J.\,O. Nygaard$^{1}$
+        and J. Mikkelsen$^{1}$
+        and Husk Anonymisering Hvis Paakrevet!$^{1}$
+%        S. Spencer$^2$\thanks{Chairman Siggraph Publications Board}
+        \\
+% For Computer Graphics Forum: Please use the abbreviation of your first name.
+         $^1$SINTEF ICT, applied mathematics, Norway
+%        $^2$ Another Department to illustrate the use in papers from authors
+%             with different affiliations
+       }
+
+% ------------------------------------------------------------------------
+
+% if the Editors-in-Chief have given you the data, you may uncomment
+% the following five lines and insert it here
+%
+% \volume{27}   % the volume in which the issue will be published;
+% \issue{1}     % the issue number of the publication
+% \pStartPage{1}      % set starting page
+
+
+%-------------------------------------------------------------------------
+\begin{document}
+
+% \teaser{
+%  \includegraphics[width=\linewidth]{eg_new}
+%  \centering
+%   \caption{New EG Logo}
+% \label{fig:teaser}
+% }
+
+\maketitle
+
+\begin{abstract}
+   We describe an algorithm, and implementation, of an automatic proxy geometry
+   system for a server-client remote rendering setup. The client may be a thin
+   client in the form of a hand-held pad, for our implementation we only assume
+   the availability of WebGL. For our rendering server, we make use of a
+   GL-capable web server. In situations where the rate of received images
+   deteriorate due to low bandwith, high latency or long rendering times, the
+   client displays an automatically generated proxy geometry. This proxy
+   geometry is computed from depth buffers bundled with rendered images from the
+   server.
+   % Husk: Skal vaere en blank linje nedenfor
+
+\begin{classification} % according to http://www.acm.org/class/1998/
+\CCScat{FIX THIS Computer Graphics}{I.3.3}{Picture/Image Generation}{Line and curve generation}
+\end{classification}
+
+\end{abstract}
+
+
+
+
+
+%-------------------------------------------------------------------------
+\section{Introduction}
+
+With increasingly powerful rendering engines, in forms ranging from mobile and
+hand-held devices to traditional stationary computers, one might be led to
+believe that rendering frame rates could only increase and visualization could
+only become more interactive. Alas, hand in hand with this development we also
+find ever increasing requirements on computation accuracy, power efficiency,
+data sizes and so on.
+
+One result of this is that server-side rendering is as relevant as ever
+before. And, with a client-server model for rendering, the problems with
+transferring images from the server to the model is of course also still
+present.
+
+In order to obtain the frame rates on the client suitable for interactive
+visualizations, demands are put on bandwidth, latency and rendering speed. If
+one or more of these demands are not met, according to a suitable measure, the
+frame rate will deteriorate together with the user experince.
+
+One way to deal with such situations is for the client to have a so-called proxy
+model, which is defined as a temporary model to be shown and manipulated locally
+on the client while waiting for the appropriate image from the server.
+
+A particularly unwelcomed chore is that of building proxy geometries for various
+data sets. The typical ``hello world'' proxy geometry is the familiar bounding
+box wire frame, but this will degrade the user experience unacceptably for most
+applications. One alternative is to hand-build such simpler proxy
+geometries. They have to be simple both for the building cost, and also for the
+actual rendering on the possibly very thin client. Another alternative is to
+automate this process, a large triangulation may for instance be represented by
+a much coarser approximating triangulation that can be built automatically. One
+disadvantage of this approach is that this is not easy to do for many kinds of
+data. 
+
+Our suggested solution is to pass along depth information from the server along
+with ordinary rendered images. From this depth image, a rudimentary 3D model can
+be built, and using the ordinary image as a texture, this model can be
+transformed and rendered on the client while waiting for the next update from
+the server. If the server does not take too long to respond, and/or the client
+does not change the position or orientation of the model too much, it is to be
+hoped that this display of a proxy model integrates seemlessly with the slower
+stream of server-rendered frames.
+
+[Kanskje ha inn en foreløpig figur-skisse her, med dybdefelt vist som en
+  høydeflate...?]
+
+[Trenger referanser til state of the art o.l. her]
+
+%-------------------------------------------------------------------------
+
+\section{The auto proxy algorithm}
+
+The first main idea is to automatically construct a proxy geometry on the client
+side from depth data provided by the server. For a new frame to be displayed on
+the client, the server renders an image in a frame buffer, and it is assumed
+that it in this process also renders a corresponding depth buffer. This depth
+buffer may be regarded as a height map over a viewing plane relative to the
+observing client. Hence, this depth map does not contain information about scene
+elements not in view for the set of view parameters at the time of server side
+rendering. Our approach is based on the assumption that small transformations of
+this height map still will give good approximations to the scene being
+rendered. These renderings are exactly what the client will compute and show
+while waiting for the next update from the server. See
+Figure~\ref{fig:2Dheightmap} and Figure~\ref{fig:2DheightmapRoated} for an
+illustration of this heightmap computed on the server, and a recovered 3D model
+on the client.
+
+\begin{figure}[htb]
+  \centering
+%  \includegraphics[width=.8\linewidth]{test.jpg}
+%  \vspace{-5cm}
+  \input{fig2.tex}
+  \caption{\label{fig:2Dheightmap}
+           The rendered image (of \eg, a cube) as a height map seen from above,
+           for a certain transformation.}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+  \subfigure[Low frame rate]{
+    \input{fig3a.tex}
+  }
+  \subfigure[Initial proxy model]{
+    \input{fig3b.tex}
+  }
+  \subfigure[Client-generated frame]{
+    \input{fig3c.tex}
+  }
+  \subfigure[With texturing]{
+    \input{fig3d.tex}
+  }
+  \subfigure[Screen-space-sized splats]{
+    \input{fig3e.tex}
+  }
+  \subfigure[With intra-splat depths]{
+    \input{fig3f.tex}
+  }
+  \caption{\label{fig:2DheightmapRotated}
+           The depth map and image sent from the server enables the client to
+           recover a 3D model approximating the one rendered on the server. This
+           client-side model is shown here with a small additional rotation, again
+           seen from above.}
+\end{figure}
+
+Note that the depth map from the server does not allow the client to recover all
+information in the server side model. For instance, the solid surface shown in
+Figure~\ref{fig:2Dheightmap} cannot be deduced, hence we show the dots in
+Figure~\ref{fig:2DheightmapRotated}. Still, there are several things we can do
+to improve the client-side computed approximation of the server-side image, and
+these will now be described.
+
+%-------------------------------------------------------------------------
+\subsection{The server}
+
+The server keeps a 3D model and accompanying viewing parameters, and will render
+an image for delivery to the client either on its own accord or because the
+client requests it. As long as the server renders a picture into a framebuffer
+with a connected depth buffer, it has a negligible cost for the server to bundle
+the resulting depth map with the rendered image upon return of the render
+result. In practice, this is easily handled by a few extra lines of computer
+code where the image is extracted from its framebuffer and prepared for sending
+to the client.
+
+The cost must of course be considered if the operation of packaging images for
+sending to the client is significant, which may be the case if, \eg, images must
+be compressed or converted to some special format. An example of the latter
+might be {\texttt base64}-encoding for converting the image to a purely ASCII
+format. Together with the rendered image (which we will call ``rgb image'' to
+avoid confusion with the ``depth image'') and the depth image, we will also send
+the current view transformations, back to the client.
+
+
+%-------------------------------------------------------------------------
+\subsection{The client}
+
+When the client receieves an rgb image, a depth image and view transformations,
+it builds a ``proxy model'' from this. This model can then be rendered directly,
+if there is no available image from the server for a new transformation provided
+by the user, or it can be combined with other proxy models the client already
+has. The latter option will be discussed in
+Section~\ref{sec:proxyModelReplacement} below.
+
+
+%-------------------------------------------------------------------------
+%\subsubsection{Proxy model building / Splatting}
+
+As indicated by Figure~\ref{fig:2DheightmapRotated}~(a), the received
+height map does not really allow us more than concluding where a set of points
+belong to the 3D model, these points giving rise to exactly the depth map from
+the server. Given these points, the client may build a model approximating the
+actual scene being rendered on the server. Since the information from such a
+depth map can only contain the foremost point along any ray from the observer
+toward the scene, it is often said to be in 2.5D, as opposed to purely 2D or
+fully 3D.
+
+The most simple thing the client can do, is just to transform and render this
+set of 3D points with the color sampled from the corresponding location in the
+server-rendered image, as illustrated in
+Figure~\ref{fig:2DheightmapRotated}~(b).
+
+We may set up the server to send a depth buffer of different resolution than the
+actual image, and the client can render at most one 3D point for each depth
+fragment available. This may be too much for a thin client, and one may want to
+operate with a smaller number of 3D points, and instead render each of them with
+a larger number of pixels on the client side. This opens up for problems and
+possibilities connected to {\em splatting}, \eg, what size and shape of
+geometries to render for each 3D point, how to color them, how to compute depth
+fragments and so on.
+
+The most simple solution is to render each 3D point as a fixed geometry, for
+instance a 2D sphere or rectangle, with the correspondig color from the image,
+see Figure~\ref{fig:2DheightmapRotated}~(c). We will briefly describe some
+improvements to this. We also note that other possibilities exist apart
+from this ``splat-based'' proxy model, \eg, building and maintaining a 3D
+occupancy mesh, a computing a distance field from which iso-surfaces can be
+extracted, and so on.
+
+In the following, we will refer to a set of reconstructed 3D points from a depth
+map as a {\em proxy model}, and the reconstructed points as {\em splats}.
+
+%-------------------------------------------------------------------------
+\subsubsection{Splat sizing}
+
+Note that as soon as a given proxy model is transformed, each splat should
+ideally be rendered into a number of client pixels according to the new splats
+3D position. A splat transformed into view closer to the observer, should result
+in more client fragments, and vice versa. 
+
+...
+
+
+
+%-------------------------------------------------------------------------
+\subsubsection{Texturing}
+
+From the previous section, we note that the splats may occupy more client
+fragments than just one, even if the should be one to one correspondence between
+server depth fragments and client pixels. This will of course also be the case
+if the client's capabilities dictate a realtively small number of splats.
+
+In any case, a splat may result in many client fragments, which necessitates an
+``intra-splat'' fragment coloring or texturing. This is not entirely straight
+forward, since the client really do not know how a finitely-sized splat should
+map to the server's model, having only a discrete set of 3D points on that
+model.
+
+A first approximation is for the client to assume that the corresponding part of
+the server's model is planar in a region around the given point. If this is the
+case, a local 2D texture transformation will provide a good approximation to the
+intra-splat texturing to be performed on the client. For the splat centered in
+$\vv_{i, j} = (x_j, y_i, z_{i, j})$, to be centered on the client's canvas at
+$\pv_{i, j} = P_c M_c M_s^{-1} P_s^{-1}\vv_{i, j}$, the texture coordinate
+transformation to be used is,
+\[
+  T = \ldots,
+\]
+such that the client fragment $\pv_{i, j} + \delta_{i, j}$ gets texel
+\[
+  I_{p, q},
+\]
+with $(p, q) = \ldots$.
+
+When the assumption does not hold, \eg, if the splats are very large, or they
+originates from a non-planar part of the server's model, this may look rather
+odd, see Figure~\ref{fig:LargeSplatsOnCorners}.
+
+\begin{figure}[htb]
+  \centering
+  \framebox{\includegraphics[width=.8\linewidth]{test.jpg}}
+  \caption{\label{fig:LargeSplatsOnCorners}
+           The rendered image (of \eg, a cube) as a height map seen from above,
+           for a certain transformation.}
+\end{figure}
+
+%-------------------------------------------------------------------------
+\subsubsection{Splat depth fragments}
+
+%-------------------------------------------------------------------------
+
+
+%------------------------------------------------------------------------
+\subsection{Splat set replacement algorithms}
+\label{sec:proxyModelReplacement}
+
+In the case of splat sets: Replacement algorithms
+
+%-------------------------------------------------------------------------
+\subsection{Dynamic/heuristic method selection}
+
+
+%-------------------------------------------------------------------------
+\section{Results and discussion}
+
+
+%-------------------------------------------------------------------------
+\section{Conclusion and future work}
+
+
+
+%-------------------------------------------------------------------------
+\subsection{References}
+
+List all bibliographical references in 9-point Times, single-spaced, at the
+end of your paper in alphabetical order. When referenced in the text, enclose
+the citation index in square brackets, for example~\cite{Lous90}. Where
+appropriate, include the name(s) of editors of referenced books.
+
+For your references please use the following algorithm:
+\begin{itemize} 
+\item \textbf{one} author: first 3 chars plus year -- 
+      e.g.\ \cite{Lous90}
+\item \textbf{two}, \textbf{three} or \textbf{four} authors: first char
+      of each family name plus year --  e.g.\ \cite{Fellner-Helmberg93} 
+      or \cite{Kobbelt97-USHDR} or \cite{Lafortune97-NARF}
+\item \textbf{more than 4} authors: first char of family name from 
+      first 3 authors followed by a '*' followed by the year -- 
+      e.g.\ \cite{Buhmann:1998:DCQ} or \cite{FolDamFeiHug.etal93} 
+\end{itemize}
+
+For BibTeX users a style file \ \texttt{eg-alpha.bst} \ is available which
+uses the above algorithm.
+
+
+
+
+%-------------------------------------------------------------------------
+\subsection{Conclusions}
+
+Please direct any questions to the production editor in charge of
+these proceedings.
+
+%-------------------------------------------------------------------------
+
+%\bibliographystyle{eg-alpha}
+\bibliographystyle{eg-alpha-doi}
+
+\bibliography{egbibsample}
+
+%-------------------------------------------------------------------------
+
+\end{document}
