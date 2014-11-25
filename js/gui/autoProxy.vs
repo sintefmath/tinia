@@ -298,9 +298,8 @@ void main(void)
     //
     //----------------------------------------------------------------------------------------------------
 
-    // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to which
-    // the screen space region with lower left corner 'pos.xy * vec2(vp_width, vp_height) / 2.0 / pos.w' and spanning
-    // vectors 'scr_dx' and 'scr_dy' should be mapped.
+    // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to which the screen space region
+    // with lower left corner 'pos.xy * vec2(vp_width, vp_height) / 2.0 / pos.w' and spanning vectors 'scr_dx' and 'scr_dy' should be mapped.
     
     intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned
