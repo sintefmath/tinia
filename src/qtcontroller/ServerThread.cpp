@@ -196,6 +196,7 @@ public:
         //m_gl_grabber_locker.unlock();
 
         QByteArray str( qBuffer.data(), int(qBuffer.size()) );
+        std::cout << "SnapshotAsBytesFetcher::~SnapshotAsBytesFetcher - returning " << qBuffer.size() << " bytes." << std::endl;
         m_reply << str;
     }
 
@@ -284,11 +285,13 @@ void ServerThread::run()
 
             QString requestURI = getRequestURI(request); // Should return a filename with .txt or .xml
             if (requestURI.split('.').last() == "txt") {
+                std::cout << "\n\nServerThread::run() - Starting on txt-request" << std::endl;
 
                 // Still need a QTextStream in case handleNonStatic throws an error, but it should not be connected on socket yet!
                 QString errorString;
                 QTextStream textStream(&errorString);
                 if (!handleNonStatic(responseBuffer, textStream, requestURI, request)) {
+                    std::cout << "ServerThread::run() - Not able to handleNonStatic..." << std::endl;
                     //QTextStream os(&socket);
                     textStream.setAutoDetectUnicode(true);
                     textStream << getStaticContent(getRequestURI(request)) << "\r\n";
@@ -296,14 +299,25 @@ void ServerThread::run()
                     os << errorString;
                 }
                 else {
+                    std::cout << "ServerThread::run() - Handled nonStatic" << std::endl;
+                    std::cout << "ServerThread::run() - responseBuffer is at addresse " << responseBuffer << std::endl;
+                    std::cout << "ServerThread::run() - responseBuffer is size " << responseBuffer->size() << std::endl;
+
                     QDataStream ds(&socket);
                     ds << httpHeader(getMimeType("file.bin"), 200, QString("utf-8"), (unsigned int)(responseBuffer->size())).toLocal8Bit();
+                    //std::cerr << httpHeader(getMimeType("file.bin"), 200, QString("utf-8"), (unsigned int)(responseBuffer->size())); //.toLocal8Bit();
                     ds << QString("\r\n").toLocal8Bit();
+                    //ds << QString("\r\n").toAscii();
+                    //std::cerr << QString("\r\n");
                     ds << responseBuffer;
+                    //std::cerr << "trying to dump response buffer" << std::endl;
+                    //std::cerr << responseBuffer;
+                    std::cout << "ServerThread::run() - Finished filling QDataStream connected to socket." << std::endl;
                 }
 
             }
             else {
+                std::cout << "\n\nServerThread::run() - non-txt request." << std::endl;
                 QTextStream os(&socket);
                 os.setAutoDetectUnicode(true);
                 if(!handleNonStatic(os, getRequestURI(request), request)) {
@@ -391,7 +405,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
 
 // This should be something similar to the gtetSnapshotTxt, but with binary data instead.
 // This function should return a google protocol buffer, which should be used instead of the QTextStream object.
-void ServerThread::getSnapshotBytes( QByteArray* protoBytes, const QString &request,
+void ServerThread::getSnapshotBytes(QByteArray* &protoBytes, const QString &request,
                                      tinia::jobcontroller::Job* job,
                                      tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                      const bool with_depth )
@@ -409,55 +423,69 @@ void ServerThread::getSnapshotBytes( QByteArray* protoBytes, const QString &requ
 
     tinia::protobuf::TiniaProtoBuf proto;
 
+    std::cout << "ServerThread::getSnapshotBytes() - Start building protocol buffer" << std::endl;
     QString viewer_keys(viewer_key_list.c_str());
     QStringList vk_list = viewer_keys.split(',');
 
     for (int i=0; i<vk_list.size(); i++) {
+        std::cout << "ServerThread::getSnapshotBytes() - Creating viewer " << i << std::endl;
         QString k = vk_list[i];
         tinia::protobuf::TiniaProtoBuf_Viewer *proto_viewer = proto.add_viewer();
         proto_viewer->set_viewer_key(k.toStdString());
 
         // Now building the JSON entry for this viewer/key
         //os << k << ": { \"rgb\": \"";
-        {
-            QByteArray rgb_bytes;
-            QDataStream rgb_ds(&rgb_bytes, QIODevice::ReadWrite);
+
+       QByteArray rgb_bytes;
+       QDataStream rgb_ds(&rgb_bytes, QIODevice::ReadWrite);
+       {
+            // The Snapshot is written in the destructor, so we need to close the block before we write to the protocol buffer!
             SnapshotAsBytesFetcher f( rgb_ds, request, k.toStdString(), job, grabber, true /* RGB requested */ );
             m_mainthread_invoker->invokeInMainThread( &f, true );
-            proto_viewer->set_rgb(rgb_bytes, rgb_bytes.size());
         }
+        proto_viewer->set_rgb(rgb_bytes, rgb_bytes.size());
+        //proto_viewer->set_rgb(QByteArray("A small byte array created from a char*"));
+        std::cout << "ServerThread::getSnapshotBytes() - Added " << rgb_bytes.size() << " bytes as rgb." << std::endl;
+
         // os << "\"";
         if (with_depth) {
             //os << ", \"depth\": \"";
+            QByteArray depth_bytes;
+            QDataStream depth_ds(&depth_bytes, QIODevice::ReadWrite);
             {
-                QByteArray depth_bytes;
-                QDataStream depth_ds(&depth_bytes, QIODevice::ReadWrite);
                 SnapshotAsBytesFetcher f( depth_ds, request, k.toStdString(), job, grabber, false /* Depth requested */ );
                 m_mainthread_invoker->invokeInMainThread( &f, true );
-                proto_viewer->set_depth(depth_bytes, depth_bytes.size());
             }
+            proto_viewer->set_depth(depth_bytes, depth_bytes.size());
+            std::cout << "ServerThread::getSnapshotBytes() - Added " << depth_bytes.size() << " bytes as depth." << std::endl;
+
             //os << "\", \"view\": \"";
             tinia::model::Viewer viewer;
             m_job->getExposedModel()->getElementValue( k.toStdString(), viewer );
+
+            QString view_qString;
+            QTextStream view_stream(&view_qString);
             {
-                QString view_qString;
-                QTextStream view_stream(&view_qString);
                 for (size_t i=0; i<15; i++) {
                     view_stream << viewer.modelviewMatrix[i] << " ";
                 }
                 view_stream << viewer.modelviewMatrix[15];
-                proto_viewer->set_view(view_qString.toStdString());
             }
+            proto_viewer->set_view(view_qString.toStdString());
+            std::cout << "ServerThread::getSnapshotBytes() - Added the view matrix as text." << std::endl;
+
             //os << "\", \"proj\": \"";
+            QString proj_qString;
+            QTextStream proj_stream(&proj_qString);
             {
-                QString proj_qString;
-                QTextStream proj_stream(&proj_qString);
                 for (size_t i=0; i<15; i++) {
                     proj_stream << viewer.projectionMatrix[i] << " ";
                 }
                 proj_stream << viewer.projectionMatrix[15];
-                proto_viewer->set_proj(proj_qString.toStdString());
             }
+            proto_viewer->set_proj(proj_qString.toStdString());
+            std::cout << "ServerThread::getSnapshotBytes() - Added the proj matrix as text." << std::endl;
+
             //os << "\"";
         }
         //os << " }";
@@ -467,11 +495,12 @@ void ServerThread::getSnapshotBytes( QByteArray* protoBytes, const QString &requ
     }
 
     protoBytes = new QByteArray(proto.SerializeAsString().c_str(), proto.ByteSize());
+    std::cout << "ServerThread::getSnapshotBytes() - Created protocol buffer of size " << protoBytes->size() << " and returning." << std::endl;
     //os << "}";
 }
 
 
-bool ServerThread::handleNonStatic(QByteArray* protoBytes, QTextStream &os, const QString &file,
+bool ServerThread::handleNonStatic(QByteArray* &protoBytes, QTextStream &os, const QString &file,
                                    const QString &request)
 
 {
