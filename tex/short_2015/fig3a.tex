@@ -20,7 +20,6 @@
   \def \redpixels   {5}
   \def \pixels      {11}
   \def \linewidth   {1.25pt}
-  \def \theta       {25}
   \def \cx          {5}
   \def \cy          {3}
   \def \rightcol    {red!100}
@@ -28,14 +27,16 @@
   %\def \leftcolR    {red!100!blue!0} % Why doesn't this work?! (The color becomes white)
   \def \leftcolR    {red!100}
 
+  \pgfmathsetmacro\halfpixelwidth{0.5*\pixelwidth}
 
-  % The scene, using same coordinate calculations as in the loop below
 
-  \foreach \t in {0, ..., 4} {
+  \foreach \frame in {0, ..., 4} {
 
-    \pgfmathsetmacro\theta{25*\t}
+    \pgfmathsetmacro\theta{25*\frame}
 
-    \ifthenelse{ \t = 0 \OR \t = 2 \OR \t = 4} {
+    % The scene, using same coordinate calculations as in the loop below
+
+    \ifthenelse{ \frame = 0 \OR \frame = 2 \OR \frame = 4} {
       \def \rightcolToUse {\rightcol}
       \def \leftcolLToUse {\leftcolL}
       \def \leftcolRToUse {\leftcolR}
@@ -71,12 +72,40 @@
     
     % The "server-rendered model"
     \fill[left color=\leftcolLToUse, right color=\leftcolRToUse, draw=none]
-    (left) -- (middle) -- +(0, 3*\linewidth) -- ($ (left) + (0, 3*\linewidth) $) -- cycle;
+      (left) -- (middle) -- +(0, 3*\linewidth) -- ($ (left) + (0, 3*\linewidth) $) -- cycle;
     % Why is the factor 3 needed here?!?!
     % And why is there a (very thin) border?
     % And why is it not equally thick everywhere?
-
     \draw[\rightcolToUse, line width=\linewidth] (middle) -- (right);
+
+    % Showing splats
+    \foreach \s in {1, ..., \pixels} {
+      \ifthenelse{\s < \redpixels} {
+        \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+        \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+        \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+        \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+        
+        % Constant color
+        \pgfmathsetmacro\t{100*\s/\redpixels}
+        \pgfmathsetmacro\u{100*(1.0-\s/\redpixels)}
+        %      \draw[red!\t!blue!\u, line width=1.5pt] (\posxRot, \posyRot) -- +(-\halfWidthToUse, 0);
+        %      \draw[red!\t!blue!\u, line width=1.5pt] (\posxRot, \posyRot) -- +(\halfWidthToUse, 0);
+        
+%        \draw[fill=red!\t!blue!\u] (\posxRot, \posyRot) circle(0.15);
+        
+        %      \draw[red, fill=red!50] (\posxRot, \posyRot) circle(0.15);
+      } {
+        \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+        \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+        \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+        \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+
+%        \draw[fill=\rightcolToUse] (\posxRot, \posyRot) circle(0.15);
+
+      }
+    }
+
 
   }
 

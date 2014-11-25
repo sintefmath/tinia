@@ -1,4 +1,3 @@
-%\begin{tikzpicture}[ scale=.25, show background rectangle]
 \begin{tikzpicture}[scale=0.32, >=triangle 45, show background rectangle,
   declare function = {
     rotx(\x,\y,\th) = cos(\th)*\x - sin(\th)*\y; % NB! Cannot have space between parameters it seems!
@@ -25,112 +24,24 @@
   \pgfmathsetmacro\halfpixelwidth{0.5*\pixelwidth}
 
 
-  % The scene, using same coordinate calculations as in the loop below
+  \foreach \frame in {0, ..., 1} {
+    \pgfmathsetmacro\theta{25*\frame}
 
-  \pgfmathsetmacro\s{1}
-  \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-  \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
-  \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
-  \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
-  \coordinate (left) at ( \posxRot, \posyRot );
+    \def \rightcolToUse {red!100}
+    \def \leftcolLToUse {blue!100}
+    \def \leftcolRToUse {red!100}
 
-  \pgfmathsetmacro\s{\redpixels - 1}
-  \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-  \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
-  \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
-  \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
-  \coordinate (middle) at ( \posxRot, \posyRot );
-
-  % The offset necessary for the red and green lines to meet properly
-  \pgfmathsetmacro\redgreenintersection{3.5 -(0.6+0.2)*(\s-1)}
-
-  \pgfmathsetmacro\s{\pixels}
-  \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-  \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
-  \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
-  \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
-  \coordinate (right) at ( \posxRot, \posyRot );
-
-  \draw[red!50, line width=\linewidth] (left) -- (middle);
-  \draw[green!50, line width=\linewidth] (middle) -- (right);
-
-
-  % Showing splats
-
-  \foreach \s in {1, ..., \pixels} {
-    \ifthenelse{\s < \redpixels} {
-      \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-      \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
-      \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-
-      % Screen-space-sized splats
-      \pgfmathsetmacro\posx{0.5*(\s-1-1) + 2}
-      \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1-1)}
-      \pgfmathsetmacro\posxRotL{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRotL{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-      \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-      \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
-      \pgfmathsetmacro\posxRotR{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRotR{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-      \pgfmathsetmacro\halfWidthToUse{0.5*(\posxRotR-\posxRotL)}
-
-      %\pgfmathsetmacro\halfWidthToUse{\halfpixelwidth}
-
-%      \draw[red, fill=red!50, line width=1.5pt] (\posxRot, \posyRot) -- +(-\halfWidthToUse, 0);
-%      \draw[red, fill=red!50, line width=1.5pt] (\posxRot, \posyRot) -- +(\halfWidthToUse, 0);
-
-      % Varying color, screen-sized splats, without depth
-      \pgfmathsetmacro\tl{100*(\s-1)/\redpixels}
-      \pgfmathsetmacro\ul{100-\tl)}
-      \pgfmathsetmacro\tr{100*(\s  )/\redpixels}
-      \pgfmathsetmacro\ur{100-\tr}
-      %\shade[left color=red!\tl!blue!\ul, right color=red!\tr!blue!\ur, line width=1.5pt]
-      %  (\posxRot-\halfWidthToUse, \posyRot) rectangle +(2*\halfWidthToUse, 0.2);
-
-      % Varying color, screen-sized splats, with depth
-%      \shade[left color=red!\tl!blue!\ul, right color=red!\tr!blue!\ur, line width=1.5pt]
-%        (\posxRotL, \posyRotL) rectangle (\posxRotR, \posyRotR);
-
-% Tror kanskje at problemet med at ting kommer for langt til venstre her, skyldes at vi ser paa 
-% linjestykker fra s-1-1 til s-1. Burde muligens vaert fra s-1-0.5 til s-1+0.5?!
-
-      \fill[left color=red!\tl!blue!\ul, right color=red!\tr!blue!\ur, draw=none]
-        (\posxRotL, \posyRotL) -- (\posxRotR, \posyRotR) -- +(0, 3*\linewidth) -- 
-        ($ (\posxRotL, \posyRotL) + (0, 3*\linewidth) $) -- cycle;
-
-
-      %\draw[red, fill=red!50] (\posxRot, \posyRot) circle(0.15);
-    } {
-      % Center of splat 's' rotated into place
-      \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-      \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
-      \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-
-      % Screen-space-sized splats, using center of neighbouring splats
-      \pgfmathsetmacro\posx{0.5*(\s-1-1) + 2}
-      \pgfmathsetmacro\posy{0.2*(\s-1-1) + \redgreenintersection}
-      \pgfmathsetmacro\posxRotL{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRotL{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-      \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
-      \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
-      \pgfmathsetmacro\posxRotR{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
-      \pgfmathsetmacro\posyRotR{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
-      \pgfmathsetmacro\halfWidthToUse{0.5*(\posxRotR-\posxRotL)}
-
-      % For non-screen-sized splats
-      %\pgfmathsetmacro\halfWidthToUse{\halfpixelwidth}
-
-      % Screen-space-sized splats, no depth
-      %\draw[green, fill=green!50, line width=1.5pt] (\posxRot, \posyRot) -- +(-\halfWidthToUse, 0);
-      %\draw[green, fill=green!50, line width=1.5pt] (\posxRot, \posyRot) -- +(\halfWidthToUse, 0);
-
-      % Screen-space-sized splats, with depth
-      \draw[green, fill=green!50, line width=1.5pt] (\posxRotL, \posyRotL) -- (\posxRotR, \posyRotR);
-
-      %\draw[green, fill=green!50] (\posxRot, \posyRot) circle(0.15);
+    \ifthenelse{ \frame = 0 } {
+      \def \withSplats {0}
+    }{
+      \def \withSplats {1}
     }
+    \def \withLargeSplats {1}
+    \def \withConstantWidthSplats {0}
+    \def \withFragDepth {1}
+
+    \input{fig3main.tex}
+    
   }
 
 

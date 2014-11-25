@@ -1,0 +1,121 @@
+    \pgfmathsetmacro\s{1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
+    \coordinate (left) at ( \posxRot, \posyRot );
+    
+    \pgfmathsetmacro\s{\redpixels - 1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
+    \coordinate (middle) at ( \posxRot, \posyRot );
+    
+    % The offset necessary for the red and green lines to meet properly
+    \pgfmathsetmacro\redgreenintersection{3.5 -(0.6+0.2)*(\s-1)}
+    
+    \pgfmathsetmacro\s{\pixels}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, 0)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, 0)+\cy}
+    \coordinate (right) at ( \posxRot, \posyRot );
+    
+    % The "server-rendered model"
+    \fill[left color=\leftcolLToUse, right color=\leftcolRToUse, draw=none]
+      (left) -- (middle) -- +(0, 5*\linewidth) -- ($ (left) + (0, 5*\linewidth) $) -- cycle;
+    % Why is the factor 3 needed here?!?!
+    % And why is there a (very thin) border?
+    % And why is it not equally thick everywhere?
+    \draw[\rightcolToUse, line width=\linewidth] (middle) -- (right);
+
+    \ifthenelse{ \withSplats = 1 } {
+      \foreach \s in {1, ..., \pixels} {
+        \ifthenelse{\s < \redpixels} {
+          \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+          \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+          \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          
+          % Screen-space-sized splats
+          \pgfmathsetmacro\posx{0.5*(\s-1-1) + 2}
+          \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1-1)}
+          \pgfmathsetmacro\posxRotL{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRotL{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+          \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+          \pgfmathsetmacro\posxRotR{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRotR{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          \pgfmathsetmacro\halfWidthToUse{0.5*(\posxRotR-\posxRotL)}
+          
+          % Overriding with constant width for one of the sub-figures
+          \ifthenelse{ \withConstantWidthSplats = 1 } {
+            \pgfmathsetmacro\halfWidthToUse{\halfpixelwidth}
+          }{}
+
+          \ifthenelse{ \withLargeSplats = 1 } {
+            % Varying color here on the left side
+            \pgfmathsetmacro\tl{100*(\s-1)/\redpixels}
+            \pgfmathsetmacro\ul{100-\tl)}
+            \pgfmathsetmacro\tr{100*(\s  )/\redpixels}
+            \pgfmathsetmacro\ur{100-\tr}
+            \ifthenelse{ \withFragDepth = 0 } {
+              \draw[left color=red!\tl!blue!\ul, right color=red!\tr!blue!\ur]
+                (\posxRot-\halfWidthToUse, \posyRot) rectangle +(2*\halfWidthToUse, 0.2);
+            }{
+              % Tror kanskje at problemet med at ting kommer for langt til venstre her, skyldes at vi ser paa 
+              % linjestykker fra s-1-1 til s-1. Burde muligens vaert fra s-1-0.5 til s-1+0.5?!
+              % Replace with rotated rectangles, will probably look better...
+              \draw[left color=red!\tl!blue!\ul, right color=red!\tr!blue!\ur]
+                (\posxRotL, \posyRotL) -- (\posxRotR, \posyRotR) -- +(0, 5*\linewidth) -- 
+                ($ (\posxRotL, \posyRotL) + (0, 5*\linewidth) $) -- cycle;
+            }
+          }{
+            % Constant color, just a dot
+            \pgfmathsetmacro\t{100*\s/\redpixels}
+            \pgfmathsetmacro\u{100*(1.0-\s/\redpixels)}
+            \draw[fill=red!\t!blue!\u] (\posxRot, \posyRot) circle(0.15);
+          }
+        } {
+          \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+          \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+          \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          
+          % Screen-space-sized splats
+          \pgfmathsetmacro\posx{0.5*(\s-1-1) + 2}
+          \pgfmathsetmacro\posy{0.2*(\s-1-1) + \redgreenintersection}
+          \pgfmathsetmacro\posxRotL{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRotL{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+          \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+          \pgfmathsetmacro\posxRotR{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+          \pgfmathsetmacro\posyRotR{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+          \pgfmathsetmacro\halfWidthToUse{0.5*(\posxRotR-\posxRotL)}
+          
+          \ifthenelse{ \withConstantWidthSplats = 1 } {
+            % Overriding with constant width for one of the sub-figures
+            \pgfmathsetmacro\halfWidthToUse{\halfpixelwidth}
+          }{}
+
+          \ifthenelse{ \withLargeSplats = 1 } {
+            \ifthenelse{ \withFragDepth = 0 } {
+              \draw[fill=\rightcolToUse]
+                (\posxRot-\halfWidthToUse, \posyRot) rectangle +(2*\halfWidthToUse, 0.2);
+            }{
+              % \draw[fill=\rightcolToUse, line width=1.5pt] (\posxRotL, \posyRotL) -- (\posxRotR, \posyRotR);
+              % Tror kanskje at problemet med at ting kommer for langt til venstre her, skyldes at vi ser paa 
+              % linjestykker fra s-1-1 til s-1. Burde muligens vaert fra s-1-0.5 til s-1+0.5?!
+              % Replace with rotated rectangles, will probably look better...
+              \draw[fill=\rightcolToUse]
+                (\posxRotL, \posyRotL) -- (\posxRotR, \posyRotR) -- +(0, 5*\linewidth) -- 
+                ($ (\posxRotL, \posyRotL) + (0, 5*\linewidth) $) -- cycle;
+            }
+          }{
+            % Constant color, just a dot
+            \draw[fill=\rightcolToUse] (\posxRot, \posyRot) circle(0.15);
+          }
+        }
+      }
+    }{}
