@@ -104,6 +104,7 @@ dojo.declare("model.ExposedModelSender", null, {
             
             // Reset keys we have seen.
             this._keys = {};
+            console.log("ExposedModelSender.js - updateComplete - Does this show?");
             dojo.publish("/model/updateSendComplete", [{"response": response, "ioArgs" : ioArgs}]);
         }
     },

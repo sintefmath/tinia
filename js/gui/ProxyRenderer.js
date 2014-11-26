@@ -418,6 +418,23 @@ dojo.declare("gui.ProxyRenderer", null, {
         // console.log("setDepthData: done");
     },
 
+    setDepthDataRaw: function(imageAsBytes, depthBufferAsBytes, viewMatAsText, projMatAsText) {
+        console.log("setDepthDataRaw: Starting load proceess for images-as-bytes data");
+        if (this._proxyModelBeingProcessed.state!=0) {
+            console.log("A depth buffer is already being processed, discarding the new one just received! (state=" + this._proxyModelBeingProcessed.state + ")");
+        } else {
+            if (!this._lock2) {
+                // lock2 not set, we shall update the ring buffer as usual
+                this._proxyModelBeingProcessed.setAllFromBytes(depthBufferAsBytes, imageAsBytes, viewMatAsText, projMatAsText);
+            }
+            if (this._lock) {
+                // All models have been reset and we just inserted a proxy model in the ring buffer, after this, we shall not insert any more, hence we set lock2.
+                this._lock2 = true;
+            }
+        }
+        console.log("setDepthDataRaw: End of load proceess for images-as-bytes data");
+
+    },
 
     // Some useful wrappers
     _setUniform1i: function(prog, name, value) {

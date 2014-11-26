@@ -19,6 +19,9 @@
 dojo.provide("gui.Canvas");
 
 dojo.require("3rdparty.webgl-utils");
+//dojo.require("3rdparty.ByteBuffer");
+//dojo.require("3rdparty.Long\.min");
+//dojo.require("3rdparty.ProtoBuf\.min");
 dojo.require("renderlist.RenderList");
 dojo.require("renderlist.RenderListParser" );
 dojo.require("renderlist.RenderListRenderer" );
@@ -194,7 +197,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // We need to fetch a new image.
         dojo.subscribe("/model/updateParsed", dojo.hitch(this, function (params) {
             if (!this._imageLoading) {
-                console.log("Getting new image");
+                console.log("Getting new image - UpdateParsed");
+                console.log(params);
                 dojo.xhrGet({ // Here we explicitly ask for a new image in a new HTTP connection.
                     url: this._urlHandler.getURL(),
                     preventCache: true,
@@ -207,6 +211,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     })
                 });
             }
+            console.log("Got new image?");
         }));
 
         // We are initiating a new update TO the server.
@@ -220,6 +225,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         // The "partial" bit says that we _may_ have another update to send after this as well.
         // Either way, we should show the image we just got from the server (it's newer than the one we have!).
         dojo.subscribe("/model/updateSendPartialComplete", dojo.hitch(this, function (params) {
+
+            if ( params.ioArgs.args.contentType.match(/octet/) ) {
+                log("--------- OCTET STREAM!!! --------------             <-- <-- <--");
+            }
+
             if (params.response.match(/\"rgb\"\:/)) { // For the time being, we assume this to be an image.
 //                console.log("/model/updateSendPartialComplete: response = " + params.response);
                 var response_obj = eval( '(' + params.response + ')' );
@@ -230,12 +240,40 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");
+                if (!params.response.match(/html/)) {
+                    console.log("Because we recieved a protocal buffer!");
+                    console.log(params);
+                    //console.log(params.response);
+                    console.log("params.ioArgs.handleAs: " + params.ioArgs.handleAs);
+                    var response_ibj = eval(params.response);
+                    console.log("Next is response_ibj");
+                    console.log(response_ibj)
+
+                    if ( params.ioArgs.handleAs.match(/text/) ) {
+                        console.log("Nope, it was text!");
+                    }
+                    else {
+                        //console.log("And we even think it was proto buf!");
+                        console.log("Yes, it most def is a protobuf");
+                        this._setImageFromProtoBuf(params.response);
+                    }
+
+                }
+                else {
+                    console.log("found html");
+                }
             }
         }));
 
         // Here we know that we have no further updates to send at the moment. Therefore the
         // image we received is a perfect match for our current exposedmodel.
         dojo.subscribe("/model/updateSendComplete", dojo.hitch(this, function (params) {
+            if ( params.ioArgs.args.contentType.match(/octet/) )  {
+                console.log("-------------");
+                console.log("subscribe of model updateSendComplete ");
+                console.log(params);
+                console.log("- - - -- - - - ");
+            }
             this._imageLoading = false;
             this._showCorrect();
         }));
@@ -400,6 +438,24 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }
         this._showCorrect();
         return response_rgb;
+    },
+
+    _setImageFromProtoBuf: function (protoBuf_blob) {
+        console.log("starting decoding of possible blob");
+        console.log(protoBuf_blob);
+        console.log("Beginning of _setImageFromProtoBuf in Canvas.js");
+        var protoBuf = TiniaProtoBuf.decode(protoBuf_blob);
+        console.log("Canvas.js :: _setImageFromProtoBuf - decoded TiniaProtoBuf");
+        viewer = protoBuf.Viewer[i];
+        console.log("Canvas.js :: _setImageFromProtoBuf - got Viewer");
+        this._img.src = "data:image/png, " + viewer.rgb;
+        console.log("Canvas.js :: _setImageFromProtoBuf - sat 'img.src = data:image/png,  + viewer.rgb;'");
+        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) && (this._proxyRenderer) ) {
+
+            this._proxyRenderer.setDepthDataRaw(viewer.rgb, viewer.depth, viewer.view, viewer.proj);
+        }
+        this._showCorrect();
+        //return ???;
     },
 
     _touchGestureBegin: function (event) {
