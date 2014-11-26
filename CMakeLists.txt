@@ -158,8 +158,8 @@ IF(Tinia_SERVER)
         HINTS "/usr/lib/" "/opt/libjpeg-turbo/lib64/"
     )
     FIND_PATH(TURBOJPEG_INCLUDE_DIR "turbojpeg.h"
-        HINTS "/usr/include/" "/usr/local/include/"
-              "/opt/" "/opt/libjpeg-turbo/" "/opt/libjpeg-turbo/include/"
+        HINTS "/opt/" "/opt/libjpeg-turbo/" "/opt/libjpeg-turbo/include/" 
+              "/usr/include/" "/usr/local/include/"
     )
 
     FIND_PACKAGE( Threads )
