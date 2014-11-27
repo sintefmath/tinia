@@ -41,12 +41,13 @@ class ProxyDebugGUI //  : public Item
 public:
 
     ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
-                   const bool with_ap, const bool with_ap_debugging, const bool with_jpg, const bool with_auto_select );
+                   const bool with_ap, const bool with_ap_debugging, const bool with_jpg, const bool with_auto_select,
+                   const bool with_depth_buffer_manipulation = false );
     tinia::model::gui::Grid *getGrid();
     
 private:
 
-    bool m_w_ap, m_w_apd, m_w_jpg, m_w_as;
+    bool m_w_ap, m_w_apd, m_w_jpg, m_w_as, m_with_depth_buffer_manipulation;
 
 };
 

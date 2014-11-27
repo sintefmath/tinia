@@ -46,8 +46,10 @@ namespace utils {
 
 
 ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
-                              const bool with_ap, const bool with_ap_debugging, const bool with_jpg, const bool with_auto_select )
-    : m_w_ap(with_ap), m_w_apd(with_ap_debugging), m_w_jpg(with_jpg), m_w_as(with_auto_select)
+                              const bool with_ap, const bool with_ap_debugging, const bool with_jpg, const bool with_auto_select,
+                              const bool with_depth_buffer_manipulation /* = false */ )
+    : m_w_ap(with_ap), m_w_apd(with_ap_debugging), m_w_jpg(with_jpg), m_w_as(with_auto_select),
+      m_with_depth_buffer_manipulation(with_depth_buffer_manipulation)
 {
     if ( m_w_ap && m_w_jpg && m_w_as ) {
         model->addElement<bool>( "ap_autoSelect", false );            // Selects whatever proxy method works fastest.
@@ -110,6 +112,13 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addElement( "ap_fragExtStatus", "---" );
         model->addElement( "ap_consoleLog", "---" );
         model->addElement<int>( "ap_cntr", 0 );
+    }
+
+    if (with_depth_buffer_manipulation) {
+        model->addConstrainedElement<int>("ap_depthWidth", 512, 4, 1024);
+        model->addAnnotation("ap_depthWidth", "Depth buffer Width)");
+        model->addConstrainedElement<int>("ap_depthHeight", 512, 4, 1024);
+        model->addAnnotation("ap_depthHeight", "Depth buffer height)");
     }
 }
 
@@ -199,6 +208,17 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_consoleLog", true));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::VerticalExpandingSpace());
+    }
+
+    if (m_with_depth_buffer_manipulation) {
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_depthWidth"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_depthWidth", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_depthWidth", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_depthHeight"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_depthHeight", false));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_depthHeight", true));
+        row++;
     }
 
     return mainGrid;

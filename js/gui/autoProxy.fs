@@ -1,4 +1,9 @@
-// #define FS_DISCARD_DEBUG
+#define FS_DISCARD_DEBUG
+
+//#define CAM_DIR_THRESHOLD_DEG 3.0 // Used 3.0 until 141127
+#define CAM_DIR_THRESHOLD_DEG 30.0
+
+#define MID_TEXEL_SAMPLING
 
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
@@ -115,7 +120,9 @@ void main(void)
 
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
-    // tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#ifdef MID_TEXEL_SAMPLING
+    tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#endif
 #ifdef DEBUG
     if (useISTC>0) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
@@ -129,6 +136,8 @@ void main(void)
     // by other parts of the geometry, these are simply not available in the proxy model.  Note also that this will not
     // remove parts of primitives that are rotated outside of the correct geometry.  That is impossible to do, we do not
     // have the necessary information.
+    //    tc.x = tc.x * 522.0/512.0;
+    //    tc.x = tc.x/2.0;
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
     if ( intra_splat_depth > 0.999 ) {
 	if (splatSetIndex==-1) {
@@ -137,7 +146,7 @@ void main(void)
 	    // colouring this fragment, but when the "most recent model" is rendered, it should override anything else,
 	    // hence, we use the background color in this case.
 #ifdef FS_DISCARD_DEBUG
-	    gl_FragColor = vec4( 1.0, 1.0, 1.0, src_alpha ); return;
+	    gl_FragColor = vec4( 1.0, 1.0, 1.0, src_alpha ); return; // white
 #else
 	    gl_FragColor = vec4( backgroundCol, src_alpha );
 #endif
@@ -172,7 +181,7 @@ void main(void)
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
 
-    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( 3.0 / 180.0 * PI) )  // Test for "plane interpolation quality" if angle > 3 deg.
+    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( CAM_DIR_THRESHOLD_DEG / 180.0 * PI) )  // Test for "plane interpolation quality" if angle > ... deg.
 #ifdef DEBUG
 	   &&   ( useISTC > 0 )
 #endif

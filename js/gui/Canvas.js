@@ -88,6 +88,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 "jpeg_quality": 50
             });
         }
+        this._urlHandler.updateParams({
+            "depth_w": this._width, "depth_h": this._height
+        });
 
         // This is not in use
         // this._onLoadFunction = dojo.hitch(this, this._loadComplete);
@@ -332,6 +335,12 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }) );
         this._modelLib.addLocalListener( "ap_jpgQuality", dojo.hitch(this, function(event) {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
+        }) );
+        this._modelLib.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
+            this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
+        }) );
+        this._modelLib.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
+            this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
         }) );
 
         this._modelLib.addLocalListener( "ap_autoSelectSampleAll", dojo.hitch(this, function(event) {

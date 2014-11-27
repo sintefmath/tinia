@@ -8,6 +8,8 @@
 #define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
                                         // otherwise, the splat is discarded.
 
+#define MID_TEXEL_SAMPLING
+
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
@@ -89,7 +91,11 @@ void main(void)
     // With a 1024^2 canvas and 512^2 splats, there are no artifacts to be seen from using 16 bits for the depth.
     // (But 8 is clearly too coarse.)
     // Now using all 24 bits, since we do send them from the server, currently.
-    //st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#ifdef MID_TEXEL_SAMPLING
+    st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#endif
+    //    st.x = st.x * 522.0/512.0;
+    //    st.x = st.x/2.0;
     sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
 
     if ( sampled_depth > 0.999 ) {
@@ -136,6 +142,7 @@ void main(void)
     //----------------------------------------------------------------------------------------------------
 
     float delta = float(splats_x) / float(vp_width);
+    delta = delta/4.0;
     // delta = 1.0;
     
     // A value of 1.0 will cause the "next splat" to be used for the subsequent computations. If the number of splats is
@@ -149,11 +156,18 @@ void main(void)
     // these splats will come out quite wrong anyway. Still, this should be the best value for delta.
     
     vec2 st_dx = 0.5*( vec2(aVertexPosition.x+delta*2.0/splats_x, aVertexPosition.y) + 1.0 );
+    //    st_dx.x = st_dx.x * 522.0/512.0;
+    //    st_dx.x = st_dx.x/2.0;
     vec2 st_dy = 0.5*( vec2(aVertexPosition.x, aVertexPosition.y+delta*2.0/splats_y) + 1.0 );
+//     st_dy.x = st_dy.x * 522.0/512.0;
+//    st_dy.x = st_dy.x/2.0;
+
     st_dx.y = 1.0-st_dx.y;
     st_dy.y = 1.0-st_dy.y; 
-//     st_dx = st_dx + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
-//     st_dy = st_dy + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#ifdef MID_TEXEL_SAMPLING
+    st_dx = st_dx + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st_dy = st_dy + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#endif
     float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
     float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
     if (depth_dx>0.999) {
