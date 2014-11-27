@@ -271,16 +271,73 @@ forward, since the client really do not know how a finitely-sized splat should
 map to the server's model, having only a discrete set of 3D points on that
 model.
 
+\vspace{10cm}
+
 A first approximation is for the client to assume that the corresponding part of
 the server's model is planar in a region around the given point. If this is the
 case, a local 2D texture transformation will provide a good approximation to the
 intra-splat texturing to be performed on the client. For the splat centered in
 $\vv_{i, j} = (x_j, y_i, z_{i, j})$, to be centered on the client's canvas at
-$\pv_{i, j} = P_c M_c M_s^{-1} P_s^{-1}\vv_{i, j}$, the texture coordinate
-transformation to be used is,
+screen coordinate $\pv_{i, j} = P_c M_c M_s^{-1} P_s^{-1}\vv_{i, j} = U\vv_{i,
+j}$, the texture coordinate transformation to be used is,
 \[
-  T = \ldots,
+  T =
+  \begin{pmatrix} 1/\text{splats}_x & 0 \\ 0 & 1/\text{splats}_y \end{pmatrix}
+  \Big( \sv_x \, \, \, \sv_y \Big)^{-1}
+  \begin{pmatrix} \text{vpwidth}/\text{splats}_x & 0 \\ 0 & \text{vpheight}/\text{splats}_y \end{pmatrix}
+  \cdot \text{overlap},
 \]
+where $(\ev_1 \, \, \, \ev_2)$ maps the ``client's splat region'' (in $[0,
+1]^2$) to the corresponding texture area, $(\sv_{dx} \, \, \, \sv_{dy})^{-1}$
+maps the ``client's screen space splat area'' to $[0, 1]^2$, and $\text{splatSize}_x
+= \text{vp}_\text{width}/\text{splats}_x$ and $\text{splatSize}_y
+= \text{vp}_\text{height}/\text{splats}_y$ together with the ``overlap'' just
+provides a scaling factor so that ``overlap=1'' produces non-overlapping but
+covering splats when $M_c=M_s$, \ie, the client does no transformation of the
+proxy model.
+
+We compute $\sv_{dx}$ and $\sv_{dy}$ by sampling proxy model positions and
+performing the perspective division and transformation into window coordinates
+in the vertex shader.
+Let
+\[
+  \text{pos} =
+  U { \small \begin{pmatrix} x \\ y \\ d \\ 1 \end{pmatrix} },
+  \text{pos}_{\Delta x} =
+  U { \small \begin{pmatrix} x+\Delta x \\ y \\ d_{\Delta x} \\ 1 \end{pmatrix} }
+  \text{and}\, \, \, 
+  \text{pos}_{\Delta y} =
+  U { \small \begin{pmatrix} x \\ y+\Delta y \\ d_{\Delta y} \\ 1 \end{pmatrix} },
+\]
+where $d = 2\text{depthTex}(x, y) - 1$, $d_{\Delta x} =
+2\text{depthTex}(x+\Delta x, y) - 1$, and $d_{\Delta y} = 2\text{depthTex}(x,
+y+\Delta y) - 1$ are depths sampled from the received depth buffer and transformed
+to $[-1, 1]$. 
+
+We use $\Delta = \Delta x = \Delta y = ...$, so that ...
+
+Then, for the 2D vectors spanning the splats in client window coordinates, we
+get
+\[
+  \sv_{\Delta x} =
+    \frac{\text{viewport width}}{2\Delta x} \left(
+        \frac{\text{pos}_{\Delta x}.xy}{\text{pos}_{\Delta x}.w} -
+        \frac{\text{pos}.xy}{\text{pos}.w}
+    \right),
+\]
+and
+\[
+  \sv_{\Delta y} =
+    \frac{\text{viewport width}}{2\Delta y} \left(
+        \frac{\text{pos}_{\Delta y}.xy}{\text{pos}_{\Delta y}.w} -
+        \frac{\text{pos}.xy}{\text{pos}.w}
+    \right),
+\]
+where we have used the ``shader notation'' to extract 2D vectors and scalars
+from the 4D vectors.
+
+Then, ...
+
 such that the client fragment $\pv_{i, j} + \delta_{i, j}$ gets texel
 \[
   I_{p, q},

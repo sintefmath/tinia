@@ -190,7 +190,10 @@ void main(void)
     float frag_depth_dy = pos_dy.z/pos_dy.w;
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
     frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
-    
+
+    // (Note to self: Remember that projUnproj * vec4 gets us to clip space, must do perspective division and 
+    // transformation into window coordinates in order to get "pixel" coordinates...)
+
     // Difference of screen coordinates, in pixels:
     vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w );
     vec2 scr_dy = float(vp_height)/(2.0*delta) * ( pos_dy.xy/pos_dy.w - pos.xy/pos.w );
