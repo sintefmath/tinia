@@ -67,20 +67,19 @@ private:
     jobcontroller::OpenGLJob*                           m_openGLJob;
 
     int                                                 m_quality;
-    struct RenderEnvironment {
+    
         GLuint                                          m_fbo;
         GLuint                                          m_renderbuffer_rgba;
         GLuint                                          m_renderbuffer_depth;
         GLsizei                                         m_width;
         GLsizei                                         m_height;
         GLsizei                                         m_samples;
-    };
-
-    std::list<RenderEnvironment*>                       m_environments;
+    
 
     GLsizei                                             m_max_samples;
 
-
+    int                                                 m_argc;
+    char**                                               m_argv;
     
     bool
     checkFramebufferCompleteness() const;

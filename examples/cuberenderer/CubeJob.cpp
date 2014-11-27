@@ -88,13 +88,15 @@ bool CubeJob::renderFrame(const std::string &session, const std::string &key, un
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, width, height);
-    tinia::model::Viewer viewer;
-    m_model->getElementValue( key, viewer);
+   // tinia::model::Viewer viewer;
+    //m_model->getElementValue( key, viewer);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( viewer.projectionMatrix.data() );
+    glLoadIdentity();
+    //glLoadMatrixf( viewer.projectionMatrix.data() );
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf( viewer.modelviewMatrix.data() );
+    //glLoadMatrixf( viewer.modelviewMatrix.data() );
+    glLoadIdentity();
 
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
