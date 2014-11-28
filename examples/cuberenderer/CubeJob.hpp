@@ -43,10 +43,13 @@ public:
     const tinia::renderlist::DataBase*
     getRenderList(const std::string &session, const std::string &key);
 
+    float rotate( float r );
+
 private:
     tinia::renderlist::DataBase     m_renderlist_db;
     GLuint                      m_gpgpu_quad_vertex_array;
     GLuint                      m_gpgpu_quad_buffer;
+    float                       m_rotation;
 };
 }
 }

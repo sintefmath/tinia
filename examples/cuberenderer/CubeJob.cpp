@@ -39,6 +39,8 @@
 namespace tinia {
 namespace example {
 CubeJob::CubeJob()
+    :
+    m_rotation(0.0f)
 {
 }
 
@@ -97,6 +99,7 @@ bool CubeJob::renderFrame(const std::string &session, const std::string &key, un
     glMatrixMode(GL_MODELVIEW);
     //glLoadMatrixf( viewer.modelviewMatrix.data() );
     glLoadIdentity();
+    glRotatef( m_rotation * 57.2957795, 0.001, 0.0, 1.0 );
 
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
@@ -155,5 +158,13 @@ CubeJob::getRenderList( const std::string& session, const std::string& key )
 {
     return &m_renderlist_db;
 }
+
+float CubeJob::rotate( float r )
+{
+    float f = m_rotation;
+    m_rotation += r;
+    return f;
+}
+
 }
 }

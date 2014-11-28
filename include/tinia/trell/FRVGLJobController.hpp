@@ -56,6 +56,8 @@ protected:
     void
     cleanup();
 
+
+
 bool
 FRVGLJobController::onGetSnapshot( char*               buffer,
                                    const size_t        width,

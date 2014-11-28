@@ -23,6 +23,10 @@
 #include "tinia/trell/GLDebugMessages.hpp"
 #include <GL/freeglut.h>
 
+
+//not the way it should be, but for proof of concept and bypassing exposedModel, here we go
+#include "../../examples/cuberenderer/CubeJob.hpp"
+
 namespace {
 
 static const std::string package = "FRVGLJobController";
@@ -313,16 +317,28 @@ int FRVGLJobController::run( int argc, char** argv )
     m_argv = argv;
     init();
     m_openGLJob->initGL();
-    //call init
-    //call initGL
     //setup polling of websocket messages
     //ie update/idle function
-    //set job->renderFrame as glutRenderFunction
+    
     //call glutMainloop.
+
     m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
     glutSwapBuffers();
+    
+    float rotation = 0.001, prev = 0;
+    tinia::example::CubeJob* cj = (tinia::example::CubeJob*) m_openGLJob;
+    for (int i = 0; i < 150; i++ )
+    {
+        prev = cj->rotate( rotation * i );
+
+        m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
+        glutSwapBuffers();
+    }
+
     return 1;
 }
+
+
 
 } // of namespace trell
 } // of namespace tinia
