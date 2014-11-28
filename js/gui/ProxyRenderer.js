@@ -194,7 +194,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_overlap") ) {
-                this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_overlap") / 100.0;
+                this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
             }
             this.exposedModel.addLocalListener( "ap_overlap", dojo.hitch(this, function(event) {
                 this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
