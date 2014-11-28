@@ -20,16 +20,20 @@
 #include <GL/glew.h>
 #include <unordered_map>
 
+
 #include "tinia/jobcontroller/Controller.hpp"
 #include "tinia/jobcontroller/OpenGLJob.hpp"
+
+
 namespace tinia {
 namespace trell {
 
 class FRVGLJobController : public jobcontroller::Controller
 {
+
 public:
 
-    FRVGLJobController( bool is_master = false );
+    explicit FRVGLJobController( bool is_master = false );
     void setJob( jobcontroller::Job *job);
 
    ////from Job.hpp
@@ -43,7 +47,7 @@ public:
     void finish();
     void fail();
     void addScript( const std::string& script) {}
-    //fiks dette, du maa legge til FRVGLJobController til et lib....
+    
 protected:
     /** \copydoc MessageBox::init */
     virtual
@@ -66,18 +70,15 @@ FRVGLJobController::onGetSnapshot( char*               buffer,
                                    const std::string&  key );
 
 private:
+
     jobcontroller::OpenGLJob*                           m_openGLJob;
-
-    int                                                 m_quality;
-    
-        GLuint                                          m_fbo;
-        GLuint                                          m_renderbuffer_rgba;
-        GLuint                                          m_renderbuffer_depth;
-        GLsizei                                         m_width;
-        GLsizei                                         m_height;
-        GLsizei                                         m_samples;
-    
-
+    int                                                 m_quality;    
+    GLuint                                              m_fbo;
+    GLuint                                              m_renderbuffer_rgba;
+    GLuint                                              m_renderbuffer_depth;
+    GLsizei                                             m_width;
+    GLsizei                                             m_height;
+    GLsizei                                             m_samples;
     GLsizei                                             m_max_samples;
 
     int                                                 m_argc;

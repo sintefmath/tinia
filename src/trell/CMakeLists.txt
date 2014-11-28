@@ -27,10 +27,15 @@ INSTALL( FILES
 )
 ENDIF( TINIA_SERVER )
 
+FIND_PACKAGE( Qt5Core )
+FIND_PACKAGE( Qt5WebSockets )
 FIND_PACKAGE( Freeglut REQUIRED )
-INCLUDE_DIRECTORIES( ${Freeglut_INCLUDE_DIR} )
-SET( FRV_HEADERS "../../include/tinia/trell/FRVGLJobController.hpp" "../../include/tinia/jobcontroller/Controller.hpp")
-SET( FRV_SRC "FRVGLJobController.cpp" )
+INCLUDE_DIRECTORIES( ${Freeglut_INCLUDE_DIR} ${QT_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR})
+FILE( GLOB FRV_HEADERS "../../include/tinia/trell/FRV*.hpp" "../../include/tinia/jobcontroller/Controller.hpp")
+FILE( GLOB FRV_SRC "FRV*.cpp" )
+MESSAGE( "SRC: ${FRV_SRC}")
+MESSAGE( "HDR: ${FRV_HEADERS}")
 ADD_LIBRARY( tinia_frvController ${FRV_HEADERS} ${FRV_SRC})
 TARGET_LINK_LIBRARIES( tinia_frvController ${GLEW_LIBRARY} tinia_jobcontroller tinia_model ${Freeglut_LIBRARY})
+QT5_USE_MODULES( tinia_frvController WebSockets )
 

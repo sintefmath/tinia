@@ -48,7 +48,7 @@ TARGET_LINK_LIBRARIES( cube_sockets_job
   tinia_frvController
 #  ${Freeglut_LIBRARY}
 )
-QT5_USE_MODULES( cube_sockets_job WebSockets )
+#QT5_USE_MODULES( cube_sockets_job WebSockets Core)
 
 
 IF(Tinia_SERVER)
