@@ -47,6 +47,7 @@ void tinia::trell::FRVQtController::onNewConnection()
     connect(pSocket, &QWebSocket::textMessageReceived, this, &FRVQtController::processTextMessage);
     connect(pSocket, &QWebSocket::binaryMessageReceived, this, &FRVQtController::processBinaryMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &FRVQtController::socketDisconnected);
+    m_glJob->render();
 
     m_clients << pSocket;
 
@@ -54,15 +55,12 @@ void tinia::trell::FRVQtController::onNewConnection()
 
 void tinia::trell::FRVQtController::processTextMessage(QString message)
 {
-    static char* testing = "testing";
-    m_glJob->run(1, &testing );
+     m_glJob->render();
 }
 
 void tinia::trell::FRVQtController::processBinaryMessage(QByteArray message)
 {
-    static char* testing = "testing";
-    m_glJob->run(1, &testing );
-
+    m_glJob->render();
 }
 
 void tinia::trell::FRVQtController::socketDisconnected()

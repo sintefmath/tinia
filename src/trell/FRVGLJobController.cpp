@@ -322,12 +322,15 @@ int FRVGLJobController::run( int argc, char** argv )
         exit(113);
     }
     //call glutMainloop.
-
-
-
     m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
     glutSwapBuffers();
-    
+    render();
+
+    return 1;
+}
+
+void FRVGLJobController::render()
+{    
     static float rotation = 0.001;
     float prev = 0;
     tinia::example::CubeJob* cj = (tinia::example::CubeJob*) m_openGLJob;
@@ -337,9 +340,7 @@ int FRVGLJobController::run( int argc, char** argv )
 
         m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
         glutSwapBuffers();
-    }
-
-    return 1;
+    }   
 }
 
 

@@ -52,6 +52,10 @@ public:
     bool
     init( );
 
+
+    void render();
+
+
 protected:
     /** \copydoc MessageBox::init */
     
@@ -91,6 +95,8 @@ private:
 
     bool
     checkForGLError() const;
+
+
 
 };
 
