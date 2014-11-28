@@ -119,7 +119,7 @@ void main(void)
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
 #ifdef MID_TEXEL_SAMPLING
-    tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    tc = tc + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
 #endif
 #ifdef DEBUG
     if (useISTC>0) {
@@ -134,8 +134,6 @@ void main(void)
     // by other parts of the geometry, these are simply not available in the proxy model.  Note also that this will not
     // remove parts of primitives that are rotated outside of the correct geometry.  That is impossible to do, we do not
     // have the necessary information.
-    //    tc.x = tc.x * 522.0/512.0;
-    //    tc.x = tc.x/2.0;
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
     if ( intra_splat_depth > 0.999 ) {
 	if (splatSetIndex==-1) {

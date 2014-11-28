@@ -4,8 +4,8 @@
 // FS. (See that start of the FS main() function.)
 
 // #define CULL_BACK_SIDES              // We use pos(i, j+1)-pos(i, j) x pos(i+1, j)-pos(i, j) to determine culling
-#define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
-#define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
+//#define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
+//#define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
                                         // otherwise, the splat is discarded.
 
 attribute vec2 aVertexPosition;
@@ -90,10 +90,12 @@ void main(void)
     // (But 8 is clearly too coarse.)
     // Now using all 24 bits, since we do send them from the server, currently.
 #ifdef MID_TEXEL_SAMPLING
-    st = st + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st = st + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
 #endif
-    //    st.x = st.x * 522.0/512.0;
-    //    st.x = st.x/2.0;
+#ifdef MID_SPLAT_SAMPLING
+    // Adding the amount of "a half delta", for delta=1, see below.
+    st = st + vec2(0.5/splats_x, -0.5/splats_y);
+#endif
     sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
 
     if ( sampled_depth > 0.999 ) {
@@ -139,32 +141,54 @@ void main(void)
     //
     //----------------------------------------------------------------------------------------------------
 
-    float delta = float(splats_x) / float(vp_width);
-    delta = delta/4.0;
-    // delta = 1.0;
-    
-    // A value of 1.0 will cause the "next splat" to be used for the subsequent computations. If the number of splats is
-    // smaller than the depth buffer size, this means that we will skip depth values in the computations. This also
-    // means that for the cube test, all splats on the edges will be similarly "skewed". This will not necessarily be
-    // the case if we choose a smaller delta.
-    //
+#ifdef SMALL_DELTA_SAMPLING
     // To get the "next texture sample", we should have st_dx.x - st.x = 0.5 * delta*2.0/splats_x = 1/vp_width <=>
     // delta/splats_x = 1/vp_width <=> delta = splats_x/vp_width. In the cube case, it means that most splats on the
     // edges will turn out ok, if the number of splats is smaller than the number of depth samples. Note that some of
     // these splats will come out quite wrong anyway. Still, this should be the best value for delta.
+
+    // (141128: For the cube corners, this should mean that one of the two faces turn out just fine, and the other bogus,
+    // in most cases, i.e., cases where all three samples (pos, pos+dx, pos+dy) are on the same side of the corner. Right?)
+
+    // 141128: If we use such neighbouring fragments, should we rather put them in the middle of the splat instead of the 
+    //         corner?! If that is what we currently do, then... Think maybe "yes" to this...
+    //         (MID_SPLAT_SAMPLING) Hmm... Doesn't seem like an improvement.
+
+    // 141128: And if we want "small delta", i.e., neighbouring texels, why not go not to the first neighbour, but instead
+    //         to the next, to make sure we don't accidentally sample the same spot twice, for slightly skewed splats?!
+    //         (LARGER_DELTA_SAMPLING) Doesn't seem like an improvement. But indicates that depth buffer resolution can be 
+    //         reduced.
+
+#ifdef LARGER_DELTA_SAMPLING
+    float delta = 2.0 * float(splats_x) / float(vp_width);
+#else
+    float delta = float(splats_x) / float(vp_width);
+#endif
+
+#else
+    // A value of 1.0 will cause the "next splat" to be used for the subsequent computations. If the number of splats is
+    // smaller than the depth buffer size, this means that we will skip depth values in the computations. This also
+    // means that for the cube test, all splats on the edges will be similarly "skewed". This will not necessarily be
+    // the case if we choose a smaller delta.
+
+    // 141128: Should we use delta=0.5 instead? And some offset so that all three samples (pos, pos+dx, pos+dy) are inside
+    //         the splat?
+
+    float delta = 1.0;
+#endif
     
     vec2 st_dx = 0.5*( vec2(aVertexPosition.x+delta*2.0/splats_x, aVertexPosition.y) + 1.0 );
-    //    st_dx.x = st_dx.x * 522.0/512.0;
-    //    st_dx.x = st_dx.x/2.0;
     vec2 st_dy = 0.5*( vec2(aVertexPosition.x, aVertexPosition.y+delta*2.0/splats_y) + 1.0 );
-//     st_dy.x = st_dy.x * 522.0/512.0;
-//    st_dy.x = st_dy.x/2.0;
 
     st_dx.y = 1.0-st_dx.y;
     st_dy.y = 1.0-st_dy.y; 
 #ifdef MID_TEXEL_SAMPLING
-    st_dx = st_dx + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
-    st_dy = st_dy + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st_dx = st_dx + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st_dy = st_dy + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#endif
+#ifdef MID_SPLAT_SAMPLING
+    st_dx = st_dx + vec2(0.5/splats_x, 0.0);
+    st_dy = st_dy - vec2(0.0, 0.5/splats_y);
 #endif
     float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
     float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;

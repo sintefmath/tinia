@@ -119,7 +119,7 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_depthWidth", "Depth buffer Width)");
         model->addConstrainedElement<int>("ap_depthHeight", 512, 64, 1024);
         model->addAnnotation("ap_depthHeight", "Depth buffer height)");
-        model->addElement<bool>( "ap_mid_texel_sampling", false );
+        model->addElement<bool>( "ap_mid_texel_sampling", false );              // false best
         model->addAnnotation("ap_mid_texel_sampling", "Sample mid-texel");
         model->addElement<bool>( "ap_use_qt_img_scaling", true );
         model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled()");
@@ -129,6 +129,12 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_set_depth_size_256", "256");
         model->addElement<bool>( "ap_set_depth_size_512", false );
         model->addAnnotation("ap_set_depth_size_512", "512");
+        model->addElement<bool>( "ap_small_delta_sampling", true );             // true best
+        model->addAnnotation("ap_small_delta_sampling", "Small delta");
+        model->addElement<bool>( "ap_larger_delta_sampling", false );           // cannot see any difference
+        model->addAnnotation("ap_larger_delta_sampling", "Larger delta");
+        model->addElement<bool>( "ap_mid_splat_sampling", false );
+        model->addAnnotation("ap_mid_splat_sampling", "Sample mid-splat");
     }
 }
 
@@ -234,8 +240,11 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_set_depth_size_512"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_mid_texel_sampling"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_small_delta_sampling"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_larger_delta_sampling"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));
         row++;
     }
 

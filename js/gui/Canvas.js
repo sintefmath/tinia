@@ -427,7 +427,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                     if (response_obj[this._key].snaptype == "jpg") {
                         snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
                     }
-                    console.log("new snaptype = " + snaptype);
+                    // console.log("new snaptype = " + snaptype);
                     this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
                     this._snapshotTimings.print();
                     this._autoSelectSnapshotType(this._snapshotTimings);

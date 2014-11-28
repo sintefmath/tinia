@@ -53,8 +53,9 @@ OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
     glPixelStorei( GL_PACK_ALIGNMENT, 4 );
 
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = scanline_size*height*3; // Why *3 here?!
-    std::cout << "scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*3=" << width*height*3 << std::endl;
+//    size_t req_buffer_size = scanline_size*height*3; // Why *3 here?!
+    size_t req_buffer_size = scanline_size*height;
+    std::cout << "rgb scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*3=" << width*height*3 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -96,17 +97,6 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
         resize(width, height);
     }
 
-    if ( (depth_w!=0) || (depth_h!=0) ) {
-
-        std::cout << "er her" << std::endl;
-        throw "not implemented";
-        
-
-    } else {
-        
-        // Old QImage path
-    
-
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glViewport( 0, 0, width, height );
     // Should not be necessary to render, we will always have rendered for the RGB-grab before doing a depth-grab!
@@ -119,8 +109,9 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     glPixelStorei( GL_PACK_ALIGNMENT, 1 ); // 4 and 1 equally good, in this case?
 
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = scanline_size*height*4; // Why 4 here?!
-    std::cout << "scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*4=" << width*height*4 << std::endl;
+//        size_t req_buffer_size = scanline_size*height*4; // Why 4 here?!
+    size_t req_buffer_size = scanline_size*height;
+    std::cout << "depth scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*4=" << width*height*4 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -133,30 +124,82 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
 
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
-    // Depth encoded as 24 bit fixed point values.
-    for (size_t i=0; i<width*height; i++) {
-        float value = ((float *)m_buffer)[i];
-        for (size_t j=0; j<3; j++) {
-            ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
-            value = 255.0*value - floor(value*255.0);
+
+    if ( (depth_w!=0) || (depth_h!=0) ) {
+
+        // New "downsampling" path. We grab the full depth buffer and downsample, before passing results back to QImage construction
+
+        // First try, no bilinear filtering
+
+        // Depth encoded as 24 bit fixed point values.
+
+        std::cout << "manual downsampling..." << std::endl;
+
+        float *tmp_buffer = new float[depth_w*depth_h];
+        const float * const m_buf = (float *)m_buffer;
+#if 1
+        for (size_t i=0; i<depth_h; i++) {
+            // Thinking "left side" of left-most texels and "right side" of the right-most texels...
+            size_t ii = (i*height)/(depth_h-1);         // [0, height]
+            double u = i/(depth_h-1.0)*height - ii;     // [0, 1]
+            if ( ii == height ) {
+                ii--;
+                u = 1.0; // Instead of ii=height and u==0, we want ii=height-1 and u==1
+            }
+            for (size_t j=0; j<depth_w; j++) {
+                size_t jj = (j*width)/(depth_w-1);          // [0, width]
+                double v = j/(depth_w-1.0)*width - jj;      // [0, 1]
+                if ( jj == width ) {
+                    jj--;
+                    v = 1.0;
+                }
+                tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
+                                                   v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] );
+            }
         }
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#else
+                // Thinking "center" of texels...
+#endif
+
+        for (size_t i=0; i<depth_w*depth_h; i++) {
+            float value = tmp_buffer[i];
+            for (size_t j=0; j<3; j++) {
+                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                value = 255.0*value - floor(value*255.0);
+            }
+        }
+
+        delete tmp_buffer;
+
+    } else {
+        
+        // Old QImage path, we grab the whole depth buffer and don't downsample here
+
+        // Depth encoded as 24 bit fixed point values.
+        for (size_t i=0; i<width*height; i++) {
+            float value = ((float *)m_buffer)[i];
+            for (size_t j=0; j<3; j++) {
+                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                value = 255.0*value - floor(value*255.0);
+            }
+        }
 #if 0
-    // Debug code for writing out the depth map to disk.
-    static int cntr=0;
-    {
-        char fname[1000];
-        sprintf(fname, "/tmp/qtdepth_%05d.ppm", cntr);
-        FILE *fp = fopen(fname, "w");
-        fprintf(fp, "P6\n%d\n%d\n255\n", width, height);
-        fwrite(m_buffer, 1, 3*width*height, fp);
-        fclose(fp);
-    }
-    cntr++;
+        // Debug code for writing out the depth map to disk.
+        static int cntr=0;
+        {
+            char fname[1000];
+            sprintf(fname, "/tmp/qtdepth_%05d.ppm", cntr);
+            FILE *fp = fopen(fname, "w");
+            fprintf(fp, "P6\n%d\n%d\n255\n", width, height);
+            fwrite(m_buffer, 1, 3*width*height, fp);
+            fclose(fp);
+        }
+        cntr++;
 #endif
 
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
