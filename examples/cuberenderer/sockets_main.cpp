@@ -18,6 +18,10 @@
 
 #include "CubeJob.hpp"
 #include "tinia/trell/FRVGLJobController.hpp"
+#include "tinia/trell/FRVQtController.hpp"
+#include <QCoreApplication>
+
+
 int main(int argc, char** argv)
 {
     using namespace tinia::example;
@@ -27,5 +31,11 @@ int main(int argc, char** argv)
     trellController->setJob(testJob);
 
     trellController->run(argc, argv);
-    exit(EXIT_SUCCESS);
+    tinia::trell::FRVQtController* server  = new tinia::trell::FRVQtController( trellController );
+
+    QCoreApplication blah(argc, argv );
+    QObject::connect( server, &tinia::trell::FRVQtController::closed, &blah, &QCoreApplication::quit );
+    auto retVal = blah.exec();
+
+    exit( retVal );
 }

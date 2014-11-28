@@ -3,6 +3,7 @@
 #include <QObject>
 
 QT_FORWARD_DECLARE_CLASS(QWebSocket);
+QT_FORWARD_DECLARE_CLASS(QWebSocketServer);
 
 namespace tinia{ namespace trell {
 
@@ -21,13 +22,17 @@ Q_SIGNALS:
     void closed();
     
 private Q_SLOTS:
-    void onConnect();
-    void onMessageReceived();
+     void onNewConnection();
+    void processTextMessage(QString message);
+    void processBinaryMessage(QByteArray message);
+    void socketDisconnected();
 
 private:
-    QWebSocket* m_socket;
+    QWebSocketServer* m_pWebSocketServer;
+    QList<QWebSocket*> m_clients;
+
     FRVGLJobController* m_glJob;
-    
+    unsigned int m_port;
 };
 
 

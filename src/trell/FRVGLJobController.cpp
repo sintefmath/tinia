@@ -92,8 +92,8 @@ FRVGLJobController::init()
 
    
     
-
-    return m_openGLJob->initGL();
+    //initialise OpenGL job
+    return m_openGLJob->init() && m_openGLJob->initGL();
 
 }
 
@@ -303,7 +303,7 @@ FRVGLJobController::checkForGLError() const
 
 void FRVGLJobController::finish()
 {
-    std::cerr << "will never ever be called, as this prototype does not support this call" << std::endl;
+    m_openGLJob->quit();
 }
 
 void FRVGLJobController::fail()
@@ -315,17 +315,21 @@ int FRVGLJobController::run( int argc, char** argv )
 {
     m_argc = argc;
     m_argv = argv;
-    init();
-    m_openGLJob->initGL();
     //setup polling of websocket messages
     //ie update/idle function
-    
+    if( !init() ){
+        glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 113, GL_DEBUG_SEVERITY_HIGH, -1, "Could not initialise OpenGLJob, terminating");
+        exit(113);
+    }
     //call glutMainloop.
+
+
 
     m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
     glutSwapBuffers();
     
-    float rotation = 0.001, prev = 0;
+    static float rotation = 0.001;
+    float prev = 0;
     tinia::example::CubeJob* cj = (tinia::example::CubeJob*) m_openGLJob;
     for (int i = 0; i < 150; i++ )
     {

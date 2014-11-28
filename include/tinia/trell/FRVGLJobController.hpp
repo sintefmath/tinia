@@ -47,12 +47,14 @@ public:
     void finish();
     void fail();
     void addScript( const std::string& script) {}
-    
-protected:
-    /** \copydoc MessageBox::init */
+
     virtual
     bool
     init( );
+
+protected:
+    /** \copydoc MessageBox::init */
+    
 
 
     /** \copydoc MessageBox::cleanup */
