@@ -8,8 +8,6 @@
 #define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
                                         // otherwise, the splat is discarded.
 
-#define MID_TEXEL_SAMPLING
-
 attribute vec2 aVertexPosition;
 
 varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!

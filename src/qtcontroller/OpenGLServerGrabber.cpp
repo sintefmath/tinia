@@ -53,7 +53,8 @@ OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
     glPixelStorei( GL_PACK_ALIGNMENT, 4 );
 
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = scanline_size*height*3;
+    size_t req_buffer_size = scanline_size*height*3; // Why *3 here?!
+    std::cout << "scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*3=" << width*height*3 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -84,7 +85,9 @@ void
 OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
                                 unsigned int width,
                                 unsigned int height,
-                                const std::string& key)
+                                const std::string& key,
+                                const unsigned depth_w, /* = 0 */
+                                const unsigned depth_h ) /* = 0 */
 {
     if( !m_openglIsReady ) {
         setupOpenGL();
@@ -92,6 +95,17 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     if(m_width != width || m_height != height) {
         resize(width, height);
     }
+
+    if ( (depth_w!=0) || (depth_h!=0) ) {
+
+        std::cout << "er her" << std::endl;
+        throw "not implemented";
+        
+
+    } else {
+        
+        // Old QImage path
+    
 
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glViewport( 0, 0, width, height );
@@ -101,11 +115,12 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     // job->renderFrame( "session", key, m_fbo, width, height );
 
     // QImage requires scanline size to be a multiple of 32 bits.
-    size_t scanline_size = 4*width;
+    size_t scanline_size = 4*width; // 4 bytes per fragment, since each fragment gets a float
     glPixelStorei( GL_PACK_ALIGNMENT, 1 ); // 4 and 1 equally good, in this case?
 
     // make sure that buffer is large enough to hold raw image
-    size_t req_buffer_size = scanline_size*height*4;
+    size_t req_buffer_size = scanline_size*height*4; // Why 4 here?!
+    std::cout << "scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*4=" << width*height*4 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -140,6 +155,8 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     }
     cntr++;
 #endif
+
+    }
 }
 
 

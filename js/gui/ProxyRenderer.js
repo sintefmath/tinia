@@ -176,6 +176,37 @@ dojo.declare("gui.ProxyRenderer", null, {
         //         Not adding a test for construction-time setting of all of these, just a subset.
         if (true) { // if (this._debugging) {
             //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_128", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_128")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 128);
+                    this.exposedModel.updateElement("ap_depthHeight", 128);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_128", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_256", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_256")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 256);
+                    this.exposedModel.updateElement("ap_depthHeight", 256);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_256", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_512", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_512")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 512);
+                    this.exposedModel.updateElement("ap_depthHeight", 512);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_512", false);
+                }
+            }));
+
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener("ap_reloadShader", dojo.hitch(this, function(event) {
                 if(this.exposedModel.getElementValue("ap_reloadShader")) {
                     this._loadShaders();
@@ -194,7 +225,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_overlap") ) {
-                this._alwaysShowMostRecent = this.exposedModel.getElementValue("ap_overlap") / 100.0;
+                this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
             }
             this.exposedModel.addLocalListener( "ap_overlap", dojo.hitch(this, function(event) {
                 this._splatOverlap = this.exposedModel.getElementValue("ap_overlap") / 100.0;
@@ -258,6 +289,14 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_mid_texel_sampling") ) {
+                this._loadShaders();
+            }
+            this.exposedModel.addLocalListener( "ap_mid_texel_sampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
             }) );
 
             //-------------------------------------------------------
@@ -372,6 +411,16 @@ dojo.declare("gui.ProxyRenderer", null, {
         } else {
             this._useFragDepthAndAvailable = false;
             console.log("// #define USE_FRAG_DEPTH_EXT");
+        }
+
+        if ( (this.exposedModel.hasKey("ap_mid_texel_sampling")) && (this.exposedModel.getElementValue("ap_mid_texel_sampling")) ) {
+            splat_vs_src = "#define MID_TEXEL_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define MID_TEXEL_SAMPLING\n" + splat_fs_src;
+            console.log("#define MID_TEXEL_SAMPLING");
+        } else {
+            splat_vs_src = "// #define MID_TEXEL_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "// #define MID_TEXEL_SAMPLING\n" + splat_fs_src;
+            console.log("// #define MID_TEXEL_SAMPLING");
         }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);

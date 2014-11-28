@@ -91,19 +91,19 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_decayMode", "Splats decaying from center");
         model->addElement<bool>( "ap_roundSplats", false );
         model->addAnnotation("ap_roundSplats", "Circular splats");
-        model->addElement<bool>( "ap_screenSpaceSized", true );
+        model->addElement<bool>( "ap_screenSpaceSized", false );
         model->addAnnotation("ap_screenSpaceSized", "Screen-space-sized splats");
-        model->addConstrainedElement<int>("ap_overlap", 200, 1, 300);
+        model->addConstrainedElement<int>("ap_overlap", 100, 1, 300);
         model->addAnnotation("ap_overlap", "Overlap factor)");
         model->addElement<bool>( "ap_alwaysShowMostRecent", true );
         model->addAnnotation("ap_alwaysShowMostRecent", "Most recent model in front");
-        model->addConstrainedElement<int>("ap_splats", 64, 2, 512);
+        model->addConstrainedElement<int>("ap_splats", 12, 2, 512);
         model->addAnnotation("ap_splats", "Number of splats)");
         model->addElement<bool>( "ap_resetAllModels", false );
         model->addAnnotation("ap_resetAllModels", "Remove all models, update now");
         model->addElement<bool>( "ap_useISTC", true );
         model->addAnnotation("ap_useISTC", "Use intra-splat texcoo");
-        model->addElement<bool>( "ap_splatOutline", false );
+        model->addElement<bool>( "ap_splatOutline", true );
         model->addAnnotation("ap_splatOutline", "Square splat outline");
         model->addElement<bool>( "ap_reloadShader", false );
         model->addAnnotation("ap_reloadShader", "Reload shader");
@@ -115,10 +115,20 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
     }
 
     if (with_depth_buffer_manipulation) {
-        model->addConstrainedElement<int>("ap_depthWidth", 512, 4, 1024);
+        model->addConstrainedElement<int>("ap_depthWidth", 512, 64, 1024);
         model->addAnnotation("ap_depthWidth", "Depth buffer Width)");
-        model->addConstrainedElement<int>("ap_depthHeight", 512, 4, 1024);
+        model->addConstrainedElement<int>("ap_depthHeight", 512, 64, 1024);
         model->addAnnotation("ap_depthHeight", "Depth buffer height)");
+        model->addElement<bool>( "ap_mid_texel_sampling", false );
+        model->addAnnotation("ap_mid_texel_sampling", "Sample mid-texel");
+        model->addElement<bool>( "ap_use_qt_img_scaling", true );
+        model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled()");
+        model->addElement<bool>( "ap_set_depth_size_128", false );
+        model->addAnnotation("ap_set_depth_size_128", "128");
+        model->addElement<bool>( "ap_set_depth_size_256", false );
+        model->addAnnotation("ap_set_depth_size_256", "256");
+        model->addElement<bool>( "ap_set_depth_size_512", false );
+        model->addAnnotation("ap_set_depth_size_512", "512");
     }
 }
 
@@ -218,6 +228,14 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::HorizontalSlider("ap_depthHeight"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_depthHeight", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_depthHeight", true));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_set_depth_size_128"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_set_depth_size_256"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_set_depth_size_512"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_mid_texel_sampling"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
         row++;
     }
 

@@ -3,8 +3,6 @@
 //#define CAM_DIR_THRESHOLD_DEG 3.0 // Used 3.0 until 141127.
 #define CAM_DIR_THRESHOLD_DEG 30.0
 
-#define MID_TEXEL_SAMPLING
-
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 

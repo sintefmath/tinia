@@ -107,33 +107,61 @@ public:
         }
         m_key    = ( proper_key_to_use != "" ? proper_key_to_use : arguments.get<2>() );
     }
-    
+
     ~SnapshotAsTextFetcher()
     {
         using namespace tinia::qtcontroller::impl;
-        QImage img( m_gl_grabber->imageBuffer(),
-                    m_width,
-                    m_height,
-                    QImage::Format_RGB888 );
-    
-        // This is a temporary fix. The image is reflected through the horizontal
-        // line y=height ((x, y) |--> (x, h-y) ).
-        QTransform flipTransformation(1, 0,
-                                      0, -1,
-                                      0, m_height);
-        img = img.transformed(flipTransformation);
-        if ( (m_depth_w!=m_width) || (m_depth_h!=m_height) ) {
-            img = img.scaled(m_depth_w, m_depth_h);
-        }
-        QBuffer qBuffer;
-        if (m_pngMode) {
-            img.save(&qBuffer, "png");
+
+        bool use_qt_scaling;
+        m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+        if (use_qt_scaling) {
+
+            QImage img( m_gl_grabber->imageBuffer(),
+                        m_width,
+                        m_height,
+                        QImage::Format_RGB888 );
+            // This is a temporary fix. The image is reflected through the horizontal
+            // line y=height ((x, y) |--> (x, h-y) ).
+            QTransform flipTransformation(1, 0,
+                                          0, -1,
+                                          0, m_height);
+            img = img.transformed(flipTransformation);
+            if ( (m_depth_w!=m_width) || (m_depth_h!=m_height) ) {
+                img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
+            }
+            QBuffer qBuffer;
+            if (m_pngMode) {
+                img.save(&qBuffer, "png");
+            } else {
+                img.save(&qBuffer, "jpg", m_jpg_quality);
+            }
+            
+            QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
+            m_reply << str;
+
         } else {
-            img.save(&qBuffer, "jpg", m_jpg_quality);
+            
+            QImage img( m_gl_grabber->imageBuffer(),
+                        m_depth_w,
+                        m_depth_h,
+                        QImage::Format_RGB888 );
+            // This is a temporary fix. The image is reflected through the horizontal
+            // line y=height ((x, y) |--> (x, h-y) ).
+            QTransform flipTransformation(1, 0,
+                                          0, -1,
+                                          0, m_depth_h);
+            img = img.transformed(flipTransformation);
+            QBuffer qBuffer;
+            if (m_pngMode) {
+                img.save(&qBuffer, "png");
+            } else {
+                img.save(&qBuffer, "jpg", m_jpg_quality);
+            }
+            
+            QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
+            m_reply << str;
+
         }
-        
-        QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
-        m_reply << str;
     }
     
     void
@@ -142,7 +170,15 @@ public:
         if ( m_getRGBsnapshot ) {
             m_gl_grabber->grabRGB( m_job, m_width, m_height, m_key );
         } else {
-            m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+            
+            bool use_qt_scaling;
+            m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+            if (use_qt_scaling) {
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+            } else {
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h );
+            }
+            
         }
     }
     

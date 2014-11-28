@@ -42,7 +42,7 @@ public:
     grabRGB( tinia::jobcontroller::OpenGLJob* job,
              unsigned int width,
              unsigned int height,
-             const std::string &key);
+             const std::string &key );
 
     /** Grabs the depth buffer of a view
      *
@@ -55,7 +55,9 @@ public:
     grabDepth( tinia::jobcontroller::OpenGLJob* job,
                unsigned int width,
                unsigned int height,
-               const std::string &key);
+               const std::string &key,
+               const unsigned depth_w = 0, // The default value 0 means that the size of the canvas (i.e., width x height) will be used for the depth buffer also.
+               const unsigned depth_h = 0 );
 
 private:
     void setupOpenGL();
