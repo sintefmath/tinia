@@ -207,7 +207,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 if (response_obj[this._key].snaptype == "jpg") {
                                     snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
                                 }
-                                console.log("new snaptype = " + snaptype);
+                                // console.log("new snaptype = " + snaptype);
                                 this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
                                 this._snapshotTimings.print();
                                 this._autoSelectSnapshotType(this._snapshotTimings);
@@ -337,10 +337,18 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
         this._modelLib.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
-            this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
+            if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
+                this._urlHandler.updateParams( { "depth_w": 0 } );
+            } else {
+                this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
+            }
         }) );
         this._modelLib.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
-            this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
+            if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
+                this._urlHandler.updateParams( { "depth_h": 0 } );
+            } else {
+                this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
+            }
         }) );
 
         this._modelLib.addLocalListener( "ap_autoSelectSampleAll", dojo.hitch(this, function(event) {
@@ -790,8 +798,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // We will always get here, while holding a mouse button down inside the canvas.
             // Also when the mouse is inside the canvas and a button is pushed.
         } else {
-            dojo.style(this._img, "z-index", "2");
-            this._img.style.zIndex = "2";
+            // For AP-debugging, comment out the two lines below to make the ap-image stay after mouse button release.
+//            dojo.style(this._img, "z-index", "2");
+//            this._img.style.zIndex = "2";
             // We get here when the mouse is crossing the border to the canvas while no button is pressed.
             // Also when the mouse is inside and a button is released.
         }

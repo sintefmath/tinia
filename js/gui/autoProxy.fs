@@ -5,6 +5,7 @@
 
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
+// 141129: textureSize(sampler, lod) is not available in GLSL ES 1.0 (WebGL) so we use DEPTH_WIDTH and DEPTH_HEIGHT added in ProxyRenderer.js.
 
 varying highp vec2 texCoo;
 varying highp float sampled_depth;      // Splat-centered depth
@@ -119,7 +120,7 @@ void main(void)
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
 #ifdef MID_TEXEL_SAMPLING
-    tc = tc + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    tc = tc + vec2(0.5/float(DEPTH_WIDTH), -0.5/float(DEPTH_HEIGHT)); // Must we add this to get sampling mid-texel?!
 #endif
 #ifdef DEBUG
     if (useISTC>0) {

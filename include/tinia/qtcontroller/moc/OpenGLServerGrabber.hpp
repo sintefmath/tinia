@@ -56,8 +56,8 @@ public:
                unsigned int width,
                unsigned int height,
                const std::string &key,
-               const unsigned depth_w = 0, // The default value 0 means that the size of the canvas (i.e., width x height) will be used for the depth buffer also.
-               const unsigned depth_h = 0 );
+               const unsigned depth_w = 0,      // The default value 0 means that the size of the canvas (i.e., width x height) will be used for the depth buffer also.
+               const unsigned depth_h = 0 );    // Also, this means that QImage.scaled() will be used on the depth-encoded rgb image, not our own downscaling.
 
 private:
     void setupOpenGL();

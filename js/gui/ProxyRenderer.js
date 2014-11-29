@@ -176,6 +176,26 @@ dojo.declare("gui.ProxyRenderer", null, {
         //         Not adding a test for construction-time setting of all of these, just a subset.
         if (true) { // if (this._debugging) {
             //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_32", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_32")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 32);
+                    this.exposedModel.updateElement("ap_depthHeight", 32);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_32", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_64", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_64")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 64);
+                    this.exposedModel.updateElement("ap_depthHeight", 64);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_64", false);
+                }
+            }));
+            //-------------------------------------------------------
             this.exposedModel.addLocalListener("ap_set_depth_size_128", dojo.hitch(this, function(event) {
                 if(this.exposedModel.getElementValue("ap_set_depth_size_128")) {
                     this._loadShaders();
@@ -289,6 +309,30 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_depthWidth") ) {
+                this._loadShaders();
+            }
+            this.exposedModel.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_depthHeight") ) {
+                this._loadShaders();
+            }
+            this.exposedModel.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_simulate_downsampling") ) {
+                this._loadShaders();
+            }
+            this.exposedModel.addLocalListener( "ap_simulate_downsampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
             }) );
 
             //-------------------------------------------------------
@@ -437,6 +481,27 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("// #define USE_FRAG_DEPTH_EXT");
         }
 
+        if (this.exposedModel.hasKey("ap_depthWidth")) {
+            splat_vs_src = "#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")) + "\n" + splat_vs_src;
+            splat_fs_src = "#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")) + "\n" + splat_fs_src;
+            console.log("#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")));
+        }
+        if (this.exposedModel.hasKey("ap_depthHeight")) {
+            splat_vs_src = "#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")) + "\n" + splat_vs_src;
+            splat_fs_src = "#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")) + "\n" + splat_fs_src;
+            console.log("#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")));
+        }
+
+        if ( (this.exposedModel.hasKey("ap_simulate_downsampling")) && (this.exposedModel.getElementValue("ap_simulate_downsampling")) ) {
+            splat_vs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_fs_src;
+            console.log("#define SIMULATE_DOWNSAMPLING\n");
+        } else {
+            splat_vs_src = "// #define SIMULATE_DOWNSAMPLING\n" + splat_vs_src;
+            splat_fs_src = "// #define SIMULATE_DOWNSAMPLING\n" + splat_fs_src;
+            console.log("// #define SIMULATE_DOWNSAMPLING\n");
+        }
+
         if ( (this.exposedModel.hasKey("ap_mid_texel_sampling")) && (this.exposedModel.getElementValue("ap_mid_texel_sampling")) ) {
             splat_vs_src = "#define MID_TEXEL_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define MID_TEXEL_SAMPLING\n" + splat_fs_src;
@@ -481,8 +546,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.shaderSource(splat_fs, splat_fs_src);
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
             console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
+            alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
             return null;
         }
 
@@ -490,6 +555,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.shaderSource(splat_vs, splat_vs_src);
         this.gl.compileShader(splat_vs);
         if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
+            console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
             alert("An error occurred compiling the splat_vs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_vs));
             return null;
         }

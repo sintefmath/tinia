@@ -100,7 +100,7 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addConstrainedElement<int>("ap_splats", 12, 2, 512);
         model->addAnnotation("ap_splats", "Number of splats)");
         model->addElement<bool>( "ap_resetAllModels", false );
-        model->addAnnotation("ap_resetAllModels", "Remove all models, update now");
+        model->addAnnotation("ap_resetAllModels", "Reset and fix proxy");
         model->addElement<bool>( "ap_useISTC", true );
         model->addAnnotation("ap_useISTC", "Use intra-splat texcoo");
         model->addElement<bool>( "ap_splatOutline", true );
@@ -115,14 +115,18 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
     }
 
     if (with_depth_buffer_manipulation) {
-        model->addConstrainedElement<int>("ap_depthWidth", 512, 64, 1024);
+        model->addConstrainedElement<int>("ap_depthWidth", 512, 32, 1024);
         model->addAnnotation("ap_depthWidth", "Depth buffer Width)");
-        model->addConstrainedElement<int>("ap_depthHeight", 512, 64, 1024);
+        model->addConstrainedElement<int>("ap_depthHeight", 512, 32, 1024);
         model->addAnnotation("ap_depthHeight", "Depth buffer height)");
         model->addElement<bool>( "ap_mid_texel_sampling", false );              // false best
         model->addAnnotation("ap_mid_texel_sampling", "Sample mid-texel");
         model->addElement<bool>( "ap_use_qt_img_scaling", true );
         model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled()");
+        model->addElement<bool>( "ap_set_depth_size_32", false );
+        model->addAnnotation("ap_set_depth_size_32", "32");
+        model->addElement<bool>( "ap_set_depth_size_64", false );
+        model->addAnnotation("ap_set_depth_size_64", "64");
         model->addElement<bool>( "ap_set_depth_size_128", false );
         model->addAnnotation("ap_set_depth_size_128", "128");
         model->addElement<bool>( "ap_set_depth_size_256", false );
@@ -135,6 +139,8 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_larger_delta_sampling", "Larger delta");
         model->addElement<bool>( "ap_mid_splat_sampling", false );
         model->addAnnotation("ap_mid_splat_sampling", "Sample mid-splat");
+        model->addElement<bool>( "ap_simulate_downsampling", false );
+        model->addAnnotation("ap_simulate_downsampling", "Simulate downsampling");
     }
 }
 
@@ -143,7 +149,7 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
 
 tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
 {
-    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 4);
+    tinia::model::gui::Grid *mainGrid = new tinia::model::gui::Grid(100, 5);
     int row = 0;
 
     if ( m_w_ap && m_w_jpg && m_w_as ) {
@@ -235,9 +241,11 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_depthHeight", false));
         mainGrid->setChild(row, 2, new tinia::model::gui::Label("ap_depthHeight", true));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_set_depth_size_128"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_set_depth_size_256"));
-        mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_set_depth_size_512"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_set_depth_size_32"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_set_depth_size_64"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_set_depth_size_128"));
+        mainGrid->setChild(row, 3, new tinia::model::gui::Button("ap_set_depth_size_256"));
+        mainGrid->setChild(row, 4, new tinia::model::gui::Button("ap_set_depth_size_512"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_mid_texel_sampling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_small_delta_sampling"));
@@ -245,6 +253,7 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_simulate_downsampling"));
         row++;
     }
 

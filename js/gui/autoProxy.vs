@@ -23,6 +23,9 @@ varying highp mat2 intraSplatTexCooTransform2;
 uniform highp mat4 projUnproj; // PM * MV * depthMVinv * depthPMinv
 
 uniform sampler2D depthImg;
+// 141129: textureSize(sampler, lod) is not available in GLSL ES 1.0 (WebGL) so we use DEPTH_WIDTH and DEPTH_HEIGHT added in ProxyRenderer.js.
+// Next: use SIMULATED_DOWNSAMPLING
+
 uniform float splatOverlap;                     // Makes little sense in having this much larger than one if we use screenSpaceSized splats. 
                                                 // We need 2 for coverage at all times, for consider this case:
                                                 //
@@ -90,7 +93,7 @@ void main(void)
     // (But 8 is clearly too coarse.)
     // Now using all 24 bits, since we do send them from the server, currently.
 #ifdef MID_TEXEL_SAMPLING
-    st = st + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st = st + vec2(0.5/float(DEPTH_WIDTH), -0.5/float(DEPTH_HEIGHT)); // Must we add this to get sampling mid-texel?!
 #endif
 #ifdef MID_SPLAT_SAMPLING
     // Adding the amount of "a half delta", for delta=1, see below.
@@ -142,8 +145,8 @@ void main(void)
     //----------------------------------------------------------------------------------------------------
 
 #ifdef SMALL_DELTA_SAMPLING
-    // To get the "next texture sample", we should have st_dx.x - st.x = 0.5 * delta*2.0/splats_x = 1/vp_width <=>
-    // delta/splats_x = 1/vp_width <=> delta = splats_x/vp_width. In the cube case, it means that most splats on the
+    // To get the "next texture sample", we should have st_dx.x - st.x = 0.5 * delta*2.0/splats_x = 1/DEPTH_WIDTH <=>
+    // delta/splats_x = 1/DEPTH_WIDTH <=> delta = splats_x/DEPTH_WIDTH. In the cube case, it means that most splats on the
     // edges will turn out ok, if the number of splats is smaller than the number of depth samples. Note that some of
     // these splats will come out quite wrong anyway. Still, this should be the best value for delta.
 
@@ -160,9 +163,9 @@ void main(void)
     //         reduced.
 
 #ifdef LARGER_DELTA_SAMPLING
-    float delta = 2.0 * float(splats_x) / float(vp_width);
+    float delta = 2.0 * float(splats_x) / float(DEPTH_WIDTH);
 #else
-    float delta = float(splats_x) / float(vp_width);
+    float delta = float(splats_x) / float(DEPTH_WIDTH);
 #endif
 
 #else
@@ -183,8 +186,8 @@ void main(void)
     st_dx.y = 1.0-st_dx.y;
     st_dy.y = 1.0-st_dy.y; 
 #ifdef MID_TEXEL_SAMPLING
-    st_dx = st_dx + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
-    st_dy = st_dy + vec2(0.5/float(vp_width), -0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+    st_dx = st_dx + vec2(0.5/float(DEPTH_WIDTH), -0.5/float(DEPTH_HEIGHT)); // Must we add this to get sampling mid-texel?!
+    st_dy = st_dy + vec2(0.5/float(DEPTH_WIDTH), -0.5/float(DEPTH_HEIGHT)); // Must we add this to get sampling mid-texel?!
 #endif
 #ifdef MID_SPLAT_SAMPLING
     st_dx = st_dx + vec2(0.5/splats_x, 0.0);
@@ -228,8 +231,8 @@ void main(void)
     frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
     
     // Difference of screen coordinates, in pixels:
-    vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w );
-    vec2 scr_dy = float(vp_height)/(2.0*delta) * ( pos_dy.xy/pos_dy.w - pos.xy/pos.w );
+    vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w ); // @@@ vp-size or DEPTH-size?!
+    vec2 scr_dy = float(vp_height)/(2.0*delta) * ( pos_dy.xy/pos_dy.w - pos.xy/pos.w ); // @@@ vp-size or DEPTH-size?!
     // Difference of texture coordinates for adjacent splats, measured in texels:
     vec2 st_e1 = vec2( 1.0/splats_x, 0.0 );
     vec2 st_e2 = vec2( 0.0, -1.0/splats_y );
@@ -337,6 +340,7 @@ void main(void)
     // The vectors 'st_e1' and 'st_e2' span the region in the textures with lower left corner 'st' (splat_00), to which
     // the screen space region with lower left corner 'pos.xy * vec2(vp_width, vp_height) / 2.0 / pos.w' and spanning
     // vectors 'scr_dx' and 'scr_dy' should be mapped.
+    // @@@ vp-size or DEPTH-size?! (Don't quite get this comment...)
     
     intraSplatTexCooTransform2 =
 	invrs( mat2(scr_dx, scr_dy) ) *                        // These terms map gl_PointCoord-0.5 to the (scr_dx, scr_dy)-spanned

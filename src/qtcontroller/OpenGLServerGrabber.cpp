@@ -55,7 +55,7 @@ OpenGLServerGrabber::grabRGB( jobcontroller::OpenGLJob *job,
     // make sure that buffer is large enough to hold raw image
 //    size_t req_buffer_size = scanline_size*height*3; // Why *3 here?!
     size_t req_buffer_size = scanline_size*height;
-    std::cout << "rgb scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*3=" << width*height*3 << std::endl;
+    //std::cout << "rgb scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*3=" << width*height*3 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -111,7 +111,7 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     // make sure that buffer is large enough to hold raw image
 //        size_t req_buffer_size = scanline_size*height*4; // Why 4 here?!
     size_t req_buffer_size = scanline_size*height;
-    std::cout << "depth scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*4=" << width*height*4 << std::endl;
+    // std::cout << "depth scanline_size=" << scanline_size << ", width=" << width << ", height=" << height << ", req_buffer_size=" << req_buffer_size << ", w*h*4=" << width*height*4 << std::endl;
     if( (m_buffer == NULL) || (m_buffer_size < req_buffer_size) ) {
         if( m_buffer != NULL ) {
             delete m_buffer;
@@ -128,6 +128,7 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     if ( (depth_w!=0) || (depth_h!=0) ) {
 
         // New "downsampling" path. We grab the full depth buffer and downsample, before passing results back to QImage construction
+        // This path is triggered by the exposed model variable 'ap_use_qt_img_scaling' begin set to false.
 
         // First try, no bilinear filtering
 
@@ -174,6 +175,8 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     } else {
         
         // Old QImage path, we grab the whole depth buffer and don't downsample here
+        // The downsampling will be done after the float->rgb encoding, by QImage.scaled(), so this is a bit dangerous.
+        // However, the QImage.scaled() should just downsample without filtering, so it should work.
 
         // Depth encoded as 24 bit fixed point values.
         for (size_t i=0; i<width*height; i++) {
