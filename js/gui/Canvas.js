@@ -203,8 +203,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
                                 // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                                 var depthwidth = response_obj[this._key].depthwidth;
-                                console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
-                                if ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) ) {
+                                // console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
+                                // if ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) )
+                                {
                                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                                     var snaptype = response_obj[this._key].snaptype;
                                     if (response_obj[this._key].snaptype == "jpg") {
@@ -214,8 +215,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
                                     this._snapshotTimings.print();
                                     this._autoSelectSnapshotType(this._snapshotTimings);
-                                } else {
-                                    console.log("mismatch in depth size");
+//                                } else {
+//                                    console.log("mismatch in depth size");
                                 }
                             })
                         });
@@ -435,8 +436,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].view = " + response_obj[this._key].view);
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].proj = " + response_obj[this._key].proj);
                 var depthwidth = response_obj[this._key].depthwidth;
-                console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
-                if ( (response_obj) && ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) ) ) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                // console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
+                // if ( (response_obj) && ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) ) ) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                     var tmp = Date.now();
                     var snaptype = response_obj[this._key].snaptype;

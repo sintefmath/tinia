@@ -395,10 +395,10 @@ static int trell_pass_reply_png_bundle( void*          data,
 
 
                 }
-                const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size );
+                const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + padded_img_size + padded_depth_size );
                 BB_APPEND_STRING( encoder_state->r->pool, bb, "\", view: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                   MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15] );
-                const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size + sizeof(float)*16 );
+                const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + padded_img_size + padded_depth_size + sizeof(float)*16 );
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", proj: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                   PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15] );
             }
