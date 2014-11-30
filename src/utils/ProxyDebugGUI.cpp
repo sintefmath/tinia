@@ -141,6 +141,8 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_mid_splat_sampling", "Sample mid-splat");
         model->addElement<bool>( "ap_simulate_downsampling", false );
         model->addAnnotation("ap_simulate_downsampling", "Simulate downsampling");
+        model->addElement<bool>( "ap_bi_linear_filtering", false );
+        model->addAnnotation("ap_bi_linear_filtering", "Bi-linear filtering");
     }
 }
 
@@ -250,6 +252,7 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_mid_texel_sampling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_small_delta_sampling"));
         mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_larger_delta_sampling"));
+        mainGrid->setChild(row, 3, new tinia::model::gui::CheckBox("ap_bi_linear_filtering"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));

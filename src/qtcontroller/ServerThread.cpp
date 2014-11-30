@@ -180,10 +180,12 @@ public:
             
             bool use_qt_scaling;
             m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+            bool bi_linear_filtering;
+            m_job->getExposedModel()->getElementValue( "ap_bi_linear_filtering", bi_linear_filtering );
             if (use_qt_scaling) {
                 m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
             } else {
-                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h );
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h, bi_linear_filtering );
             }
             
         }

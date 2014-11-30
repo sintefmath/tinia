@@ -88,7 +88,8 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
                                 unsigned int height,
                                 const std::string& key,
                                 const unsigned depth_w, /* = 0 */
-                                const unsigned depth_h ) /* = 0 */
+                                const unsigned depth_h, /* = 0 */
+                                const bool bi_linear_filtering ) /* = false */
 {
     if( !m_openglIsReady ) {
         setupOpenGL();
@@ -126,42 +127,94 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
     glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, m_buffer );
 
     if ( (depth_w!=0) || (depth_h!=0) ) {
-
         // New "downsampling" path. We grab the full depth buffer and downsample, before passing results back to QImage construction
-        // This path is triggered by the exposed model variable 'ap_use_qt_img_scaling' begin set to false.
-
-        // First try, no bilinear filtering
-
-        // Depth encoded as 24 bit fixed point values.
-
-        std::cout << "manual downsampling..." << std::endl;
-
+        // This path is triggered by the exposed model variable 'ap_use_qt_img_scaling' set to false.
+        std::cout << "non-Qt-based downsampling..." << std::endl;
         float *tmp_buffer = new float[depth_w*depth_h];
         const float * const m_buf = (float *)m_buffer;
-#if 1
-        for (size_t i=0; i<depth_h; i++) {
-            // Thinking "left side" of left-most texels and "right side" of the right-most texels...
-            size_t ii = (i*height)/(depth_h-1);         // [0, height]
-            double u = i/(depth_h-1.0)*height - ii;     // [0, 1]
-            if ( ii == height ) {
-                ii--;
-                u = 1.0; // Instead of ii=height and u==0, we want ii=height-1 and u==1
-            }
-            for (size_t j=0; j<depth_w; j++) {
-                size_t jj = (j*width)/(depth_w-1);          // [0, width]
-                double v = j/(depth_w-1.0)*width - jj;      // [0, 1]
-                if ( jj == width ) {
-                    jj--;
-                    v = 1.0;
+
+        if (bi_linear_filtering) {
+            std::cout << "bi-linear filtering" << std::endl;
+            for (size_t i=0; i<depth_h; i++) {
+                // Thinking "left side" of left-most texels and "right side" of the right-most texels...
+                size_t ii = (i*height)/(depth_h-1);         // [0, height]
+                double u = i/(depth_h-1.0)*height - ii;     // [0, 1]
+                if ( ii == height ) {
+                    ii--;
+                    u = 1.0; // Instead of ii=height and u==0, we want ii=height-1 and u==1
                 }
-                tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
-                                                   v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] );
+                for (size_t j=0; j<depth_w; j++) {
+                    size_t jj = (j*width)/(depth_w-1);          // [0, width]
+                    double v = j/(depth_w-1.0)*width - jj;      // [0, 1]
+                    if ( jj == width ) {
+                        jj--;
+                        v = 1.0;
+                    }
+                    // The simple solution... (there are other options, with extrapolation and what not, but would it be worth the effort?!)
+                    const int a = ( m_buf[  ii   *width +  jj    ] == 1.0 );
+                    const int b = ( m_buf[ (ii+1)*width +  jj    ] == 1.0 );
+                    const int c = ( m_buf[  ii   *width + (jj+1) ] == 1.0 );
+                    const int d = ( m_buf[ (ii+1)*width + (jj+1) ] == 1.0 );
+                    switch ( (a<<3) + (b<<2) + (c<<1) + d ) {
+                        case 0:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 1:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * (         m_buf[ ii*width + jj+1 ]                                  ); break;
+                        case 2:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * (                                      m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 3:
+                            tmp_buffer[ i*depth_w + j ] =           ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ); break;
+                        case 4:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * (         m_buf[ ii*width + jj   ]                                  ) +
+                                                               v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 5:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * (         m_buf[ ii*width + jj   ]                                  ) +
+                                                               v  * (         m_buf[ ii*width + jj+1 ]                                  ); break;
+                        case 6:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ]                                  ) +
+                                                               v  * (                                      m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 7:
+                            tmp_buffer[ i*depth_w + j ] =                     m_buf[ ii*width + jj   ]                                   ; break;
+                        case 8:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * (                                      m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 9:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * (                                      m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * (         m_buf[ ii*width + jj+1 ]                                  ); break;
+                        case 10:
+                            tmp_buffer[ i*depth_w + j ] = (1.0-v) * (                                      m_buf[ (ii+1)*width + jj   ] ) +
+                                                               v  * (                                      m_buf[ (ii+1)*width + jj+1 ] ); break;
+                        case 11:
+                            tmp_buffer[ i*depth_w + j ] =                                                  m_buf[ (ii+1)*width + jj   ]  ; break;
+                        case 12:
+                            tmp_buffer[ i*depth_w + j ] =             (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ]  ; break;
+                        case 13:
+                            tmp_buffer[ i*depth_w + j ] =                     m_buf[ ii*width + jj+1 ]                                   ; break;
+                        case 14:
+                            tmp_buffer[ i*depth_w + j ] =                                                  m_buf[ (ii+1)*width + jj+1 ]  ; break;
+                        case 15:
+                            tmp_buffer[ i*depth_w + j ] = 1.0; break;
+                    }
+                    //                    tmp_buffer[ i*depth_w + j ] = (1.0-v) * ( (1.0-u)*m_buf[ ii*width + jj   ] + u*m_buf[ (ii+1)*width + jj   ] ) +
+                    //                                                       v  * ( (1.0-u)*m_buf[ ii*width + jj+1 ] + u*m_buf[ (ii+1)*width + jj+1 ] );
+                }
+            }
+        } else {
+            std::cout << "just sampling, no filtering" << std::endl;
+            for (size_t i=0; i<depth_h; i++) {
+                // Thinking "left side" of left-most texels and "right side" of the right-most texels...
+                size_t ii = size_t( floor( (i*height)/double(depth_h) + 0.5 ) );
+                for (size_t j=0; j<depth_w; j++) {
+                    size_t jj = size_t( floor( (j*width)/double(depth_w) + 0.5 ) );
+                    tmp_buffer[ i*depth_w + j ] = m_buf[ ii*width + jj ];
+                }
             }
         }
-#else
-                // Thinking "center" of texels...
-#endif
 
+        // Depth encoded as 24 bit fixed point values.
         for (size_t i=0; i<depth_w*depth_h; i++) {
             float value = tmp_buffer[i];
             for (size_t j=0; j<3; j++) {
@@ -176,7 +229,7 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
         
         // Old QImage path, we grab the whole depth buffer and don't downsample here
         // The downsampling will be done after the float->rgb encoding, by QImage.scaled(), so this is a bit dangerous.
-        // However, the QImage.scaled() should just downsample without filtering, so it should work.
+        // However, the QImage.scaled() should just downsample without filtering, so it should work. (See ServerThread.cpp)
 
         // Depth encoded as 24 bit fixed point values.
         for (size_t i=0; i<width*height; i++) {
