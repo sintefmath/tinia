@@ -135,7 +135,12 @@ void main(void)
     // by other parts of the geometry, these are simply not available in the proxy model.  Note also that this will not
     // remove parts of primitives that are rotated outside of the correct geometry.  That is impossible to do, we do not
     // have the necessary information.
+#ifndef SIMULATE_DOWNSAMPLING
     highp float intra_splat_depth = texture2D(depthImg, tc).r + (texture2D(depthImg, tc).g + texture2D(depthImg, tc).b/255.0)/255.0;
+#else
+    highp vec2 tc2 = floor( tc * vec2(DEPTH_WIDTH, DEPTH_HEIGHT) ) / vec2(DEPTH_WIDTH, DEPTH_HEIGHT);
+    highp float intra_splat_depth = texture2D(depthImg, tc2).r + (texture2D(depthImg, tc2).g + texture2D(depthImg, tc2).b/255.0)/255.0;
+#endif
     if ( intra_splat_depth > 0.999 ) {
 	if (splatSetIndex==-1) {
 	    // We treat this "most recent model" specially, so that it can overwrite spurious fragments from the other

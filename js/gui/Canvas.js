@@ -338,14 +338,14 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         }) );
         this._modelLib.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
             if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
-                this._urlHandler.updateParams( { "depth_w": 0 } );
+                this._urlHandler.updateParams( { "depth_w": this._width } );
             } else {
                 this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
             }
         }) );
         this._modelLib.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
             if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
-                this._urlHandler.updateParams( { "depth_h": 0 } );
+                this._urlHandler.updateParams( { "depth_h": this._height } );
             } else {
                 this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
             }

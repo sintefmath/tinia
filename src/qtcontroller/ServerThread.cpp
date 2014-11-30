@@ -127,7 +127,14 @@ public:
                                           0, m_height);
             img = img.transformed(flipTransformation);
             if ( (m_depth_w!=m_width) || (m_depth_h!=m_height) ) {
-                img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
+                bool tmp;
+                m_job->getExposedModel()->getElementValue( "ap_simulate_downsampling", tmp );
+                if (!tmp) {
+                    std::cout << "scaling to " << m_depth_w << " x " << m_depth_h << std::endl;
+                    img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
+                } else {
+                    std::cout << "Not downsampling with QImage.scaled(), we're simulating downsampling in shaders" << std::endl;
+                }
             }
             QBuffer qBuffer;
             if (m_pngMode) {

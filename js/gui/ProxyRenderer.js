@@ -333,6 +333,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             }
             this.exposedModel.addLocalListener( "ap_simulate_downsampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
+                console.log("Remember to make sure a new proxy model is produced after this, otherwise all bets are off!!!");
             }) );
 
             //-------------------------------------------------------
@@ -478,7 +479,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("#define USE_FRAG_DEPTH_EXT");
         } else {
             this._useFragDepthAndAvailable = false;
-            console.log("// #define USE_FRAG_DEPTH_EXT");
         }
 
         if (this.exposedModel.hasKey("ap_depthWidth")) {
@@ -496,50 +496,30 @@ dojo.declare("gui.ProxyRenderer", null, {
             splat_vs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_fs_src;
             console.log("#define SIMULATE_DOWNSAMPLING\n");
-        } else {
-            splat_vs_src = "// #define SIMULATE_DOWNSAMPLING\n" + splat_vs_src;
-            splat_fs_src = "// #define SIMULATE_DOWNSAMPLING\n" + splat_fs_src;
-            console.log("// #define SIMULATE_DOWNSAMPLING\n");
         }
 
         if ( (this.exposedModel.hasKey("ap_mid_texel_sampling")) && (this.exposedModel.getElementValue("ap_mid_texel_sampling")) ) {
             splat_vs_src = "#define MID_TEXEL_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define MID_TEXEL_SAMPLING\n" + splat_fs_src;
             console.log("#define MID_TEXEL_SAMPLING");
-        } else {
-            splat_vs_src = "// #define MID_TEXEL_SAMPLING\n" + splat_vs_src;
-            splat_fs_src = "// #define MID_TEXEL_SAMPLING\n" + splat_fs_src;
-            console.log("// #define MID_TEXEL_SAMPLING");
         }
 
         if ( (this.exposedModel.hasKey("ap_mid_splat_sampling")) && (this.exposedModel.getElementValue("ap_mid_splat_sampling")) ) {
             splat_vs_src = "#define MID_SPLAT_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define MID_SPLAT_SAMPLING\n" + splat_fs_src;
             console.log("#define MID_SPLAT_SAMPLING");
-        } else {
-            splat_vs_src = "// #define MID_SPLAT_SAMPLING\n" + splat_vs_src;
-            splat_fs_src = "// #define MID_SPLAT_SAMPLING\n" + splat_fs_src;
-            console.log("// #define MID_SPLAT_SAMPLING");
         }
 
         if ( (this.exposedModel.hasKey("ap_small_delta_sampling")) && (this.exposedModel.getElementValue("ap_small_delta_sampling")) ) {
             splat_vs_src = "#define SMALL_DELTA_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define SMALL_DELTA_SAMPLING\n" + splat_fs_src;
             console.log("#define SMALL_DELTA_SAMPLING");
-        } else {
-            splat_vs_src = "// #define SMALL_DELTA_SAMPLING\n" + splat_vs_src;
-            splat_fs_src = "// #define SMALL_DELTA_SAMPLING\n" + splat_fs_src;
-            console.log("// #define SMALL_DELTA_SAMPLING");
         }
 
         if ( (this.exposedModel.hasKey("ap_larger_delta_sampling")) && (this.exposedModel.getElementValue("ap_larger_delta_sampling")) ) {
             splat_vs_src = "#define LARGER_DELTA_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define LARGER_DELTA_SAMPLING\n" + splat_fs_src;
             console.log("#define LARGER_DELTA_SAMPLING");
-        } else {
-            splat_vs_src = "// #define LARGER_DELTA_SAMPLING\n" + splat_vs_src;
-            splat_fs_src = "// #define LARGER_DELTA_SAMPLING\n" + splat_fs_src;
-            console.log("// #define LARGER_DELTA_SAMPLING");
         }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
