@@ -122,6 +122,8 @@ protected:
                    TrellPixelFormat    pixel_format,
                    const size_t        width,
                    const size_t        height,
+                   const size_t        depth_width,
+                   const size_t        depth_height,
                    const std::string&  session,
                    const std::string&  key );
     virtual

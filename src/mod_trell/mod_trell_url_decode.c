@@ -243,6 +243,8 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
     dispatch_info->m_base64 = 0;
     dispatch_info->m_width = 0;
     dispatch_info->m_height = 0;
+    dispatch_info->m_depth_w = 0;
+    dispatch_info->m_depth_h = 0;
 
     int i;
     int o = -1;
@@ -438,8 +440,10 @@ trell_decode_path_info( trell_dispatch_info_t* dispatch_info, request_rec *r )
         dispatch_info->m_pixel_format = TRELL_PIXEL_FORMAT_RGB_CUSTOM_DEPTH;
         dispatch_info->m_base64 = 1;
         if( (trell_hash_strncpy( r, dispatch_info->m_key, form, "key", TRELL_KEYID_MAXLENGTH-1 ) == 0 )
-                || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
-                || (trell_hash_atoi( r, component, request, &dispatch_info->m_height, form, "height", 1 ) == 0 ) )
+            || (trell_hash_atoi( r, component, request, &dispatch_info->m_width, form, "width", 1 ) == 0 )
+            || (trell_hash_atoi( r, component, request, &dispatch_info->m_height, form, "height", 1 ) == 0 )
+            || (trell_hash_atoi( r, component, request, &dispatch_info->m_depth_w, form, "depth_w", 1 ) == 0 )
+            || (trell_hash_atoi( r, component, request, &dispatch_info->m_depth_h, form, "depth_h", 1 ) == 0 ) )
         {
             ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, r, "%s: parsing %s failed.", r->handler, request );
             return HTTP_BAD_REQUEST;

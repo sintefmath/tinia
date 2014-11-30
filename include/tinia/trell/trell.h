@@ -125,6 +125,8 @@ typedef struct {
     enum TrellPixelFormat   pixel_format;
     unsigned int            width;
     unsigned int            height;
+    unsigned int            depth_w;
+    unsigned int            depth_h;
     char                    session_id[TRELL_SESSIONID_MAXLENGTH + 1];
     char                    key[ TRELL_KEYID_MAXLENGTH + 1 ];
     char                    viewer_key_list[ TRELL_VIEWER_KEY_LIST_MAXLENGTH + 1 ];
@@ -170,6 +172,8 @@ typedef struct {
     enum TrellPixelFormat   pixel_format;
     unsigned int            width;
     unsigned int            height;
+    unsigned int            depth_width;
+    unsigned int            depth_height;
 } tinia_msg_image_t;
 
 
