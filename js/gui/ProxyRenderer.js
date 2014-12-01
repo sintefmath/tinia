@@ -124,8 +124,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._initProxyCoverage(2, glContext);
 
         // --- For debugging, start
-        this._frameOutputInterval         = 1000;
-        this._frameMeasureInterval        = 100;
+        this._frameOutputInterval         = 50;
+        this._frameMeasureInterval        = 50;
         this._pausePerFrameInMilliseconds = 0; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
         this._debugSplatCol               = 0;
         this._decayMode                   = 0;
@@ -684,6 +684,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
 
             var t0 = performance.now();
+
             for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", i);
@@ -745,10 +746,11 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }
 
-            // Timing-stuff
-            //            if (this._debugging) {
+            // Timing-stuff ------------------------------------------------------
             if (false) {
-                //            this.gl.flush();
+                // A couple of problems here... 1) Strange things happen whenever the string put to ap_consoleLog changes in length!!! (Tinia-bug?!?!)
+                // 2) This is only timing rendering, and perhaps not even that... Loading/sending/decoding etc. of snapshots is not properly accounted for.
+
                 if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
                     var t1 = performance.now();
                     this._frameTime += t1 - t0;
@@ -773,6 +775,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
                 this.exposedModel.updateElement("ap_cntr", this.exposedModel.getElementValue("ap_cntr") + 1 );
             }
+            // Timing-stuff ------------------------------------------------------
 
             if ( this._useBlending ) {
                 this.gl.colorMask(false, false, false, true);

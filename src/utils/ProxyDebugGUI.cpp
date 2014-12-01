@@ -122,7 +122,7 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addElement<bool>( "ap_mid_texel_sampling", false );              // false best
         model->addAnnotation("ap_mid_texel_sampling", "Sample mid-texel");
         model->addElement<bool>( "ap_use_qt_img_scaling", true );
-        model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled()");
+        model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled() (Qtc)");
         model->addElement<bool>( "ap_set_depth_size_32", false );
         model->addAnnotation("ap_set_depth_size_32", "32");
         model->addElement<bool>( "ap_set_depth_size_64", false );
@@ -140,9 +140,11 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addElement<bool>( "ap_mid_splat_sampling", false );
         model->addAnnotation("ap_mid_splat_sampling", "Sample mid-splat");
         model->addElement<bool>( "ap_simulate_downsampling", false );
-        model->addAnnotation("ap_simulate_downsampling", "Simulate downsampling");
+        model->addAnnotation("ap_simulate_downsampling", "Simulate downsampling (Qtc?)");
         model->addElement<bool>( "ap_bi_linear_filtering", false );
-        model->addAnnotation("ap_bi_linear_filtering", "Bi-linear filtering");
+        model->addAnnotation("ap_bi_linear_filtering", "Bi-linear filtering (Qtc)");
+        model->addElement<bool>( "ap_16_bit_depth", false );
+        model->addAnnotation("ap_16_bit_depth", "16 bit depth");
     }
 }
 
@@ -257,6 +259,7 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));
         mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_simulate_downsampling"));
+        mainGrid->setChild(row, 3, new tinia::model::gui::CheckBox("ap_16_bit_depth"));
         row++;
     }
 

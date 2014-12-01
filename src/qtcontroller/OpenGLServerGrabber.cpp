@@ -89,7 +89,8 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
                                 const std::string& key,
                                 const unsigned depth_w, /* = 0 */
                                 const unsigned depth_h, /* = 0 */
-                                const bool bi_linear_filtering ) /* = false */
+                                const bool bi_linear_filtering, /* = false */
+                                const bool depth16 ) /* = false */
 {
     if( !m_openglIsReady ) {
         setupOpenGL();
@@ -214,12 +215,23 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
             }
         }
 
-        // Depth encoded as 24 bit fixed point values.
-        for (size_t i=0; i<depth_w*depth_h; i++) {
-            float value = tmp_buffer[i];
-            for (size_t j=0; j<3; j++) {
-                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+        if (depth16) {
+            // Depth encoded as 24 bit fixed point values, least significant bits set to 0
+            for (size_t i=0; i<depth_w*depth_h; i++) {
+                float value = tmp_buffer[i];
+                ((unsigned char *)m_buffer)[3*i+0] = (unsigned char)( floor(value*255.0) );
                 value = 255.0*value - floor(value*255.0);
+                ((unsigned char *)m_buffer)[3*i+1] = (unsigned char)( floor(value*255.0) );
+                ((unsigned char *)m_buffer)[3*i+2] = 0;
+            }
+        } else {
+            // Depth encoded as 24 bit fixed point values.
+            for (size_t i=0; i<depth_w*depth_h; i++) {
+                float value = tmp_buffer[i];
+                for (size_t j=0; j<3; j++) {
+                    ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                    value = 255.0*value - floor(value*255.0);
+                }
             }
         }
 
@@ -231,12 +243,23 @@ OpenGLServerGrabber::grabDepth( jobcontroller::OpenGLJob *job,
         // The downsampling will be done after the float->rgb encoding, by QImage.scaled(), so this is a bit dangerous.
         // However, the QImage.scaled() should just downsample without filtering, so it should work. (See ServerThread.cpp)
 
-        // Depth encoded as 24 bit fixed point values.
-        for (size_t i=0; i<width*height; i++) {
-            float value = ((float *)m_buffer)[i];
-            for (size_t j=0; j<3; j++) {
-                ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+        if (depth16) {
+            // Depth encoded as 24 bit fixed point values, least significant bits set to 0
+            for (size_t i=0; i<width*height; i++) {
+                float value = ((float *)m_buffer)[i];
+                ((unsigned char *)m_buffer)[3*i+0] = (unsigned char)( floor(value*255.0) );
                 value = 255.0*value - floor(value*255.0);
+                ((unsigned char *)m_buffer)[3*i+1] = (unsigned char)( floor(value*255.0) );
+                ((unsigned char *)m_buffer)[3*i+2] = 0;
+            }
+        } else {
+            // Depth encoded as 24 bit fixed point values.
+            for (size_t i=0; i<width*height; i++) {
+                float value = ((float *)m_buffer)[i];
+                for (size_t j=0; j<3; j++) {
+                    ((unsigned char *)m_buffer)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                    value = 255.0*value - floor(value*255.0);
+                }
             }
         }
 #if 0

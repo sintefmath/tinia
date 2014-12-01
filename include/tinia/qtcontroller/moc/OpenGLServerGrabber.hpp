@@ -57,9 +57,10 @@ public:
                unsigned int height,
                const std::string &key,
                const unsigned depth_w = 0,                  // The default value 0 means that the size of the canvas (i.e., width x height) will be used for the depth buffer also.
-               const unsigned depth_h = 0,                  // NB! Downscaling may still be perfored, but then by the caller of this routine. This happens when QImage.scaled() is
+               const unsigned depth_h = 0,                  // NB! Downscaling may still be performed, but then by the caller of this routine. This happens when QImage.scaled() is
                                                             // used for downscaling, this happens in ~SnapshotAsTextFetcher(), see ServerThread.cpp.
-               const bool bi_linear_filtering = false );    // Only for our own downscaling, QImage.scaled() will never do filtering.
+               const bool bi_linear_filtering = false,      // Only for our own downscaling, QImage.scaled() will never do filtering.
+               const bool depth16 = false );
 
 private:
     void setupOpenGL();

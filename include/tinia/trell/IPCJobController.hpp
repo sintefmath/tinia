@@ -124,6 +124,7 @@ protected:
                    const size_t        height,
                    const size_t        depth_width,
                    const size_t        depth_height,
+                   const bool          depth16,
                    const std::string&  session,
                    const std::string&  key );
     virtual

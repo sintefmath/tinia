@@ -202,10 +202,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 var response_obj = eval( '(' + response + ')' );
                                 // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
                                 // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
-                                var depthwidth = response_obj[this._key].depthwidth;
-                                // console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
-                                // if ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) )
+                                var depthwidth  = response_obj[this._key].depthwidth;
+                                var depthheight = response_obj[this._key].depthheight;
+                                // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
+                                //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
+                                if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) ) &&
+                                     ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) ) )
                                 {
+                                    // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
+                                    // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
                                     this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
                                     var snaptype = response_obj[this._key].snaptype;
                                     if (response_obj[this._key].snaptype == "jpg") {
@@ -215,8 +220,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
                                     this._snapshotTimings.print();
                                     this._autoSelectSnapshotType(this._snapshotTimings);
-//                                } else {
-//                                    console.log("mismatch in depth size");
+                                } else {
+                                    console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle.");
                                 }
                             })
                         });
@@ -435,20 +440,29 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 var response_obj = eval( '(' + params.response + ')' );
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].view = " + response_obj[this._key].view);
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].proj = " + response_obj[this._key].proj);
-                var depthwidth = response_obj[this._key].depthwidth;
-                // console.log("Receieved depth width: " + depthwidth + ", current model's depth width: " + this._modelLib.getElementValue("ap_depthWidth"));
-                // if ( (response_obj) && ( (depthwidth==this._modelLib.getElementValue("ap_depthWidth")) || (depthwidth==0) ) ) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
+                var depthwidth  = response_obj[this._key].depthwidth;
+                var depthheight = response_obj[this._key].depthheight;
+                // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
+                //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
-                    var tmp = Date.now();
-                    var snaptype = response_obj[this._key].snaptype;
-                    if (response_obj[this._key].snaptype == "jpg") {
-                        snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+                    if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) ) &&
+                         ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) ) )
+                    {
+                        // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
+                        // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
+                        this._setImageFromText( response_obj[this._key].rgb, response_obj[this._key].depth, response_obj[this._key].view, response_obj[this._key].proj );
+                        var tmp = Date.now();
+                        var snaptype = response_obj[this._key].snaptype;
+                        if (response_obj[this._key].snaptype == "jpg") {
+                            snaptype = snaptype + parseInt(this._modelLib.getElementValue("ap_jpgQuality")/10);
+                        }
+                        // console.log("new snaptype = " + snaptype);
+                        this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
+                        this._snapshotTimings.print();
+                        this._autoSelectSnapshotType(this._snapshotTimings);
+                    } else {
+                        console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle.");
                     }
-                    // console.log("new snaptype = " + snaptype);
-                    this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
-                    this._snapshotTimings.print();
-                    this._autoSelectSnapshotType(this._snapshotTimings);
                 }
             } else {
                 console.log("This was not a snapshot. Why are we here at all?");

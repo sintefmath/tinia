@@ -87,6 +87,7 @@ IPCJobController::onGetSnapshot( char*               buffer,
                                  const size_t        height,
                                  const size_t        depth_width,
                                  const size_t        depth_height,
+                                 const bool          depth16,
                                  const std::string&  session,
                                  const std::string&  key )
 {
@@ -228,6 +229,7 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         // These are coming from the url-parameters depth_w and depth_h...
         int depth_width = q->depth_h;
         int depth_height = q->depth_h;
+        // bool depth16 = q->depth16; @@@ should probably be gotten this way, too... for now, fetching from exposed model below...
 
         std::string key_list_string = std::string( q->viewer_key_list );
         std::vector<std::string> key_list;
@@ -271,11 +273,14 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             return sizeof(tinia_msg_t);
         }
 
+        bool depth16;
+        m_model->getElementValue( "ap_16_bit_depth", depth16 );
+
         // Looping through all keys and grabbing GL-content
         char *buf = (char*)msg + sizeof(tinia_msg_image_t);
         for (size_t i=0; i<key_list.size(); i++) {
             key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
-            if ( onGetSnapshot(buf, format, w, h, depth_width, depth_height, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
+            if ( onGetSnapshot(buf, format, w, h, depth_width, depth_height, depth16, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
 #ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok. format = %d", format );

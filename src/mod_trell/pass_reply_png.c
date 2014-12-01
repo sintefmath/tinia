@@ -350,20 +350,13 @@ static int trell_pass_reply_png_bundle( void*          data,
                 {
                     p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
 
-
-
-
-
                     // Is this safe, i.e., just poking into this structure?
                     tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: Setter ny depth size: %d %d",
-                                   msg->depth_width, msg->depth_height );
+//                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+//                                   "trell_pass_reply_png_bundle: ********** Setting new temporary encoding size for possibly reduced depth size: %d %d",
+//                                   msg->depth_width, msg->depth_height );
                     encoder_state->width  = msg->depth_width;   // Now changing to size of depth image
                     encoder_state->height = msg->depth_height;
-
-
-
-
 
                     int rv = trell_png_encode( data, i*canvas_size + padded_img_size , &p );
                     if ( p-png > total_bound ) {
@@ -380,19 +373,12 @@ static int trell_pass_reply_png_bundle( void*          data,
                     }
                     APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
 
-
-
-
                     // Setting size back again for rgb image
-
-
-                    // Is this safe, i.e., just poking into this structure?
-                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: ********** Setter ny encoder-size: %d %d",
-                                   msg->width, msg->height );
-                    encoder_state->width  = msg->width;   // Now changing to size of rgb image
+//                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+//                                   "trell_pass_reply_png_bundle: ********** Resetting encoding size back to rgb image size: %d %d",
+//                                   msg->width, msg->height );
+                    encoder_state->width  = msg->width;   // Now changing back to size of rgb image
                     encoder_state->height = msg->height;
-
-
 
                 }
                 const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + padded_img_size + padded_depth_size );
@@ -407,6 +393,7 @@ static int trell_pass_reply_png_bundle( void*          data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"timestamp\" : \"%s\"", encoder_state->dispatch_info->m_timestamp );
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"snaptype\" : \"%s\"", encoder_state->dispatch_info->m_snaptype );
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depthwidth\" : \"%d\"", encoder_state->dispatch_info->m_depth_w );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depthheight\" : \"%d\"", encoder_state->dispatch_info->m_depth_h );
 
             BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
             if (i<num_of_keys-1) {

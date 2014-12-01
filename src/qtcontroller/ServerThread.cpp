@@ -130,7 +130,7 @@ public:
                 bool tmp;
                 m_job->getExposedModel()->getElementValue( "ap_simulate_downsampling", tmp );
                 if (!tmp) {
-                    std::cout << "scaling to " << m_depth_w << " x " << m_depth_h << std::endl;
+                    // std::cout << "Scaling (QImage) to " << m_depth_w << " x " << m_depth_h << std::endl;
                     img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
                 } else {
                     std::cout << "Not downsampling with QImage.scaled(), we're simulating downsampling in shaders" << std::endl;
@@ -182,10 +182,12 @@ public:
             m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
             bool bi_linear_filtering;
             m_job->getExposedModel()->getElementValue( "ap_bi_linear_filtering", bi_linear_filtering );
+            bool depth16;
+            m_job->getExposedModel()->getElementValue( "ap_16_bit_depth", depth16 );
             if (use_qt_scaling) {
-                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, 0, 0, false, depth16 );
             } else {
-                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h, bi_linear_filtering );
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h, bi_linear_filtering, depth16 );
             }
             
         }
@@ -342,7 +344,7 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
             os << "\"";
         }
         os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\"";
-        os << ",\n\"depthwidth\": " << depth_w << " }";
+        os << ",\n\"depthwidth\": " << depth_w << ",\"depthheight\": " << depth_h << " }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
