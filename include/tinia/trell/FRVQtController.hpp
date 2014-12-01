@@ -15,14 +15,14 @@ class FRVQtController : public QObject
     Q_OBJECT
 public:
     //FRVQtController();
-    explicit FRVQtController( tinia::trell::FRVGLJobController* glJob, QObject* parent = Q_NULLPTR );
+    explicit FRVQtController( tinia::trell::FRVGLJobController* glJob, int port = 8097, QObject* parent = Q_NULLPTR );
     ~FRVQtController();
 
 Q_SIGNALS:
     void closed();
     
 private Q_SLOTS:
-     void onNewConnection();
+    void onNewConnection();
     void processTextMessage(QString message);
     void processBinaryMessage(QByteArray message);
     void socketDisconnected();

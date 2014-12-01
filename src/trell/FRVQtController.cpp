@@ -5,11 +5,12 @@
 #include <QObject>
 
 
-tinia::trell::FRVQtController::FRVQtController( FRVGLJobController* glJob, QObject* parent /*= Q_NULLPTR */ )
+tinia::trell::FRVQtController::FRVQtController( FRVGLJobController* glJob, int port, QObject* parent )
     :
     QObject(parent),
     m_glJob( glJob ),
-    m_port(8081)
+    m_port(port),
+    m_clients()
 {
     m_pWebSocketServer = new QWebSocketServer(QStringLiteral("Echo Server"),
         QWebSocketServer::NonSecureMode, this);
@@ -42,12 +43,14 @@ tinia::trell::FRVQtController::~FRVQtController()
 
 void tinia::trell::FRVQtController::onNewConnection()
 {
+    qDebug() << "got a new connection attempt";
     QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
 
     connect(pSocket, &QWebSocket::textMessageReceived, this, &FRVQtController::processTextMessage);
     connect(pSocket, &QWebSocket::binaryMessageReceived, this, &FRVQtController::processBinaryMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &FRVQtController::socketDisconnected);
-    m_glJob->render();
+    if(m_glJob)
+        m_glJob->render();
 
     m_clients << pSocket;
 
@@ -55,12 +58,16 @@ void tinia::trell::FRVQtController::onNewConnection()
 
 void tinia::trell::FRVQtController::processTextMessage(QString message)
 {
-     m_glJob->render();
+    qDebug() << "got a new text message";
+    if(m_glJob)
+        m_glJob->render();
 }
 
 void tinia::trell::FRVQtController::processBinaryMessage(QByteArray message)
 {
-    m_glJob->render();
+    qDebug() << "got a new binary message";
+    if(m_glJob)
+        m_glJob->render();
 }
 
 void tinia::trell::FRVQtController::socketDisconnected()

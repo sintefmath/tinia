@@ -24,16 +24,17 @@
 
 int main(int argc, char** argv)
 {
+    QCoreApplication blah(argc, argv );
+
     using namespace tinia::example;
     tinia::trell::FRVGLJobController *trellController = new tinia::trell::FRVGLJobController();
 
     CubeJob *testJob = new CubeJob();
     trellController->setJob(testJob);
-
     trellController->run(argc, argv);
-    tinia::trell::FRVQtController* server  = new tinia::trell::FRVQtController( trellController );
-
-    QCoreApplication blah(argc, argv );
+    
+    tinia::trell::FRVQtController* server  = new tinia::trell::FRVQtController( trellController, 9999, nullptr );
+   
     QObject::connect( server, &tinia::trell::FRVQtController::closed, &blah, &QCoreApplication::quit );
     auto retVal = blah.exec();
 
