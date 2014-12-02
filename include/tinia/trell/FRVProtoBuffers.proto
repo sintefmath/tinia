@@ -1,0 +1,13 @@
+package frv;
+
+message imageRequest{
+        repeated float modelView = 1 [packed=true];
+        repeated float projection = 2 [packed=true];
+        optional float zScale = 3;
+}
+
+message imageResponse {
+	required bytes image_bytes = 1;
+        required string imamge_type = 2;
+        optional float zScale = 3;
+}	

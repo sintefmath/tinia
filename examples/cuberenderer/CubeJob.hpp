@@ -33,6 +33,8 @@ public:
     bool renderFrame(const std::string &session, const std::string &key,
                      unsigned int fbo, const size_t width, const size_t height);
 
+    bool renderFrame(unsigned int fbo, const size_t width, const size_t height, float* modelView, float* projection);
+
     /** Database for renderlist.
       *
       * Desktop jobs doesn't usually provide render lists (as they are normally

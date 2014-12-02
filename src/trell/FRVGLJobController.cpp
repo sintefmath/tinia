@@ -66,11 +66,12 @@ FRVGLJobController::init()
     glutInitWindowPosition (1000, 100);
     glutInitContextFlags( GLUT_DEBUG );
     glutCreateWindow ("FRViewJobDebugWindow");    
-    
+    m_width = 1000;
+    m_height = 1000; 
     // --- OpenGL context created, init glew etc. ------------------------------
     glewInit();
 
-    //GLDebugMessages::setupGLDebugMessages();
+    GLDebugMessages::setupGLDebugMessages();
 
     
     GLint major, minor;
@@ -329,8 +330,16 @@ int FRVGLJobController::run( int argc, char** argv )
     return 1;
 }
 
-void FRVGLJobController::render()
+char* FRVGLJobController::render(float* modelView, float* projection )
 {    
+    int rgb = 3;
+    char* buffer;
+    if( modelView != nullptr || projection != nullptr){
+         buffer = (char*)malloc( m_width * m_height * rgb * sizeof(float) );
+    }
+
+    glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    glViewport( 0, 0, m_width, m_height );
     static float rotation = 0.001;
     float prev = 0;
     tinia::example::CubeJob* cj = (tinia::example::CubeJob*) m_openGLJob;
@@ -338,10 +347,14 @@ void FRVGLJobController::render()
     {
         prev = cj->rotate( rotation * i + 0.01 );
 
-        m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
+        m_openGLJob->renderFrame( 0,  m_width, m_height, modelView, projection );
         glutSwapBuffers();
 
     }   
+   // glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+
+    //glReadPixels( 0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+    return buffer;
 }
 
 

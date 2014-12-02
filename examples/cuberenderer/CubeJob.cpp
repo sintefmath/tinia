@@ -153,6 +153,79 @@ bool CubeJob::renderFrame(const std::string &session, const std::string &key, un
     return true;
 }
 
+bool CubeJob::renderFrame( unsigned int fbo, const size_t width, const size_t height, float* modelView, float* projection)
+{
+    glEnable(GL_DEPTH_TEST);
+
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, width, height);
+    // tinia::model::Viewer viewer;
+    //m_model->getElementValue( key, viewer);
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    //glLoadMatrixf( viewer.projectionMatrix.data() );
+    glMatrixMode(GL_MODELVIEW);
+    //glLoadMatrixf( viewer.modelviewMatrix.data() );
+    glLoadIdentity();
+    glRotatef( m_rotation * 57.2957795, 0.001, 0.0, 1.0 );
+
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  0.0, 0.0 );
+    glVertex3f(  0.5, -0.5, -0.5 );
+    glVertex3f(  0.5,  0.5, -0.5 );
+    glVertex3f( -0.5,  0.5, -0.5 );
+    glVertex3f( -0.5, -0.5, -0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(   0.0,  1.0, 0.0 );
+    glVertex3f(  0.5, -0.5, 0.5 );
+    glVertex3f(  0.5,  0.5, 0.5 );
+    glVertex3f( -0.5,  0.5, 0.5 );
+    glVertex3f( -0.5, -0.5, 0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(  .0,  0.0,  1.0 );
+    glVertex3f( 0.5, -0.5, -0.5 );
+    glVertex3f( 0.5,  0.5, -0.5 );
+    glVertex3f( 0.5,  0.5,  0.5 );
+    glVertex3f( 0.5, -0.5,  0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  1.0,  0.0 );
+    glVertex3f( -0.5, -0.5,  0.5 );
+    glVertex3f( -0.5,  0.5,  0.5 );
+    glVertex3f( -0.5,  0.5, -0.5 );
+    glVertex3f( -0.5, -0.5, -0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  0.0,  1.0 );
+    glVertex3f(  0.5,  0.5,  0.5 );
+    glVertex3f(  0.5,  0.5, -0.5 );
+    glVertex3f( -0.5,  0.5, -0.5 );
+    glVertex3f( -0.5,  0.5,  0.5 );
+    glEnd();
+
+    glBegin(GL_POLYGON);
+    glColor3f(   0.0,  1.0,  1.0 );
+    glVertex3f(  0.5, -0.5, -0.5 );
+    glVertex3f(  0.5, -0.5,  0.5 );
+    glVertex3f( -0.5, -0.5,  0.5 );
+    glVertex3f( -0.5, -0.5, -0.5 );
+    glEnd();
+    CHECK_GL;
+
+    return true;
+}
+
+
+
 const tinia::renderlist::DataBase*
 CubeJob::getRenderList( const std::string& session, const std::string& key )
 {

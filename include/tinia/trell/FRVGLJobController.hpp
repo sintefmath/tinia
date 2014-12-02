@@ -53,7 +53,7 @@ public:
     init( );
 
 
-    void render();
+    char* render( float* modelView = nullptr, float* projection = nullptr );
 
 
 protected:

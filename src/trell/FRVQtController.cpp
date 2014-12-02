@@ -4,6 +4,7 @@
 #include <QtWebSockets/QWebSocketServer>
 #include <QObject>
 
+#include "tinia/trell/FRVProtoBuffers.pb.h"
 
 tinia::trell::FRVQtController::FRVQtController( FRVGLJobController* glJob, int port, QObject* parent )
     :
@@ -72,9 +73,26 @@ void tinia::trell::FRVQtController::processTextMessage(QString message)
 
 void tinia::trell::FRVQtController::processBinaryMessage(QByteArray message)
 {
+    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     qDebug() << "got a new binary message";
-    if(m_glJob)
-        m_glJob->render();
+    if( !pClient || &m_glJob){
+        qDebug() << "Major problem, we are not ready for messages yet. Please try again later!";
+        return;
+    }
+    
+   
+
+    frv::imageRequest ir;
+    frv::imageResponse response;
+    ir.ParseFromString( (std::string)message );
+    if( ir.has_zscale() ){
+        qDebug() << "it has z-scale, something got through and that was: " << ir.zscale();
+    }
+
+    char* results =  m_glJob->render();
+    response.set_allocated_image_bytes( (std::string*)results );
+    pClient->sendBinaryMessage( response.SerializeAsString().c_str() );
+    
 }
 
 void tinia::trell::FRVQtController::socketDisconnected()
