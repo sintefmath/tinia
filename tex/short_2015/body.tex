@@ -63,6 +63,28 @@
 
 
 
+%-------------------------------------------------------------------------
+\section{Notes}
+
+\begin{itemize}
+
+\item We restrict ourselves to discuss ``splat sets'' in this paper. (Nevne der det
+tas frem andre alternativer)
+
+\item
+Husk aa faa med det viktige i at vi faar oekt serverkapasiteten til aa
+serve flere klienter ogsaa!
+
+\item
+``server-image'' i steden for ``server-rendered image'' for aa spare plass?
+
+\item received stavekontroll
+
+\item Hvor passer det aa faa inn 1) bilde og 2) tekst om FRView?
+
+\item Maa ta et lite soek paa prior art innen omraadet
+
+\end{itemize}
 
 %-------------------------------------------------------------------------
 \section{Introduction}
@@ -296,45 +318,60 @@ provides a scaling factor so that ``overlap=1'' produces non-overlapping but
 covering splats when $M_c=M_s$, \ie, the client does no transformation of the
 proxy model.
 
-We compute $\sv_{dx}$ and $\sv_{dy}$ by sampling proxy model positions and
+% After mult by proj matrix: clip coo, range of (x, y, z) = [-w, w]^3
+% After persp division: ndc [-1, 1]^3
+% After viewport transf: window coordinates
+% (Range [vp[0] vp[1]] x [[vp[2] vp[3]] x [0, 1] ?)
+
+We compute $\sv_{dx}$ and $\sv_{dy}$ by evaluating proxy model positions and
 performing the perspective division and transformation into window coordinates
-in the vertex shader.
-Let
+in the vertex shader. Let proxy model positions corresponding to three corners
+of a quadrilateral splat in clip coordinates be
+given by
 \[
-  \text{pos} =
+  \pv =
   U { \small \begin{pmatrix} x \\ y \\ d \\ 1 \end{pmatrix} },
-  \text{pos}_{\Delta x} =
+  \pv_{x+\Delta x} =
   U { \small \begin{pmatrix} x+\Delta x \\ y \\ d_{\Delta x} \\ 1 \end{pmatrix} }
   \text{and}\, \, \, 
-  \text{pos}_{\Delta y} =
+  \pv_{y+\Delta y} =
   U { \small \begin{pmatrix} x \\ y+\Delta y \\ d_{\Delta y} \\ 1 \end{pmatrix} },
 \]
 where $d = 2\text{depthTex}(x, y) - 1$, $d_{\Delta x} =
 2\text{depthTex}(x+\Delta x, y) - 1$, and $d_{\Delta y} = 2\text{depthTex}(x,
-y+\Delta y) - 1$ are depths sampled from the received depth buffer and transformed
-to $[-1, 1]$. 
+y+\Delta y) - 1$ are depths sampled from the received depth buffer and
+transformed to $[-1, 1]$. By combining this with a $w$-component set to one, we
+have in effect done a perspective division, so that the right-hand side vertices
+are in clip space, suitable for multiplication with $U$.
 
 We use $\Delta = \Delta x = \Delta y = ...$, so that ...
 
-Then, for the 2D vectors spanning the splats in client window coordinates, we
-get
+\textbf{ Litt om valgene vi kan gjoere for Delta}
+
+This again leaves us $\pv$, $\pv_{x+\Delta x}$ and $\pv_{y+\Delta y}$ in clip
+coordinates, and after perspective division and viewport transformation, we get
+corresponding window coordinates $\sv$, $\sv_{x+\Delta x}$ and $\sv_{y+\Delta
+y}$, which we can subtract to obtain 2D vectors spanning the splat,
 \[
   \sv_{\Delta x} =
-    \frac{\text{viewport width}}{2\Delta x} \left(
-        \frac{\text{pos}_{\Delta x}.xy}{\text{pos}_{\Delta x}.w} -
-        \frac{\text{pos}.xy}{\text{pos}.w}
+  \sv_{x+\Delta x} - \sv =
+    \frac{\text{width}}{2\Delta x} \left(
+        \frac{\pv_{x+\Delta x}.xy}{\pv_{x+\Delta x}.w} -
+        \frac{\pv.xy}{\pv.w}
     \right),
 \]
 and
 \[
   \sv_{\Delta y} =
-    \frac{\text{viewport width}}{2\Delta y} \left(
-        \frac{\text{pos}_{\Delta y}.xy}{\text{pos}_{\Delta y}.w} -
-        \frac{\text{pos}.xy}{\text{pos}.w}
+  \sv_{y+\Delta y} - \sv =
+    \frac{\text{height}}{2\Delta y} \left(
+        \frac{\pv_{y+\Delta y}.xy}{\pv_{y+\Delta y}.w} -
+        \frac{\pv.xy}{\pv.w}
     \right),
 \]
 where we have used the ``shader notation'' to extract 2D vectors and scalars
-from the 4D vectors.
+from the 4D vectors, and $\text{width}$ and $\text{height}$ are the viewport
+width and height, respectively.
 
 Then, ...
 
@@ -356,62 +393,166 @@ odd, see Figure~\ref{fig:LargeSplatsOnCorners}.
            for a certain transformation.}
 \end{figure}
 
+The problem with this, is that the geometry is not planar, and our simple texture
+coordinate transformation will produce the wrong result. Some ways to remedy
+this, is to choose smaller (and more) splats, detect the problem and discard
+such splats, or introduce more complex texture transformations. Since the proxy
+geometry in principle is to be short-lived, and only a temporary geometry to be
+rendered before the server-rendered image can be receieved, we have chosen the
+first alternative. Discarding such splats may offer a good alternative,
+especially when combining several proxy geometries, where the union of retained
+splats increases the likelihood of all geometry parts being covered. Note also
+that implementing a more sophisticated texture coordinate transformation may
+actually amount to performing the same work as for more and smaller splats. Or,
+in other words, using more and smaller splats may be regarded as a better
+texture transform implementation.
+
+
 %-------------------------------------------------------------------------
 \subsubsection{Splat depth fragments}
 
-%-------------------------------------------------------------------------
+For larger splats, covering many fragments, it makes sense to also compute and
+use depth fragments. This will improve the usage of more proxy models
+simultaneously, since the risk of a splat with a not very representative depth
+value covers another and better splat is reduced. The ``intra-splat'' depth
+values can easily be fetched from the depth image, just as the texture is looked
+up for color. One problem is that many thin clients may not support this, in
+WebGL, the ``frag depth'' feature is an extension, which may not be supported
+everywhere.
 
 
 %------------------------------------------------------------------------
 \subsection{Splat set replacement algorithms}
 \label{sec:proxyModelReplacement}
 
-In the case of splat sets: Replacement algorithms
+In this paper we concern ourselves with proxy models defined as sets of
+splats. Since each splat set is the product of one instance of a server-rendered
+image, depth buffer and viewing parameters, it makes sense to retain more than
+one such model on the client. By doing this, the client may combine them, in
+order to provide renderings for viewing parameters very different from the last
+one received. One can imagine a plethora of splat set replacement algorithms, we
+have tested two approaches which both works well; both retain a constant number
+of proxy models. The first algorithm is to replace the one with a viewing
+direction differing the most from the newly received model. The second simply
+replaces the oldest one in store. The third replaces a proxy model $j$ if the
+replacement results in the following objective function being reduced,
+\[
+  \text{coverage}_j = 
+  \sum_{i=1, i\neq j}^n 
+    \angle(\textbf{camdir}_i, \textbf{new camdir} )^2,
+\]
+where $\textbf{camdir}$ is the direction in which the camera was looking for the
+generation of that particular proxy model.
+
+There are some issues to consider with respect to panning and zooming that we
+will not discuss here due to the limited space available.  All of these model
+replacement algorithms work decently well.
+
+
 
 %-------------------------------------------------------------------------
 \subsection{Dynamic/heuristic method selection}
+
+Since the main purpose of the automatically generated proxy model is to
+facilitate a client-rendered image while waiting for one from the server for
+increased interactivity, it is important that the process of generating and
+sending proxy model data from the server itself is not hold up more than
+necessary. There are mainly three sources of delay (\textbf{passer aa nevne
+tidligere?}) for server-rendered images to the client; high
+latency, low bandwidth, and slow server-rendering itself.
+
+In the first case, it seems prudent to have a better proxy model on the client,
+that can be used for longer time and for interactivity resulting in viewing
+parameters deviating more from the last received server-rendered image. In the
+two other cases, it is important for the proxy model generation/transmission to
+be quicker, both in order to get the proxy model to the client and keep from
+delaying the server-image more than necessary.
+
+To take care of this, we have adopted an adaptive specification of
+proxy model data from the server. This involves a more light-weight image (lossy
+JPG-compression with adaptive quality control) while the user is interacting
+with the client, as well as a reduced resolution of the depth buffer sent from
+the server. See Figure~\ref{fig:adapativeProxyModels} for examples of low- and
+high-quality proxy models.
+
+\begin{figure}[htb]
+  \centering
+  \subfigure[Low quality (tenker her jpg med q=0 og daarlig dybdebuffer, faa
+  splats kanskje]{
+    \input{fig3a.tex}
+  }
+  \subfigure[High quality (png med maks av alt, mange splats)]{
+    \input{fig3b.tex}
+  }
+  \caption{\label{fig:adapativeProxyModels}
+           Proxy models adaptively adjusted to available bandwidth and server
+           capacity.}
+\end{figure}
+
 
 
 %-------------------------------------------------------------------------
 \section{Results and discussion}
 
+We have tested the algorithms discussed in the Tinia framework, which is a
+programming framework for setting up and managing a client/server based
+interactive OpenGL-based visualization application. The client is
+Javascript/WebGL-based and runs in one of several possible browsers, \eg Chrome
+or Firefox. This client communicates over tcp/ip, using either http or
+websockets, with a server running as an Apache module.
+
+The automatic proxy geometry implementation is fully invisible to the
+application, meaning that all existing applications immediately will have the
+feature available. We have tested the algorithm on several smaller test cases,
+but also on a larger oild reservoir viewer.
+
+This viewer utilizes several GLSL shaders to render reservoir cells and
+boundaries, tubular wells etc., and operates in general on a geometric model
+that is not trivial to reduce in complexity. The model is typically also very
+large, meaning that rendering on a thin client is prohibitive. With the
+automatic proxy geometry, we can obtain interactive frame rates with a bad
+connection from a very lightweight client to the server. For a comparison of a
+server-rendered image and a client-rendered proxy model, see
+Figure~\ref{fig:FRView}.
+
+\begin{figure}[htb]
+  \centering
+  \subfigure[Server-rendered]{
+    \input{fig3a.tex}
+  }
+  \subfigure[Client-rendered proxy model]{
+    \input{fig3b.tex}
+  }
+  \caption{\label{fig:FRView}
+           The oil reservoir viewer FRView}
+\end{figure}
+
 
 %-------------------------------------------------------------------------
 \section{Conclusion and future work}
 
+The single most attractive feature of such an automatic proxy geometry as
+described, is exactly the automated generation. It means that problems with
+downscaling, sending and rendering existing geometries is bypassed
+altogether. The Tinia framework with which we have demonstrated this, is a
+framework for setting up and managing a client/server based interactive OpenGL
+based visualization application. The automatic proxy geometry implementation is
+fully invisible to the application, meaning that all existing applications
+immediately will have the feature available.
 
-
-%-------------------------------------------------------------------------
-\subsection{References}
-
-List all bibliographical references in 9-point Times, single-spaced, at the
-end of your paper in alphabetical order. When referenced in the text, enclose
-the citation index in square brackets, for example~\cite{Lous90}. Where
-appropriate, include the name(s) of editors of referenced books.
-
-For your references please use the following algorithm:
-\begin{itemize} 
-\item \textbf{one} author: first 3 chars plus year -- 
-      e.g.\ \cite{Lous90}
-\item \textbf{two}, \textbf{three} or \textbf{four} authors: first char
-      of each family name plus year --  e.g.\ \cite{Fellner-Helmberg93} 
-      or \cite{Kobbelt97-USHDR} or \cite{Lafortune97-NARF}
-\item \textbf{more than 4} authors: first char of family name from 
-      first 3 authors followed by a '*' followed by the year -- 
-      e.g.\ \cite{Buhmann:1998:DCQ} or \cite{FolDamFeiHug.etal93} 
+There are several directions in which we would like to follow up and improve
+this concept,
+\begin{itemize}
+\item \textbf{Proxy model replacement algorithms} The goal is to obtain a good view with
+all relevant viewing parameters on the client, with the help of a minimal set of
+proxy models.
+\item \textbf{Grid-based proxy geometry} Instead of a set of ``splats'', one can
+envision a spatially partioned grid, for instance containing a distance field,
+with the geometry as an iso-surface.
 \end{itemize}
 
-For BibTeX users a style file \ \texttt{eg-alpha.bst} \ is available which
-uses the above algorithm.
 
 
-
-
-%-------------------------------------------------------------------------
-\subsection{Conclusions}
-
-Please direct any questions to the production editor in charge of
-these proceedings.
 
 %-------------------------------------------------------------------------
 
