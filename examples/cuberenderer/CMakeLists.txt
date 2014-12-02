@@ -1,5 +1,5 @@
-SET( cube_qt_job_SOURCES "CubeJob.cpp" "main.cpp" "echo.cpp"  )
-SET( cube_job_HEADERS "CubeJob.hpp" "utils.hpp" "echo.hpp" )
+SET( cube_qt_job_SOURCES "CubeJob.cpp" "main.cpp" )
+SET( cube_job_HEADERS "CubeJob.hpp" "utils.hpp" )
 IF(Tinia_DESKTOP)
   ADD_EXECUTABLE(cube_qt_job
     ${cube_qt_job_SOURCES}

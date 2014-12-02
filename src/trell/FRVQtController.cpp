@@ -59,6 +59,13 @@ void tinia::trell::FRVQtController::onNewConnection()
 void tinia::trell::FRVQtController::processTextMessage(QString message)
 {
     qDebug() << "got a new text message";
+
+    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
+
+    if ( pClient ) {
+        pClient->sendTextMessage("frv " + message);
+    }
+
     if(m_glJob)
         m_glJob->render();
 }

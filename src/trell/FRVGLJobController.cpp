@@ -70,7 +70,7 @@ FRVGLJobController::init()
     // --- OpenGL context created, init glew etc. ------------------------------
     glewInit();
 
-    GLDebugMessages::setupGLDebugMessages();
+    //GLDebugMessages::setupGLDebugMessages();
 
     
     GLint major, minor;
@@ -324,7 +324,7 @@ int FRVGLJobController::run( int argc, char** argv )
     //call glutMainloop.
     m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
     glutSwapBuffers();
-    render();
+
 
     return 1;
 }
@@ -334,12 +334,13 @@ void FRVGLJobController::render()
     static float rotation = 0.001;
     float prev = 0;
     tinia::example::CubeJob* cj = (tinia::example::CubeJob*) m_openGLJob;
-    for (int i = 0; i < 150; i++ )
+    for (int i = 0; i < 1; i++ )
     {
-        prev = cj->rotate( rotation * i );
+        prev = cj->rotate( rotation * i + 0.01 );
 
         m_openGLJob->renderFrame( "blah", "viewer", 0, 512, 512 );
         glutSwapBuffers();
+
     }   
 }
 

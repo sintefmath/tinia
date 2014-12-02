@@ -60,7 +60,13 @@ public:
            unsigned int fbo,
            const size_t        width,
            const size_t        height )=0;
-
+    
+    virtual
+    bool renderFrame( unsigned int        fbo,
+                      const size_t        width,
+                      const size_t        height,
+                      float*              modelView,
+                      float*              projection){ return true;};
 
 
     /** Let the controller access the render list for a particular session and key.
