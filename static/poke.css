@@ -33,3 +33,48 @@ th.my {
     color:white;
     text-align:left;
 }
+
+
+
+/** For the demo table (borrowed from the cloudflow project) */
+
+table.demotable {
+
+    font-size: 18pt;
+    border-collapse: collapse;
+}
+/** List app page */
+.demotable td  {
+    vertical-align: middle;
+    margin: 0;
+    padding: 10px;
+    padding-left: 30px;
+   /* border: 2px solid gray;*/
+}
+
+
+.demotable .wftype {
+    margin-top: auto;
+    margin-bottom: auto;
+    float: right;
+    display: block;
+}
+
+.demotable img {
+    float: left;
+}
+.demotable tr:hover {
+    cursor: default;
+    color: white;
+    background-color: #5184c4;
+}
+.demotable td.clickable:hover {
+	cursor: pointer;
+}
+
+.demotable tr:hover:first-child {
+     cursor: default;
+     color: inherit;
+    background-color: white;
+}
+
