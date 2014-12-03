@@ -65,7 +65,8 @@ FRVGLJobController::init()
     glutInitWindowSize (1000, 1000);
     glutInitWindowPosition (1000, 100);
     glutInitContextFlags( GLUT_DEBUG );
-    glutCreateWindow ("FRViewJobDebugWindow");    
+    glutCreateWindow ("FRViewJobDebugWindow");   
+    
     m_width = 1000;
     m_height = 1000; 
     // --- OpenGL context created, init glew etc. ------------------------------
@@ -88,9 +89,28 @@ FRVGLJobController::init()
 
 
     //set up the FBO that we will be rendering to
-    m_fbo = 0; //direct to screen right now please.
-
-
+    //glGenFramebuffers( 1, &m_fbo );
+    //glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+    //GLuint fboTex;
+    //glGenTextures( 1, &fboTex );
+    //glBindTexture( GL_TEXTURE_2D, fboTex );
+    //glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0 );
+    //glBindTexture( GL_TEXTURE_2D, 0 );
+    //
+    //glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTex, 0 );
+    ////glBind
+    //if(checkFramebufferCompleteness()){
+    //    glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 114, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Framebuffer complete, continuing with offscreen rendering.");
+    //}else{
+    //    glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 114, GL_DEBUG_SEVERITY_HIGH, -1, "Framebuffer incomplete, can not work properly. Using m_fbo = 0; for now.");
+    //   
+    //}
+    m_fbo = 0;
+    //glBindFramebuffer( GL_FRAMEBUFFER, 0);
    
     
     //initialise OpenGL job

@@ -170,7 +170,7 @@ bool CubeJob::renderFrame( unsigned int fbo, const size_t width, const size_t he
     glMatrixMode(GL_MODELVIEW);
     //glLoadMatrixf( viewer.modelviewMatrix.data() );
     glLoadIdentity();
-    glRotatef( m_rotation * 57.2957795, 0.001, 0.0, 1.0 );
+    glRotatef( m_rotation * 57.2957795, 0.25, 1.0, 0.2 );
 
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
@@ -181,7 +181,7 @@ bool CubeJob::renderFrame( unsigned int fbo, const size_t width, const size_t he
     glEnd();
 
     glBegin(GL_POLYGON);
-    glColor3f(   0.0,  1.0, 0.0 );
+    glColor3f(   1.0,  1.0, 1.0 );
     glVertex3f(  0.5, -0.5, 0.5 );
     glVertex3f(  0.5,  0.5, 0.5 );
     glVertex3f( -0.5,  0.5, 0.5 );
