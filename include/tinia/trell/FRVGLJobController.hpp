@@ -52,8 +52,10 @@ public:
     bool
     init( );
 
+    int getWidth() const { return m_width; }
+    int getHeight() const { return m_height; }
 
-    char* render( float* modelView = nullptr, float* projection = nullptr );
+    unsigned char* render( float* modelView = nullptr, float* projection = nullptr );
 
 
 protected:

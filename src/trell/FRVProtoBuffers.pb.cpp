@@ -56,7 +56,7 @@ void protobuf_AssignDesc_FRVProtoBuffers_2eproto() {
   imageResponse_descriptor_ = file->message_type(1);
   static const int imageResponse_offsets_[3] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(imageResponse, image_bytes_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(imageResponse, imamge_type_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(imageResponse, image_type_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(imageResponse, zscale_),
   };
   imageResponse_reflection_ =
@@ -106,9 +106,9 @@ void protobuf_AddDesc_FRVProtoBuffers_2eproto() {
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\025FRVProtoBuffers.proto\022\003frv\"M\n\014imageReq"
     "uest\022\025\n\tmodelView\030\001 \003(\002B\002\020\001\022\026\n\nprojectio"
-    "n\030\002 \003(\002B\002\020\001\022\016\n\006zScale\030\003 \001(\002\"I\n\rimageResp"
-    "onse\022\023\n\013image_bytes\030\001 \002(\014\022\023\n\013imamge_type"
-    "\030\002 \002(\t\022\016\n\006zScale\030\003 \001(\002", 182);
+    "n\030\002 \003(\002B\002\020\001\022\016\n\006zScale\030\003 \001(\002\"H\n\rimageResp"
+    "onse\022\023\n\013image_bytes\030\001 \002(\014\022\022\n\nimage_type\030"
+    "\002 \002(\t\022\016\n\006zScale\030\003 \001(\002", 181);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "FRVProtoBuffers.proto", &protobuf_RegisterTypes);
   imageRequest::default_instance_ = new imageRequest();
@@ -469,7 +469,7 @@ void imageRequest::Swap(imageRequest* other) {
 
 #ifndef _MSC_VER
 const int imageResponse::kImageBytesFieldNumber;
-const int imageResponse::kImamgeTypeFieldNumber;
+const int imageResponse::kImageTypeFieldNumber;
 const int imageResponse::kZScaleFieldNumber;
 #endif  // !_MSC_VER
 
@@ -493,7 +493,7 @@ void imageResponse::SharedCtor() {
   ::google::protobuf::internal::GetEmptyString();
   _cached_size_ = 0;
   image_bytes_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  imamge_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  image_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   zscale_ = 0;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
@@ -507,8 +507,8 @@ void imageResponse::SharedDtor() {
   if (image_bytes_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     delete image_bytes_;
   }
-  if (imamge_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    delete imamge_type_;
+  if (image_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete image_type_;
   }
   if (this != default_instance_) {
   }
@@ -542,9 +542,9 @@ void imageResponse::Clear() {
         image_bytes_->clear();
       }
     }
-    if (has_imamge_type()) {
-      if (imamge_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-        imamge_type_->clear();
+    if (has_image_type()) {
+      if (image_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+        image_type_->clear();
       }
     }
     zscale_ = 0;
@@ -571,20 +571,20 @@ bool imageResponse::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
-        if (input->ExpectTag(18)) goto parse_imamge_type;
+        if (input->ExpectTag(18)) goto parse_image_type;
         break;
       }
 
-      // required string imamge_type = 2;
+      // required string image_type = 2;
       case 2: {
         if (tag == 18) {
-         parse_imamge_type:
+         parse_image_type:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_imamge_type()));
+                input, this->mutable_image_type()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-            this->imamge_type().data(), this->imamge_type().length(),
+            this->image_type().data(), this->image_type().length(),
             ::google::protobuf::internal::WireFormat::PARSE,
-            "imamge_type");
+            "image_type");
         } else {
           goto handle_unusual;
         }
@@ -638,14 +638,14 @@ void imageResponse::SerializeWithCachedSizes(
       1, this->image_bytes(), output);
   }
 
-  // required string imamge_type = 2;
-  if (has_imamge_type()) {
+  // required string image_type = 2;
+  if (has_image_type()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->imamge_type().data(), this->imamge_type().length(),
+      this->image_type().data(), this->image_type().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "imamge_type");
+      "image_type");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->imamge_type(), output);
+      2, this->image_type(), output);
   }
 
   // optional float zScale = 3;
@@ -670,15 +670,15 @@ void imageResponse::SerializeWithCachedSizes(
         1, this->image_bytes(), target);
   }
 
-  // required string imamge_type = 2;
-  if (has_imamge_type()) {
+  // required string image_type = 2;
+  if (has_image_type()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->imamge_type().data(), this->imamge_type().length(),
+      this->image_type().data(), this->image_type().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE,
-      "imamge_type");
+      "image_type");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->imamge_type(), target);
+        2, this->image_type(), target);
   }
 
   // optional float zScale = 3;
@@ -705,11 +705,11 @@ int imageResponse::ByteSize() const {
           this->image_bytes());
     }
 
-    // required string imamge_type = 2;
-    if (has_imamge_type()) {
+    // required string image_type = 2;
+    if (has_image_type()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
-          this->imamge_type());
+          this->image_type());
     }
 
     // optional float zScale = 3;
@@ -747,8 +747,8 @@ void imageResponse::MergeFrom(const imageResponse& from) {
     if (from.has_image_bytes()) {
       set_image_bytes(from.image_bytes());
     }
-    if (from.has_imamge_type()) {
-      set_imamge_type(from.imamge_type());
+    if (from.has_image_type()) {
+      set_image_type(from.image_type());
     }
     if (from.has_zscale()) {
       set_zscale(from.zscale());
@@ -778,7 +778,7 @@ bool imageResponse::IsInitialized() const {
 void imageResponse::Swap(imageResponse* other) {
   if (other != this) {
     std::swap(image_bytes_, other->image_bytes_);
-    std::swap(imamge_type_, other->imamge_type_);
+    std::swap(image_type_, other->image_type_);
     std::swap(zscale_, other->zscale_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);

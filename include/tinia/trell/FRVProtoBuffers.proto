@@ -8,6 +8,6 @@ message imageRequest{
 
 message imageResponse {
 	required bytes image_bytes = 1;
-        required string imamge_type = 2;
+        required string image_type = 2;
         optional float zScale = 3;
 }	

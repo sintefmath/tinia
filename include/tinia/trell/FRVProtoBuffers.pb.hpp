@@ -210,17 +210,17 @@ class imageResponse : public ::google::protobuf::Message {
   inline ::std::string* release_image_bytes();
   inline void set_allocated_image_bytes(::std::string* image_bytes);
 
-  // required string imamge_type = 2;
-  inline bool has_imamge_type() const;
-  inline void clear_imamge_type();
-  static const int kImamgeTypeFieldNumber = 2;
-  inline const ::std::string& imamge_type() const;
-  inline void set_imamge_type(const ::std::string& value);
-  inline void set_imamge_type(const char* value);
-  inline void set_imamge_type(const char* value, size_t size);
-  inline ::std::string* mutable_imamge_type();
-  inline ::std::string* release_imamge_type();
-  inline void set_allocated_imamge_type(::std::string* imamge_type);
+  // required string image_type = 2;
+  inline bool has_image_type() const;
+  inline void clear_image_type();
+  static const int kImageTypeFieldNumber = 2;
+  inline const ::std::string& image_type() const;
+  inline void set_image_type(const ::std::string& value);
+  inline void set_image_type(const char* value);
+  inline void set_image_type(const char* value, size_t size);
+  inline ::std::string* mutable_image_type();
+  inline ::std::string* release_image_type();
+  inline void set_allocated_image_type(::std::string* image_type);
 
   // optional float zScale = 3;
   inline bool has_zscale() const;
@@ -233,8 +233,8 @@ class imageResponse : public ::google::protobuf::Message {
  private:
   inline void set_has_image_bytes();
   inline void clear_has_image_bytes();
-  inline void set_has_imamge_type();
-  inline void clear_has_imamge_type();
+  inline void set_has_image_type();
+  inline void clear_has_image_type();
   inline void set_has_zscale();
   inline void clear_has_zscale();
 
@@ -243,7 +243,7 @@ class imageResponse : public ::google::protobuf::Message {
   ::google::protobuf::uint32 _has_bits_[1];
   mutable int _cached_size_;
   ::std::string* image_bytes_;
-  ::std::string* imamge_type_;
+  ::std::string* image_type_;
   float zscale_;
   friend void  protobuf_AddDesc_FRVProtoBuffers_2eproto();
   friend void protobuf_AssignDesc_FRVProtoBuffers_2eproto();
@@ -423,80 +423,80 @@ inline void imageResponse::set_allocated_image_bytes(::std::string* image_bytes)
   // @@protoc_insertion_point(field_set_allocated:frv.imageResponse.image_bytes)
 }
 
-// required string imamge_type = 2;
-inline bool imageResponse::has_imamge_type() const {
+// required string image_type = 2;
+inline bool imageResponse::has_image_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void imageResponse::set_has_imamge_type() {
+inline void imageResponse::set_has_image_type() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void imageResponse::clear_has_imamge_type() {
+inline void imageResponse::clear_has_image_type() {
   _has_bits_[0] &= ~0x00000002u;
 }
-inline void imageResponse::clear_imamge_type() {
-  if (imamge_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    imamge_type_->clear();
+inline void imageResponse::clear_image_type() {
+  if (image_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    image_type_->clear();
   }
-  clear_has_imamge_type();
+  clear_has_image_type();
 }
-inline const ::std::string& imageResponse::imamge_type() const {
-  // @@protoc_insertion_point(field_get:frv.imageResponse.imamge_type)
-  return *imamge_type_;
+inline const ::std::string& imageResponse::image_type() const {
+  // @@protoc_insertion_point(field_get:frv.imageResponse.image_type)
+  return *image_type_;
 }
-inline void imageResponse::set_imamge_type(const ::std::string& value) {
-  set_has_imamge_type();
-  if (imamge_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    imamge_type_ = new ::std::string;
+inline void imageResponse::set_image_type(const ::std::string& value) {
+  set_has_image_type();
+  if (image_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    image_type_ = new ::std::string;
   }
-  imamge_type_->assign(value);
-  // @@protoc_insertion_point(field_set:frv.imageResponse.imamge_type)
+  image_type_->assign(value);
+  // @@protoc_insertion_point(field_set:frv.imageResponse.image_type)
 }
-inline void imageResponse::set_imamge_type(const char* value) {
-  set_has_imamge_type();
-  if (imamge_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    imamge_type_ = new ::std::string;
+inline void imageResponse::set_image_type(const char* value) {
+  set_has_image_type();
+  if (image_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    image_type_ = new ::std::string;
   }
-  imamge_type_->assign(value);
-  // @@protoc_insertion_point(field_set_char:frv.imageResponse.imamge_type)
+  image_type_->assign(value);
+  // @@protoc_insertion_point(field_set_char:frv.imageResponse.image_type)
 }
-inline void imageResponse::set_imamge_type(const char* value, size_t size) {
-  set_has_imamge_type();
-  if (imamge_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    imamge_type_ = new ::std::string;
+inline void imageResponse::set_image_type(const char* value, size_t size) {
+  set_has_image_type();
+  if (image_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    image_type_ = new ::std::string;
   }
-  imamge_type_->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:frv.imageResponse.imamge_type)
+  image_type_->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:frv.imageResponse.image_type)
 }
-inline ::std::string* imageResponse::mutable_imamge_type() {
-  set_has_imamge_type();
-  if (imamge_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    imamge_type_ = new ::std::string;
+inline ::std::string* imageResponse::mutable_image_type() {
+  set_has_image_type();
+  if (image_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    image_type_ = new ::std::string;
   }
-  // @@protoc_insertion_point(field_mutable:frv.imageResponse.imamge_type)
-  return imamge_type_;
+  // @@protoc_insertion_point(field_mutable:frv.imageResponse.image_type)
+  return image_type_;
 }
-inline ::std::string* imageResponse::release_imamge_type() {
-  clear_has_imamge_type();
-  if (imamge_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+inline ::std::string* imageResponse::release_image_type() {
+  clear_has_image_type();
+  if (image_type_ == &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
     return NULL;
   } else {
-    ::std::string* temp = imamge_type_;
-    imamge_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    ::std::string* temp = image_type_;
+    image_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
     return temp;
   }
 }
-inline void imageResponse::set_allocated_imamge_type(::std::string* imamge_type) {
-  if (imamge_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
-    delete imamge_type_;
+inline void imageResponse::set_allocated_image_type(::std::string* image_type) {
+  if (image_type_ != &::google::protobuf::internal::GetEmptyStringAlreadyInited()) {
+    delete image_type_;
   }
-  if (imamge_type) {
-    set_has_imamge_type();
-    imamge_type_ = imamge_type;
+  if (image_type) {
+    set_has_image_type();
+    image_type_ = image_type;
   } else {
-    clear_has_imamge_type();
-    imamge_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    clear_has_image_type();
+    image_type_ = const_cast< ::std::string*>(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   }
-  // @@protoc_insertion_point(field_set_allocated:frv.imageResponse.imamge_type)
+  // @@protoc_insertion_point(field_set_allocated:frv.imageResponse.image_type)
 }
 
 // optional float zScale = 3;

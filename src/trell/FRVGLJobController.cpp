@@ -330,13 +330,13 @@ int FRVGLJobController::run( int argc, char** argv )
     return 1;
 }
 
-char* FRVGLJobController::render(float* modelView, float* projection )
+unsigned char* FRVGLJobController::render(float* modelView, float* projection )
 {    
     int rgb = 3;
-    char* buffer;
-    if( modelView != nullptr || projection != nullptr){
-         buffer = (char*)malloc( m_width * m_height * rgb * sizeof(float) );
-    }
+    unsigned char* buffer;
+    //if( modelView != nullptr || projection != nullptr){
+         buffer = (unsigned char*)malloc( m_width * m_height * rgb * sizeof(float) );
+   // }
 
     glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
     glViewport( 0, 0, m_width, m_height );
@@ -348,12 +348,14 @@ char* FRVGLJobController::render(float* modelView, float* projection )
         prev = cj->rotate( rotation * i + 0.01 );
 
         m_openGLJob->renderFrame( 0,  m_width, m_height, modelView, projection );
-        glutSwapBuffers();
+        //glutSwapBuffers();
 
     }   
    // glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-
-    //glReadPixels( 0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+    
+    
+    glReadPixels( 0, 0, m_width, m_height, GL_RGB, GL_UNSIGNED_BYTE, buffer );
+    glutSwapBuffers();
     return buffer;
 }
 

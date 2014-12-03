@@ -3,8 +3,10 @@
 #include <QtWebSockets/QWebSocket>
 #include <QtWebSockets/QWebSocketServer>
 #include <QObject>
-
-#include "tinia/trell/FRVProtoBuffers.pb.h"
+#include <QImage>
+#include <QBuffer>
+#include <QIODevice>
+#include "tinia/trell/FRVProtoBuffers.pb.hpp"
 
 tinia::trell::FRVQtController::FRVQtController( FRVGLJobController* glJob, int port, QObject* parent )
     :
@@ -50,8 +52,6 @@ void tinia::trell::FRVQtController::onNewConnection()
     connect(pSocket, &QWebSocket::textMessageReceived, this, &FRVQtController::processTextMessage);
     connect(pSocket, &QWebSocket::binaryMessageReceived, this, &FRVQtController::processBinaryMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &FRVQtController::socketDisconnected);
-    if(m_glJob)
-        m_glJob->render();
 
     m_clients << pSocket;
 
@@ -63,12 +63,30 @@ void tinia::trell::FRVQtController::processTextMessage(QString message)
 
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
 
-    if ( pClient ) {
-        pClient->sendTextMessage("frv " + message);
-    }
+    //if ( pClient ) {
+    //    pClient->sendTextMessage("frv " + message);
+    //}
+    //
+    unsigned char* result  = m_glJob->render();
 
-    if(m_glJob)
-        m_glJob->render();
+    //convert to JPEG
+    std::string imageType = "PNG";
+    QImage qi( result, m_glJob->getWidth(), m_glJob->getHeight(), QImage::Format_RGB888 );
+    qi = qi.mirrored();
+    QByteArray qba;
+    QBuffer buffer(&qba);
+    buffer.open(QIODevice::WriteOnly);
+    qi.save( &buffer, imageType.c_str());
+    buffer.close();
+    std::string payload( qba.constData(), qba.size());
+    //payload = new std::string
+    frv::imageResponse *response = new frv::imageResponse();
+    response->set_allocated_image_type(&imageType);
+    response->set_allocated_image_bytes( &payload );
+    QByteArray responseBytes (response->SerializeAsString().c_str(), response->ByteSize() );
+    pClient->sendBinaryMessage( responseBytes );
+    free(result);
+ 
 }
 
 void tinia::trell::FRVQtController::processBinaryMessage(QByteArray message)
@@ -89,10 +107,10 @@ void tinia::trell::FRVQtController::processBinaryMessage(QByteArray message)
         qDebug() << "it has z-scale, something got through and that was: " << ir.zscale();
     }
 
-    char* results =  m_glJob->render();
+    unsigned char* results =  m_glJob->render();
     response.set_allocated_image_bytes( (std::string*)results );
     pClient->sendBinaryMessage( response.SerializeAsString().c_str() );
-    
+    free( results );
 }
 
 void tinia::trell::FRVQtController::socketDisconnected()
