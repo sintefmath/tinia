@@ -30,7 +30,7 @@ namespace {
     const char *allowed_auto_proxy_algos[] = { "0) AngleCoverage-5",
                                                "1) AngleCoverage-2",
                                                "2) OnlyMostRecent",
-                                               "3) ReplaceOldestWhenDifferent-5",
+                                               "3) ReplOldestWhnDiff-5",
                                                "4) ReplaceOldest-5",
                                                NULL };
 
@@ -54,7 +54,7 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
     if ( m_w_ap && m_w_jpg && m_w_as ) {
         model->addElement<bool>( "ap_autoSelect", false );            // Selects whatever proxy method works fastest.
         model->addElement<bool>( "ap_autoSelectSampleAll", false );
-        model->addAnnotation("ap_autoSelectSampleAll", "Smple all snapsh. types");
+        model->addAnnotation("ap_autoSelectSampleAll", "Sample all");
         model->addElement( "ap_autoSelectIndicator", "---" );
         model->addConstrainedElement<int>("ap_autoSelectTargetTime", 100, 0, 200);
         model->addAnnotation("ap_autoSelectTargetTime", "Target time:");
@@ -84,11 +84,11 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
             algos++;
         }
         model->addElementWithRestriction<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[2], &allowed_auto_proxy_algos[0], &allowed_auto_proxy_algos[0]+algos );
-        model->addAnnotation("ap_autoProxyAlgo", "Proxy model replacement algo");
+        model->addAnnotation("ap_autoProxyAlgo", "Proxy replacement algo");
         model->addElement<bool>( "ap_debugSplatCol", false );
-        model->addAnnotation("ap_debugSplatCol", "Index coloring (r, g, b, y, c, m)");
+        model->addAnnotation("ap_debugSplatCol", "Index coloring"); //  (r, g, b, y, c, m)");
         model->addElement<bool>( "ap_decayMode", false );
-        model->addAnnotation("ap_decayMode", "Splats decaying from center");
+        model->addAnnotation("ap_decayMode", "Decaying splats");
         model->addElement<bool>( "ap_roundSplats", false );
         model->addAnnotation("ap_roundSplats", "Circular splats");
         model->addElement<bool>( "ap_screenSpaceSized", false );
@@ -115,14 +115,15 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
     }
 
     if (with_depth_buffer_manipulation) {
-        model->addConstrainedElement<int>("ap_depthWidth", 512, 32, 1024);
-        model->addAnnotation("ap_depthWidth", "Depth buffer Width)");
-        model->addConstrainedElement<int>("ap_depthHeight", 512, 32, 1024);
-        model->addAnnotation("ap_depthHeight", "Depth buffer height)");
+        // To avoid confusion, it is wise to use as default value for these sliders, the same value as the canvas size in Canvas.js...
+        model->addConstrainedElement<int>("ap_depthWidth", 1024, 16, 1024);
+        model->addAnnotation("ap_depthWidth", "Depth buf width)");
+        model->addConstrainedElement<int>("ap_depthHeight", 1024, 16, 1024);
+        model->addAnnotation("ap_depthHeight", "Depth buf height)");
         model->addElement<bool>( "ap_mid_texel_sampling", false );              // false best
         model->addAnnotation("ap_mid_texel_sampling", "Sample mid-texel");
         model->addElement<bool>( "ap_use_qt_img_scaling", true );
-        model->addAnnotation("ap_use_qt_img_scaling", "Use QImage::scaled() (Qtc)");
+        model->addAnnotation("ap_use_qt_img_scaling", "Qt-scaling (qtc)");
         model->addElement<bool>( "ap_set_depth_size_32", false );
         model->addAnnotation("ap_set_depth_size_32", "32");
         model->addElement<bool>( "ap_set_depth_size_64", false );
@@ -140,11 +141,19 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addElement<bool>( "ap_mid_splat_sampling", false );
         model->addAnnotation("ap_mid_splat_sampling", "Sample mid-splat");
         model->addElement<bool>( "ap_simulate_downsampling", false );
-        model->addAnnotation("ap_simulate_downsampling", "Simulate downsampling (Qtc?)");
+        model->addAnnotation("ap_simulate_downsampling", "Simul. downs (qtc)");
         model->addElement<bool>( "ap_bi_linear_filtering", false );
-        model->addAnnotation("ap_bi_linear_filtering", "Bi-linear filtering (Qtc)");
+        model->addAnnotation("ap_bi_linear_filtering", "Bi-linear (qtc)");
         model->addElement<bool>( "ap_16_bit_depth", false );
         model->addAnnotation("ap_16_bit_depth", "16 bit depth");
+        model->addElement<bool>( "ap_hold_up_png", false );
+        model->addAnnotation("ap_hold_up_png", "Hold up PNG");
+        model->addElement<bool>( "ap_whitebg", false );
+        model->addAnnotation("ap_whitebg", "White bg");
+        model->addElement<bool>( "ap_greenbg", false );
+        model->addAnnotation("ap_greenbg", "Green bg");
+        model->addElement<bool>( "ap_blackbg", false );
+        model->addAnnotation("ap_blackbg", "Black bg");
     }
 }
 
@@ -248,18 +257,25 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_set_depth_size_32"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_set_depth_size_64"));
         mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_set_depth_size_128"));
-        mainGrid->setChild(row, 3, new tinia::model::gui::Button("ap_set_depth_size_256"));
-        mainGrid->setChild(row, 4, new tinia::model::gui::Button("ap_set_depth_size_512"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_set_depth_size_256"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_set_depth_size_512"));
         row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_mid_texel_sampling"));
         mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_small_delta_sampling"));
         mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_larger_delta_sampling"));
-        mainGrid->setChild(row, 3, new tinia::model::gui::CheckBox("ap_bi_linear_filtering"));
         row++;
-        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
-        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));
-        mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_simulate_downsampling"));
-        mainGrid->setChild(row, 3, new tinia::model::gui::CheckBox("ap_16_bit_depth"));
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_bi_linear_filtering"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_use_qt_img_scaling"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_mid_splat_sampling"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_simulate_downsampling"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::CheckBox("ap_16_bit_depth"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::CheckBox("ap_hold_up_png"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_whitebg"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_greenbg"));
+        mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_blackbg"));
         row++;
     }
 

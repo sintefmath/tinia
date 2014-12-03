@@ -51,8 +51,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 512;
-        this._height = 512;
+        this._width = 1024;
+        this._height = 1024;
         this._modelLib = params.modelLib;
         // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
         // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
@@ -206,8 +206,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 var depthheight = response_obj[this._key].depthheight;
                                 // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
                                 //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
-                                if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) ) &&
-                                     ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) ) )
+                                if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                                     ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) || (depthheight===undefined) ) )
                                 {
                                     // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                                     // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -221,7 +221,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     this._snapshotTimings.print();
                                     this._autoSelectSnapshotType(this._snapshotTimings);
                                 } else {
-                                    console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle.");
+                                    console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (1)");
+                                    console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight +
+                                                ", ap_depthWidth=" + this._modelLib.getElementValue("ap_depthWidth") + ", ap_depthHeight=" + this._modelLib.getElementValue("ap_depthHeight"));
                                 }
                             })
                         });
@@ -445,8 +447,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
                 //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) ) &&
-                         ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) ) )
+                    if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                            ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) || (depthheight===undefined) ) )
                     {
                         // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                         // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -461,7 +463,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                         this._snapshotTimings.print();
                         this._autoSelectSnapshotType(this._snapshotTimings);
                     } else {
-                        console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle.");
+                        console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (2)");
+                        console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight +
+                                    ", ap_depthWidth=" + this._modelLib.getElementValue("ap_depthWidth") + ", ap_depthHeight=" + this._modelLib.getElementValue("ap_depthHeight"));
                     }
                 }
             } else {
@@ -822,11 +826,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             // We will always get here, while holding a mouse button down inside the canvas.
             // Also when the mouse is inside the canvas and a button is pushed.
         } else {
-            // For AP-debugging, comment out the two lines below to make the ap-image stay after mouse button release.
-//            dojo.style(this._img, "z-index", "2");
-//            this._img.style.zIndex = "2";
-            // We get here when the mouse is crossing the border to the canvas while no button is pressed.
-            // Also when the mouse is inside and a button is released.
+            // For AP-debugging, it can be useful to make the ap-image stay after mouse button release.
+            if ( ! ( (this._modelLib.hasKey("ap_hold_up_png")) && (this._modelLib.getElementValue("ap_hold_up_png")) ) ) {
+                dojo.style(this._img, "z-index", "2");
+                this._img.style.zIndex = "2";
+                // We get here when the mouse is crossing the border to the canvas while no button is pressed.
+                // Also when the mouse is inside and a button is released.
+            }
         }
         if (this._loadingDiv) {
             if (this._imageLoading && !this._active) {

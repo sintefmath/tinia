@@ -51,7 +51,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                                                                         (180.0/1) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
                                                                         1.1);                               // "Zoom threshold"
             break;
-        case "3) ReplaceOldestWhenDifferent-5":
+        case "3) ReplOldestWhnDiff-5":
         case 3:
             this._proxyModelCoverage = new gui.ProxyModelCoverageReplaceOldestWhenDifferent(glContext,
                                                                         5,                                  // Number of proxy models to keep
@@ -175,6 +175,29 @@ dojo.declare("gui.ProxyRenderer", null, {
         // 140911: Allowing these listeners even without debugging mode being enabled, so that applications may set their own values.
         //         Not adding a test for construction-time setting of all of these, just a subset.
         if (true) { // if (this._debugging) {
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_whitebg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_whitebg")) {
+                    this._backgroundCol = vec3.createFrom(1.0, 1.0, 1.0);
+                } else {
+                    this.exposedModel.updateElement("ap_whitebg", false);
+                }
+            }));
+            this.exposedModel.addLocalListener("ap_blackbg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_blackbg")) {
+                    this._backgroundCol = vec3.createFrom(0.0, 0.0, 0.0);
+                } else {
+                    this.exposedModel.updateElement("ap_blackbg", false);
+                }
+            }));
+            this.exposedModel.addLocalListener("ap_greenbg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_greenbg")) {
+                    this._backgroundCol = vec3.createFrom(0.0, 0.2, 0.0);
+                } else {
+                    this.exposedModel.updateElement("ap_greenbg", false);
+                }
+            }));
+
             //-------------------------------------------------------
             this.exposedModel.addLocalListener("ap_set_depth_size_32", dojo.hitch(this, function(event) {
                 if(this.exposedModel.getElementValue("ap_set_depth_size_32")) {
@@ -620,7 +643,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             } else {
                 if (this._debugging) {
                     // this.gl.clearColor(0.2, 0.2, 0.2, 0.8); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
-                    this.gl.clearColor(0.0, 0.2, 0.0, 1.0); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+//                    this.gl.clearColor(0.0, 0.2, 0.0, 1.0); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
                 } else {
                     this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
                 }
