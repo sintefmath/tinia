@@ -71,7 +71,7 @@ dojo.declare("gui.ProxyModel", null, {
             }
         });
         depth_t0 = Date.now();
-        console.log("Starting depth image loading");
+        // console.log("Starting depth image loading");
         depthImage.src = "data:image/png;base64," + depthBufferAsText;
 
         var rgbImage = new Image();
