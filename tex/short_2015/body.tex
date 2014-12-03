@@ -156,12 +156,10 @@ on the client.
 
 \begin{figure}[htb]
   \centering
-%  \includegraphics[width=.8\linewidth]{test.jpg}
-%  \vspace{-5cm}
   \input{fig2.tex}
   \caption{\label{fig:2Dheightmap}
            The rendered image (of \eg, a cube) as a height map seen from above,
-           for a certain transformation.}
+           for a certain transformation. \textbf{Droppe denne?}}
 \end{figure}
 
 \begin{figure}[htb]
@@ -387,7 +385,18 @@ odd, see Figure~\ref{fig:LargeSplatsOnCorners}.
 
 \begin{figure}[htb]
   \centering
-  \framebox{\includegraphics[width=.8\linewidth]{test.jpg}}
+  \subfigure[Server-rendered]{
+    \includegraphics[width=.3\linewidth]{splat1.jpg}
+  }
+  \subfigure[$P_c M_c = P_s M_s$]{
+    \includegraphics[width=.3\linewidth]{splat1.jpg}
+  }
+  \subfigure[$P_c M_c \neq P_s M_s$]{
+    \includegraphics[width=.3\linewidth]{splat2.jpg}
+  }
+%  \subfigure[yyy]{
+%    \includegraphics[width=.3\linewidth]{splat3.jpg}
+%  }
   \caption{\label{fig:LargeSplatsOnCorners}
            The rendered image (of \eg, a cube) as a height map seen from above,
            for a certain transformation.}
