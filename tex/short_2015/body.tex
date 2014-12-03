@@ -394,12 +394,9 @@ odd, see Figure~\ref{fig:LargeSplatsOnCorners}.
   \subfigure[$P_c M_c \neq P_s M_s$]{
     \includegraphics[width=.3\linewidth]{splat2.jpg}
   }
-%  \subfigure[yyy]{
-%    \includegraphics[width=.3\linewidth]{splat3.jpg}
-%  }
   \caption{\label{fig:LargeSplatsOnCorners}
-           The rendered image (of \eg, a cube) as a height map seen from above,
-           for a certain transformation.}
+           Splats for which depths are sampled on a planar region look nice on
+  exactly this region, but contorted elsewhere, notice the corner of the cube.}
 \end{figure}
 
 The problem with this, is that the geometry is not planar, and our simple texture
