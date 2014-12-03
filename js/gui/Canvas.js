@@ -705,10 +705,13 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                    ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
                 // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
                 // console.log("Mouse up:   Setting PNG mode");
-                this._snapshotURL = this._snapshotStrings.png;
-                this._urlHandler.setURL(this._snapshotURL);
-                this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
-                this._requestImageIfNotBusy();
+                // 141203: Wrapping this, for figure-generation
+                if ( ! ( (this._modelLib.hasKey("ap_hold_up_png")) && (this._modelLib.getElementValue("ap_hold_up_png")) ) ) {
+                    this._snapshotURL = this._snapshotStrings.png;
+                    this._urlHandler.setURL(this._snapshotURL);
+                    this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
+                    this._requestImageIfNotBusy();
+                }
             }
         }
         this._showCorrect();
