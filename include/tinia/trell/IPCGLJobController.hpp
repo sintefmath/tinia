@@ -65,6 +65,7 @@ protected:
                    const size_t        depth_width,
                    const size_t        depth_height,
                    const bool          depth16,
+                   const bool          dump_images,
                    const std::string&  session,
                    const std::string&  key );
 

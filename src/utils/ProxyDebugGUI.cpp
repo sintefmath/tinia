@@ -154,6 +154,10 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_greenbg", "Green bg");
         model->addElement<bool>( "ap_blackbg", false );
         model->addAnnotation("ap_blackbg", "Black bg");
+        model->addElement<bool>( "ap_dump", false );
+        model->addAnnotation("ap_dump", "Dump rgb (trell)");
+        model->addElement<bool>( "ap_dump_button", false );
+        model->addAnnotation("ap_dump_button", "Dump (js)");
     }
 }
 
@@ -276,6 +280,9 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_whitebg"));
         mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_greenbg"));
         mainGrid->setChild(row, 2, new tinia::model::gui::Button("ap_blackbg"));
+        row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::CheckBox("ap_dump"));
+        mainGrid->setChild(row, 1, new tinia::model::gui::Button("ap_dump_button"));
         row++;
     }
 

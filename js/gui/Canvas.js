@@ -381,6 +381,30 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             }
         }) );
 
+//        this._modelLib.addLocalListener( "ap_dump_button", dojo.hitch(this, function(event) {
+//            if ( this._modelLib.getElementValue("ap_dump_button") ) {
+//                console.log("pressed");
+//                this._modelLib.updateElement("ap_dump_button", false);
+
+//                var img = this._canvas.toDataURL("image/png");
+
+//                console.log(img);
+
+//                fs = dojo.require('fs');
+//                sys = dojo.require('sys');
+
+//                // strip off the data: url prefix to get just the base64-encoded bytes
+//                var data = img.replace(/^data:image\/\w+;base64,/, "");
+//                dojo.require('buffer');
+//                var buf = new Buffer(data, 'base64');
+//                writeFile('image.png', buf);
+
+
+//            } else {
+//                console.log("released");
+//            }
+//        }) );
+
 
 
         // Some timing issues:
@@ -706,7 +730,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
                 // console.log("Mouse up:   Setting PNG mode");
                 // 141203: Wrapping this, for figure-generation
-                if ( ! ( (this._modelLib.hasKey("ap_hold_up_png")) && (this._modelLib.getElementValue("ap_hold_up_png")) ) ) {
+                if ( (this._modelLib.hasKey("ap_hold_up_png")) && (!this._modelLib.getElementValue("ap_hold_up_png")) ) {
                     this._snapshotURL = this._snapshotStrings.png;
                     this._urlHandler.setURL(this._snapshotURL);
                     this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});

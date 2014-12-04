@@ -168,6 +168,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this._shaderSourceLoaded = false;
         this._loadShaders();
+        var reloadShaders = false; // Will be set to true if some magical exposedModel variable dictates the modification of a macro used by one or more shaders.
 
         // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
         // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
@@ -327,7 +328,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             if ( this.exposedModel.hasKey("ap_useFragExt") ) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 //console.log("xxxxxxxxxxxxxxxx compiling shaders because initial ap_useFragExt exists...");
-                this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
@@ -336,7 +337,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_depthWidth") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -344,7 +345,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_depthHeight") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -352,7 +353,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_simulate_downsampling") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_simulate_downsampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -361,7 +362,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_mid_texel_sampling") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_mid_texel_sampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -369,7 +370,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_mid_splat_sampling") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_mid_splat_sampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -377,7 +378,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_small_delta_sampling") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_small_delta_sampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -385,7 +386,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
             //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_larger_delta_sampling") ) {
-                this._loadShaders();
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_larger_delta_sampling", dojo.hitch(this, function(event) {
                 this._loadShaders();
@@ -415,7 +416,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         if ( this.exposedModel.hasKey("ap_autoProxyDebugging") ) {
             this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
             console.log("xxxxxxxxxxxxxxxx Recompiling shaders with/without DEBUG set...");
-            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            reloadShaders = true;
         }
         this.exposedModel.addLocalListener( "ap_autoProxyDebugging", dojo.hitch(this, function(event) {
             this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
@@ -431,6 +432,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._clearCanvas();
             }
         }) );
+
+        if ( reloadShaders ) {
+            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+        }
 
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
