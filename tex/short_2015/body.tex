@@ -84,6 +84,14 @@ serve flere klienter ogsaa!
 
 \item Maa ta et lite soek paa prior art innen omraadet
 
+\item problem med shading/shadows ++ i forb. med ikke deferred shading/normal map
+
+\item About our test case: corners, smooth surfaces, texturing for which artifacts are easy to
+spot. What it does lack is self-occluding parts. The FRView rservoir model that
+we have tested on does contain some of this.
+
+\item Burde vi vise chemco?
+
 \end{itemize}
 
 %-------------------------------------------------------------------------
@@ -389,10 +397,10 @@ odd, see Figure~\ref{fig:LargeSplatsOnCorners}.
     \includegraphics[width=.3\linewidth]{splat1.jpg}
   }
   \subfigure[$P_c M_c = P_s M_s$]{
-    \includegraphics[width=.3\linewidth]{splat1.jpg}
+    \includegraphics[width=.3\linewidth]{splat2.jpg}
   }
   \subfigure[$P_c M_c \neq P_s M_s$]{
-    \includegraphics[width=.3\linewidth]{splat2.jpg}
+    \includegraphics[width=.3\linewidth]{splat3.jpg}
   }
   \caption{\label{fig:LargeSplatsOnCorners}
            Splats for which depths are sampled on a planar region look nice on
@@ -483,16 +491,24 @@ high-quality proxy models.
 
 \begin{figure}[htb]
   \centering
-  \subfigure[Low quality (tenker her jpg med q=0 og daarlig dybdebuffer, faa
-  splats kanskje]{
-    \input{fig3a.tex}
+  \subfigure[Full png]{
+    \includegraphics[width=.30\linewidth]{auto1.jpg}
   }
-  \subfigure[High quality (png med maks av alt, mange splats)]{
-    \input{fig3b.tex}
+  \subfigure[Coarse jpg]{
+    \includegraphics[width=.30\linewidth]{auto2.jpg}
+  }
+  \subfigure[Auto-proxy w/$260^2$ splats and 1/256 rgb to depth fragment ratio]{
+    \includegraphics[width=.30\linewidth]{auto3.jpg}
   }
   \caption{\label{fig:adapativeProxyModels}
            Proxy models adaptively adjusted to available bandwidth and server
-           capacity.}
+           capacity. The server-rendered JPG image adaptively selects a quality
+  setting based on timing of image sending. Shown is the worst
+  case, \texttt{quality}=0, which is the last step before switching to ``auto
+  proxy''. The auto-proxy shown displays artifacts caused by the magenta surface
+  to being almost parallel to the viewing direction at the moment of proxy model
+  recording, the number of splats is set low ($260^2$) on purpose, and the depth
+  buffer size is reduced by a factor of $16^{-2} \approx 0.4\%$.}
 \end{figure}
 
 
@@ -524,13 +540,16 @@ Figure~\ref{fig:FRView}.
 \begin{figure}[htb]
   \centering
   \subfigure[Server-rendered]{
-    \input{fig3a.tex}
+    \includegraphics[width=.47\linewidth]{frview1.jpg}
   }
   \subfigure[Client-rendered proxy model]{
-    \input{fig3b.tex}
+    \includegraphics[width=.47\linewidth]{frview2.jpg}
   }
   \caption{\label{fig:FRView}
-           The oil reservoir viewer FRView}
+           The oil reservoir viewer FRView. Not that we have chosen parameters
+  (small number of splats ($128^2$), forcing display of splats that would normally be
+  discarded) to emphasize artifacts, \eg, the ragged edges, a few holes, and the
+  oddly placed (and rendered) axis indicator.}
 \end{figure}
 
 
