@@ -1,34 +1,13 @@
-%\begin{tikzpicture}[ scale=.25, show background rectangle]
-\begin{tikzpicture}[scale=0.32, >=triangle 45, show background rectangle,
+\begin{tikzpicture}[scale=0.32, >=triangle 45, % show background rectangle,
   declare function = {
     rotx(\x,\y,\th) = cos(\th)*\x - sin(\th)*\y; % NB! Cannot have space between parameters it seems!
     roty(\x,\y,\th) = sin(\th)*\x + cos(\th)*\y;
   }
   ]
 
-  % View frustum
-  \fill[fill=gray!20] (1, 0) -- (9, 0) -- (10, 5) -- (0, 5) -- cycle;
-  % \clip (1, 0) -- (9, 0) -- (10, 5) -- (0, 5) -- cycle;
-  % Clipping looks ok, but clipped content still expands bbox!! Solving this by reducing \pixels below from 13 to 11...
-
-
-  % Defining some figure params
-
-  \def \pixelwidth  {0.4}
-  \def \pixelheight {0.3}
-  \def \redstart    {2.2}
-  \def \redpixels   {5}
+  \input{fig3pre.tex}
+  \def \cy          {3} % overriding the one in fig3pre.tex
   \def \pixels      {11}
-  \def \linewidth   {1.25pt}
-  \def \cx          {5}
-  \def \cy          {3}
-  \def \rightcol    {red!100}
-  \def \leftcolL    {blue!100}
-  %\def \leftcolR    {red!100!blue!0} % Why doesn't this work?! (The color becomes white)
-  \def \leftcolR    {red!100}
-
-  \pgfmathsetmacro\halfpixelwidth{0.5*\pixelwidth}
-
 
   \foreach \frame in {0, ..., 4} {
 

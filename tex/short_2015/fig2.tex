@@ -1,5 +1,4 @@
-%\begin{tikzpicture}[ scale=.25, show background rectangle]
-\begin{tikzpicture}[scale=0.5, >=triangle 45, show background rectangle]
+\begin{tikzpicture}[scale=0.5, >=triangle 45] % , show background rectangle]
 
 
 %  \node[scale=0.15, above right] (screenshotcenter) at (0,0) {\includegraphics{test.jpg}};
@@ -21,7 +20,7 @@
 %  \draw [fill=none] (lowerleft) rectangle (upperright);
 
   % View frustum
-  \fill[fill=gray!20] (1, 0) -- (9, 0) -- (10, 5) -- (0, 5) -- cycle;
+  \fill[fill=gray!10] (1, 0.7) -- (9, 0.7) -- (10, 4.3) -- (0, 4.3) -- cycle;
 
   % Some scene
   \draw[red, line width=3pt] (2, 3) -- (5, 2);
@@ -38,12 +37,12 @@
     \def \x { \redstart + \s * \pixelwidth }
     \def \xx { \x + \pixelwidth }
     \ifthenelse{\s < \redpixels} {
-      \draw[red, fill=red!50] (\x, 0) rectangle (\xx, \pixelheight); 
+      \draw[red, fill=red!50] (\x, 1) rectangle (\xx, 1+\pixelheight); 
     } {
-      \draw[green, fill=green!50] (\x, 0) rectangle (\xx, \pixelheight);
+      \draw[green, fill=green!50] (\x, 1) rectangle (\xx, 1+\pixelheight);
     }
     \pgfmathsetmacro\depthcol{abs(\redpixels-0.5-\s) * 25}
-    \draw[black, fill=gray!\depthcol] (\x, \pixelheight) rectangle (\xx, 2*\pixelheight);
+    \draw[black, fill=gray!\depthcol] (\x, 1+\pixelheight) rectangle (\xx, 1+2*\pixelheight);
   }
 
 
