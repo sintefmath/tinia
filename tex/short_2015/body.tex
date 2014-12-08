@@ -3,19 +3,22 @@
 % D.Fellner, v1.17, Sep 23, 2010
 
 
-\title[Automatic Proxy Geometry]%
-      {Automatic Proxy Geometry}
+%\title[Automatic Proxy Geometry Generation]%
+%      {Automatic Proxy Geometry Generation}
+
+\title[Automatic Proxy Model Generation]%
+      {Hybrid Client/Server Rendering with Automatic Proxy Model Generation}
 
 % for anonymous conference submission please enter your SUBMISSION ID
 % instead of the author's name (and leave the affiliation blank) !!
 \author[J.\,O. Nygaard \& J. Mikkelsen]
        {J.\,O. Nygaard$^{1}$
         and J. Mikkelsen$^{1}$
-        and Husk Anonymisering Hvis Paakrevet!$^{1}$
+        and Husk Anonymisering Hvis Paakrevet! \textbf{JA DET ER DET}$^{1}$
 %        S. Spencer$^2$\thanks{Chairman Siggraph Publications Board}
         \\
 % For Computer Graphics Forum: Please use the abbreviation of your first name.
-         $^1$SINTEF ICT, applied mathematics, Norway
+%         $^1$SINTEF ICT, applied mathematics, Norway
 %        $^2$ Another Department to illustrate the use in papers from authors
 %             with different affiliations
        }
@@ -33,29 +36,47 @@
 %-------------------------------------------------------------------------
 \begin{document}
 
-% \teaser{
-%  \includegraphics[width=\linewidth]{eg_new}
-%  \centering
-%   \caption{New EG Logo}
-% \label{fig:teaser}
-% }
+\teaser{
+  \centering
+  \subfigure[Server-rendered (OpenGL)]{
+    \includegraphics[width=.2\linewidth]{frview1.jpg}
+  }
+  \subfigure[Client-rendered proxy model (Google\newline Chrome, artifacts not subdued)]{
+    \includegraphics[width=.2\linewidth]{frview2.jpg}
+  }
+  \subfigure[Client-rendered proxy model (Google\newline Chrome, artifacts subdued)]{
+    \includegraphics[width=.2\linewidth]{frview2.jpg}
+  }
+  \caption{\label{fig:FRView} The oil reservoir viewer FRView, developed in the
+  CloudViz project~\cite{cloudviz}, showing a server-rendered image and two
+  client-rendered images of automatically generated proxy models. For~(b),
+  parameters are chosen to highlight some artifacts (few and large splats
+  without intra-splat texturing, displaying of skewed splats) while the second
+  client-rendered image (c) has parameters chosen to make an optimal proxy
+  geometry (many more splats, intra-splat texturing, discarding of skewed
+  splats.)}
+}
 
 \maketitle
 
 \begin{abstract}
-   We describe an algorithm and implementation of an automatic proxy geometry
-   system for a server/client remote rendering setup. The client may be a thin
-   client in the form of a hand-held pad, for our implementation we only assume
-   the availability of WebGL and Javascript. For our rendering server, we make
-   use of a GL-capable web server. In situations where the rate of received
+   We describe an algorithm and implementation of an automatic proxy model
+   generation system for a client/server remote rendering setup. In this
+   context, a {\em proxy model}, is a light-weight replacement of a main model
+   that is much easier to manipulate and render. This proxy model is
+   automatically derived from the main model. The client may be a {\em thin
+   client}, \eg, a hand-held tablet. For our implementation we only assume the
+   availability of WebGL and Javascript on this client. On the server side we
+   make use of OpenGL and a web server. In situations where the rate of received
    images deteriorate due to low bandwith, high latency or long rendering times,
-   the client displays an automatically generated proxy geometry. This proxy
-   geometry is computed from depth buffers bundled with rendered images from the
-   server, and requires no modification of the application or its data itself.
+   the client displays the proxy model. The proxy geometry is computed from
+   depth buffers bundled with rendered images from the server, and the algorithm
+   is non-intrusive in that it requires no modification of the application or
+   its data itself.
    % Husk: Skal vaere en blank linje nedenfor
 
 \begin{classification} % according to http://www.acm.org/class/1998/
-\CCScat{FIX THIS Computer Graphics}{I.3.3}{Picture/Image Generation}{Line and curve generation}
+\CCScat{\textbf{FIX THIS}Computer Graphics}{I.3.3}{Picture/Image Generation}{Line and curve generation}
 \end{classification}
 
 \end{abstract}
@@ -65,23 +86,6 @@
 
 %-------------------------------------------------------------------------
 \section{Introduction}
-
-\begin{figure}[htb]
-  \centering
-  \subfigure[Server-rendered (OpenGL)]{
-    \includegraphics[width=.47\linewidth]{frview1.jpg}
-  }
-  \subfigure[Client-rendered proxy model (Google Chrome)]{
-    \includegraphics[width=.47\linewidth]{frview2.jpg}
-  }
-  \caption{\label{fig:FRView} The oil reservoir viewer FRView, showing a
-  server-rendered image and a proxy geometry generated from this and the
-  accompanying depth buffer. Note that we have chosen parameters for the proxy
-  generation (small number of splats ($128^2$), forcing display of splats that
-  would normally be discarded) to emphasize rather than reduce artifacts, \eg,
-  the ragged edges, a few holes, and the oddly placed (and rendered) axis
-  indicator.}
-\end{figure}
 
 With increasingly powerful rendering engines, in forms ranging from mobile and
 hand-held devices to traditional stationary computers, one might be led to
@@ -93,7 +97,7 @@ data sizes, scaling, etc.
 One effect of this, also enhanced by new cloud-based approaches, wireless
 connection, and mobile devices with display capabilities outpacing their
 computation and storage capabilities, is that interactivity still is a difficult
-issue. In this work, we consider a server/client model for rendering, but this
+issue. In this work, we consider a client/server model for rendering, but this
 is just a way of separating the interaction from the rendering; the discussion
 also applies to a more integrated setup.  In order to obtain the frame rates on
 the client suitable for interactive visualizations, demands are put on
@@ -101,23 +105,41 @@ bandwidth, latency and rendering speed. If one or more of these demands are not
 met, according to a suitable measure, the frame rate will deteriorate together
 with the user experience.
 
-One way to deal with such situations is for the client to have a {\em
-proxy model}, defined as a temporary model to be shown and manipulated
-locally on the client while waiting for the appropriate image from the server.
-A particularly unwelcomed chore is that of building proxy geometries for various
-data sets. The typical ``hello world'' proxy geometry is the familiar bounding
-box wire frame, but this will degrade the user experience unacceptably for most
+%\begin{figure}[htb]
+%  \centering
+%  \subfigure[Server-rendered (OpenGL)]{
+%    \includegraphics[width=.47\linewidth]{frview1.jpg}
+%  }
+%  \subfigure[Client-rendered proxy model (Google Chrome)]{
+%    \includegraphics[width=.47\linewidth]{frview2.jpg}
+%  }
+%  \caption{\label{fig:FRView} The oil reservoir viewer FRView \textbf{FIKS HER ref}, showing a
+%  server-rendered image and a proxy geometry generated from this and the
+%  accompanying depth buffer. Note that we have chosen parameters for the proxy
+%  generation (small number of splats ($128^2$), forcing display of splats that
+%  would normally be discarded) to emphasize rather than reduce artifacts, \eg,
+%  the ragged edges, a few holes, and the oddly placed (and rendered) axis
+%  indicator. \textbf{Flytte opp til teaser, tredje bilde: uten artifacter for aa
+%  vise at det kan bli bra}}
+%\end{figure}
+
+One way to deal with such situations is for the client to have a {\em proxy
+model}, defined as a temporary model to be shown and manipulated locally on the
+client while waiting for the appropriate image from the server.  A particularly
+unwelcomed chore is that of building proxy geometries for various data sets. The
+typical ``hello world'' proxy geometry is the familiar bounding box wire frame,
+but this will degrade the user experience unacceptably for most
 applications. One alternative is to hand craft such simpler proxies. They have
 to be simple both for the building cost, and also for the actual rendering on
 the possibly very thin client. Another alternative is to automate this process,
 a large triangulation may for instance be represented by a much coarser
 approximating triangulation that can be built automatically. One disadvantage of
 this approach is that this is not easy to do for many kinds of data, like our
-main case in which we have an oil reservoir viewer (FRView) that renders large
-{\em corner points grids}, together with {\em faults}, oil wells, and more. See
-Figure~\ref{fig:FRView} above for an example of both a fully completed
-rendering, and an automatically generated proxy geometry rendered in Google
-Chrome.
+main case in which we have an oil reservoir viewer (FRView,~\cite{cloudviz})
+that renders large {\em corner point grids}, together with faults, oil wells,
+and more. See Figure~\ref{fig:FRView} above for an example of both a fully
+completed rendering, and automatically generated proxy geometries rendered in
+Google Chrome.
 
 Our suggested solution is to pass depth information from the server along with
 ordinary rendered images. From this depth image, a rudimentary 3D model can be
@@ -131,24 +153,33 @@ We also mention that even if bandwidth and latency is not a problem, it may be
 desirable to let a server of limited capacity serve many simultaneous users,
 hence decreasing the effective server time available for each one. In this case,
 suitable scaling properties may still be achieved without increasing server
-capacity. \textbf{referanse til ArrowHead her?}
+capacity. The results described in this paper will be commercialized in the new
+SINTEF project \mbox{ArrowHead}~\cite{arrowhead}.
 
 \subsection{Previous work}
+\label{sec:prevWork}
 
 Our approach has some similarities to {\em image based rendering} (IBR)
-techniques (\textbf{referanse til noe av dette?}), with the difference that an
-important IBR problem would be the reconstruction of a depth map from images,
-while we have access to the full depth map from a rendering pass.
-Another way to use depth maps similar to what we do, is for ``immersive
-streaming'',
-see \eg, \texttt{http://www.cc...},
-% http://www.cc.gatech.edu/conferences/3DPVT08/Program/Papers/paper203.pdf
-where focus is on depth map compression, an issue that we also must confront.
+techniques, with the difference that an important IBR problem would be the
+reconstruction of a depth map from images, while we have access to the full
+depth map from a rendering pass.  Another way to use depth maps similar to what
+we do, is for ``immersive streaming'', see \eg,~\cite{ibr}, where focus is on
+depth map compression, an issue that we also consider.
+
+Common to many IBR-algorithms is also that of stitching together 3D or 2.5D
+point clouds. We could also in principle do this for our 2.5D maps fetched from
+the server, but it is not clear that the benefit would outweight the
+cost. \marginpar{\textbf{REF?!}}
 
 We are not aware of anybody else using depth maps exactly for our purpose, most
 research seems to be focused on the retrieval of the depth map from images,
 while we use an existing depth map to distill and render temporary geometry.
 
+Finally, we note that these 2.5D heightmaps are exactly what ``3D cameras''
+(time-of-flight and other range image sensors) produce, but most authors
+considering these are typically building more complex geometries before
+visualization. % , see~\eg,~\cite{}
+\marginpar{\textbf{REF?!}}
 
 
 %-------------------------------------------------------------------------
@@ -156,25 +187,22 @@ while we use an existing depth map to distill and render temporary geometry.
 \section{The auto proxy algorithm}
 
 The main idea is to automatically construct a proxy geometry on the client side
-from depth data provided by the server. For a new image to be displayed on the
-client, the server renders an image in a frame buffer, and as part of this
-process it also renders a corresponding depth buffer. (This means that our
-technique is not immediately ready for \eg, ray-tracing.) This depth buffer may
-be regarded as a height map over a viewing plane relative to the observing
-client. Hence, this depth map does not contain information about scene elements
-not in view for the set of view parameters at the time of server side
-rendering. Our approach is based on the assumption that small transformations of
-this height map still will give good approximations to the scene being
-rendered. These renderings are exactly what the client will compute and show
-while waiting for the next update from the server. See
-Figure~\ref{fig:2Dheightmap} and Figure~\ref{fig:2DheightmapRotated} below for an
-illustration of this heightmap computed on the server, and a recovered 3D model
-on the client.
+from depth data provided by the server. The server already produces a depth
+buffer as part of its rendering process.  This means that our technique is not
+immediately ready for \eg, ray-tracing.) This depth buffer may be regarded as a
+height map over a viewing plane relative to the observing client. Hence, this
+depth map does not contain information about scene elements not in view for the
+set of view parameters at the time of server side rendering. Our approach is
+based on the assumption that small transformations of this height map still will
+give good approximations to the scene being rendered. These renderings are
+exactly what the client will compute and show while waiting for the next update
+from the server. See Figure~\ref{fig:2Dheightmap} and
+Figure~\ref{fig:2DheightmapRotated} below for an illustration of this heightmap
+computed on the server, and a recovered 3D model on the client.
 
 \begin{figure}[htb]
   \centering
   \input{fig2.tex}
-
   \caption{\label{fig:2Dheightmap} The rendered image (of \eg, a cube) as a
            height map seen from above, for a certain transformation. Also shown
            are the corresponding RGB-fragments (red and green) and depth
@@ -241,18 +269,13 @@ value in the range $[0, 1]$ as a 16 bit fixed point number, this also works
 quite well. These measures cause the bundling of the depth buffer with the rgb
 image to impose just a small data overhead.
 
-Further compression methods (\textbf{passende med en ref her?}) may be employed
-to bring this data size down even more, but then the cost of the compression
-itself must also be added to the cost of rendering on the server.
-%
-%The cost must of course be considered if the operation of packaging images for
-%sending to the client is significant, which may be the case if, \eg, images must
-%be compressed or converted to some special format. An example of the latter
-%might be {\texttt base64}-encoding for converting the image to a purely ASCII
-%format.
-%
-Together with the rendered rgb image and the depth image we will also send the
-current view transformations back to the client.
+Further compression may bring this data size down even more, but the cost of
+compression/decompression must also be added to the cost of rendering on the
+client/server. In~\cite{DBLP:journals/tvcg/Lindstrom14} a suitable algorithm is
+proposed that promises to be fast both for the compression and decompression
+stages. \marginpar{\textbf{REF?!}} Together with the rendered rgb image and the
+depth image we will also send the current view transformations back to the
+client.
 
 
 %-------------------------------------------------------------------------
@@ -270,6 +293,7 @@ Section~\ref{sec:proxyModelReplacement}.
 %-------------------------------------------------------------------------
 \subsubsection{Proxy model building, splats}
 
+\marginpar{\textbf{boer kunne krympes}}
 As indicated by Figure~\ref{fig:2DheightmapRotated}~(b), the received
 height map does not really allow us more than concluding where a set of points
 belong to the 3D model, these points giving rise to exactly the depth map from
@@ -287,11 +311,14 @@ Figure~\ref{fig:2DheightmapRotated}~(b).
 It makes sense for the client only to render at most one 3D point for each depth
 fragment available. This may be too much for a thin client, and one may want to
 operate with a smaller number of 3D points, and instead render each of them with
-a larger number of pixels on the client side, this is called a {\em
-splat}. A set of such splats for a given depth image, we will call a {\em proxy
+a larger number of pixels on the client side, this is called a {\em splat}. A
+set of such splats for a given depth image is what we have termed a {\em proxy
 model}. There are some issues to discuss in relation to this, \eg, what size and
 shape of geometries to render for each 3D point, how to color them, how to
-compute depth fragments and so on.
+compute depth fragments and so on.  By rendering splats, we get fewer ``false
+connections'' than if we connect 3D points and reconstruct topology, for
+instance in the shape of a triangulation. On the other hand, we risk getting
+more ``holes'' in our models.
 
 The simplest solution is to render each 3D point as a fixed geometry, for
 instance a 2D disk or rectangle, with the correspondig color from the image, see
@@ -315,20 +342,23 @@ model.
 A first approximation is for the client to assume that the corresponding part of
 the server's model is planar in a region around the given point. If this is the
 case, a local 2D texture transformation will provide a good approximation to the
-intra-splat texturing to be performed on the client. For the splat centered in
-$\vv_{i, j} = (x_j, y_i, z_{i, j})$, to be centered on the client's canvas at
-screen coordinate $\pv_{i, j} = P_c M_c M_s^{-1} P_s^{-1}\vv_{i, j} = U\vv_{i,
-j}$, the texture coordinate transformation to be used is,
+intra-splat texturing to be performed on the client. Let $P_c$ and $P_s$ be
+projection matrices on the client and server, respectively, and $M_c$ and $M_s$
+corresponding view matrices. Let there be $n_x \times n_y$ splats laid out in a
+grid. For the splat centered in $\vv_{i, j} = (x_j, y_i, z_{i, j})$, to be
+centered on the client's canvas at screen coordinate $\pv_{i, j} = P_c M_c
+M_s^{-1} P_s^{-1}\vv_{i, j} = U\vv_{i, j}$, the texture coordinate
+transformation to be used is,
 \[
   T =
   \begin{pmatrix}
-    \frac{1}{\text{splats}_x} & 0 \\
-    0 & \frac{1}{\text{splats}_y}
+    \frac{1}{n_x} & 0 \\
+    0 & \frac{1}{n_y}
   \end{pmatrix}
   \Big( \sv_x \, \, \, \sv_y \Big)^{-1}
   \begin{pmatrix} 
-    \frac{\text{vpwidth}}{\text{splats}_x} & 0 \\
-     0 & \frac{\text{vpheight}}{\text{splats}_y}
+    \frac{\text{vpwidth}}{n_x} & 0 \\
+     0 & \frac{\text{vpheight}}{n_y}
   \end{pmatrix}
   \cdot \text{overlap},
 \]
@@ -367,21 +397,21 @@ given by
 \]
 where $d = 2\text{depthTex}(x, y) - 1$, $d_{\Delta x} =
 2\text{depthTex}(x+\Delta x, y) - 1$, and $d_{\Delta y} = 2\text{depthTex}(x,
-y+\Delta y) - 1$ are depths sampled from the received depth buffer and
-transformed to $[-1, 1]$. By combining this with a $w$-component set to one, we
-have in effect done a perspective division, so that the right-hand side vertices
-are in clip space, suitable for multiplication with $U$.
+y+\Delta y) - 1$ are depths sampled from the received depth buffer
+$\text{depthTex}$ and transformed to $[-1, 1]$. By combining this with a
+$w$-component set to one, we have in effect done a perspective division, so that
+the right-hand side vertices are in clip space, suitable for multiplication with
+$U$.
 
 We use
 \begin{equation}
-  \Delta x = \text{splats}_x / \text{DepthImg-width}
+  \begin{aligned}
+    \Delta x & = n_x / \text{width}(\text{depthTex}) \\
+    \Delta y & = n_y / \text{height}(\text{depthTex}),
+  \end{aligned}
   \label{eq:deltaChoice}
 \end{equation}
-\[
-  \Delta y = \text{splats}_y / \text{DepthImg-height}.
-\]
-\textbf{fiks de likningene over}
-Note that this choice of $\Delta x$ and $\Delta y$ is not unique, we might have
+note that this choice of $\Delta x$ and $\Delta y$ is not unique, we might have
 chosen something larger. The values are used for looking up depth image samples,
 so we should not choose something too small, our choice is exactly to look for
 neighbouring depth samples. Since this calculation of $\sv_x$ and $\sv_y$ is
@@ -394,25 +424,18 @@ coordinates, and after perspective division and viewport transformation, we get
 corresponding window coordinates $\sv$, $\sv_{x+\Delta x}$ and $\sv_{y+\Delta
 y}$, which we can subtract to obtain 2D vectors spanning the splat,
 \[
-  \sv_{\Delta x} =
-  \sv_{x+\Delta x} - \sv =
-    \frac{\text{width}}{2\Delta x} \left(
-        \frac{\pv_{x+\Delta x}.xy}{\pv_{x+\Delta x}.w} -
+  \sv_{\delta} =
+  \sv_{x+\delta} - \sv =
+    \frac{L}{2\delta} \left(
+        \frac{\pv_{x+\delta}.xy}{\pv_{x+\delta}.w} -
         \frac{\pv.xy}{\pv.w}
     \right),
 \]
-and
-\[
-  \sv_{\Delta y} =
-  \sv_{y+\Delta y} - \sv =
-    \frac{\text{height}}{2\Delta y} \left(
-        \frac{\pv_{y+\Delta y}.xy}{\pv_{y+\Delta y}.w} -
-        \frac{\pv.xy}{\pv.w}
-    \right),
-\]
-where we have used the ``shader notation'' to extract 2D vectors and scalars
-from the 4D vectors, and $\text{width}$ and $\text{height}$ are the viewport
-width and height, respectively.
+where $\delta$ is either $\Delta x$ or $\Delta y$, $L$ is either
+$\text{width}$ or $\text{height}$, and we have used the ``shader
+notation'' to extract 2D vectors and scalars from the 4D vectors, and
+$\text{width}$ and $\text{height}$ are the viewport width and height,
+respectively.
 
 Then, on the client we render a \texttt{glPoint} for each splat, with texture
 coordinates $(s, t)^\prime$ and \texttt{glPointSize} set to a larger value that will
@@ -426,10 +449,16 @@ image at position
   \begin{pmatrix}
     u \\ v
   \end{pmatrix}
+  =
+  \begin{pmatrix}
+    s \\ t
+  \end{pmatrix} +
+  T 
+  \begin{pmatrix}
+    \texttt{glPointCoord}-\frac{1}{2}
+  \end{pmatrix}
 \]
-where $(u, v)^\prime = \texttt{gl\_PointCoord}-0.5$ are ``intra-splat texture
-coordinates''. \textbf{Boer kanskje sjekke at det ikke er noen faktor 2 som har
-falt ut noe sted paa veien...}
+where $(u, v)$ are ``intra-splat texture coordinates''.
 
 When the assumption that the geometry is locally planar does not hold, \eg, if
 the splats are very large, or they originate from a rather curved or non-smooth
@@ -465,6 +494,12 @@ implementing a more sophisticated texture coordinate transformation may actually
 amount to performing the same work as for more and smaller splats. Equivalently
 , using more and smaller splats may be regarded as a better texture transform
 implementation.
+
+
+%-------------------------------------------------------------------------
+\subsubsection{Other splat considerations}
+
+\marginpar{\textbf{... samle avsnittene nedenfor og komprimere...}}
 
 
 %-------------------------------------------------------------------------
@@ -511,32 +546,41 @@ algorithm for replacing old models with new ones.  One can imagine a plethora of
 retain a constant number of proxy models. The first algorithm is to replace the
 one with a viewing direction differing the most from the newly received
 model. The second simply replaces the oldest one in store. The third replaces a
-proxy model $j$ if the replacement results in the following objective function
+proxy model $k$ if the replacement results in the following objective function
 being reduced,
 \[
-  \text{coverage}_j = 
-  \sum_{i=1, i\neq j}^n 
-    \angle(\textbf{camdir}_i, \textbf{new camdir} )^2,
+  \text{coverage} =
+  \sum_{i=1}^n 
+    \sum_{j\neq i}^n 
+      ( \angle(\textbf{camdir}_i, \textbf{camdir}_j )^2,
 \]
-where $\textbf{camdir}$ is the direction in which the camera was looking for the
-generation of that particular proxy model.
-
-There are some issues to consider with respect to panning and zooming that we
-will not discuss here due to the limited space available.  All of these model
-replacement algorithms work decently well.
-
+where $n$ is the number of proxy models available and the model to be replaced
+is the one that minimizes this after replacement.
+%\textbf{droppe fra her: }
+%\ie, if $\text{coverage}_k < \text{coverage}$, where
+%\[
+%  \text{coverage}_k =
+%  \min_j
+%  \sum_{i=1, i\neq j}^n 
+%    ( \angle(\textbf{camdir}_i, \textbf{new\ camdir}_j )^2.
+%\]
+%\textbf{til hit?}
+Here, $\textbf{camdir}$ is the direction in which the camera was looking for the
+generation of that particular proxy model.  There are some issues to consider
+with respect to panning and zooming that we will not discuss here due to the
+limited space available.
 
 
 %-------------------------------------------------------------------------
-\subsection{Dynamic/heuristic method selection, depth compression}
+\subsection{Dynamic/heuristic method selection, depth compression, auto-tuning}
+\label{sec:autoTuning}
 
 Since the main purpose of the automatically generated proxy model is to
 facilitate a client-rendered image while waiting for one from the server for
 increased interactivity, it is important that the process of generating and
 sending proxy model data from the server itself is not hold up more than
-necessary. There are mainly three sources of delay (\textbf{passer aa nevne
-tidligere?}) for server-rendered images to the client; high
-latency, low bandwidth, and slow server-rendering itself.
+necessary. There are mainly three sources of delay for server-rendered images to
+the client; high latency, low bandwidth, and slow server-rendering itself.
 
 In the first case, it seems prudent to have a better proxy model on the client,
 that can be used for longer time and for interactivity resulting in viewing
@@ -549,32 +593,33 @@ To take care of this, we have adopted an adaptive specification of
 proxy model data from the server. This involves a more light-weight image (lossy
 JPG-compression with adaptive quality control) while the user is interacting
 with the client, as well as a reduced resolution of the depth buffer sent from
-the server. See Figure~\ref{fig:adapativeProxyModels} for examples of low- and
-high-quality proxy models.
+the server. Another possible form of auto-tuning is to let the client adaptively
+choose the number of splats, stored number of proxy models, etc.
 
-\begin{figure}[htb]
-  \centering
-  \subfigure[Full png image,\newline full depth buffer]{
-    \includegraphics[width=.30\linewidth]{auto1.jpg}
-  }
-  \subfigure[Coarse jpg,\newline quality $q=0$]{
-    \includegraphics[width=.30\linewidth]{auto2.jpg}
-  }
-  \subfigure[Auto-proxy, trun-\newline cated depth data]{
-    \includegraphics[width=.30\linewidth]{auto3.jpg}
-  }
-  \caption{\label{fig:adapativeProxyModels} Proxy models adaptively adjusted to
-           available bandwidth and server capacity. The server-rendered JPG
-           image adaptively selects a quality setting based on recorded
-           timings. Shown is the worst case, \texttt{quality}=0, (b) which is
-           the last step before switching to ``auto proxy'' (c). The auto-proxy
-           model shown displays artifacts caused both by the magenta surface
-           being almost parallel to the viewing direction at the moment of proxy
-           model recording, and by the non-smooth parts of the geometry
-           (corners). The number of splats is set low on purpose, and the depth
-           buffer size is reduced by a factor of $16^{-2} \approx 0.4\%$.}
-\end{figure}
-
+%See Figure~\ref{fig:adapativeProxyModels} for examples of low- and
+%high-quality proxy models.
+%\begin{figure}[htb]
+%  \centering
+%  \subfigure[Full png image,\newline full depth buffer]{
+%    \includegraphics[width=.30\linewidth]{auto1.jpg}
+%  }
+%  \subfigure[Coarse jpg,\newline quality $q=0$]{
+%    \includegraphics[width=.30\linewidth]{auto2.jpg}
+%  }
+%  \subfigure[Auto-proxy, trun-\newline cated depth data]{
+%    \includegraphics[width=.30\linewidth]{auto3.jpg}
+%  }
+%  \caption{\label{fig:adapativeProxyModels} Proxy models adaptively adjusted to
+%           available bandwidth and server capacity. The server-rendered JPG
+%           image adaptively selects a quality setting based on recorded
+%           timings. Shown is the worst case, \texttt{quality}=0, (b) which is
+%           the last step before switching to ``auto proxy'' (c). The auto-proxy
+%           model shown displays artifacts caused both by the magenta surface
+%           being almost parallel to the viewing direction at the moment of proxy
+%           model recording, and by the non-smooth parts of the geometry
+%           (corners). The number of splats is set low on purpose, and the depth
+%           buffer size is reduced by a factor of $16^{-2} \approx 0.4\%$. \textbf{KRYMPE HER}}
+%\end{figure}
 
 
 %-------------------------------------------------------------------------
@@ -587,10 +632,12 @@ we use Google Chrome, the code is written in standard Javascript/WebGL.
 The client communicatesover tcp/ip, using either http or
 websockets, with a server running as an Apache module.
 
-The automatic proxy geometry implementation is fully invisible to the
+The automatic proxy geometry implementation in Tinia is fully invisible to the
 application, meaning that all existing applications immediately will have the
-feature available. We have tested the algorithm on several smaller test cases,
-but also on a larger oil reservoir viewer, FRView, developed in the CloudViz
+feature available. Without Tinia, the algorithm is minimally intrusive in that
+only the depth buffer will have to be added to the rendering output of the
+application. We have tested the algorithm on several smaller test cases, but
+also on a larger oil reservoir viewer, FRView, developed in the CloudViz
 project, see~\cite{cloudviz}.
 
 This viewer utilizes several GLSL shaders to render reservoir cells and
@@ -600,7 +647,7 @@ model is typically also very large, meaning that rendering the full model on a
 thin client is prohibitive. With the automatic proxy geometry, we can obtain
 interactive frame rates with a limited connection from a very lightweight client
 to the server. For a comparison of a server-rendered image and a client-rendered
-proxy model that is slightly rotated on the client, see Figure~\ref{fig:FRView}.
+proxy model that is slightly rotated on the client, see again Figure~\ref{fig:FRView}.
 
 
 %-------------------------------------------------------------------------
@@ -616,52 +663,41 @@ fully invisible to the application, meaning that all existing applications
 immediately will have the feature available.
 
 There are several directions in which we would like to follow up and improve
-this concept,
+this concept, foremost of these are,
 \begin{itemize}
+
 \item \textbf{Proxy model replacement algorithms} The goal is to obtain a good view with
 all relevant viewing parameters on the client, with the help of a minimal set of
 proxy models.
-\item \textbf{Grid-based proxy geometry} Instead of a set of ``splats'', one can
-envision a spatially partioned grid, for instance containing a distance field,
-with the geometry as an iso-surface.
-\end{itemize}
 
+%\item \textbf{Grid-based proxy geometry} Instead of a set of ``splats'', one can
+%envision a spatially partioned grid, for instance containing a distance field,
+%with the geometry as an iso-surface.
 
+%\item \textbf{Client rendering with overlays} Items like, \eg, axis indicators,
+%legends etc. that do not use the same view matrix as the main model could be
+%rendered locally on the client, only. This will cancel some of the benefit
+%connected to the automatic proxy model generation, though. \textbf{Nettopp av
+%denne grunn kan kanskje dette vaere et punkt vi boer luke bort? Plassmangel
+%ogsaa...}
 
+\item \textbf{Depth compression} We have currently done a unsophisticated
+truncation, but other approaches are possible,
+like discussed in~\cite{DBLP:journals/tvcg/Lindstrom14}.
 
-%-------------------------------------------------------------------------
-\section{Midlertidige notater}
+%\item \textbf{Improved auto-tuning} The auto-tuning discussed in
+%Section~\ref{sec:autoTuning} should be extended to take not only server
+%parameters (rendering quality, compression etc.) into account, but also the
+%capabilities of various thin clients.
 
-\begin{itemize}
+\item \textbf{Deferred shading} In addition to sending an image and a depth map
+from the server, one could send also a normal map. (This can also be
+reconstructed from the depth map on the client.) This would allow more advanced
+shading on the client.
 
-\item We restrict ourselves to discuss ``splat sets'' in this paper. (Nevne der det
-tas frem andre alternativer)
-
-\item
-Husk aa faa med det viktige i at vi faar oekt serverkapasiteten til aa
-serve flere klienter ogsaa!
-
-\item
-``server-image'' i steden for ``server-rendered image'' for aa spare plass?
-
-\item received stavekontroll
-
-\item Hvor passer det aa faa inn 1) bilde og 2) tekst om FRView?
-
-\item Maa ta et lite soek paa prior art innen omraadet
-
-\item problem med shading/shadows ++ i forb. med ikke deferred shading/normal map
-
-\item About our test case: corners, smooth surfaces, texturing for which artifacts are easy to
-spot. What it does lack is self-occluding parts. The FRView rservoir model that
-we have tested on does contain some of this.
-
-\item Burde vi vise chemco?
-
-\item Sjekk konsistens ved bruk av kombinasjoner som ``server rendered'' og
-``server-rendered'' etc.
-
-\item Referanser? Prior work?
+%\item \textbf{Stitching of 2.5D point clouds} As mentioned in
+%Section~\ref{sec:prevWork}, we have considered but not experimented with
+%stitching of depth maps from the server.
 
 \end{itemize}
 
