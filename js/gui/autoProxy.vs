@@ -4,7 +4,7 @@
 // FS. (See that start of the FS main() function.)
 
 // #define CULL_BACK_SIDES              // We use pos(i, j+1)-pos(i, j) x pos(i+1, j)-pos(i, j) to determine culling
-//#define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
+#define CULL_SKEWED_SPLATS              // Whether or not to test on the texture coordinate transform at all
 //#define BLOB_INSTEAD_OF_SKEWED_SPLAT    // If the intra-splat texture coordinate transform is skewed, we use uniform coloring of the splat,
                                         // otherwise, the splat is discarded.
 

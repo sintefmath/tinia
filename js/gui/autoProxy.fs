@@ -1,4 +1,4 @@
-#define FS_DISCARD_DEBUG
+//#define FS_DISCARD_DEBUG
 
 //#define CAM_DIR_THRESHOLD_DEG 3.0 // Used 3.0 until 141127.
 #define CAM_DIR_THRESHOLD_DEG 30.0
