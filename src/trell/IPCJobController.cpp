@@ -275,10 +275,14 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             return sizeof(tinia_msg_t);
         }
 
-        bool depth16;
-        m_model->getElementValue( "ap_16_bit_depth", depth16 );
-        bool dump_images;
-        m_model->getElementValue( "ap_dump", dump_images );
+        bool depth16 = false;
+        if ( m_job->getExposedModel()->hasElement("ap_16_bit_depth") ) {
+            m_model->getElementValue( "ap_16_bit_depth", depth16 );
+        }
+        bool dump_images = false;
+        if ( m_job->getExposedModel()->hasElement("ap_dump") ) {
+            m_model->getElementValue( "ap_dump", dump_images );
+        }
 
         // Looping through all keys and grabbing GL-content
         char *buf = (char*)msg + sizeof(tinia_msg_image_t);

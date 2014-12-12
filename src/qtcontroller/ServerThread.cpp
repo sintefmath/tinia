@@ -174,15 +174,21 @@ public:
             m_gl_grabber->grabRGB( m_job, m_width, m_height, m_key );
         } else {
             
-            bool use_qt_scaling;
-            m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
-            bool bi_linear_filtering;
-            m_job->getExposedModel()->getElementValue( "ap_bi_linear_filtering", bi_linear_filtering );
-            bool depth16;
-            m_job->getExposedModel()->getElementValue( "ap_16_bit_depth", depth16 );
+            bool use_qt_scaling = true;
+            if ( m_job->getExposedModel()->hasElement("ap_use_qt_img_scaling") ) {
+                m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+            }
+            bool depth16 = false;
+            if ( m_job->getExposedModel()->hasElement("ap_16_bit_depth") ) {
+                m_job->getExposedModel()->getElementValue( "ap_16_bit_depth", depth16 );
+            }
             if (use_qt_scaling) {
                 m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, 0, 0, false, depth16 );
             } else {
+                bool bi_linear_filtering = false;
+                if ( m_job->getExposedModel()->hasElement("ap_bi_linear_filtering") ) {
+                    m_job->getExposedModel()->getElementValue( "ap_bi_linear_filtering", bi_linear_filtering );
+                }
                 m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h, bi_linear_filtering, depth16 );
             }
             
