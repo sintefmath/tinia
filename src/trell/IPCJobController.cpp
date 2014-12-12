@@ -82,11 +82,15 @@ IPCJobController::cleanup()
 
 bool
 IPCJobController::onGetSnapshot( char*               buffer,
-                               TrellPixelFormat    pixel_format,
-                               const size_t        width,
-                               const size_t        height,
-                               const std::string&  session,
-                               const std::string&  key )
+                                 TrellPixelFormat    pixel_format,
+                                 const size_t        width,
+                                 const size_t        height,
+                                 const size_t        depth_width,
+                                 const size_t        depth_height,
+                                 const bool          depth16,
+                                 const bool          dump_images,
+                                 const std::string&  session,
+                                 const std::string&  key )
 {
     return false;
 }
@@ -223,6 +227,12 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         session = std::string( q->session_id );
         key     = std::string( q->key );
 
+        // These are coming from the url-parameters depth_w and depth_h...
+        int depth_width = q->depth_h;
+        int depth_height = q->depth_h;
+        // bool depth16 = q->depth16; @@@ should probably be gotten this way, too... for now, fetching from exposed model below...
+        // bool dump_images = q->dump_images; @@@ should probably be gotten this way, too... for now, fetching from exposed model below...
+
         std::string key_list_string = std::string( q->viewer_key_list );
         std::vector<std::string> key_list;
         boost::split( key_list, key_list_string, boost::is_any_of(",") );
@@ -241,7 +251,10 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                 // We could have the size of each canvas associated with the keys we have, but this information is currently
                 // not available. This will only work for equally sized canvases then, and no problem will be checked for or detected if it
                 // is not the case!
-                data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two long word aligned images + 2 matrices
+//                data_size = 4*((3*w*h+3)/4) * 2 + sizeof(float)*16*2; // Two long word aligned images + 2 matrices
+                data_size = 4*((3*w*h+3)/4);                        // One long word aligned image for rgb
+                data_size += 4*((3*depth_width*depth_height+3)/4);  // + one for depth
+                data_size += sizeof(float)*16*2;                    // + 2 matrices
                 // ... times the number of keys:
                 data_size *= key_list.size();
                 buf_size_required = 4*((3*w*h+3)/4) + 4*w*h + sizeof(float)*16*2; // One long word aligned image + one depth buffer (with floats) + 2 matrices
@@ -262,12 +275,16 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
             return sizeof(tinia_msg_t);
         }
 
+        bool depth16;
+        m_model->getElementValue( "ap_16_bit_depth", depth16 );
+        bool dump_images;
+        m_model->getElementValue( "ap_dump", dump_images );
+
         // Looping through all keys and grabbing GL-content
         char *buf = (char*)msg + sizeof(tinia_msg_image_t);
         for (size_t i=0; i<key_list.size(); i++) {
             key = key_list[i]; // Overriding the key gotten from the 'msg' parameter!
-
-            if ( onGetSnapshot(buf, format, w, h, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
+            if ( onGetSnapshot(buf, format, w, h, depth_width, depth_height, depth16, dump_images, session, key) ) { // onGetSnapshot() in IPCGLJobController grabs pixels for a given key
 #ifdef DEBUG
                 m_logger_callback( m_logger_data, 2, package.c_str(),
                                    "Queried for snapshot, ok. format = %d", format );
@@ -284,13 +301,14 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
                     // latter two into the buffer.
                     tinia::model::Viewer viewer;
                     m_model->getElementValue( key, viewer );
-                    buf += 4*((3*w*h+3)/4) * 2;     // Size of two packed images padded to be long word aligned...
+                    buf += 4*((3*w*h+3)/4);                         // Size of one packed image padded to be long word aligned, this is the rgb image
+                    buf += 4*((3*depth_width*depth_height+3)/4);    // Then the depth image.
                     float * float_buf = (float *)buf;
                     for (size_t i=0; i<16; i++) {
                         float_buf[   i] = viewer.modelviewMatrix[i];
                         float_buf[16+i] = viewer.projectionMatrix[i];
                     }
-                    buf += 16*sizeof(float) * 2;    // ... + two matrices
+                    buf += 16*sizeof(float) * 2;                    // ... + two matrices
                 }
             } else {
                 m_logger_callback( m_logger_data, 0, package.c_str(), "Queried for snapshot, rendering error." );
@@ -312,6 +330,8 @@ IPCJobController::handle( tinia_msg_t* msg, size_t msg_size, size_t buf_size )
         reply->msg.type     = TRELL_MESSAGE_IMAGE;
         reply->width        = w;
         reply->height       = h;
+        reply->depth_width  = depth_width;
+        reply->depth_height = depth_height;
         reply->pixel_format = format;
         m_logger_callback( m_logger_data, 2, package.c_str(), "data_size = %d", data_size );
         return sizeof(tinia_msg_image_t) + data_size; // size of msg + payload

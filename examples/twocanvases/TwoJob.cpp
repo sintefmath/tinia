@@ -65,7 +65,7 @@ bool TwoJob::init()
 //    const char *allowed_auto_proxy_algos[] = { "0) AngleCoverage-5",
 //                                               "1) AngleCoverage-2",
 //                                               "2) OnlyMostRecent",
-//                                               "3) ReplaceOldestWhenDifferent-5",
+//                                               "3) ReplOldestWhnDiff-5",
 //                                               "4) ReplaceOldest-5",
 //                                               NULL }; // NB! This list must match the one in ProxyRenderer.js, exactly! (I think...)
 //    int algos=0;

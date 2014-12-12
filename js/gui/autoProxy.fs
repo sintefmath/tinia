@@ -1,7 +1,11 @@
-// #define FS_DISCARD_DEBUG
+//#define FS_DISCARD_DEBUG
+
+//#define CAM_DIR_THRESHOLD_DEG 3.0 // Used 3.0 until 141127.
+#define CAM_DIR_THRESHOLD_DEG 30.0
 
 uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
+// 141129: textureSize(sampler, lod) is not available in GLSL ES 1.0 (WebGL) so we use DEPTH_WIDTH and DEPTH_HEIGHT added in ProxyRenderer.js.
 
 varying highp vec2 texCoo;
 varying highp float sampled_depth;      // Splat-centered depth
@@ -115,7 +119,9 @@ void main(void)
 
     // Adjusting for intra-splat texture coordinate.
     highp vec2 tc = texCoo;
-    // tc = tc + vec2(0.5/float(vp_width), 0.5/float(vp_height)); // Must we add this to get sampling mid-texel?!
+#ifdef MID_TEXEL_SAMPLING
+    tc = tc + vec2(0.5/float(DEPTH_WIDTH), -0.5/float(DEPTH_HEIGHT)); // Must we add this to get sampling mid-texel?!
+#endif
 #ifdef DEBUG
     if (useISTC>0) {
 	tc = tc + intraSplatTexCooTransform * vec2(c.x, -c.y); // Flip needed because texture is flipped, while gl_PointCoord is not?!;
@@ -137,7 +143,7 @@ void main(void)
 	    // colouring this fragment, but when the "most recent model" is rendered, it should override anything else,
 	    // hence, we use the background color in this case.
 #ifdef FS_DISCARD_DEBUG
-	    gl_FragColor = vec4( 1.0, 1.0, 1.0, src_alpha ); return;
+	    gl_FragColor = vec4( 1.0, 1.0, 1.0, src_alpha ); return; // white
 #else
 	    gl_FragColor = vec4( backgroundCol, src_alpha );
 #endif
@@ -172,7 +178,7 @@ void main(void)
     // To visualize the difference between the assumed-locally-planar geometry and the measured intra-splat depth:
     // gl_FragColor = vec4( 1000.0*abs(planar_depth-intra_splat_depth)*vec3(1.0), src_alpha ); return;
 
-    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( 3.0 / 180.0 * PI) )  // Test for "plane interpolation quality" if angle > 3 deg.
+    if (   ( dot( normalize(camDir), vec3(0.0, 0.0, -1.0) ) < cos( CAM_DIR_THRESHOLD_DEG / 180.0 * PI) )  // Test for "plane interpolation quality" if angle > ... deg.
 #ifdef DEBUG
 	   &&   ( useISTC > 0 )
 #endif

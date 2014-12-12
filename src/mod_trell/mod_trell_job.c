@@ -139,6 +139,8 @@ trell_handle_get_snapshot( trell_sconf_t*          sconf,
     query.pixel_format = dispatch_info->m_pixel_format;
     query.width        = dispatch_info->m_width;
     query.height       = dispatch_info->m_height;
+    query.depth_w      = dispatch_info->m_depth_w;
+    query.depth_h      = dispatch_info->m_depth_h;
     memcpy( query.session_id, dispatch_info->m_sessionid, TRELL_SESSIONID_MAXLENGTH );
     query.session_id[TRELL_SESSIONID_MAXLENGTH] = '\0';
     memcpy( query.key, dispatch_info->m_key, TRELL_KEYID_MAXLENGTH );

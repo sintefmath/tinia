@@ -105,6 +105,8 @@ typedef struct mod_trell_dispatch_info
     int                  m_base64;
     int                  m_width;
     int                  m_height;
+    int                  m_depth_w;
+    int                  m_depth_h;
     char                 m_jobid[TINIA_IPC_JOBID_MAXLENGTH+1];
     char                 m_sessionid[TRELL_SESSIONID_MAXLENGTH+1];
     char                 m_key[TRELL_KEYID_MAXLENGTH];

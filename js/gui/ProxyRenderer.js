@@ -51,7 +51,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                                                                         (180.0/1) / 180.0*3.1415926535,     // Is this a sensible value? 180/#models degrees
                                                                         1.1);                               // "Zoom threshold"
             break;
-        case "3) ReplaceOldestWhenDifferent-5":
+        case "3) ReplOldestWhnDiff-5":
         case 3:
             this._proxyModelCoverage = new gui.ProxyModelCoverageReplaceOldestWhenDifferent(glContext,
                                                                         5,                                  // Number of proxy models to keep
@@ -124,8 +124,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         this._initProxyCoverage(2, glContext);
 
         // --- For debugging, start
-        this._frameOutputInterval         = 1000;
-        this._frameMeasureInterval        = 100;
+        this._frameOutputInterval         = 50;
+        this._frameMeasureInterval        = 50;
         this._pausePerFrameInMilliseconds = 0; // (100 is useful for GPU fans that we don't want to spin up too much... :-) )
         this._debugSplatCol               = 0;
         this._decayMode                   = 0;
@@ -168,6 +168,7 @@ dojo.declare("gui.ProxyRenderer", null, {
 
         this._shaderSourceLoaded = false;
         this._loadShaders();
+        var reloadShaders = false; // Will be set to true if some magical exposedModel variable dictates the modification of a macro used by one or more shaders.
 
         // Setting up listeners for known configurable parameters. These are mainly for debugging and testing. (Meaning
         // that modification of defaults are for testing.) The application proxyCube sets up a GUI for manipulating
@@ -175,6 +176,80 @@ dojo.declare("gui.ProxyRenderer", null, {
         // 140911: Allowing these listeners even without debugging mode being enabled, so that applications may set their own values.
         //         Not adding a test for construction-time setting of all of these, just a subset.
         if (true) { // if (this._debugging) {
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_whitebg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_whitebg")) {
+                    this._backgroundCol = vec3.createFrom(1.0, 1.0, 1.0);
+                } else {
+                    this.exposedModel.updateElement("ap_whitebg", false);
+                }
+            }));
+            this.exposedModel.addLocalListener("ap_blackbg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_blackbg")) {
+                    this._backgroundCol = vec3.createFrom(0.0, 0.0, 0.0);
+                } else {
+                    this.exposedModel.updateElement("ap_blackbg", false);
+                }
+            }));
+            this.exposedModel.addLocalListener("ap_greenbg", dojo.hitch(this, function(event) {
+                if (this.exposedModel.getElementValue("ap_greenbg")) {
+                    this._backgroundCol = vec3.createFrom(0.0, 0.2, 0.0);
+                } else {
+                    this.exposedModel.updateElement("ap_greenbg", false);
+                }
+            }));
+
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_32", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_32")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 32);
+                    this.exposedModel.updateElement("ap_depthHeight", 32);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_32", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_64", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_64")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 64);
+                    this.exposedModel.updateElement("ap_depthHeight", 64);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_64", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_128", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_128")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 128);
+                    this.exposedModel.updateElement("ap_depthHeight", 128);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_128", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_256", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_256")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 256);
+                    this.exposedModel.updateElement("ap_depthHeight", 256);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_256", false);
+                }
+            }));
+            //-------------------------------------------------------
+            this.exposedModel.addLocalListener("ap_set_depth_size_512", dojo.hitch(this, function(event) {
+                if(this.exposedModel.getElementValue("ap_set_depth_size_512")) {
+                    this._loadShaders();
+                    this.exposedModel.updateElement("ap_depthWidth", 512);
+                    this.exposedModel.updateElement("ap_depthHeight", 512);
+                } else {
+                    this.exposedModel.updateElement("ap_set_depth_size_512", false);
+                }
+            }));
+
             //-------------------------------------------------------
             this.exposedModel.addLocalListener("ap_reloadShader", dojo.hitch(this, function(event) {
                 if(this.exposedModel.getElementValue("ap_reloadShader")) {
@@ -253,11 +328,59 @@ dojo.declare("gui.ProxyRenderer", null, {
             if ( this.exposedModel.hasKey("ap_useFragExt") ) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 //console.log("xxxxxxxxxxxxxxxx compiling shaders because initial ap_useFragExt exists...");
-                this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+                reloadShaders = true;
             }
             this.exposedModel.addLocalListener( "ap_useFragExt", dojo.hitch(this, function(event) {
                 this._useFragDepthExt = this.exposedModel.getElementValue("ap_useFragExt") ? 1 : 0;
                 this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_depthWidth") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_depthHeight") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_mid_texel_sampling") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_mid_texel_sampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_mid_splat_sampling") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_mid_splat_sampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_small_delta_sampling") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_small_delta_sampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
+            }) );
+
+            //-------------------------------------------------------
+            if ( this.exposedModel.hasKey("ap_larger_delta_sampling") ) {
+                reloadShaders = true;
+            }
+            this.exposedModel.addLocalListener( "ap_larger_delta_sampling", dojo.hitch(this, function(event) {
+                this._loadShaders();
             }) );
 
             //-------------------------------------------------------
@@ -284,7 +407,7 @@ dojo.declare("gui.ProxyRenderer", null, {
         if ( this.exposedModel.hasKey("ap_autoProxyDebugging") ) {
             this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
             console.log("xxxxxxxxxxxxxxxx Recompiling shaders with/without DEBUG set...");
-            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+            reloadShaders = true;
         }
         this.exposedModel.addLocalListener( "ap_autoProxyDebugging", dojo.hitch(this, function(event) {
             this._debugging = this.exposedModel.getElementValue("ap_autoProxyDebugging");
@@ -300,6 +423,10 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._clearCanvas();
             }
         }) );
+
+        if ( reloadShaders ) {
+            this._loadShaders(); // Must use this and not _compileShaders directly, since we cannot be sure that source has been loaded otherwise.
+        }
 
         this._proxyModelBeingProcessed = new gui.ProxyModel(this.gl);
 
@@ -371,15 +498,49 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("#define USE_FRAG_DEPTH_EXT");
         } else {
             this._useFragDepthAndAvailable = false;
-            console.log("// #define USE_FRAG_DEPTH_EXT");
+        }
+
+        if (this.exposedModel.hasKey("ap_depthWidth")) {
+            splat_vs_src = "#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")) + "\n" + splat_vs_src;
+            splat_fs_src = "#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")) + "\n" + splat_fs_src;
+            console.log("#define DEPTH_WIDTH " + (this.exposedModel.getElementValue("ap_depthWidth")));
+        }
+        if (this.exposedModel.hasKey("ap_depthHeight")) {
+            splat_vs_src = "#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")) + "\n" + splat_vs_src;
+            splat_fs_src = "#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")) + "\n" + splat_fs_src;
+            console.log("#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")));
+        }
+
+        if ( (this.exposedModel.hasKey("ap_mid_texel_sampling")) && (this.exposedModel.getElementValue("ap_mid_texel_sampling")) ) {
+            splat_vs_src = "#define MID_TEXEL_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define MID_TEXEL_SAMPLING\n" + splat_fs_src;
+            console.log("#define MID_TEXEL_SAMPLING");
+        }
+
+        if ( (this.exposedModel.hasKey("ap_mid_splat_sampling")) && (this.exposedModel.getElementValue("ap_mid_splat_sampling")) ) {
+            splat_vs_src = "#define MID_SPLAT_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define MID_SPLAT_SAMPLING\n" + splat_fs_src;
+            console.log("#define MID_SPLAT_SAMPLING");
+        }
+
+        if ( (this.exposedModel.hasKey("ap_small_delta_sampling")) && (this.exposedModel.getElementValue("ap_small_delta_sampling")) ) {
+            splat_vs_src = "#define SMALL_DELTA_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define SMALL_DELTA_SAMPLING\n" + splat_fs_src;
+            console.log("#define SMALL_DELTA_SAMPLING");
+        }
+
+        if ( (this.exposedModel.hasKey("ap_larger_delta_sampling")) && (this.exposedModel.getElementValue("ap_larger_delta_sampling")) ) {
+            splat_vs_src = "#define LARGER_DELTA_SAMPLING\n" + splat_vs_src;
+            splat_fs_src = "#define LARGER_DELTA_SAMPLING\n" + splat_fs_src;
+            console.log("#define LARGER_DELTA_SAMPLING");
         }
 
         var splat_fs = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         this.gl.shaderSource(splat_fs, splat_fs_src);
         this.gl.compileShader(splat_fs);
         if (!this.gl.getShaderParameter(splat_fs, this.gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
             console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
+            alert("An error occurred compiling the splat_fs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_fs));
             return null;
         }
 
@@ -387,9 +548,14 @@ dojo.declare("gui.ProxyRenderer", null, {
         this.gl.shaderSource(splat_vs, splat_vs_src);
         this.gl.compileShader(splat_vs);
         if (!this.gl.getShaderParameter(splat_vs, this.gl.COMPILE_STATUS)) {
+            console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
             alert("An error occurred compiling the splat_vs: " + this.gl.COMPILE_STATUS + ": " + this.gl.getShaderInfoLog(splat_vs));
             return null;
         }
+
+        // Displaying the shaders, for inspection...
+        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
+        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
 
         this._splatProgram = this.gl.createProgram();
         this.gl.attachShader(this._splatProgram, splat_vs);
@@ -398,6 +564,13 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
             alert("Unable to initialize the shader program: " + this.gl.LINK_STATUS + ": " + this.gl.getProgramInfoLog(this._splatProgram));
         }
+
+        // Nope, only gives the original source...
+        //    var vs_src = this.gl.getShaderSource( splat_vs );
+        //      console.log("VS source after preprocessing: ---------------------\n" + vs_src + "\n----------------");
+
+        // To get preprocessed output: cat autoProxy.fs.post | grep -v '#extension' | gcc -x c++ -E -P -w - | less
+
     },
 
 
@@ -471,7 +644,8 @@ dojo.declare("gui.ProxyRenderer", null, {
             } else {
                 if (this._debugging) {
                     // this.gl.clearColor(0.2, 0.2, 0.2, 0.8); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
-                    this.gl.clearColor(0.0, 0.2, 0.0, 1.0); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+//                    this.gl.clearColor(0.0, 0.2, 0.0, 1.0); // Use something smaller than 1.0 (0.8 for instance) for alpha to see the "ghost images"
+                    this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
                 } else {
                     this.gl.clearColor(this._backgroundCol[0], this._backgroundCol[1], this._backgroundCol[2], 1.0);
                 }
@@ -528,6 +702,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
             this._setUniform1i(this._splatProgram, "vp_width", this.gl.canvas.width);
             this._setUniform1i(this._splatProgram, "vp_height", this.gl.canvas.height);
+            console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
             this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
@@ -535,6 +710,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this.gl.uniform1i( this.gl.getUniformLocation(this._splatProgram, "rgbImage"), 1 );
 
             var t0 = performance.now();
+
             for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
                 if (this._proxyModelCoverage.proxyModelRing[i].state==2) {
                     this._setUniform1i(this._splatProgram, "splatSetIndex", i);
@@ -596,10 +772,11 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
             }
 
-            // Timing-stuff
-            //            if (this._debugging) {
+            // Timing-stuff ------------------------------------------------------
             if (false) {
-                //            this.gl.flush();
+                // A couple of problems here... 1) Strange things happen whenever the string put to ap_consoleLog changes in length!!! (Tinia-bug?!?!)
+                // 2) This is only timing rendering, and perhaps not even that... Loading/sending/decoding etc. of snapshots is not properly accounted for.
+
                 if ( this._frameMeasureCounter < this._frameMeasureInterval ) {
                     var t1 = performance.now();
                     this._frameTime += t1 - t0;
@@ -624,6 +801,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 }
                 this.exposedModel.updateElement("ap_cntr", this.exposedModel.getElementValue("ap_cntr") + 1 );
             }
+            // Timing-stuff ------------------------------------------------------
 
             if ( this._useBlending ) {
                 this.gl.colorMask(false, false, false, true);

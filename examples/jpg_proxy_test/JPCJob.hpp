@@ -17,13 +17,16 @@
  */
 
 #pragma once
+
 #include <GL/glew.h>
 #include <tinia/renderlist/DataBase.hpp>
 #include "tinia/jobcontroller/OpenGLJob.hpp"
 #include "tinia/model/StateListener.hpp"
+#include "tinia/utils/ProxyDebugGUI.hpp"
+
 namespace tinia {
 namespace example {
-class JPCJob : public tinia::jobcontroller::OpenGLJob, public tinia::model::StateListener
+class JPCJob : public tinia::jobcontroller::OpenGLJob
 {
 public:
     JPCJob();
@@ -48,6 +51,8 @@ private:
     GLuint                      m_gpgpu_quad_vertex_array;
     GLuint                      m_gpgpu_quad_buffer;
     GLuint m_tex;
+    boost::shared_ptr<tinia::utils::ProxyDebugGUI> m_proxyGUI;
+
 };
 }
 }

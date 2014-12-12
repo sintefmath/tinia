@@ -73,7 +73,8 @@ public:
                                     tinia::qtcontroller::impl::OpenGLServerGrabber* gl_grabber,
                                     const bool getRBGsnapshot,
                                     const bool pngMode, // Could have used TrellRequest, but then we would have to drag in mod_trell.h...
-                                    const int jpg_quality )
+                                    const int jpg_quality,
+                                    const unsigned depth_w = 0, const unsigned depth_h = 0 ) // Default values will result in canvas size being used.
         : m_reply( reply ),
           m_request( request ),
           m_job( NULL ),
@@ -81,7 +82,10 @@ public:
           m_gl_grabber_locker( gl_grabber->exclusiveAccessMutex() ),
           m_getRGBsnapshot( getRBGsnapshot ),
           m_pngMode( pngMode ),
-          m_jpg_quality( jpg_quality )
+          m_jpg_quality( jpg_quality ), // Could get this (and other) parameter from parsing below, like is done for m_ket etc. Same thing is done by the caller.
+                                        // (Better done by the caller, now that we (may) have multiple viewers...)
+          m_depth_w( depth_w ),
+          m_depth_h( depth_h )
     {
         using namespace tinia::qtcontroller::impl;
         
@@ -95,32 +99,72 @@ public:
                                                  "width height key" );
         m_width  = arguments.get<0>();
         m_height = arguments.get<1>();
+        if (depth_w==0) {
+            m_depth_w = m_width;
+        }
+        if (depth_h==0) {
+            m_depth_h = m_height;
+        }
         m_key    = ( proper_key_to_use != "" ? proper_key_to_use : arguments.get<2>() );
     }
-    
+
     ~SnapshotAsTextFetcher()
     {
         using namespace tinia::qtcontroller::impl;
-        QImage img( m_gl_grabber->imageBuffer(),
-                    m_width,
-                    m_height,
-                    QImage::Format_RGB888 );
-    
-        // This is a temporary fix. The image is reflected through the horizontal
-        // line y=height ((x, y) |--> (x, h-y) ).
-        QTransform flipTransformation(1, 0,
-                                      0, -1,
-                                      0, m_height);
-        img = img.transformed(flipTransformation);
-        QBuffer qBuffer;
-        if (m_pngMode) {
-            img.save(&qBuffer, "png");
-        } else {
-            img.save(&qBuffer, "jpg", m_jpg_quality);
+
+        bool use_qt_scaling = true;
+        if (m_job->getExposedModel()->hasElement("ap_use_qt_img_scaling")) {
+            m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
         }
-        
-        QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
-        m_reply << str;
+        if (use_qt_scaling) {
+
+            QImage img( m_gl_grabber->imageBuffer(),
+                        m_width,
+                        m_height,
+                        QImage::Format_RGB888 );
+            // This is a temporary fix. The image is reflected through the horizontal
+            // line y=height ((x, y) |--> (x, h-y) ).
+            QTransform flipTransformation(1, 0,
+                                          0, -1,
+                                          0, m_height);
+            img = img.transformed(flipTransformation);
+            if ( (m_depth_w!=m_width) || (m_depth_h!=m_height) ) {
+                // std::cout << "Scaling (QImage) to " << m_depth_w << " x " << m_depth_h << std::endl;
+                img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
+            }
+            QBuffer qBuffer;
+            if (m_pngMode) {
+                img.save(&qBuffer, "png");
+            } else {
+                img.save(&qBuffer, "jpg", m_jpg_quality);
+            }
+            
+            QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
+            m_reply << str;
+
+        } else {
+            
+            QImage img( m_gl_grabber->imageBuffer(),
+                        m_depth_w,
+                        m_depth_h,
+                        QImage::Format_RGB888 );
+            // This is a temporary fix. The image is reflected through the horizontal
+            // line y=height ((x, y) |--> (x, h-y) ).
+            QTransform flipTransformation(1, 0,
+                                          0, -1,
+                                          0, m_depth_h);
+            img = img.transformed(flipTransformation);
+            QBuffer qBuffer;
+            if (m_pngMode) {
+                img.save(&qBuffer, "png");
+            } else {
+                img.save(&qBuffer, "jpg", m_jpg_quality);
+            }
+            
+            QString str( QByteArray( qBuffer.data(), int(qBuffer.size()) ).toBase64() );
+            m_reply << str;
+
+        }
     }
     
     void
@@ -129,7 +173,19 @@ public:
         if ( m_getRGBsnapshot ) {
             m_gl_grabber->grabRGB( m_job, m_width, m_height, m_key );
         } else {
-            m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key );
+            
+            bool use_qt_scaling;
+            m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+            bool bi_linear_filtering;
+            m_job->getExposedModel()->getElementValue( "ap_bi_linear_filtering", bi_linear_filtering );
+            bool depth16;
+            m_job->getExposedModel()->getElementValue( "ap_16_bit_depth", depth16 );
+            if (use_qt_scaling) {
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, 0, 0, false, depth16 );
+            } else {
+                m_gl_grabber->grabDepth( m_job, m_width, m_height, m_key, m_depth_w, m_depth_h, bi_linear_filtering, depth16 );
+            }
+            
         }
     }
     
@@ -145,6 +201,7 @@ protected:
     bool                                            m_getRGBsnapshot;
     bool                                            m_pngMode;
     int                                             m_jpg_quality;
+    unsigned                                        m_depth_w, m_depth_h;
 };
 
 
@@ -231,14 +288,16 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
                                    tinia::qtcontroller::impl::OpenGLServerGrabber* grabber,
                                    const bool with_depth )
 {
-    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> arguments =
-            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string> >(
-                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype" );
+    boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string, int, int> arguments =
+            parseGet< boost::tuple<unsigned int, unsigned int, std::string, std::string, int, long, long, std::string, int, int> >(
+                decodeGetParameters(request), "width height key viewer_key_list jpeg_quality revision timestamp snaptype depth_w depth_h" );
     std::string key = arguments.get<2>();
     std::string viewer_key_list = arguments.get<3>();
     const long revision = arguments.get<5>();
     const long timestamp = arguments.get<6>();
     const std::string snaptype = arguments.get<7>();
+    const int depth_w = arguments.get<8>();
+    const int depth_h = arguments.get<9>();
 
     os << httpHeader(getMimeType("file.txt")) << "\r\n{ ";
 
@@ -258,7 +317,8 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
         if (with_depth) {
             os << ", \"depth\": \"";
             {
-                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */ );
+                SnapshotAsTextFetcher f( os, request, k.toStdString(), job, grabber, false /* Depth requested */, true /* png mode */, 0 /* jpeg-quality, unused for png */,
+                                         depth_w, depth_h ); // Only used for depth
                 m_mainthread_invoker->invokeInMainThread( &f, true );
             }
             os << "\", \"view\": \"";
@@ -279,7 +339,8 @@ void ServerThread::getSnapshotTxt( QTextStream &os, const QString &request,
             }
             os << "\"";
         }
-        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\" }";
+        os << ",\n\"revision\": " << revision << ",\n\"timestamp\": " << timestamp << ",\n\"snaptype\": " << "\"" << snaptype.c_str() << "\"";
+        os << ",\n\"depthwidth\": " << depth_w << ",\"depthheight\": " << depth_h << " }";
         if ( i < vk_list.size() - 1 ) {
             os << ", ";
         }
@@ -388,7 +449,8 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    QString fullPath = ":javascript/" + uri;
+//    QString fullPath = ":javascript/" + uri;
+    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_141127/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

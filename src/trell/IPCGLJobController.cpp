@@ -389,6 +389,10 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
                                    TrellPixelFormat    pixel_format,
                                    const size_t        width,
                                    const size_t        height,
+                                   const size_t        depth_width,
+                                   const size_t        depth_height,
+                                   const bool          depth16,
+                                   const bool          dump_images,
                                    const std::string&  session,
                                    const std::string&  key )
 {
@@ -502,35 +506,86 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
         // NB! We read four bytes per pixel, then convert to three, meaning that the buffer must be large enough for four!!!
+        // (This should be taken care of further up the stack. The caller of this method is IPCJobController::handle().)
         glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
-        // Depth encoded as 24 bit fixed point values.
-        for (size_t i=0; i<width*height; i++) {
-            float value = (float)( ((GLfloat *)buffer_pos)[i] );
-            for (size_t j=0; j<3; j++) {
-                (buffer_pos)[3*i+j] = (unsigned char)( floor(value*255.0) );
-                value = 255.0*value - floor(value*255.0);
+
+        if( m_logger_callback != NULL ) { // (This goes to /tmp/job-id.stderr)
+            m_logger_callback( m_logger_data, 0, package.c_str(), "Current canvas and depth buffer size: %d %d and %d %d", width, height, depth_width, depth_height );
+        }
+
+        if ( (depth_width!=width) || (depth_height!=height) ) {
+            // New path, downsampling, without bi-linear interpolation
+            float *tmp_buffer = new float[depth_width*depth_height];
+            const float * const m_buf = (float *)buffer_pos;
+            for (size_t i=0; i<depth_height; i++) {
+                size_t ii = size_t( floor( (i*height)/double(depth_height) + 0.5 ) );
+                for (size_t j=0; j<depth_width; j++) {
+                    size_t jj = size_t( floor( (j*width)/double(depth_width) + 0.5 ) );
+                    tmp_buffer[ i*depth_width + j ] = m_buf[ ii*width + jj ];
+                }
+            }
+            if (depth16) {
+                // Depth encoded as 24 bit fixed point values, least significant bits set to 0
+                for (size_t i=0; i<depth_width*depth_height; i++) {
+                    float value = tmp_buffer[i];
+                    (buffer_pos)[3*i+0] = (unsigned char)( floor(value*255.0) );
+                    value = 255.0*value - floor(value*255.0);
+                    (buffer_pos)[3*i+1] = (unsigned char)( floor(value*255.0) );
+                    (buffer_pos)[3*i+2] = 0;
+                }
+            } else {
+                // Depth encoded as 24 bit fixed point values.
+                for (size_t i=0; i<depth_width*depth_height; i++) {
+                    float value = tmp_buffer[i];
+                    for (size_t j=0; j<3; j++) {
+                        (buffer_pos)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                        value = 255.0*value - floor(value*255.0);
+                    }
+                }
+            }
+            delete tmp_buffer;
+        } else {
+            // (Old path for non-reduced depth resolution)
+            if (depth16) {
+                // Depth encoded as 24 bit fixed point values, least significant bits set to 0
+                for (size_t i=0; i<width*height; i++) {
+                    float value = (float)( ((GLfloat *)buffer_pos)[i] );
+                    (buffer_pos)[3*i+0] = (unsigned char)( floor(value*255.0) );
+                    value = 255.0*value - floor(value*255.0);
+                    (buffer_pos)[3*i+1] = (unsigned char)( floor(value*255.0) );
+                    (buffer_pos)[3*i+2] = 0;
+                }
+            } else {
+                // Depth encoded as 24 bit fixed point values.
+                for (size_t i=0; i<width*height; i++) {
+                    float value = (float)( ((GLfloat *)buffer_pos)[i] );
+                    for (size_t j=0; j<3; j++) {
+                        (buffer_pos)[3*i+j] = (unsigned char)( floor(value*255.0) );
+                        value = 255.0*value - floor(value*255.0);
+                    }
+                }
+            }
+            if (dump_images) {
+                static int cntr=0;
+                {
+                    char fname[1000];
+                    sprintf(fname, "/tmp/trell_rgb_%05d.ppm", cntr);
+                    FILE *fp = fopen(fname, "w");
+                    fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+                    fwrite(buffer_pos - 4*((width*height*3 + 3)/4), 1, 3*width*height, fp);
+                    fclose(fp);
+                }
+                {
+                    char fname[1000];
+                    sprintf(fname, "/tmp/trell_depth_%05d.ppm", cntr);
+                    FILE *fp = fopen(fname, "w");
+                    fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
+                    fwrite(buffer_pos, 1, 3*width*height, fp);
+                    fclose(fp);
+                }
+                cntr++;
             }
         }
-#if 0
-        static int cntr=0;
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/rgb_%05d.ppm", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
-            fwrite(buffer_pos - 4*((width*height*3 + 3)/4), 1, 3*width*height, fp);
-            fclose(fp);
-        }
-        {
-            char fname[1000];
-            sprintf(fname, "/tmp/depth_%05d.ppm", cntr);
-            FILE *fp = fopen(fname, "w");
-            fprintf(fp, "P6\n%lu\n%lu\n255\n", width, height);
-            fwrite(buffer_pos, 1, 3*width*height, fp);
-            fclose(fp);
-        }
-        cntr++;
-#endif
        break;
     }
     default:

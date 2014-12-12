@@ -235,7 +235,7 @@ static int trell_pass_reply_png_bundle( void*          data,
     }
 
     static int num_of_keys = 0;
-    size_t buffer_img_size=0, padded_img_size=0, matrix_size = sizeof(float)*16*w_depth, canvas_size=0;
+    size_t buffer_img_size=0, depth_img_size=0, padded_img_size=0, padded_depth_size=0, matrix_size = sizeof(float)*16*w_depth, canvas_size=0;
 
     size_t offset = 0;
     if( part == 0 ) {
@@ -254,6 +254,9 @@ static int trell_pass_reply_png_bundle( void*          data,
             }
         }
 
+        // Some (all?) of this doesn't make (the same kind of) sense as before, now that we send two images from this routine, and they may
+        // even differ in size...
+
         encoder_state->dispatch_info->m_png_entry = apr_time_now();
         // first invocation
         tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
@@ -264,8 +267,11 @@ static int trell_pass_reply_png_bundle( void*          data,
         encoder_state->width  = msg->width;
         encoder_state->height = msg->height;
         buffer_img_size       = 3 * encoder_state->width * encoder_state->height;
+        depth_img_size        = 3 * msg->depth_width * msg->depth_height;
+        ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "depth_img_size = %lu.", depth_img_size );
         padded_img_size       = 4*( (buffer_img_size+3)/4 );
-        canvas_size           = padded_img_size + w_depth*( padded_img_size + 2*matrix_size );
+        padded_depth_size     = 4*( (depth_img_size+3)/4 );
+        canvas_size           = padded_img_size + w_depth*( padded_depth_size + 2*matrix_size );
         encoder_state->buffer = apr_palloc( encoder_state->r->pool, num_of_keys * canvas_size );
         const size_t filtered_img_size_bound = (3*encoder_state->width+1) * encoder_state->height; // The +1 is for the png filter flag
         encoder_state->filtered = apr_palloc( encoder_state->r->pool, filtered_img_size_bound + w_depth*2*matrix_size ); // Just in case the image is smaller than 4*16 bytes!
@@ -343,6 +349,15 @@ static int trell_pass_reply_png_bundle( void*          data,
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depth\": \"" );
                 {
                     p = png; // Reusing the old buffer, should be ok when we use the "transient" buckets that copy data.
+
+                    // Is this safe, i.e., just poking into this structure?
+                    tinia_msg_image_t* msg = (tinia_msg_image_t*)buffer;
+//                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+//                                   "trell_pass_reply_png_bundle: ********** Setting new temporary encoding size for possibly reduced depth size: %d %d",
+//                                   msg->depth_width, msg->depth_height );
+                    encoder_state->width  = msg->depth_width;   // Now changing to size of depth image
+                    encoder_state->height = msg->depth_height;
+
                     int rv = trell_png_encode( data, i*canvas_size + padded_img_size , &p );
                     if ( p-png > total_bound ) {
                         ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r, "trell_pass_reply_png_bundle: encoder has overrun the buffer!" );
@@ -357,11 +372,19 @@ static int trell_pass_reply_png_bundle( void*          data,
                         base64_size--;
                     }
                     APR_BRIGADE_INSERT_TAIL( bb, apr_bucket_transient_create( base64, base64_size, bb->bucket_alloc ) );
+
+                    // Setting size back again for rgb image
+//                    ap_log_rerror( APLOG_MARK, APLOG_ERR, 0, encoder_state->r,
+//                                   "trell_pass_reply_png_bundle: ********** Resetting encoding size back to rgb image size: %d %d",
+//                                   msg->width, msg->height );
+                    encoder_state->width  = msg->width;   // Now changing back to size of rgb image
+                    encoder_state->height = msg->height;
+
                 }
-                const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size );
+                const float * const MV = (const float * const)( encoder_state->buffer + i*canvas_size + padded_img_size + padded_depth_size );
                 BB_APPEND_STRING( encoder_state->r->pool, bb, "\", view: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                   MV[0], MV[1], MV[2], MV[3], MV[4], MV[5], MV[6], MV[7], MV[8], MV[9], MV[10], MV[11], MV[12], MV[13], MV[14], MV[15] );
-                const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + 2*padded_img_size + sizeof(float)*16 );
+                const float * const PM = (const float * const)( encoder_state->buffer + i*canvas_size + padded_img_size + padded_depth_size + sizeof(float)*16 );
                 BB_APPEND_STRING( encoder_state->r->pool, bb, ", proj: \"%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\"",
                                   PM[0], PM[1], PM[2], PM[3], PM[4], PM[5], PM[6], PM[7], PM[8], PM[9], PM[10], PM[11], PM[12], PM[13], PM[14], PM[15] );
             }
@@ -369,6 +392,8 @@ static int trell_pass_reply_png_bundle( void*          data,
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"revision\" : \"%d\"", encoder_state->dispatch_info->m_revision );
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"timestamp\" : \"%s\"", encoder_state->dispatch_info->m_timestamp );
             BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"snaptype\" : \"%s\"", encoder_state->dispatch_info->m_snaptype );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depthwidth\" : \"%d\"", encoder_state->dispatch_info->m_depth_w );
+            BB_APPEND_STRING( encoder_state->r->pool, bb, ", \"depthheight\" : \"%d\"", encoder_state->dispatch_info->m_depth_h );
 
             BB_APPEND_STRING( encoder_state->r->pool, bb, " }" );
             if (i<num_of_keys-1) {
