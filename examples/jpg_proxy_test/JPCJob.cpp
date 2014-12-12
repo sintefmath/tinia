@@ -17,6 +17,9 @@
  */
 
 #include <GL/glew.h>
+
+#include <boost/make_shared.hpp>
+
 #include <tinia/renderlist/Buffer.hpp>
 #include <tinia/renderlist/Draw.hpp>
 #include <tinia/renderlist/SetViewCoordSys.hpp>
@@ -53,16 +56,19 @@ bool JPCJob::init()
     m_model->addElement<std::string>( "boundingbox", "-2.0 -2.0 -2.0 2.0 2.0 2.0" );
 
     // The constructor of proxyGUI sets up "magical" elements in m_model.
-    tinia::utils::ProxyDebugGUI proxyGUI( m_model,
-                                          true, // autoProxy
-                                          true, // autoProxy-debugging
-                                          true, // jpgProxy
-                                          true,  // autoSelect proxy method
-                                          true  // depth buffer manipulation
-                                          );
+    m_proxyGUI = boost::make_shared<tinia::utils::ProxyDebugGUI>( m_model,
+                                                                  true, // autoProxy
+                                                                  true, // autoProxy-debugging
+                                                                  true, // jpgProxy
+                                                                  true,  // autoSelect proxy method
+                                                                  true  // depth buffer manipulation
+                                                                  );
 
     // And this method returns a corresponding grid containing GUI elements for manipulating these elements.
-    tinia::model::gui::Grid *grid = proxyGUI.getGrid();
+    tinia::model::gui::Grid *grid = m_proxyGUI->getGrid();
+
+    // This is a more basic and compact version with sensible presets.
+    tinia::model::gui::Grid *compact_grid = m_proxyGUI->getCompactGrid();
 
     // Setting up root consisting of canvas + grid
     tinia::model::gui::HorizontalLayout *rootLayout = new tinia::model::gui::HorizontalLayout();
@@ -71,19 +77,21 @@ bool JPCJob::init()
         rootLayout->addChild(canvas);
     }
     rootLayout->addChild(grid);
+    rootLayout->addChild(compact_grid);
     m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
 
     return true;
 }
 
 
+
+
 JPCJob::~JPCJob()
 {
 }
 
-void JPCJob::stateElementModified(tinia::model::StateElement *stateElement)
-{
-}
+
+
 
 bool JPCJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
@@ -132,8 +140,7 @@ bool JPCJob::renderFrame(const std::string &session, const std::string &key, uns
 
     glEnable(GL_DEPTH_TEST);
 
-    // glClearColor(0, 0, 0, 1);
-    glClearColor(1.0, 1.0, 1.0, 1);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, width, height);

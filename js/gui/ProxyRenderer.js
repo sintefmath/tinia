@@ -352,15 +352,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             }) );
 
             //-------------------------------------------------------
-            if ( this.exposedModel.hasKey("ap_simulate_downsampling") ) {
-                reloadShaders = true;
-            }
-            this.exposedModel.addLocalListener( "ap_simulate_downsampling", dojo.hitch(this, function(event) {
-                this._loadShaders();
-                console.log("Remember to make sure a new proxy model is produced after this, otherwise all bets are off!!!");
-            }) );
-
-            //-------------------------------------------------------
             if ( this.exposedModel.hasKey("ap_mid_texel_sampling") ) {
                 reloadShaders = true;
             }
@@ -520,12 +511,6 @@ dojo.declare("gui.ProxyRenderer", null, {
             console.log("#define DEPTH_HEIGHT " + (this.exposedModel.getElementValue("ap_depthHeight")));
         }
 
-        if ( (this.exposedModel.hasKey("ap_simulate_downsampling")) && (this.exposedModel.getElementValue("ap_simulate_downsampling")) ) {
-            splat_vs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_vs_src;
-            splat_fs_src = "#define SIMULATE_DOWNSAMPLING\n" + splat_fs_src;
-            console.log("#define SIMULATE_DOWNSAMPLING\n");
-        }
-
         if ( (this.exposedModel.hasKey("ap_mid_texel_sampling")) && (this.exposedModel.getElementValue("ap_mid_texel_sampling")) ) {
             splat_vs_src = "#define MID_TEXEL_SAMPLING\n" + splat_vs_src;
             splat_fs_src = "#define MID_TEXEL_SAMPLING\n" + splat_fs_src;
@@ -568,6 +553,10 @@ dojo.declare("gui.ProxyRenderer", null, {
             return null;
         }
 
+        // Displaying the shaders, for inspection...
+        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
+        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
+
         this._splatProgram = this.gl.createProgram();
         this.gl.attachShader(this._splatProgram, splat_vs);
         this.gl.attachShader(this._splatProgram, splat_fs);
@@ -575,6 +564,13 @@ dojo.declare("gui.ProxyRenderer", null, {
         if (!this.gl.getProgramParameter(this._splatProgram, this.gl.LINK_STATUS)) {
             alert("Unable to initialize the shader program: " + this.gl.LINK_STATUS + ": " + this.gl.getProgramInfoLog(this._splatProgram));
         }
+
+        // Nope, only gives the original source...
+        //    var vs_src = this.gl.getShaderSource( splat_vs );
+        //      console.log("VS source after preprocessing: ---------------------\n" + vs_src + "\n----------------");
+
+        // To get preprocessed output: cat autoProxy.fs.post | grep -v '#extension' | gcc -x c++ -E -P -w - | less
+
     },
 
 
@@ -706,6 +702,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
             this._setUniform1i(this._splatProgram, "vp_width", this.gl.canvas.width);
             this._setUniform1i(this._splatProgram, "vp_height", this.gl.canvas.height);
+            console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
             this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 

@@ -51,8 +51,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._boundingboxKey = params.boundingboxKey;
         this._resetViewKey = params.resetViewKey;
         this._renderListURL = params.renderListURL;
-        this._width = 1024;
-        this._height = 1024;
+        this._width = 512;
+        this._height = 512;
         this._modelLib = params.modelLib;
         // The modification of fields of 'params' in this constructor is probably not necessary, because the call (there seems to be
         // only one) to the constructor uses a very short-lived automatic variable that is not used again before going out of scope.
@@ -202,12 +202,17 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                 var response_obj = eval( '(' + response + ')' );
                                 // console.log("/model/updateParsed: response[" + this._key + "].view = " + response_obj[this._key].view);
                                 // console.log("/model/updateParsed: response[" + this._key + "].proj = " + response_obj[this._key].proj);
-                                var depthwidth  = response_obj[this._key].depthwidth;
+                                var depthwidth  = response_obj[this._key].depthwidth;   // Values from the server
                                 var depthheight = response_obj[this._key].depthheight;
-                                // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
-                                //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
-                                if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) || (depthwidth ===undefined) ) &&
-                                     ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) || (depthheight===undefined) ) )
+                                var apDepthHeight = depthheight;                        // Values from the GUI
+                                var apDepthWidth  = depthwidth;
+                                if ( (this._modelLib.hasKey("ap_depthWidth")) && (this._modelLib.hasKey("ap_depthHeight")) ) {
+                                    apDepthWidth  = this._modelLib.getElementValue("ap_depthWidth");
+                                    apDepthHeight = this._modelLib.getElementValue("ap_depthHeight");
+                                }
+                                // console.log("Received depth size 1: " + depthwidth + " " + depthheight + ", specified by GUI: " + apDepthWidth + " " + apDepthHeight);
+                                if ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                                     ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) )
                                 {
                                     // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                                     // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -218,12 +223,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     }
                                     // console.log("new snaptype = " + snaptype);
                                     this._snapshotTimings.update( snaptype, (t0 - response_obj[this._key].timestamp) );
-                                    this._snapshotTimings.print();
+                                    // this._snapshotTimings.print();
                                     this._autoSelectSnapshotType(this._snapshotTimings);
                                 } else {
                                     console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (1)");
-                                    console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight +
-                                                ", ap_depthWidth=" + this._modelLib.getElementValue("ap_depthWidth") + ", ap_depthHeight=" + this._modelLib.getElementValue("ap_depthHeight"));
+                                    console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
                                 }
                             })
                         });
@@ -351,18 +355,10 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
         this._modelLib.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
-            if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
-                this._urlHandler.updateParams( { "depth_w": this._width } );
-            } else {
-                this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
-            }
+            this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
         }) );
         this._modelLib.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
-            if ( (this._modelLib.hasKey("ap_simulate_downsampling")) && (this._modelLib.getElementValue("ap_simulate_downsampling")) ) {
-                this._urlHandler.updateParams( { "depth_h": this._height } );
-            } else {
-                this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
-            }
+            this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
         }) );
 
         this._modelLib.addLocalListener( "ap_autoSelectSampleAll", dojo.hitch(this, function(event) {
@@ -380,6 +376,27 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
             }
         }) );
+        this._modelLib.addLocalListener("ap_set_canvas_size_256", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("ap_set_canvas_size_256") ) {
+                this.resize( 256, 256 );
+                this._modelLib.updateElement("ap_set_canvas_size_256", false);
+                this._updateMatrices();
+            }
+        }));
+        this._modelLib.addLocalListener("ap_set_canvas_size_512", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("ap_set_canvas_size_512") ) {
+                this.resize( 512, 512 );
+                this._modelLib.updateElement("ap_set_canvas_size_512", false);
+                this._updateMatrices();
+            }
+        }));
+        this._modelLib.addLocalListener("ap_set_canvas_size_1024", dojo.hitch(this, function(event) {
+            if ( this._modelLib.getElementValue("ap_set_canvas_size_1024") ) {
+                this.resize( 1024, 1024 );
+                this._modelLib.updateElement("ap_set_canvas_size_1024", false);
+                this._updateMatrices();
+            }
+        }));
 
 //        this._modelLib.addLocalListener( "ap_dump_button", dojo.hitch(this, function(event) {
 //            if ( this._modelLib.getElementValue("ap_dump_button") ) {
@@ -466,13 +483,18 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 var response_obj = eval( '(' + params.response + ')' );
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].view = " + response_obj[this._key].view);
 //                console.log("/model/updateSendPartialComplete: response[" + this._key + "].proj = " + response_obj[this._key].proj);
-                var depthwidth  = response_obj[this._key].depthwidth;
+                var depthwidth  = response_obj[this._key].depthwidth;   // Values from the server
                 var depthheight = response_obj[this._key].depthheight;
-                // console.log("Received depth size: " + depthwidth + " " + depthheight + ", current model's depth size: " +
-                //             this._modelLib.getElementValue("ap_depthWidth") + " " + this._modelLib.getElementValue("ap_depthHeight"));
+                var apDepthHeight = depthheight;                        // Values from the GUI
+                var apDepthWidth  = depthwidth;
+                if ( (this._modelLib.hasKey("ap_depthWidth")) && (this._modelLib.hasKey("ap_depthHeight")) ) {
+                    apDepthWidth  = this._modelLib.getElementValue("ap_depthWidth");
+                    apDepthHeight = this._modelLib.getElementValue("ap_depthHeight");
+                }
+                // console.log("Received depth size 2: " + depthwidth + " " + depthheight + ", specified by GUI: " + apDepthWidth + " " + apDepthHeight);
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    if ( ( (depthwidth ==this._modelLib.getElementValue("ap_depthWidth" )) || (depthwidth ==0) || (depthwidth ===undefined) ) &&
-                            ( (depthheight==this._modelLib.getElementValue("ap_depthHeight")) || (depthheight==0) || (depthheight===undefined) ) )
+                    if ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                         ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) )
                     {
                         // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                         // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -484,12 +506,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                         }
                         // console.log("new snaptype = " + snaptype);
                         this._snapshotTimings.update( snaptype, (tmp - response_obj[this._key].timestamp) );
-                        this._snapshotTimings.print();
+                        // this._snapshotTimings.print();
                         this._autoSelectSnapshotType(this._snapshotTimings);
                     } else {
                         console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (2)");
-                        console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight +
-                                    ", ap_depthWidth=" + this._modelLib.getElementValue("ap_depthWidth") + ", ap_depthHeight=" + this._modelLib.getElementValue("ap_depthHeight"));
+                        console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
                     }
                 }
             } else {

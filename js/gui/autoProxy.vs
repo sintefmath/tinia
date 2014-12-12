@@ -98,12 +98,7 @@ void main(void)
     // Adding the amount of "a half delta", for delta=1, see below.
     st = st + vec2(0.5/splats_x, -0.5/splats_y);
 #endif
-#ifndef SIMULATE_DOWNSAMPLING
     sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
-#else
-    vec2 st2 = floor( st * vec2(DEPTH_WIDTH, DEPTH_HEIGHT) ) / vec2(DEPTH_WIDTH, DEPTH_HEIGHT);
-    sampled_depth = texture2D(depthImg, st2).r + (texture2D(depthImg, st2).g + texture2D(depthImg, st2).b/255.0) / 255.0;
-#endif
 
     if ( sampled_depth > 0.999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
@@ -197,15 +192,8 @@ void main(void)
     st_dx = st_dx + vec2(0.5/splats_x, 0.0);
     st_dy = st_dy - vec2(0.0, 0.5/splats_y);
 #endif
-#ifndef SIMULATE_DOWNSAMPLING
     float depth_dx = texture2D(depthImg, st_dx).r + (texture2D(depthImg, st_dx).g + texture2D(depthImg, st_dx).b/255.0) / 255.0;
     float depth_dy = texture2D(depthImg, st_dy).r + (texture2D(depthImg, st_dy).g + texture2D(depthImg, st_dy).b/255.0) / 255.0;
-#else
-    vec2 st_dx2 = floor( st_dx * vec2(DEPTH_WIDTH, DEPTH_HEIGHT) ) / vec2(DEPTH_WIDTH, DEPTH_HEIGHT);
-    vec2 st_dy2 = floor( st_dy * vec2(DEPTH_WIDTH, DEPTH_HEIGHT) ) / vec2(DEPTH_WIDTH, DEPTH_HEIGHT);
-    float depth_dx = texture2D(depthImg, st_dx2).r + (texture2D(depthImg, st_dx2).g + texture2D(depthImg, st_dx2).b/255.0) / 255.0;
-    float depth_dy = texture2D(depthImg, st_dy2).r + (texture2D(depthImg, st_dy2).g + texture2D(depthImg, st_dy2).b/255.0) / 255.0;
-#endif
     if (depth_dx>0.999) {
         // Possible actions: Use the 'sampled_depth' value to get something more sensible. The primitive will be drawn,
         // but is it useful to draw an oddly textured splat? Another alternative is to discard the whole splat.

@@ -112,8 +112,10 @@ public:
     {
         using namespace tinia::qtcontroller::impl;
 
-        bool use_qt_scaling;
-        m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+        bool use_qt_scaling = true;
+        if (m_job->getExposedModel()->hasElement("ap_use_qt_img_scaling")) {
+            m_job->getExposedModel()->getElementValue( "ap_use_qt_img_scaling", use_qt_scaling );
+        }
         if (use_qt_scaling) {
 
             QImage img( m_gl_grabber->imageBuffer(),
@@ -127,14 +129,8 @@ public:
                                           0, m_height);
             img = img.transformed(flipTransformation);
             if ( (m_depth_w!=m_width) || (m_depth_h!=m_height) ) {
-                bool tmp;
-                m_job->getExposedModel()->getElementValue( "ap_simulate_downsampling", tmp );
-                if (!tmp) {
-                    // std::cout << "Scaling (QImage) to " << m_depth_w << " x " << m_depth_h << std::endl;
-                    img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
-                } else {
-                    std::cout << "Not downsampling with QImage.scaled(), we're simulating downsampling in shaders" << std::endl;
-                }
+                // std::cout << "Scaling (QImage) to " << m_depth_w << " x " << m_depth_h << std::endl;
+                img = img.scaled(m_depth_w, m_depth_h); // Should ignore aspect ratio, and do no (bi-)linear filtering, according to the man pages.
             }
             QBuffer qBuffer;
             if (m_pngMode) {
@@ -453,7 +449,8 @@ void ServerThread::errorCode(QTextStream &os, unsigned int code, const QString &
 QString ServerThread::getStaticContent(const QString &uri)
 {
 
-    QString fullPath = ":javascript/" + uri;
+//    QString fullPath = ":javascript/" + uri;
+    QString fullPath = "/home/jnygaard/new_system/prosjekter/tinia_checkout_141127/tinia/js/" + uri;
 
     QFile file(fullPath);
     if(file.open(QIODevice::ReadOnly)) {

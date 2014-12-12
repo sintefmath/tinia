@@ -35,7 +35,7 @@
 namespace tinia {
 namespace utils {
 
-class ProxyDebugGUI //  : public Item
+class ProxyDebugGUI: public tinia::model::StateListener
 {
 
 public:
@@ -43,12 +43,23 @@ public:
     ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
                    const bool with_ap, const bool with_ap_debugging, const bool with_jpg, const bool with_auto_select,
                    const bool with_depth_buffer_manipulation = false );
+    ~ProxyDebugGUI();
+    void stateElementModified(tinia::model::StateElement *stateElement);
     tinia::model::gui::Grid *getGrid();
-    
+    tinia::model::gui::Grid *getCompactGrid();
+
 private:
 
-    bool m_w_ap, m_w_apd, m_w_jpg, m_w_as, m_with_depth_buffer_manipulation;
+    void resetSettingsConnection();
+    void resetSettingsClient();
+    void lowBandwidthHighLatency();
+    void highBandwidthLowLatency();
+    void clientPhablet();
+    void clientLaptop();
+    void clientDesktop();
 
+    bool m_w_ap, m_w_apd, m_w_jpg, m_w_as, m_with_depth_buffer_manipulation;
+    boost::shared_ptr<model::ExposedModel> m_model;
 };
 
 
