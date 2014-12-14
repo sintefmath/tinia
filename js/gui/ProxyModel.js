@@ -83,21 +83,11 @@ dojo.declare("gui.ProxyModel", null, {
             // console.log("                   proposed new RGB size = " + pot_width + " x " + pot_height);
             if ( (pot_width!=rgbImage.width) || (pot_height!=rgbImage.height) ) {
                 // Only in these cases do we bother with (possibly costly and/or quality degrading) rescaling
-//                var border1 = 4;
-//                var border2 = 4;
                 var canvas = document.createElement('canvas');
                 var ctx = canvas.getContext('2d');
                 canvas.width=pot_width;
                 canvas.height=pot_height;
-//                ctx.fillStyle = '#ff0000';
-//                ctx.fillRect(0, 0, pot_width, pot_height);
-//                ctx.fill();
-//                ctx.fillStyle = '#ffff00';
-//                ctx.fillRect(border1, border1, pot_width-2*border1, pot_height-2*border1);
-//                ctx.fill();
-//                ctx.drawImage(rgbImage, border1+border2, border1+border2, pot_width-2*border1-2*border2, pot_height-2*border1-2*border2);
                 ctx.drawImage(rgbImage, 0, 0, pot_width, pot_height);
-                //            document.body.appendChild(canvas); // Use this to visually inspect new images, they are added to the html-page
                 rgbImage = canvas;
             }
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
