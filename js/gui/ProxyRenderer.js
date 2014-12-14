@@ -702,7 +702,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
             this._setUniform1i(this._splatProgram, "vp_width", this.gl.canvas.width);
             this._setUniform1i(this._splatProgram, "vp_height", this.gl.canvas.height);
-            console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
+            // console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
             this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 
