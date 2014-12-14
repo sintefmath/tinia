@@ -84,7 +84,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 var ycoo = -1.0*(1.0-v) + 1.0*v;
                 for (var j=0; j<this._splats_x; j++) {
                     var u = (j+0.5)/this._splats_x;
-                    this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                    this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;  // Ranges are [-1, 1] for these coordinates
                     this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = ycoo;
                 }
             }
@@ -160,7 +160,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             var v = (i+0.5)/this._splats_y;
             for (var j=0; j<this._splats_x; j++) {
                 var u = (j+0.5)/this._splats_x;
-                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u; // Ranges are [-1, 1] for these coordinates
                 this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
             }
         }

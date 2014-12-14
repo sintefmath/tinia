@@ -80,29 +80,30 @@ dojo.declare("gui.ProxyModel", null, {
             console.log("ProxyModel.setAll: RGB size = " + rgbImage.width + " x " + rgbImage.height);
 
 
-
+            var new_width = 128;
+            var new_height = 128;
+            var border1 = 4;
+            var border2 = 4;
 
 //            rgbImage.width = 512;
 //            rgbImage.height = 512;
-
-
 ////            var pixel = new Image(1, 1);
 ////            pixel.src = ""
 
-//            var canvas = document.createElement('canvas');
-//            var ctx = canvas.getContext('2d');
-//            canvas.width=128;
-//            canvas.height=128;
-//            ctx.fillStyle = '#ff0000';
-//            ctx.fillRect(0, 0, 128, 128);
-//            ctx.fill();
-//            ctx.fillStyle = '#ffff00';
-//            ctx.fillRect(4, 4, 120, 120);
-//            ctx.fill();
-//            ctx.drawImage(rgbImage, 8, 8, 112, 112);
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width=new_width;
+            canvas.height=new_height;
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(0, 0, new_width, new_height);
+            ctx.fill();
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(border1, border1, new_width-2*border1, new_height-2*border1);
+            ctx.fill();
+            ctx.drawImage(rgbImage, border1+border2, border1+border2, new_width-2*border1-2*border2, new_height-2*border1-2*border2);
 
-//            rgbImage = canvas;
-//            document.body.appendChild(canvas);
+            document.body.appendChild(canvas);
+            rgbImage = canvas;
 
 
 
