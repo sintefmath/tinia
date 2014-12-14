@@ -124,7 +124,6 @@ void main(void)
     // Next, we apply the current transformation to get the proxy splat. (This is the vertex in clip coordinates.)
     vec4 pos = projUnproj * vec4( aVertexPosition.xy, 2.0*sampled_depth - 1.0, 1.0 );
     gl_Position = pos;
-    //gl_Position = vec4(pos.x*float(vp_width)/512.0 + 1.0/float(vp_width)*512.0, pos.y, pos.z, pos.w);
 
     float z_ndc = pos.z/pos.w;
     //depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
