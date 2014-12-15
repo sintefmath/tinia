@@ -142,6 +142,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
 
 
     resize: function (w, h) {
+        if (this._gl) {
+            this._gl.viewport(0, 0, w, h);
+        }
         this._width = w;
         this._height = h;
         this._setWidthHeight(this.domNode);
