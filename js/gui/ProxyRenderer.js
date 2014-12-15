@@ -554,8 +554,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
 
         // Displaying the shaders, for inspection...
-        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
-        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
+//        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
+//        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
 
         this._splatProgram = this.gl.createProgram();
         this.gl.attachShader(this._splatProgram, splat_vs);

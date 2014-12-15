@@ -245,8 +245,8 @@ void ProxyDebugGUI::resetSettingsConnection()
     m_model->updateElement<bool>( "ap_useJpgProxy", false );
     m_model->updateElement<int>(  "ap_jpgQuality", 10);
     m_model->updateElement<bool>( "ap_useAutoProxy", true );
-    m_model->updateElement<int>(  "ap_depthWidth", 256);
-    m_model->updateElement<int>(  "ap_depthHeight", 256);
+    m_model->updateElement<int>(  "ap_depthWidth", 512);
+    m_model->updateElement<int>(  "ap_depthHeight", 512);
     m_model->updateElement<bool>( "ap_use_qt_img_scaling", true );
     m_model->updateElement<bool>( "ap_set_depth_size_32", false );
     m_model->updateElement<bool>( "ap_set_depth_size_64", false );
