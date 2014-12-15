@@ -214,8 +214,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     apDepthHeight = this._modelLib.getElementValue("ap_depthHeight");
                                 }
                                 // console.log("Received depth size 1: " + depthwidth + " " + depthheight + ", specified by GUI: " + apDepthWidth + " " + apDepthHeight);
-                                if ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
-                                     ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) )
+                                if ( ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                                       ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) ) ||
+                                        ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) ) // ... or *not* in AP-mode at all, then, ...
                                 {
                                     // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                                     // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -230,7 +231,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                                     this._autoSelectSnapshotType(this._snapshotTimings);
                                 } else {
                                     console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (1)");
-                                    console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
+                                    console.log("From response: depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", client: ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
                                 }
                             })
                         });
@@ -357,9 +358,15 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         this._modelLib.addLocalListener( "ap_jpgQuality", dojo.hitch(this, function(event) {
             this._urlHandler.updateParams( { "jpeg_quality": this._modelLib.getElementValue("ap_jpgQuality") } );
         }) );
+        if ( this._modelLib.hasKey("ap_depthWidth") ) {
+            this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
+        }
         this._modelLib.addLocalListener( "ap_depthWidth", dojo.hitch(this, function(event) {
             this._urlHandler.updateParams( { "depth_w": this._modelLib.getElementValue("ap_depthWidth") } );
         }) );
+        if ( this._modelLib.hasKey("ap_depthHeight") ) {
+            this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
+        }
         this._modelLib.addLocalListener( "ap_depthHeight", dojo.hitch(this, function(event) {
             this._urlHandler.updateParams( { "depth_h": this._modelLib.getElementValue("ap_depthHeight") } );
         }) );
@@ -496,8 +503,9 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 }
                 // console.log("Received depth size 2: " + depthwidth + " " + depthheight + ", specified by GUI: " + apDepthWidth + " " + apDepthHeight);
                 if (response_obj) { // 140616: Suddenly, params.response seems to be an empty string, from time to time, requiring this
-                    if ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
-                         ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) )
+                    if ( ( ( (depthwidth ==apDepthWidth)  || (depthwidth ==0) || (depthwidth ===undefined) ) &&
+                           ( (depthheight==apDepthHeight) || (depthheight==0) || (depthheight===undefined) ) ) ||
+                        ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) ) // ... or *not* in AP-mode at all, then, ...
                     {
                         // Not completely sure, but it may be a good idea to not update with a received bundle, if the depth size does not match what the shader is told...
                         // Currently, the shader gets the macros DEPTH_* from these exposed model elements.
@@ -513,7 +521,7 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                         this._autoSelectSnapshotType(this._snapshotTimings);
                     } else {
                         console.log("Depth size of received bundle does not match what the shader has been told to expect. Ignoring this bundle. (2)");
-                        console.log("depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
+                        console.log("From response: depthwidth=" + depthwidth + ", depthheight=" + depthheight + ", client: ap_depthWidth=" + apDepthWidth + ", ap_depthHeight=" + apDepthHeight);
                     }
                 }
             } else {
@@ -674,6 +682,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if (!response_rgb.substring(response_rgb.length - 1).match(/^[0-9a-zA-z\=\+\/]/)) { // @@@ What is this about?
             response_rgb = response_rgb.substring(0, response_rgb.length - 1);
         }
+
+
         this._img.src = "data:image/png;base64," + response_rgb;
         if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
             if (this._proxyRenderer) {
@@ -684,6 +694,22 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
                 this._img.src = "data:image/jpg;base64," + response_rgb;
             }
         }
+
+
+//        if ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) {
+//            this._img.src = "data:image/png;base64," + response_rgb;
+//            if (this._proxyRenderer) {
+//                this._proxyRenderer.setDepthData(response_rgb, response_depth, response_view, response_proj);
+//            }
+//        } else {
+//            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+//                this._img.src = "data:image/jpg;base64," + response_rgb;
+//            } else {
+//                this._img.src = "data:image/png;base64," + response_rgb;
+//            }
+//        }
+
+
         this._showCorrect();
     },
 
@@ -715,8 +741,8 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         for (var i = 0; i < this._eventHandlers.length; ++i) {
             this._eventHandlers[i].mousePressEvent(event);
         }
-        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
-            if ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) {
+        if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) { // if not AP in use
+            if ( (this._modelLib.hasKey("ap_useJpgProxy"))  && (this._modelLib.getElementValue("ap_useJpgProxy")) ) { // and JPG in use, ...
                 this._snapshotURL = this._snapshotStrings.jpg;
                 this._urlHandler.setURL(this._snapshotURL);
                 this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
@@ -750,11 +776,11 @@ dojo.declare("gui.Canvas", [dijit._Widget], {
         if ( ! ( (this._modelLib.hasKey("ap_useAutoProxy")) && (this._modelLib.getElementValue("ap_useAutoProxy")) ) ) {
             // console.log("Mouse up:   Not in AP mode");
             if (   ( (this._modelLib.hasKey("ap_useJpgProxy")) && (this._modelLib.getElementValue("ap_useJpgProxy")) ) ||
-                   ( (this._modelLib.hasKey("ap_autoSelect")) && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
+                   ( (this._modelLib.hasKey("ap_autoSelect"))  && (this._modelLib.getElementValue("ap_autoSelect")) )      ) {
                 // console.log("Mouse up:   In JPG mode *or* autoSelect mode");
-                // console.log("Mouse up:   Setting PNG mode");
                 // 141203: Wrapping this, for figure-generation
                 if ( (this._modelLib.hasKey("ap_hold_up_png")) && (!this._modelLib.getElementValue("ap_hold_up_png")) ) {
+                    // console.log("Mouse up:   Setting PNG mode");
                     this._snapshotURL = this._snapshotStrings.png;
                     this._urlHandler.setURL(this._snapshotURL);
                     this._urlHandler.updateParams({snaptype: this._snapShotStringToType( this._urlHandler.getURL() )});
