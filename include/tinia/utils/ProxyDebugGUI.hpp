@@ -53,6 +53,7 @@ private:
     void resetSettingsConnection();
     void resetSettingsClient();
     void lowBandwidthHighLatency();
+    void mediumBandwidthMediumLatency();
     void highBandwidthLowLatency();
     void clientPhablet();
     void clientLaptop();
