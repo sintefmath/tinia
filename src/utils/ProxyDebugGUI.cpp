@@ -43,7 +43,8 @@ namespace {
     }
 
     const char *ap_compactConnectionChoices[] = { "0) low bandwidth, high latency",
-                                                  "1) high bandwidth, low latency",
+                                                  "1) medium bandwidth and latency",
+                                                  "2) high bandwidth, low latency",
                                                   NULL };
 
     const char *ap_compactClientChoices[] = { "0) phablet",
@@ -180,10 +181,10 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
     model->addAnnotation("ap_set_canvas_size_1024", "Canvas 1024");
 
     model->addElementWithRestriction<std::string>( "ap_compactConnectionChoices",
-                                                   ap_compactConnectionChoices[0], &ap_compactConnectionChoices[0], &ap_compactConnectionChoices[0]+num_of_strings(ap_compactConnectionChoices) );
+                                                   ap_compactConnectionChoices[1], &ap_compactConnectionChoices[0], &ap_compactConnectionChoices[0]+num_of_strings(ap_compactConnectionChoices) );
     model->addAnnotation("ap_compactConnectionChoices", "Connection");
     model->addElementWithRestriction<std::string>( "ap_compactClientChoices",
-                                                   ap_compactClientChoices[0], &ap_compactClientChoices[0], &ap_compactClientChoices[0]+num_of_strings(ap_compactClientChoices) );
+                                                   ap_compactClientChoices[1], &ap_compactClientChoices[0], &ap_compactClientChoices[0]+num_of_strings(ap_compactClientChoices) );
     model->addAnnotation("ap_compactClientChoices", "Client");
 
     model->addStateListener(this);
@@ -211,6 +212,8 @@ void ProxyDebugGUI::stateElementModified(tinia::model::StateElement *stateElemen
        if ( value == ap_compactConnectionChoices[0] ) {
            lowBandwidthHighLatency();
        } else if ( value == ap_compactConnectionChoices[1] ) {
+           mediumBandwidthMediumLatency();
+       } else if ( value == ap_compactConnectionChoices[2] ) {
            highBandwidthLowLatency();
        } else {
            std::cout << "huh? undefined preset" << std::endl;
@@ -300,12 +303,23 @@ void ProxyDebugGUI::lowBandwidthHighLatency()
     m_model->updateElement<bool>( "ap_16_bit_depth", true );
 }
 
+void ProxyDebugGUI::mediumBandwidthMediumLatency()
+{
+    resetSettingsConnection();
+
+    m_model->updateElement<bool>( "ap_useJpgProxy", true );
+    m_model->updateElement<bool>( "ap_useAutoProxy", false );
+    m_model->updateElement<int>(  "ap_jpgQuality", 70);
+    // Since ap_mode = false, no need to set other variables
+}
+
 void ProxyDebugGUI::highBandwidthLowLatency()
 {
     resetSettingsConnection();
 
     m_model->updateElement<bool>( "ap_useJpgProxy", true );
     m_model->updateElement<bool>( "ap_useAutoProxy", false );
+    m_model->updateElement<int>(  "ap_jpgQuality", 99);
     // Since ap_mode = false, no need to set other variables
 }
 
@@ -319,7 +333,6 @@ void ProxyDebugGUI::clientPhablet()
     m_model->updateElement<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[2] ); // only most recent
     m_model->updateElement<bool>( "ap_screenSpaceSized", false );
     m_model->updateElement<int>(  "ap_overlap", 100);
-    m_model->updateElement<bool>( "ap_alwaysShowMostRecent", true );
     m_model->updateElement<bool>( "ap_useISTC", true );     // skip this?
     m_model->updateElement<bool>( "ap_useFragExt", true );  // available?
     m_model->updateElement<int>(  "ap_splats", 16);           // what is a good number?
@@ -333,10 +346,9 @@ void ProxyDebugGUI::clientLaptop()
     m_model->updateElement<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[0] ); // angle coverage 5
     m_model->updateElement<bool>( "ap_screenSpaceSized", true );
     m_model->updateElement<int>(  "ap_overlap", 200);
-    m_model->updateElement<bool>( "ap_alwaysShowMostRecent", true );
     m_model->updateElement<bool>( "ap_useISTC", true );
     m_model->updateElement<bool>( "ap_useFragExt", true );
-    m_model->updateElement<int>(  "ap_splats", 32);
+    m_model->updateElement<int>(  "ap_splats", 128);
     m_model->updateElement<bool>( "ap_larger_delta_sampling", true );
 }
 
@@ -347,10 +359,9 @@ void ProxyDebugGUI::clientDesktop()
     m_model->updateElement<std::string>( "ap_autoProxyAlgo", allowed_auto_proxy_algos[0] ); // angle coverage 5
     m_model->updateElement<bool>( "ap_screenSpaceSized", true );
     m_model->updateElement<int>("ap_overlap", 200);
-    m_model->updateElement<bool>( "ap_alwaysShowMostRecent", true );
     m_model->updateElement<bool>( "ap_useISTC", true );
     m_model->updateElement<bool>( "ap_useFragExt", true );
-    m_model->updateElement<int>("ap_splats", 1024);
+    m_model->updateElement<int>("ap_splats", 512);
     m_model->updateElement<bool>( "ap_larger_delta_sampling", true );
 }
 
@@ -500,6 +511,10 @@ tinia::model::gui::Grid *ProxyDebugGUI::getCompactGrid()
     mainGrid->setChild(0, 1, new tinia::model::gui::RadioButtons("ap_compactConnectionChoices"));
     mainGrid->setChild(1, 0, new tinia::model::gui::Label("ap_compactClientChoices"));
     mainGrid->setChild(1, 1, new tinia::model::gui::RadioButtons("ap_compactClientChoices"));
+
+    // Medium choices for defaults
+    mediumBandwidthMediumLatency();
+    clientLaptop();
 
     return mainGrid;
 }
