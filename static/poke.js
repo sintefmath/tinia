@@ -150,8 +150,10 @@ init()
     tinia_poke = new TiniaPoke();
 
     periodic();
-    listRenderingDevices( );
-    listApplications( 0 );
+    if ( !isDemo() ) {
+	listRenderingDevices( );
+	listApplications( 0 );
+    }
 }
 
 
@@ -169,7 +171,9 @@ function
 update()
 {
     listJobs();
-    load();
+    if ( !isDemo() ) {
+	load();
+    }
 }
 
 function dumpXML( req )
@@ -178,12 +182,9 @@ function dumpXML( req )
 }
 
 
-
-
-
-
-
-
+function isDemo() {
+    return (window.location.pathname.indexOf("demoes") > -1);
+}
 
 
 
