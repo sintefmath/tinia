@@ -1,6 +1,6 @@
 <HTML>
 <HEAD>
-<TITLE>mod_trell poke</TITLE>
+<TITLE>mod_trell demoes</TITLE>
 <LINK REL="stylesheet" type="text/css" href="poke.css">
 <SCRIPT type="text/javascript" src="queries.js"></SCRIPT>
 <SCRIPT type="text/javascript" src="replies.js"></SCRIPT>
@@ -8,34 +8,48 @@
 <SCRIPT type="text/javascript" src="updatedom.js"></SCRIPT>
 <SCRIPT type="text/javascript" src="demoes.js"></SCRIPT>
 <BODY onload="init();">
-<H1>Tinia master job</H1>
+
+<H1>Tinia demo jobs</H1>
+
+
+
+
+<table id="demoes" class="demotable">
+  <tr>
+    <th></th>
+    <th>Demoes</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><img src="images/qa.png"\></td>
+    <td class="clickable" onClick="demo_startClock();">Clock</td>
+    <td class="clickable" onClick="demo_startClock();">A cube that rotates for each second</td>
+  </tr>
+    <tr>
+    <td><img src="images/qa.png"\></td>
+    <td class="clickable" onClick="demo_startAP();">AutoProxy</td>
+    <td class="clickable" onClick="demo_startAP();">Using AutoProxy to allow local rendering of approxymate model while waiting for the server</td>
+  </tr>
+  <tr>
+    <td><img src="images/qa.png"\></td>
+    <td class="clickable" onClick="demo_startTwoCanvas();">Two canvases</td>
+    <td class="clickable" onClick="demo_startTwoCanvas();">Two canvases in one job</td>
+  </tr>
+</table>
+
+
 
 
 <TABLE>
 <TR><TD><TABLE WIDTH=100% class="mi">
 <TR>
     <TD COLSPAN=3>
-    <BUTTON type="button" onclick="restartMaster();">(Re)start master job</BUTTON>
-    <BUTTON type="button" onclick="load();listRenderingDevices();listApplications();listJobs();">Refresh all</BUTTON>
+      <BUTTON type="button" onclick="listJobs();">Refresh all</BUTTON>
     </TD>
 </TR>
 </TABLE></TD></TR>
 
-<TR><TD><TABLE WIDTH=100% class="mi">
-<TR>
-    <TD COLSPAN=2><B>Load averages</B></TD>
-</TR>
-<TR><TD COLSPAN=3><div id="load"></div></TD></TR>
 
-</TABLE></TD></TR>
-<TR><TD><TABLE WIDTH=100% class="mi">
-
-<TR>
-    <TD COLSPAN=2><B>Rendering devices</B></TD>
-</TR>
-<TR><TD COLSPAN=3><div id="rendering_devices"></div></td></tr>
-
-</TABLE></TD></TR>
 <TR><TD><TABLE WIDTH=100% class="mi">
 
 <TR>
@@ -43,53 +57,9 @@
 </TR>
 <TR><TD COLSPAN=3 PADDING=0><div id="joblist"> </div></TD></TR>
 
-</TABLE></TD></TR>
-<TR><TD><TABLE WIDTH=100% class="mi">
-
-<TR>
-<TD COLSPAN=3><B>Add Job</B></TD>
-</TR>
-<TR>
-<TD>Job id:</TD>
-<TD>
-    <INPUT id="jobid" type="text" size="32" title="The server-unique id of this job."/>
-    <BUTTON type="button" onclick="generateJobId();" title="auto generate a new job id">Generate</BUTTON>
-</TD>
-</TR>
-<TR>
-    <TD>Executable:</TD>
-    <TD><SELECT id="jobexe"><option>foo</option></SELECT></TD>
-</TR>
-<TR>
-    <TD>Rendering device:</TD>
-    <TD><SELECT id="jobgldev"><OPTION value="none">None</OPTION></SELECT></TD>
-</TR>
-<TR>
-    <TD>Arguments:</TD>
-    <TD><INPUT id="jobargs" type="text" size="32" value="" title="Command line arguments for the job"/></TD>
-    <TD ALIGN=RIGHT><BUTTON id="commit_job" type="button" onclick="guiAddJob();" title="Spawns a new job">Run</BUTTON></TD>
-</TR>
 </TABLE>
 </P>
 
-<table id="demoes" class="demotable">
-  <tr>
-    <th></th>
-    <th>Demoes</th>
-  </tr>
-  <tr>
-    <td><img src="images/qa.png"\></td>
-    <td class="clickable" onClick="demo_startClock();">Clock</td>
-  </tr>
-    <tr>
-    <td><img src="images/qa.png"\></td>
-    <td class="clickable" onClick="demo_startAP();">AutoProxy</td>
-  </tr>
-  <tr>
-    <td><img src="images/qa.png"\></td>
-    <td class="clickable" onClick="demo_startTwoCanvas();">Two canvases</td>
-  </tr>
-</table>
 
 </BODY>
 </HTML>

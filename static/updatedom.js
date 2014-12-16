@@ -262,3 +262,102 @@ function updateJobList_()
 
 
 
+function updateJobListForDemoes_()
+{
+    var div = document.getElementById( 'joblist' );
+
+    while( div.childNodes.length ) {
+        div.removeChild( div.childNodes[0] );
+    }
+
+    var count = tinia_poke.jobCount();
+    if( count ) {
+        var table, row, cell, button;
+    
+        table = document.createElement( 'table' );
+        table.setAttribute( 'class', 'my' );
+        div.appendChild( table );
+        
+        row = document.createElement( 'tr' );
+        row.setAttribute( 'class', 'my' );
+        table.appendChild( row );
+
+        cell = document.createElement( 'th' );
+        cell.setAttribute( 'class', 'my' );
+        cell.innerHTML = "Job id";
+        row.appendChild( cell );
+
+        cell = document.createElement( 'th' );
+        cell.setAttribute( 'class', 'my' );
+        cell.innerHTML = "Pid";
+        row.appendChild( cell );
+
+        cell = document.createElement( 'th' );
+        cell.setAttribute( 'class', 'my' );
+        cell.innerHTML = "Application";
+        row.appendChild( cell );
+
+        cell = document.createElement( 'th' );
+        cell.setAttribute( 'class', 'my' );
+        cell.innerHTML = "State";
+        row.appendChild( cell );
+    
+        for(var i=0; i<count; i++) {
+            var job = tinia_poke.job( i );
+
+            row = document.createElement( 'tr' );
+            row.setAttribute( 'class', 'my' );
+            table.appendChild( row );
+
+            cell = document.createElement( 'td' );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = job.id();
+            row.appendChild( cell );
+
+            cell = document.createElement( 'td' );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = job.pid();
+            row.appendChild( cell );
+
+            cell = document.createElement( 'td' );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = job.app();
+            row.appendChild( cell );
+
+            cell = document.createElement( 'td' );
+            cell.setAttribute( 'class', 'my' );
+            cell.innerHTML = job.state();
+            row.appendChild( cell );
+            
+            cell = document.createElement( 'td' );
+            cell.setAttribute( 'class', 'my' );
+            row.appendChild( cell );
+
+            if( (job.state() == "TERMINATED_SUCCESSFULLY") ||
+                (job.state() == "TERMINATED_UNSUCCESSFULLY") )
+            {
+                button = document.createElement( "button" );
+                button.innerHTML = "Wipe";
+                button.setAttribute( 'onclick', 'wipe( "'+job.id()+'");' );
+                button.setAttribute( 'title', 'Wipe this job from list of managed jobs. Not allowed for running jobs.' );
+                cell.appendChild( button );
+            }
+            else {
+                button = document.createElement( "button" );
+                button.innerHTML = "Stop";
+                button.setAttribute( 'onclick', 'killJob( "'+job.id()+'", false );' );
+                button.setAttribute( 'title', 'Terminate job.' );
+                cell.appendChild( button );
+
+                button = document.createElement( "button" );
+                button.innerHTML = "Interact";            
+                button.setAttribute( 'onclick', 'interact( "' + job.id() + '");' );
+                button.setAttribute( 'title', 'Interact with this job. Makes sense only for running jobs.' );
+                cell.appendChild( button );
+            }
+        }
+    }
+    else {
+        div.innerHTML = "<I>No demoes running.</I>";
+    }    
+}
