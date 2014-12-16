@@ -158,6 +158,16 @@ updateJobList( req )
         // <allowed>..
         tinia_poke.addJob( new TiniaJob( job_id, job_pid, job_app, job_state ) ); 
     }
-    updateJobList_();
+    
+    //window.console.log("updateJobList reports window.location.pathname = " + window.location.pathname);
+    if ( isDemo() ) {
+	//window.console.log("This is demoes!");
+	updateJobListForDemoes_();
+    }
+    else {
+	//window.console.log("This is static!");
+	updateJobList_();
+    }
 }
+
 
