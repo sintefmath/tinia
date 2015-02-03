@@ -37,7 +37,7 @@ function addDemoJob( application, args )
 
 function demo_startFRView()
 {
-    addDemoJob("frview_cloud_job", '<arg>/home/ec2-user/BC0407/BC0407.EGRID</arg>');
+    addDemoJob("frview_cloud_job", '<arg>/usr/local/var/trell/apps/BC0407/BC0407.EGRID</arg>');
 }
 
 function demo_startClock()
