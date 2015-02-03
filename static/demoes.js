@@ -1,5 +1,8 @@
-function addDemoJob( application )
+function addDemoJob( application, args )
 {
+    // args have to be the format "<arg>argument</arg>"
+    // If multiple arguments: "<arg>arg_1</arg><arg>arg_2</arg>...<arg>arg_n</arg>
+
     window.console.log("Starting addDemoJob with application " + application);
     var req = new XMLHttpRequest();
     req.open( "POST", "../master/rpc.xml?xml&foo=bar" );
@@ -20,7 +23,8 @@ function addDemoJob( application )
               '<query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://cloudviz.sintef.no/trell/1.0">'+
               '<addJob>' +
               '<job>' + job_id + '</job>' +
-              '<application>' + application + '</application>' +   
+              '<application>' + application + '</application>' + 
+	      args +
               '<renderingDeviceId>:0.0</renderingDeviceId>' +
               '</addJob>' +
               '</query>' );
@@ -31,17 +35,22 @@ function addDemoJob( application )
 }
 
 
+function demo_startFRView()
+{
+    addDemoJob("frview_cloud_job", '<arg>/home/ec2-user/BC0407/BC0407.EGRID</arg>');
+}
+
 function demo_startClock()
 {
-    addDemoJob("clock_cloud_job");
+    addDemoJob("clock_cloud_job", "");
 }
 
 function demo_startAP()
 {
-    addDemoJob("jpc_cloud_job");
+    addDemoJob("jpc_cloud_job", "");
 }
 
 function demo_startTwoCanvas()
 {
-    addDemoJob("two_cloud_job");
+    addDemoJob("two_cloud_job", "");
 }
