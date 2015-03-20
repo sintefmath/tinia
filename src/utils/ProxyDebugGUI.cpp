@@ -116,6 +116,8 @@ ProxyDebugGUI::ProxyDebugGUI( boost::shared_ptr<model::ExposedModel> model,
         model->addAnnotation("ap_splats", "Number of splats)");
         model->addElement<bool>( "ap_resetAllModels", false );
         model->addAnnotation("ap_resetAllModels", "Reset and fix proxy");
+        model->addElement<bool>( "ap_invalidateAllModels", false );
+        model->addAnnotation("ap_invalidateAllModels", "Invalidate all AP-models");
         model->addElement<bool>( "ap_useISTC", true );
         model->addAnnotation("ap_useISTC", "Use intra-splat texcoo");
         model->addElement<bool>( "ap_splatOutline", true );
@@ -269,6 +271,7 @@ void ProxyDebugGUI::resetSettingsClient()
     m_model->updateElement<int>(  "ap_overlap", 200);
     m_model->updateElement<bool>( "ap_alwaysShowMostRecent", true );
     m_model->updateElement<bool>( "ap_resetAllModels", false );
+    m_model->updateElement<bool>( "ap_invalidateAllModels", false );
     m_model->updateElement<bool>( "ap_useISTC", true );
     m_model->updateElement<bool>( "ap_splatOutline", false );
     m_model->updateElement<bool>( "ap_reloadShader", false );
@@ -449,6 +452,8 @@ tinia::model::gui::Grid *ProxyDebugGUI::getGrid()
         mainGrid->setChild(row, 0, new tinia::model::gui::Label("ap_consoleLog", false));
         mainGrid->setChild(row, 1, new tinia::model::gui::Label("ap_consoleLog", true));
         row++;
+        mainGrid->setChild(row, 0, new tinia::model::gui::Button("ap_invalidateAllModels"));
+        row++;
         mainGrid->setChild(row, 0, new tinia::model::gui::VerticalExpandingSpace());
     }
 
@@ -511,6 +516,7 @@ tinia::model::gui::Grid *ProxyDebugGUI::getCompactGrid()
     mainGrid->setChild(0, 1, new tinia::model::gui::RadioButtons("ap_compactConnectionChoices"));
     mainGrid->setChild(1, 0, new tinia::model::gui::Label("ap_compactClientChoices"));
     mainGrid->setChild(1, 1, new tinia::model::gui::RadioButtons("ap_compactClientChoices"));
+    mainGrid->setChild(2, 0, new tinia::model::gui::Button("ap_invalidateAllModels"));
 
     // Medium choices for defaults
     mediumBandwidthMediumLatency();

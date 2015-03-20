@@ -697,6 +697,13 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._lock = true;
                 this._lock2 = false;
             }
+            if ( (this.exposedModel.hasKey("ap_invalidateAllModels")) && (this.exposedModel.getElementValue("ap_invalidateAllModels")) ) {
+                // Clearing out all stored proxy models that should be invalidated, and resetting the flag to false.
+                this.exposedModel.updateElement("ap_invalidateAllModels", false);
+                for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
+                }
+            }
             this._setUniform1f(this._splatProgram, "splats_x", this._splats_x);
             this._setUniform1f(this._splatProgram, "splats_y", this._splats_y);
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
