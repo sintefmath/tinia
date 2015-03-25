@@ -20,6 +20,7 @@
 
 /** [headers]*/
 #include <tinia/tinia.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <GL/glew.h>
 /** [headers]*/
 
