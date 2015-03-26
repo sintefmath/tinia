@@ -77,41 +77,24 @@ dojo.declare("gui.ProxyModel", null, {
 
         var rgbImage = new Image();
         rgbImage.onload = dojo.hitch(this, function() {
-            console.log("ProxyModel.setAll: RGB size = " + rgbImage.width + " x " + rgbImage.height);
-
-
-
-
-//            rgbImage.width = 512;
-//            rgbImage.height = 512;
-
-
-////            var pixel = new Image(1, 1);
-////            pixel.src = ""
-
-//            var canvas = document.createElement('canvas');
-//            var ctx = canvas.getContext('2d');
-//            canvas.width=128;
-//            canvas.height=128;
-//            ctx.fillStyle = '#ff0000';
-//            ctx.fillRect(0, 0, 128, 128);
-//            ctx.fill();
-//            ctx.fillStyle = '#ffff00';
-//            ctx.fillRect(4, 4, 120, 120);
-//            ctx.fill();
-//            ctx.drawImage(rgbImage, 8, 8, 112, 112);
-
-//            rgbImage = canvas;
-//            document.body.appendChild(canvas);
-
-
-
+            // console.log("ProxyModel.setAll: RGB size = " + rgbImage.width + " x " + rgbImage.height);
+            var pot_width  = parseInt(Math.pow(2.0, Math.floor(Math.log(rgbImage.width-1)/Math.log(2.0))+1));     // This *may* have numerical problems... not quite sure how to (elegantly) avoid this...
+            var pot_height = parseInt(Math.pow(2.0, Math.floor(Math.log(rgbImage.height-1)/Math.log(2.0))+1));
+            // console.log("                   proposed new RGB size = " + pot_width + " x " + pot_height);
+            if ( (pot_width!=rgbImage.width) || (pot_height!=rgbImage.height) ) {
+                // Only in these cases do we bother with (possibly costly and/or quality degrading) rescaling
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                canvas.width=pot_width;
+                canvas.height=pot_height;
+                ctx.drawImage(rgbImage, 0, 0, pot_width, pot_height);
+                rgbImage = canvas;
+            }
             this._gl.bindTexture(this._gl.TEXTURE_2D, this.rgbTexture);
             this._gl.texImage2D(this._gl.TEXTURE_2D, 0, this._gl.RGB, this._gl.RGB, this._gl.UNSIGNED_BYTE, rgbImage);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MAG_FILTER, this._gl.LINEAR);
             this._gl.texParameteri(this._gl.TEXTURE_2D, this._gl.TEXTURE_MIN_FILTER, this._gl.LINEAR);
             this._gl.bindTexture(this._gl.TEXTURE_2D, null);
-            console.log("ProxyModel.setAll: RGB size = " + rgbImage.width + " x " + rgbImage.height);
 //            console.log("RGB image (" + imageAsText.length + " bytes) loaded in " + (Date.now()-rgb_t0) + " ms. (" + Math.floor((imageAsText.length/(Date.now()-rgb_t0))) + " bytes/ms)");
             imagesLoaded = imagesLoaded + 1;
             if (imagesLoaded==2) {

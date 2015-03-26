@@ -84,7 +84,7 @@ dojo.declare("gui.ProxyRenderer", null, {
                 var ycoo = -1.0*(1.0-v) + 1.0*v;
                 for (var j=0; j<this._splats_x; j++) {
                     var u = (j+0.5)/this._splats_x;
-                    this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                    this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;  // Ranges are [-1, 1] for these coordinates
                     this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = ycoo;
                 }
             }
@@ -160,7 +160,7 @@ dojo.declare("gui.ProxyRenderer", null, {
             var v = (i+0.5)/this._splats_y;
             for (var j=0; j<this._splats_x; j++) {
                 var u = (j+0.5)/this._splats_x;
-                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u;
+                this._splatCoordinates[(this._splats_x*i+j)*2     ] = -1.0*(1.0-u) + 1.0*u; // Ranges are [-1, 1] for these coordinates
                 this._splatCoordinates[(this._splats_x*i+j)*2 + 1 ] = -1.0*(1.0-v) + 1.0*v;
             }
         }
@@ -554,8 +554,8 @@ dojo.declare("gui.ProxyRenderer", null, {
         }
 
         // Displaying the shaders, for inspection...
-        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
-        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
+//        console.log("VS source: ---------------------\n" + splat_vs_src + "\n----------------");
+//        console.log("FS source: ---------------------\n" + splat_fs_src + "\n----------------");
 
         this._splatProgram = this.gl.createProgram();
         this.gl.attachShader(this._splatProgram, splat_vs);
@@ -697,12 +697,19 @@ dojo.declare("gui.ProxyRenderer", null, {
                 this._lock = true;
                 this._lock2 = false;
             }
+            if ( (this.exposedModel.hasKey("ap_invalidateAllModels")) && (this.exposedModel.getElementValue("ap_invalidateAllModels")) ) {
+                // Clearing out all stored proxy models that should be invalidated, and resetting the flag to false.
+                this.exposedModel.updateElement("ap_invalidateAllModels", false);
+                for (var i=0; i<this._proxyModelCoverage.bufferRingSize; i++) {
+                    this._proxyModelCoverage.proxyModelRing[i] = new gui.ProxyModel(this.gl);
+                }
+            }
             this._setUniform1f(this._splatProgram, "splats_x", this._splats_x);
             this._setUniform1f(this._splatProgram, "splats_y", this._splats_y);
             this._setUniform1f(this._splatProgram, "splatOverlap", this._splatOverlap);
             this._setUniform1i(this._splatProgram, "vp_width", this.gl.canvas.width);
             this._setUniform1i(this._splatProgram, "vp_height", this.gl.canvas.height);
-            console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
+            // console.log("ProxyRenderer.renderMain: setting viewport: " + this.gl.canvas.width + " x " + this.gl.canvas.height);
             this._setUniform3fv(this._splatProgram, "backgroundCol", this._backgroundCol);
             this.gl.vertexAttribPointer( vertexPositionAttribute, 2, this.gl.FLOAT, false, 0, 0);
 

@@ -80,6 +80,15 @@ bool JPCJob::init()
     rootLayout->addChild(compact_grid);
     m_model->setGUILayout(rootLayout, tinia::model::gui::DESKTOP);
 
+    // 150320: Debugging/testing of new feature; "invalidate"
+    m_model->updateElement<int>("ap_splats", 20);
+    m_model->updateElement<int>("ap_overlap", 51);
+    m_model->updateElement<bool>( "ap_debugSplatCol", true );
+    m_model->updateElement<bool>( "ap_autoProxyDebugging", true );
+    m_model->updateElement<bool>( "ap_screenSpaceSized", false );
+    m_model->updateElement<bool>( "ap_splatOutline", true );
+    m_model->updateElement<bool>( "ap_useAutoProxy", true );
+
     return true;
 }
 
