@@ -10,12 +10,13 @@
 
 attribute vec2 aVertexPosition;
 
-varying highp vec2 texCoo;                      // Implicitly taken to be *output*?!
-varying highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
-varying highp vec2 depth_e;                     // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
+varying highp vec4 texCoo_depth_e;              // packed texCoo and depth_e for approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
-varying highp float frag_depth;                 // Fragment depth for the vertex, i.e., the center of the splat
-varying highp vec2 frag_depth_e;
+varying highp vec4 frag_depth_e_F_sampled_depth_F_sampled_depth;        // Fused:
+   // vec2 frag_depth_e: 
+   // float sampled_depth: Actually sampled depth from the texture. Should also not be needed in the FS, probably.
+   // float frag_depth:    Fragment depth for the vertex, i.e., the center of the splat
+
 
 varying highp mat2 intraSplatTexCooTransform;
 varying highp mat2 intraSplatTexCooTransform2;
@@ -70,6 +71,10 @@ mat2 invrs(mat2 tmp)
 
 void main(void)
 {
+   highp float sampled_depth;              // Actually sampled depth from the texture. Should also not be needed in the FS, probably.
+   highp float frag_depth;                 // Fragment depth for the vertex, i.e., the center of the splat
+
+
 #ifdef DEBUG
     splat_j = floor( (0.5*aVertexPosition.x+1.0)*splats_x ); // For debugging
     splat_i = floor( (0.5*aVertexPosition.y+1.0)*splats_y );
@@ -77,16 +82,16 @@ void main(void)
 #endif
 #ifdef VS_DISCARD_DEBUG
     // Setting these now, so that we can safely exit early from the VS.
-    depth_e = vec2(0.0);
+    texCoo_depth_e.zw = vec2(0.0);
     frag_depth = 0.5;
-    frag_depth_e = vec2(0.0);
+    frag_depth_e_F_sampled_depth_F_sampled_depth.xy = vec2(0.0);
     intraSplatTexCooTransform2 = mat2(1.0, 0.0, 0.0, 1.0);
     intraSplatTexCooTransform = intraSplatTexCooTransform2;
 #endif
     
     vec2 st = 0.5*(aVertexPosition.xy+1.0); // From [-1, 1] to [0, 1]
     st.y = 1.0-st.y;
-    texCoo = st;
+    texCoo_depth_e.xy = st;
 
     // With a 1024^2 canvas and 512^2 splats, there are no artifacts to be seen from using 16 bits for the depth.
     // (But 8 is clearly too coarse.)
@@ -99,7 +104,6 @@ void main(void)
     st = st + vec2(0.5/splats_x, -0.5/splats_y);
 #endif
     sampled_depth = texture2D(depthImg, st).r + (texture2D(depthImg, st).g + texture2D(depthImg, st).b/255.0) / 255.0;
-
     if ( sampled_depth > 0.999 ) {
         // The depth should be 1 for fragments not rendered. Discarding the whole splat.
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0);
@@ -117,6 +121,7 @@ void main(void)
         sampled_depth = clamp(sampled_depth - mostRecentProxyModelOffset, 0.0, 1.0);
     }
 #endif
+    frag_depth_e_F_sampled_depth_F_sampled_depth.z = sampled_depth;
 
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
@@ -227,7 +232,7 @@ void main(void)
     frag_depth_dx = 0.5*( gl_DepthRange.diff*frag_depth_dx + gl_DepthRange.near + gl_DepthRange.far );
     float frag_depth_dy = pos_dy.z/pos_dy.w;
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
-    frag_depth_e = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
+    frag_depth_e_F_sampled_depth_F_sampled_depth.xy = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
     
     // Difference of screen coordinates, in pixels:
     vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w ); // @@@ vp-size or DEPTH-size?!
@@ -236,7 +241,7 @@ void main(void)
     vec2 st_e1 = vec2( 1.0/splats_x, 0.0 );
     vec2 st_e2 = vec2( 0.0, -1.0/splats_y );
 
-    depth_e = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
+    texCoo_depth_e.zw = (1.0/delta)*vec2(depth_dx-sampled_depth, depth_dy-sampled_depth);
 
     // This will discard all splats not facing forward
 #ifdef CULL_BACK_SIDES
@@ -386,8 +391,7 @@ void main(void)
         gl_Position = vec4(0.0, 0.0, -1000.0, 0.0); // This amounts to a "discard" operation on the primitive
     #endif
   #endif
-        return;
     }
 #endif
-
+  frag_depth_e_F_sampled_depth_F_sampled_depth.w=sampled_depth;
 }

@@ -7,9 +7,12 @@ uniform sampler2D rgbImage;
 uniform sampler2D depthImg;
 // 141129: textureSize(sampler, lod) is not available in GLSL ES 1.0 (WebGL) so we use DEPTH_WIDTH and DEPTH_HEIGHT added in ProxyRenderer.js.
 
-varying highp vec2 texCoo;
+varying highp vec4 texCoo_depth_e;              // packed texCoo and depth_e for approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
+varying highp vec4 frag_depth_e_F_sampled_depth_F_sampled_depth;        // Fused:
+   // vec2 frag_depth_e: 
+   // float sampled_depth: Actually sampled depth from the texture. Should also not be needed in the FS, probably.
+   // float frag_depth:    Fragment depth for the vertex, i.e., the center of the splat
 varying highp float sampled_depth;      // Splat-centered depth
-varying highp vec2 depth_e;             // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
 varying highp float frag_depth;
 varying highp vec2 frag_depth_e;
@@ -50,6 +53,16 @@ const highp float mostRecentProxyModelOffset = 0.001;
 
 void main(void)
 {
+// unpack varyings fused into single registers
+	
+    highp vec2 texCoo = texCoo_depth_e.xy;
+    highp vec2 depth_e = texCoo_depth_e.zw;             // For approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
+
+   highp vec2 frag_depth_e   = frag_depth_e_F_sampled_depth_F_sampled_depth.xy; 
+   highp float sampled_depth = frag_depth_e_F_sampled_depth_F_sampled_depth.z;
+   highp float frag_depth    = frag_depth_e_F_sampled_depth_F_sampled_depth.w;
+
+
     // The "most recent" is -1, the others have indices 0, 1, ...
     // if (splatSetIndex!=-1) discard;
 
