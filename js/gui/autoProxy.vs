@@ -12,7 +12,7 @@ attribute vec2 aVertexPosition;
 
 varying highp vec4 texCoo_depth_e;              // packed texCoo and depth_e for approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
-varying highp vec4 frag_depth_e_F_sampled_depth_F_sampled_depth;        // Fused:
+varying highp vec4 frag_depth_e_F_sampled_depth_F_frag_depth; // Fused: frag_depth_e, sampled_depth, frag_depth
    // vec2 frag_depth_e: 
    // float sampled_depth: Actually sampled depth from the texture. Should also not be needed in the FS, probably.
    // float frag_depth:    Fragment depth for the vertex, i.e., the center of the splat
@@ -84,7 +84,8 @@ void main(void)
     // Setting these now, so that we can safely exit early from the VS.
     texCoo_depth_e.zw = vec2(0.0);
     frag_depth = 0.5;
-    frag_depth_e_F_sampled_depth_F_sampled_depth.xy = vec2(0.0);
+    frag_depth_e_F_sampled_depth_F_frag_depth.xy = vec2(0.0);
+    frag_depth_e_F_sampled_depth_F_frag_depth.w = frag_depth;
     intraSplatTexCooTransform2 = mat2(1.0, 0.0, 0.0, 1.0);
     intraSplatTexCooTransform = intraSplatTexCooTransform2;
 #endif
@@ -121,7 +122,7 @@ void main(void)
         sampled_depth = clamp(sampled_depth - mostRecentProxyModelOffset, 0.0, 1.0);
     }
 #endif
-    frag_depth_e_F_sampled_depth_F_sampled_depth.z = sampled_depth;
+    frag_depth_e_F_sampled_depth_F_frag_depth.z = sampled_depth;
 
     // We may think of the depth texture as a grid of screen space points together with depths, which we will subsample
     // in order to get a sparser set of 'splats'.  First, we obtain ndc coordinates.
@@ -133,6 +134,7 @@ void main(void)
     float z_ndc = pos.z/pos.w;
     //depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
     frag_depth = 0.5*( gl_DepthRange.diff*z_ndc + gl_DepthRange.near + gl_DepthRange.far ); // z_window
+    frag_depth_e_F_sampled_depth_F_frag_depth.w = frag_depth;
     // This is not the depth of the point on the original geometry, but the new depth for the splat transformed into
     // place.  (This value is equal to gl_FragCoord.z in the fragment shader. Note that this is constant over the
     // primitive, unless we modify it in the fragment shader. Doing this requires the GL_EXT_frag_depth extension
@@ -232,7 +234,7 @@ void main(void)
     frag_depth_dx = 0.5*( gl_DepthRange.diff*frag_depth_dx + gl_DepthRange.near + gl_DepthRange.far );
     float frag_depth_dy = pos_dy.z/pos_dy.w;
     frag_depth_dy = 0.5*( gl_DepthRange.diff*frag_depth_dy + gl_DepthRange.near + gl_DepthRange.far );
-    frag_depth_e_F_sampled_depth_F_sampled_depth.xy = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
+    frag_depth_e_F_sampled_depth_F_frag_depth.xy = (1.0/delta)*vec2(frag_depth_dx-frag_depth, frag_depth_dy-frag_depth);
     
     // Difference of screen coordinates, in pixels:
     vec2 scr_dx = float(vp_width )/(2.0*delta) * ( pos_dx.xy/pos_dx.w - pos.xy/pos.w ); // @@@ vp-size or DEPTH-size?!
@@ -393,5 +395,5 @@ void main(void)
   #endif
     }
 #endif
-  frag_depth_e_F_sampled_depth_F_sampled_depth.w=sampled_depth;
+    //  frag_depth_e_F_sampled_depth_F_frag_depth.w=frag_depth; //not neccessary, frag_depth has not changed since previous assignment
 }
