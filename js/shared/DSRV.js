@@ -281,6 +281,9 @@ function DSRV( params ) {
                                                     function( key, bb )
         {
             this.setBoundingBox( bb );
+            this.m_manipulator.updateMatrices();
+            this.pushMatrices();
+            
         } ) );
         this.setBoundingBox( this.m_model.getElementValue( this.m_bbox_key ) );
     }
