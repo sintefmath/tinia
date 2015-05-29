@@ -281,7 +281,14 @@ function DSRV( params ) {
                                                     function( key, bb )
         {
             this.setBoundingBox( bb );
-        } ) );
+	    this.m_manipulator.updateMatrices();
+
+	    var viewer = this.m_model.getElementValue( this.m_key );
+            viewer.updateElement( "modelview", this.m_manipulator.modelviewMatrix() );
+            viewer.updateElement( "projection", this.m_manipulator.projectionMatrix() );
+
+	    this.m_model.updateElement( "markForUpdate", this.m_key );
+        } ) ) ;
         this.setBoundingBox( this.m_model.getElementValue( this.m_bbox_key ) );
     }
 }

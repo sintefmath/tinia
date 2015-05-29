@@ -23,12 +23,14 @@ dojo.declare("model.ExposedModelSender", null, {
     constructor : function(urlHandler, modelLib) {
         this._urlHandler = urlHandler;
         this._modelLib = modelLib;
-        this._modelLib.addListener(this.update, this);
-        
         this._builder = new model.ExposedModelBuilder(modelLib);
         this._updateInProgress = false;
         this._pendingXML = false;
         this._keys = {};
+//	this._bboxKey = modelLib._gui._children[0]._boundingBoxKey;
+        this._modelLib.addListener(this.update, this);
+        
+
         dojo.subscribe("/model/updateReceived", dojo.hitch(this, function() {
             this._parsingUpdate = true;
         }));
@@ -38,6 +40,7 @@ dojo.declare("model.ExposedModelSender", null, {
         }));
         
         this._modelLib.addElementAccepter(dojo.hitch(this, this.accept));
+	this._modelLib.addLocalListener( "markForUpdate", tinia.hitch( this, this.markForUpdate ) );
     },
     
     accept: function(key, value) {
@@ -47,6 +50,14 @@ dojo.declare("model.ExposedModelSender", null, {
         return true;
     },
     
+
+    markForUpdate: function( key, value ) {
+	if( value ){
+	    this._key[value] = true;	    
+	    this._pendingXML = true;
+	}
+
+    },
     
     update: function(key, value) {
         this._update(key);
