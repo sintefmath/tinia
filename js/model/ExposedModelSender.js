@@ -52,10 +52,10 @@ dojo.declare("model.ExposedModelSender", null, {
     
 
     markForUpdate: function( key, value ) {
-	if( value ){
-	    this._key[value] = true;	    
-	    this._pendingXML = true;
-	}
+        if( value ){
+            this._keys[value] = true;
+            this._pendingXML = true;
+        }
 
     },
     

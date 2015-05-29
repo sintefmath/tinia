@@ -48,9 +48,9 @@ function run(getExposedModelUpdateURL, updateStateURL, renderlistURL, isLocal, d
             }, dojo.byId("gui"));
 
             if(!isLocal){
-		modelObj.addElement( "string", "markForUpdate", "");
+                modelObj.addElement( "string", "markForUpdate", "");
                 var sender = new model.ExposedModelSender(modelSenderUrlHandler, modelObj);
-	    }
+            }
             var mainWindow = builder.buildGUI(modelObj.GUI(), modelSenderUrlHandler);
 
 
