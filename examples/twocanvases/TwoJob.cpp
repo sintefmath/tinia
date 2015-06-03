@@ -36,6 +36,18 @@
 #include <iostream>
 #include "tinia/model/File.hpp"
 
+
+////// Code to reproduce error
+#include "tinia/model/impl/xml/XMLHandler.hpp"
+#include "tinia/model/StateElement.hpp"
+#include "tinia/model/StateSchemaElement.hpp"
+#include "tinia/model/impl/xml/XMLBuilder.hpp"
+////// End of Code to reproduce error
+
+
+
+
+
 namespace tinia {
 namespace example {
 TwoJob::TwoJob()
@@ -119,6 +131,58 @@ void TwoJob::stateElementModified(tinia::model::StateElement *stateElement)
 
 bool TwoJob::renderFrame(const std::string &session, const std::string &key, unsigned int fbo, const size_t width, const size_t height)
 {
+    ////// Code to reproduce error
+    {
+        std::string failingxml = "<State> \
+                            <viewer> \
+                            <height>512</height> \
+                            <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                            <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                            <sceneView>0</sceneView> \
+                            <timestamp>0</timestamp> \
+                            <width>512</width> \
+                            </viewer> \
+                            <viewer2> \
+                            <height>512</height> \
+                            <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                            <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                            <sceneView>0</sceneView> \
+                            <timestamp>0</timestamp> \
+                            <width>512</width> \
+                            </viewer2> \
+                            </State> \
+                            ";
+
+        std::string workingxml = "<State> \
+                             <viewer> \
+                             <height>512</height> \
+                             <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                             <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                             <sceneView>0</sceneView> \
+                             <timestamp>0</timestamp> \
+                             <width>512</width> \
+                             </viewer> \
+                             </State> \
+                             ";
+        xmlDocPtr doc = NULL;
+        try {
+            tinia::model::impl::xml::XMLTransporter xmlTransporter;
+            doc = xmlTransporter.readXMLfromBuffer(failingxml.c_str(), failingxml.length());
+//            doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
+            tinia::model::impl::xml::XMLReader xmlReader;
+            tinia::model::impl::xml::ElementHandler elementHandler(m_model);
+            xmlReader.parseDocument(doc, elementHandler);
+        } catch(const std::exception& e) {
+            std::cerr<<"XML ERROR: \n";
+            std::cerr<<"MESSAGE: " << e.what() << std::endl;
+
+        } catch(...) {
+            std::cerr<<"UNKNOWN ERROR: \n";
+        }
+    }
+    ////// End of Code to reproduce error
+
+
     glEnable(GL_DEPTH_TEST);
 
     if  (key =="viewer") {
