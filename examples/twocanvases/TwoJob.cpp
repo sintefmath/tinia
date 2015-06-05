@@ -133,42 +133,67 @@ bool TwoJob::renderFrame(const std::string &session, const std::string &key, uns
 {
     ////// Code to reproduce error
     {
-        std::string failingxml = "<State> \
-                            <viewer> \
-                            <height>512</height> \
-                            <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
-                            <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
-                            <sceneView>0</sceneView> \
-                            <timestamp>0</timestamp> \
-                            <width>512</width> \
-                            </viewer> \
-                            <viewer2> \
-                            <height>512</height> \
-                            <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
-                            <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
-                            <sceneView>0</sceneView> \
-                            <timestamp>0</timestamp> \
-                            <width>512</width> \
-                            </viewer2> \
-                            </State> \
-                            ";
+        std::string probably_failing_but_not_throwing_xml = "<State> \
+                <viewer> \
+                <height>512</height> \
+                <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                <sceneView>0</sceneView> \
+                <timestamp>0</timestamp> \
+                <width>512</width> \
+                </viewer> \
+                <ap_splats>64</ap_splats> \
+                <viewer2> \
+                <height>512</height> \
+                <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                <sceneView>0</sceneView> \
+                <timestamp>0</timestamp> \
+                <width>512</width> \
+                </viewer2> \
+                </State> \
+                ";
 
-        std::string workingxml = "<State> \
-                             <viewer> \
-                             <height>512</height> \
-                             <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
-                             <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
-                             <sceneView>0</sceneView> \
-                             <timestamp>0</timestamp> \
-                             <width>512</width> \
-                             </viewer> \
-                             </State> \
-                             ";
+                std::string failingxml = "<State> \
+                <viewer> \
+                <height>512</height> \
+                <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                <sceneView>0</sceneView> \
+                <timestamp>0</timestamp> \
+                <width>512</width> \
+                </viewer> \
+                <viewer2> \
+                <height>512</height> \
+                <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                <sceneView>0</sceneView> \
+                <timestamp>0</timestamp> \
+                <width>512</width> \
+                </viewer2> \
+                </State> \
+                ";
+
+                std::string workingxml = "<State> \
+                <viewer> \
+                <height>512</height> \
+                <modelview>1 0 0 0 0 1 0 0 0 0 1 0 -1315.632568359375 310.7430114746094 -1648.2550048828125 1</modelview> \
+                <projection>1 0 0 0 0 1 0 0 0 0 -2.9648404121398926 -1 0 0 -4516.4921875 0</projection> \
+                <sceneView>0</sceneView> \
+                <timestamp>0</timestamp> \
+                <width>512</width> \
+                </viewer> \
+                <ap_splats>64</ap_splats> \
+                </State> \
+                ";
         xmlDocPtr doc = NULL;
         try {
             tinia::model::impl::xml::XMLTransporter xmlTransporter;
+#if 1
             doc = xmlTransporter.readXMLfromBuffer(failingxml.c_str(), failingxml.length());
-//            doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
+#else
+            doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
+#endif
             tinia::model::impl::xml::XMLReader xmlReader;
             tinia::model::impl::xml::ElementHandler elementHandler(m_model);
             xmlReader.parseDocument(doc, elementHandler);

@@ -23,6 +23,7 @@
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <tinia/model/exceptions/RestrictionException.hpp>
 
 using std::cout;
@@ -121,23 +122,57 @@ void impl::ElementData::checkValue(const std::string& s) {
 // in XMLReader.cpp, should be replaced by that in utils.hpp but it doesn't work?!?!?!?!?!!!!!
 typedef boost::property_tree::basic_ptree<std::string, std::string> StringStringPTree;
 
-void impl::ElementData::setPropertyTreeValue_r( std::map<std::string, impl::ElementData> &pt, const StringStringPTree &sspt, const int level )
+//--------------------------------------------------------------------------------------------------------------------------------------------
+//
+// 150604: It seems that this method traverses the boost StringStringPTree sspt, populating the std::map 'pt', in
+//         effect flattening the tree.
+//
+//         Also, for each ElementData that becomes a "value" in this new map, it (recursively) sets this ElementData's
+//         propertyTree member to sspt's "value tree" (correct term?) with level increased by 4. (!)
+//
+//--------------------------------------------------------------------------------------------------------------------------------------------
+
+void impl::ElementData::setPropertyTreeValue_r( std::map<std::string, impl::ElementData> &pt,
+                                                const StringStringPTree &sspt,
+                                                const int level )
 {
+//    std::cout << "Starting setPropertyTreeValue_r" << std::endl;
     if ( pt.size() != sspt.size() ) {
+        printf("-------------------------------------------------\n");
+        printf("pt: (size=%lu)\n", pt.size());
+        int i=0;
+        for ( std::map<std::string, impl::ElementData>::iterator it=pt.begin(); it!=pt.end(); it++, i++) {
+            std::cout << i << "   " << it->first << " : ";
+            it->second.print();
+        }
+        printf("-------------------------------------------------\n");
+        printf("sspt: (size=%lu)\n", sspt.size());
+        std::string path("");
+        BOOST_FOREACH(auto &v, sspt.get_child(path)) {
+            // v.first is the name of the child.
+            // v.second is the child tree.
+            auto f = v.first;
+            auto s = v.second;
+            std::cout << "first: " << f << std::endl;
+            boost::property_tree::ptree subtree = (boost::property_tree::ptree) v.second ;
+            BOOST_FOREACH( boost::property_tree::ptree::value_type &vs, subtree ) {
+                std::cout << "  Sub data: " << vs.first.data() << std::endl;
+            }
+        }
+        printf("-------------------------------------------------\n");
         throw std::runtime_error("Huh?! The string-string ptree has a different topology than the string-impl::ElementData ptree.");
     }
-    StringStringPTree::const_iterator end  = sspt.end();
+
+    const StringStringPTree::const_iterator end  = sspt.end();
     std::map<std::string, impl::ElementData>::iterator it2  = pt.begin();
     for (StringStringPTree::const_iterator it   = sspt.begin(); it != end; it++, it2++) {
-        const string name = it->first;
-
+        const string name  = it->first;
         const string value = it->second.get_value<string>();
-
-        // printf("setPropertyTreeValue_r: name=%s, value=%s\n", name.c_str(), value.c_str()); fflush(stdout);
+//        printf("setPropertyTreeValue_r: name=%s, value=%s, level=%d\n", name.c_str(), value.c_str(), level); fflush(stdout);
         pt[it->first].setStringValue(value);
-
         setPropertyTreeValue_r(it2->second.propertyTree, it->second, level + 4);
     }
+//    std::cout << "ferdig" << std::endl;
 }
 
 
@@ -285,34 +320,3 @@ bool model::impl::ElementData::isComplexType() const
 }
 
 } // of namespace tinia
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
