@@ -190,7 +190,7 @@ bool TwoJob::renderFrame(const std::string &session, const std::string &key, uns
         try {
             tinia::model::impl::xml::XMLTransporter xmlTransporter;
 #if 1
-            doc = xmlTransporter.readXMLfromBuffer(failingxml.c_str(), failingxml.length());
+            doc = xmlTransporter.readXMLfromBuffer(probably_failing_but_not_throwing_xml.c_str(), failingxml.length());
 #else
             doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
 #endif

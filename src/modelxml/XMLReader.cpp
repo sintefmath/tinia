@@ -185,6 +185,22 @@ XMLReader::XMLReader()
 
 
 
+    namespace {
+
+        void complexKeyFound( vector<string> &updatedKeys, const string &name, const model::StringStringPTree &ptree )
+        {
+            updatedKeys.push_back( name );
+            pt_print("Found complex type", ptree);
+        }
+
+        void simpleKeyFound( vector<string> &updatedKeys, const string &name, const string &value )
+        {
+            updatedKeys.push_back( name );
+            std::cout << "Found simple type, name and value: " << name << ": " << value << std::endl;
+        }
+
+    }
+
     vector<string> XMLReader::parseDocument(const xmlDocPtr doc,
                                             ElementHandler &elementHandler)
     {
@@ -205,46 +221,21 @@ XMLReader::XMLReader()
             int prev_depth = top_level_depth;
 
             while ( !state_end_found ) {
-                pt_print("top of loop", ptree);
-                int entries = pt_entries( ptree );
-                std::cout << "entries: " << entries << std::endl;
-                if ( ptree.begin() != ptree.end() ) {
-                    entries = pt_entries( ptree.begin()->second );
-                    std::cout << "  entries of first entry: " << entries << std::endl;
-                    if ( ptree.begin()->second.begin() != ptree.begin()->second.end() ) {
-                        entries = pt_entries( ptree.begin()->second.begin()->second );
-                        std::cout << "    entries of first entry of first entry: " << entries << std::endl;
-                    }
-                }
+
                 string name, value;
                 int depth;
-                if ( entries == 6 ) {
-                    std::cout << "ER HER" << std::endl;
-                }
 
-                const bool subtree_detected = nextTypeContainsChildren(reader, "State", name, value, state_end_found, depth);
-                // 150605: A subtree has been found, from now on we also interpret this as the end of a complex type, if we are currently parsing one.
+                const bool subtree_detected = nextTypeContainsChildren(reader, "State", name, value, state_end_found, depth); // Remember that this call has side-effects...
+                // A subtree has been found, we interpret this as the end of a complex type, if we are currently parsing one.
 
-                bool end_of_complex_type = false;
                 if ( subtree_detected && (!state_end_found) && processing_complex_type ) {
-                    std::cout << "Subtree detected, but not state_end, while processing complex type..." << std::endl;
-                    end_of_complex_type = true;
-                }
-
-                if (end_of_complex_type) {
-                    std::cout << "later test would produce: " << int( (depth==top_level_depth+1) && (processing_complex_type) ) << std::endl;
-
+                    // Subtree detected, but not state_end, while processing complex type... We should finish the current complex type and start a new one.
                     processing_complex_type = false;
-                    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-                    pt_print("before", ptree);
                     elementHandler.updateElementFromPTree(complex_type_name, ptree.begin()->second);
-                    pt_print("after", ptree);
-                    std::cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-                    updatedKeys.push_back(complex_type_name);
-                    ptree.clear();              // @@@@@@@@@@@@@@@@@@@@@@@@
+                    complexKeyFound( updatedKeys, complex_type_name, ptree );
+                    ptree.clear();
                     ptree.add("root", 0);
                     current_pos = ptree.begin();
-                    std::cout << "STACK size QQQQQQQQQQ: " << prev_pos.size() << std::endl;
                     prev_pos.clear();
                 }
 
@@ -256,43 +247,44 @@ XMLReader::XMLReader()
                     current_pos->second.add(name, "contains fields on the level below, no value here");
                     prev_pos.push_back(current_pos);
                     current_pos = (--current_pos->second.end()); // "Recursive call"
-                } else {
-                    bool restart = false;
-                    if (   ( (depth==top_level_depth+1) && (processing_complex_type) ) ||       // End of tree for complex type has been reached, even if no
-                           (  state_end_found           && (processing_complex_type) )   ) {    // "state-end" has not been found.
-                        processing_complex_type = false;
-                        pt_print("before", ptree);
-                        elementHandler.updateElementFromPTree(complex_type_name, ptree.begin()->second);
-                        pt_print("after", ptree);
-                        std::cout << "oooooooooooooooooooooooooooooooooo" << std::endl;
-                        updatedKeys.push_back(complex_type_name);
-                        ptree.clear();              // @@@@@@@@@@@@@@@@@@@@@@@@
-                        ptree.add("root", 0);
-                        current_pos = ptree.begin();
-                        std::cout << "STACK size: " << prev_pos.size() << std::endl;
-                        prev_pos.clear();
-                        restart = true;
-                    }
-                    if ( !state_end_found ) {
-                        if ( !restart ) {
-                            if (depth<prev_depth) { // We leave the level and ascend. Must pop back to a previous position in the tree. ("Recursive return.")
-                                for (int i=0; i<prev_depth-depth-1; i++)
-                                    prev_pos.pop_back();
-                                current_pos = prev_pos.back();
+                    prev_depth = depth;
+                    continue;
+                }
+
+                bool restart = false;
+                if (   ( (depth==top_level_depth+1) && (processing_complex_type) ) ||       // End of tree for complex type has been reached, even if no
+                       (  state_end_found           && (processing_complex_type) )   ) {    // "state-end" has not been found.
+                    processing_complex_type = false;
+                    elementHandler.updateElementFromPTree(complex_type_name, ptree.begin()->second);
+                    complexKeyFound( updatedKeys, complex_type_name, ptree );
+                    ptree.clear();
+                    ptree.add("root", 0);
+                    current_pos = ptree.begin();
+                    prev_pos.clear();
+                    restart = true;
+                }
+
+                if ( !state_end_found ) {
+                    if ( !restart ) {
+                        if (depth<prev_depth) { // We leave the level and ascend. Must pop back to a previous position in the tree. ("Recursive return.")
+                            for (int i=0; i<prev_depth-depth-1; i++)
                                 prev_pos.pop_back();
-                            }
-                            if (processing_complex_type) { // We are building the tree for a complex type update, so add (name, val) to ptree.
-                                current_pos->second.add(name, value);
-                            }
+                            current_pos = prev_pos.back();
+                            prev_pos.pop_back();
                         }
-                        if (!processing_complex_type) { // A simple type, call the appropriate method to update the state right away.
-                            elementHandler.updateElementFromString(name, value);
-                            updatedKeys.push_back(name);
+                        if (processing_complex_type) { // We are building the tree for a complex type update, so add (name, val) to ptree.
+                            current_pos->second.add(name, value);
                         }
+                    }
+                    if (!processing_complex_type) { // A simple type, call the appropriate method to update the state right away.
+                        elementHandler.updateElementFromString(name, value);
+                        simpleKeyFound( updatedKeys, name, value );
                     }
                 }
+
                 prev_depth = depth;
-            }
+
+            } // end of "while not state_end_found" block
         }
         xmlFreeTextReader( reader );
 
