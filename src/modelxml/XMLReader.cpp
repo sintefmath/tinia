@@ -190,13 +190,21 @@ XMLReader::XMLReader()
         void complexKeyFound( vector<string> &updatedKeys, const string &name, const model::StringStringPTree &ptree )
         {
             updatedKeys.push_back( name );
-            pt_print("Found complex type", ptree);
+            // pt_print("Found complex type", ptree);
         }
 
         void simpleKeyFound( vector<string> &updatedKeys, const string &name, const string &value )
         {
             updatedKeys.push_back( name );
-            std::cout << "Found simple type, name and value: " << name << ": " << value << std::endl;
+            // std::cout << "Found simple type, name and value: " << name << ": " << value << std::endl;
+        }
+
+        void complexTypeRestart( model::StringStringPTree &ptree, model::StringStringPTree::iterator &current_pos, vector<model::StringStringPTree::iterator> &prev_pos )
+        {
+            ptree.clear();
+            ptree.add("root", 0);
+            current_pos = ptree.begin();
+            prev_pos.clear();
         }
 
     }
@@ -211,12 +219,15 @@ XMLReader::XMLReader()
             throw std::runtime_error("Could not create xml-reader.");
 
         int top_level_depth = gobbleUntilStartElement(reader, "State");
-        if ( top_level_depth>=0 ) { // Ok, "State" was found, continue scanning for named elements...
+        if ( top_level_depth >= 0 ) { // Ok, "State" was found, continue scanning for named elements...
             bool state_end_found=false, processing_complex_type=false;
             string complex_type_name;
             model::StringStringPTree ptree;
             ptree.add("root", 0);
             vector<model::StringStringPTree::iterator> prev_pos; // Recursion through stack-usage
+            // (150606: Hmm. This probably means that we can nest complex types. Has this been tested or used?
+            //          Could also be that this is the mechanism by which we parse the simple types of the viewer complex type.
+            //          Don't quite remember.)
             model::StringStringPTree::iterator current_pos = ptree.begin();
             int prev_depth = top_level_depth;
 
@@ -225,23 +236,21 @@ XMLReader::XMLReader()
                 string name, value;
                 int depth;
 
-                const bool subtree_detected = nextTypeContainsChildren(reader, "State", name, value, state_end_found, depth); // Remember that this call has side-effects...
+                const bool subtree_detected = nextTypeContainsChildren(reader, "State", name, value, state_end_found, depth);
+                // Remember that this call has side-effects, safer to store the result in a variable before testing on it.
                 // A subtree has been found, we interpret this as the end of a complex type, if we are currently parsing one.
 
                 if ( subtree_detected && (!state_end_found) && processing_complex_type ) {
-                    // Subtree detected, but not state_end, while processing complex type... We should finish the current complex type and start a new one.
+                    // Subtree detected, but not state_end, while processing complex type. We should finish the current complex type and start a new one.
                     processing_complex_type = false;
                     elementHandler.updateElementFromPTree(complex_type_name, ptree.begin()->second);
                     complexKeyFound( updatedKeys, complex_type_name, ptree );
-                    ptree.clear();
-                    ptree.add("root", 0);
-                    current_pos = ptree.begin();
-                    prev_pos.clear();
+                    complexTypeRestart( ptree, current_pos, prev_pos );
                 }
 
                 if ( subtree_detected ) {
-                    if (depth==top_level_depth+1) {
-                        processing_complex_type = true; // We are at the root of a complex type.
+                    if (depth==top_level_depth+1) { // We are at the root of a complex type, this signals the start of a new one.
+                        processing_complex_type = true;
                         complex_type_name = name;
                     }
                     current_pos->second.add(name, "contains fields on the level below, no value here");
@@ -251,21 +260,18 @@ XMLReader::XMLReader()
                     continue;
                 }
 
-                bool restart = false;
-                if (   ( (depth==top_level_depth+1) && (processing_complex_type) ) ||       // End of tree for complex type has been reached, even if no
-                       (  state_end_found           && (processing_complex_type) )   ) {    // "state-end" has not been found.
+                bool end_of_complex_type_found = false;
+                if (   ( (depth==top_level_depth+1) && (processing_complex_type) ) ||       // End of tree for complex type has been reached, even if
+                       (  state_end_found           && (processing_complex_type) )   ) {    // no "state-end" has been found.
                     processing_complex_type = false;
                     elementHandler.updateElementFromPTree(complex_type_name, ptree.begin()->second);
                     complexKeyFound( updatedKeys, complex_type_name, ptree );
-                    ptree.clear();
-                    ptree.add("root", 0);
-                    current_pos = ptree.begin();
-                    prev_pos.clear();
-                    restart = true;
+                    complexTypeRestart( ptree, current_pos, prev_pos );
+                    end_of_complex_type_found = true;
                 }
 
                 if ( !state_end_found ) {
-                    if ( !restart ) {
+                    if ( !end_of_complex_type_found ) {
                         if (depth<prev_depth) { // We leave the level and ascend. Must pop back to a previous position in the tree. ("Recursive return.")
                             for (int i=0; i<prev_depth-depth-1; i++)
                                 prev_pos.pop_back();
@@ -288,11 +294,11 @@ XMLReader::XMLReader()
         }
         xmlFreeTextReader( reader );
 
-        std::cout << "updated keys: ";
-        for (int i=0; i<int(updatedKeys.size()); i++) {
-            std::cout << updatedKeys[i] << " ";
-        }
-        std::cout << std::endl;
+//        std::cout << "updated keys: ";
+//        for (int i=0; i<int(updatedKeys.size()); i++) {
+//            std::cout << updatedKeys[i] << " ";
+//        }
+//        std::cout << std::endl;
 
         return updatedKeys;
     }

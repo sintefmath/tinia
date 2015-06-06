@@ -189,11 +189,9 @@ bool TwoJob::renderFrame(const std::string &session, const std::string &key, uns
         xmlDocPtr doc = NULL;
         try {
             tinia::model::impl::xml::XMLTransporter xmlTransporter;
-#if 1
-            doc = xmlTransporter.readXMLfromBuffer(probably_failing_but_not_throwing_xml.c_str(), failingxml.length());
-#else
-            doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
-#endif
+            doc = xmlTransporter.readXMLfromBuffer(probably_failing_but_not_throwing_xml.c_str(), probably_failing_but_not_throwing_xml.length());
+//            doc = xmlTransporter.readXMLfromBuffer(failingxml.c_str(), failingxml.length());
+//            doc = xmlTransporter.readXMLfromBuffer(workingxml.c_str(), workingxml.length());
             tinia::model::impl::xml::XMLReader xmlReader;
             tinia::model::impl::xml::ElementHandler elementHandler(m_model);
             xmlReader.parseDocument(doc, elementHandler);
