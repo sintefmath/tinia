@@ -2,7 +2,7 @@
 FILE( GLOB fpsviewer_HEADERS "*.hpp" )
 FILE( GLOB fpsviewer_JS_SOURCES "*.js" )
 FILE(GLOB fpsviewer_RESOURCES "*.qrc" )
-QT4_ADD_RESOURCES( fpsviewer_QRC_SOURCES ${fpsviewer_RESOURCES} )
+QT5_ADD_RESOURCES( fpsviewer_QRC_SOURCES ${fpsviewer_RESOURCES} )
 
 IF(Tinia_DESKTOP)
 
@@ -17,14 +17,14 @@ ADD_EXECUTABLE(fpsviewer_desktop
     tinia_qtcontroller
     tinia_renderlist
     tinia_renderlistgl
-    ${QT_LIBRARIES}
-    ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
+  QT5_USE_MODULES( fpsviewer_desktop OpenGL )
 ENDIF()
+
 
 
 IF(Tinia_SERVER)

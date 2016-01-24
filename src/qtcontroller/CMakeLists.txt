@@ -17,9 +17,9 @@ IF(NOT LIBXML2_FOUND)
     LIST(REMOVE_ITEM qtcontroller_HEADERS ${serverToRemove})
 
 ENDIF()
-QT4_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
-QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
-QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
+QT5_ADD_RESOURCES( qtcontroller_QRC_SOURCES ${qtcontroller_RESOURCES} )
+QT5_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED})# ${qtcontroller_SOURCES})
+QT5_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
 
  add_library( tinia_qtcontroller
     ${qtcontroller_QRC_SOURCES}
@@ -39,22 +39,18 @@ target_link_libraries ( tinia_qtcontroller
     tinia_javascript
     ${LIBXML2_LIBRARIES}
     tinia_modelxml
-    ${QT_LIBRARIES}
-    ${QT_QTOPENGL_LIBRARIES}
     tinia_jobcontroller
     ${Boost_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
 )
-ELSe()
+ELSE()
 target_link_libraries ( tinia_qtcontroller
     tinia_renderlist
     tinia_renderlistgl
     tinia_model
     tinia_javascript
-    ${QT_LIBRARIES}
-    ${QT_QTOPENGL_LIBRARIES}
     tinia_jobcontroller
     ${Boost_LIBRARIES}
     ${OPENGL_LIBRARIES}
@@ -62,6 +58,9 @@ target_link_libraries ( tinia_qtcontroller
     ${Freeglut_LIBRARY}
 )
 ENDIF()
+
+QT5_USE_MODULES( tinia_qtcontroller OpenGL Script Network Xml)
+
 # The reason for the development name to be <component>_dev is
 # that using <component>-dev does not work with NSIS Windows installer.
 # Remember to also update the list of components in the 
