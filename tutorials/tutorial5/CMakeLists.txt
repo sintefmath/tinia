@@ -4,7 +4,7 @@ FILE( GLOB tutorial_DOC "*.md" )
 FILE( GLOB tutorial_JS_SOURCES "*.js" )
 
 FILE(GLOB tutorial_RESOURCES "*.qrc" )
-QT4_ADD_RESOURCES( tutorial_QRC_SOURCES ${tutorial_RESOURCES} )
+QT5_ADD_RESOURCES( tutorial_QRC_SOURCES ${tutorial_RESOURCES} )
 
 
 IF(Tinia_DESKTOP)
@@ -22,14 +22,14 @@ ADD_EXECUTABLE(tutorial5_desktop
     tinia_qtcontroller
     tinia_renderlist
     tinia_renderlistgl
-    ${QT_LIBRARIES}
-    ${QT_QTOPENGL_LIBRARIES}
+
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARY}
     ${Freeglut_LIBRARY}
     tinia_jobcontroller
     ${Boost_LIBRARIES}
     )
+  QT5_USE_MODULES( tutorial5_desktop OpenGL )
 ENDIF()
 
 
@@ -44,8 +44,6 @@ IF(Tinia_SERVER)
   TARGET_LINK_LIBRARIES(tutorial5_web
     ${TINIA_LIBRARIES}
     ${GLEW_LIBRARY}
-    ${QT_LIBRARIES}
-    ${QT_QTOPENGL_LIBRARIES}
     ${OPENGL_LIBRARIES}
     ${Freeglut_LIBRARY}
     ${Boost_LIBRARIES} 
@@ -58,7 +56,7 @@ IF(Tinia_SERVER)
     tinia_trell
     )
 
-
+  QT5_USE_MODULES( tutorial5_web OpenGL )
   INSTALL(TARGETS
     tutorial5_web
     EXPORT TiniaTargets
