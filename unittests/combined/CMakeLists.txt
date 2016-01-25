@@ -4,6 +4,12 @@ FILE( GLOB combinedTestSrc "../*/*.cpp" )
 file( GLOB mainApps "../*/main.cpp" )
 list( REMOVE_ITEM combinedTestSrc ${mainApps} )
 
+IF( NOT Tinia_SERVER )
+  #The following files are only applicable for Tinia_Server
+  FILE( GLOB toRemove "../*/test_*.cpp" )
+  LIST( REMOVE_ITEM combinedTestSrc ${toRemove} )
+ENDIF( WIN32 )
+
 file( GLOB combinedMain main.cpp ) # Assuming absolute path is a good thing
 list( APPEND combinedTestSrc ${combinedMain} )
 
