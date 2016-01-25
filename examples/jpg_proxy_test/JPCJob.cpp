@@ -40,7 +40,10 @@
 #include "tinia/model/File.hpp"
 #include "tinia/utils/ProxyDebugGUI.hpp"
 
-
+#ifdef WIN32
+#define NOMINMAX
+#include <Windows.h>
+#endif
 
 namespace tinia {
 namespace example {
@@ -143,7 +146,11 @@ bool JPCJob::renderFrame(const std::string &session, const std::string &key, uns
         m_model->getElementValue("simulatedAdditionalLatency", ms);
         if (ms>0) {
             std::cout << "Sleeping for " << ms << " ms." << std::endl;
+#ifndef WIN32
             usleep( 1000 * ms );
+#else       
+            Sleep( 1000 * ms );
+#endif
         }
     }
 
