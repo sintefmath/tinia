@@ -1,6 +1,6 @@
 PROJECT( tinia )
-CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
-SET( version_number "0.3.0" )
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8.12)
+SET( version_number "0.4.0" )
 SET(TINIA_VERSION ${version_number})
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -12,6 +12,10 @@ IF(NOT CMAKE_BUILD_TYPE)
 SET(CMAKE_DEBUG_POSTFIX "d")
 
 ENDIF(NOT CMAKE_BUILD_TYPE)
+
+cmake_policy(SET CMP0053 OLD)
+cmake_policy(SET CMP0043 OLD)
+cmake_policy(SET CMP0020 OLD)
 
 # Set shared for linux:
 IF(NOT WIN32)
@@ -76,10 +80,11 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
     ENDIF( Tinia_IPC_LOG_TRACE )
 ENDIF()
 
-IF(MSVC10)
+IF(WIN32)
         #Enable multiprocessor compilation for speed
-        #SET(CMAKE_CXX_FLAGS " /MP ${CMAKE_CXX_FLAGS}" CACHE STRING " " FORCE)
-	#CAREFUL, this will append the above string for each time CMAKE is run!
+        #Requires CMAKE 2.8.12 or later
+        ADD_COMPILE_OPTIONS( /MP )
+        
 ENDIF()
 
 
