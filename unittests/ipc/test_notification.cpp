@@ -15,7 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/test/unit_test.hpp>
+#endif
 #include "test_fixture.hpp"
 
 BOOST_AUTO_TEST_SUITE( IpcMsgNotification )

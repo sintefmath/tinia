@@ -17,7 +17,10 @@
  */
 
 #pragma once
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/utility.hpp>
+#endif
 #include <tinia/renderlist/RenderList.hpp>
 
 namespace tinia {

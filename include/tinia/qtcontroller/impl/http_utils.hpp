@@ -4,10 +4,13 @@
 #include <QStringList>
 #include <QMap>
 #include <stdexcept>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/sequence.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
 #include <boost/tuple/tuple_io.hpp>
+#endif
 
 namespace tinia { namespace qtcontroller { namespace impl {
 

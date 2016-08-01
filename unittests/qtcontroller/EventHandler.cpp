@@ -16,11 +16,17 @@
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/test/unit_test.hpp>
+#endif
 #include <tinia/qtcontroller/impl/EventHandler.hpp>
 #include <tinia/qtcontroller/impl/ScriptEngine.hpp>
 #include <tinia/qtcontroller/scripting/KeyboardEvent.hpp>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/make_shared.hpp>
+#endif
 
 BOOST_AUTO_TEST_SUITE(EventHandler)
 

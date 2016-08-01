@@ -21,8 +21,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
+#endif
 #include <tinia/model/exceptions/RestrictionException.hpp>
 
 using std::cout;

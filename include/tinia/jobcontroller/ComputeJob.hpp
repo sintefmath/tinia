@@ -20,8 +20,11 @@
 #include <string>
 //#include <mutex> 
 #include "tinia/jobcontroller/Job.hpp"
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/thread/thread.hpp>
 #include <boost/scoped_ptr.hpp>
+#endif
 
 namespace tinia {
 namespace jobcontroller

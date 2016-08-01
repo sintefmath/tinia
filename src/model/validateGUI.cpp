@@ -18,9 +18,12 @@
 
 
 #include <tinia/model/GUILayout.hpp>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/placeholders.hpp>
+#endif
 #include <tinia/model/GUILayout.hpp>
 #include <tinia/model/ExposedModel.hpp>
 #include <tinia/model/exceptions/KeyNotFoundException.hpp>
