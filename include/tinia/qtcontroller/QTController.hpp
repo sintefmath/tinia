@@ -22,8 +22,11 @@
 
 
 
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#endif
 
 class QMainWindow;
 class QGLWidget;

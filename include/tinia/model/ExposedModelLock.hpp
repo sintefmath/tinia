@@ -17,9 +17,15 @@
  */
 
 #pragma once
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include "boost/thread.hpp"
+#endif
 #include "tinia/model/ExposedModel.hpp"
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/shared_ptr.hpp>
+#endif
 
 namespace tinia {
 namespace model {

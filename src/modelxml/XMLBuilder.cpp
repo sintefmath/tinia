@@ -20,8 +20,11 @@
 
 #include <iostream>
 #include <algorithm>
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
+#endif
 
 using namespace std;
 

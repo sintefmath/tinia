@@ -28,8 +28,11 @@
 #include <map>
 #include <iterator>
 
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#endif
 
 #include "tinia/model/Viewer.hpp"
 

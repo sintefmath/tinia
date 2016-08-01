@@ -18,7 +18,10 @@
 
 #pragma once
 #include "tinia/model/impl/ElementData.hpp"
+// QT's moc doesn't like BOOST_JOIN ( can be removed in QT 5.0 we think)
+#ifndef Q_MOC_RUN 
 #include <boost/property_tree/ptree.hpp>
+#endif
 #include <string>
 
 namespace tinia {
