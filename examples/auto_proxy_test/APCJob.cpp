@@ -88,6 +88,9 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
 {
     static bool firsttime = true;
     if (firsttime) {
+
+        // 160803: Think this is for producing the fine network of black orthogonal lines used on the cube faces.
+
         std::cout << "Setting up texture" << std::endl;
         glGenTextures(1, &m_tex);
         glBindTexture(GL_TEXTURE_2D, m_tex);
@@ -97,12 +100,13 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
         std::vector<unsigned char> texData(n*n*3, 255);
         for (int i=0; i<n; i+=(n/16)) {
             for (int j=0; j<n; j++) {
-                texData[3*(i*n+j) + 0] = 0;
-                texData[3*(i*n+j) + 1] = 0;
-                texData[3*(i*n+j) + 2] = 0;
-                texData[3*(j*n+i) + 0] = 0;
-                texData[3*(j*n+i) + 1] = 0;
-                texData[3*(j*n+i) + 2] = 0;
+                const unsigned char val = 0; // 160803: Hmm... why doesn't 255 produce white lines instead of black ones?! Blend mode issue.
+                texData[3*(i*n+j) + 0] = val;
+                texData[3*(i*n+j) + 1] = val;
+                texData[3*(i*n+j) + 2] = val;
+                texData[3*(j*n+i) + 0] = val;
+                texData[3*(j*n+i) + 1] = val;
+                texData[3*(j*n+i) + 2] = val;
             }
         }
 
@@ -136,9 +140,13 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf( viewer.modelviewMatrix.data() );
 
+#if 0
+
     glEnable(GL_TEXTURE_2D);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glBindTexture(GL_TEXTURE_2D, m_tex);
+
+    // Coloured box with orthogonal network of thin lines in texture
 
     glBegin(GL_POLYGON);
     glColor3f(   1.0,  0.0, 0.0 );
@@ -216,6 +224,39 @@ bool APCJob::renderFrame(const std::string &session, const std::string &key, uns
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
+
+#else
+
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, m_tex);
+    glBegin(GL_POLYGON);
+    glColor3f(   1.0,  0.0, 0.0 );
+    glTexCoord2f(1, 1);
+    glVertex3f(  0.5, -0.5, -0.5 );
+    glTexCoord2f(1, 0);
+    glVertex3f(  0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 0);
+    glVertex3f( -0.5,  0.5, -0.5 );
+    glTexCoord2f(0, 1);
+    glVertex3f( -0.5, -0.5, -0.5 );
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+
+    // Fixed point cloud
+
+    srand48(123);
+    glPointSize(5.0);
+    glBegin(GL_POINTS);
+    for (int i=0; i<100; i++) {
+        glColor3f( 0, 1, 0 ); // drand48(), drand48(), drand48() );
+        glVertex3f( 2.0*drand48()-1.0, 2.0*drand48()-1.0, 2.0*drand48()-1.0 );
+        glColor3f(1,0,0);
+        glVertex3f( 0, 0, 0 );
+    }
+    glEnd();
+
+#endif
 
     CHECK_GL;
 
