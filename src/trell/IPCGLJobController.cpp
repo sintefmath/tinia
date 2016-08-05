@@ -504,10 +504,139 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
     {
         unsigned char *buffer_pos = (unsigned char *)buffer;
         glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer_pos );
+
+
+        const size_t fb_width      = 1080;
+        const size_t fb_height     = 1920;
+        const size_t kinect_width  = 512;
+        const size_t kinect_height = 424;
+
+
+        static bool firsttime = true;
+
+
+        // 160805: Reading binary data from file, produced by writing out matlab scripts, see notes_tinia.txt.
+        static std::vector<unsigned char> fb_img( fb_width*fb_height*3, 0 );
+        static std::vector<float> depth_img( kinect_width*kinect_height, 1.0f );
+        static float min_depth_read_from_file = FLT_MAX;
+        static float max_depth_read_from_file = FLT_MIN;
+        if (firsttime) {
+            std::string fname( "/home/jnygaard/SVIP_Kinect_PCL/fb.bin" );
+            FILE *f=fopen( fname.c_str(), "r" );
+            if (f==NULL) {
+                std::cout << "Couldn't open " << fname << " for reading." << std::endl;
+            }
+            size_t bytes_read = fread( &fb_img[0], 1, fb_img.size(), f );
+            if ( bytes_read != fb_img.size() ) {
+                std::cout << "Huh? Read " << bytes_read << " bytes for fb, expected " << fb_img.size() << std::endl;
+            }
+            fclose(f);
+
+            fname ="/home/jnygaard/SVIP_Kinect_PCL/db.bin";
+            f=fopen( fname.c_str(), "r" );
+            if (f==NULL) {
+                std::cout << "Couldn't open " << fname << " for reading." << std::endl;
+            }
+            bytes_read = sizeof(float) * fread( &depth_img[0], sizeof(float), depth_img.size(), f );
+            if ( bytes_read != sizeof(float)*depth_img.size() ) {
+                std::cout << "Huh? Read " << bytes_read << " bytes, expected " << sizeof(float)*depth_img.size() << std::endl;
+            }
+            fclose(f);
+            for (size_t i=0; i<depth_img.size(); i++) {
+                min_depth_read_from_file = std::min( min_depth_read_from_file, depth_img[i] );
+                max_depth_read_from_file = std::max( max_depth_read_from_file, depth_img[i] );
+            }
+            std::cout << "min and max depths from binary depth file: " << min_depth_read_from_file << " " << max_depth_read_from_file << std::endl;
+            std::cout << "fb width and height: " << fb_width << " " << fb_height << std::endl;
+            std::cout << "dst buffer width and height: " << width << " " << height << std::endl;
+            std::cout << "depth buffer width and height: " << kinect_width << " " << kinect_height << std::endl;
+
+            firsttime = false;
+        }
+
+
+        // 160805: Filling the frame buffer, overwriting readpixels-results. Re-scaling without interpolation, for the time being.
+        for (size_t dst_i=0; dst_i<height; dst_i++) {
+            size_t src_i = size_t( floor( dst_i/double(height)*fb_height + 0.5 ) );
+            for (size_t dst_j=0; dst_j<width; dst_j++) {
+                size_t src_j = size_t( floor( dst_j/double(width)*fb_width + 0.5 ) );
+                for (size_t k=0; k<3; k++) {
+                    buffer_pos[ (dst_i*width + dst_j)*3 + k ] = fb_img[ ((fb_height-1-src_i)*fb_width + src_j) + k*fb_width*fb_height ];
+                }
+            }
+        }
+
+#if 0
+        // Filling with solid red.
+        for (size_t i=0; i<width*height; i++) {
+            buffer_pos[ 3*i + 0 ] = 255;
+            buffer_pos[ 3*i + 1 ] = 0;
+            buffer_pos[ 3*i + 2 ] = 0;
+        }
+#endif
+
+
+#if 0
+        // 160804:
+        std::cout << "Dumping frame buffer contents (after readpixels and/or image painting), lower left corner values:\n";
+        for (int i=0; i<10; i++) {
+            std::cout << i << ": \t";
+            for (int j=0; j<10; j++) {
+                std::cout << "(" << int(buffer_pos[ (width*i+j)*3 ]) << ", " << int(buffer_pos[ (width*i+j)*3 + 1 ]) << ", " << int(buffer_pos[ (width*i+j)*3 + 2 ]) << ") ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << std::endl;
+#endif
+
+
         buffer_pos += 4*((width*height*3 + 3)/4); // As long as GL_PACK_ALIGNMENT is set to 1 above, this should be ok. (I.e., no padding for single scan lines.)
         // NB! We read four bytes per pixel, then convert to three, meaning that the buffer must be large enough for four!!!
         // (This should be taken care of further up the stack. The caller of this method is IPCJobController::handle().)
         glReadPixels( 0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer_pos );
+
+
+#if 0
+        // 160804:
+        std::cout << "dumping depth buffer, lower left corner values, 1 seems to be \"unset\" (and infinity?), range probably [0, 1], with 0 at near plane?!\n";
+        for (int i=0; i<10; i++) {
+            std::cout << i << ": \t";
+            for (int j=0; j<10; j++) {
+                std::cout << ((float *)buffer_pos)[width*i+j] << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << std::endl;
+#endif
+
+
+        // 160804: Filling the depth buffer, overwriting readpixels-results. By calling this routine with exactly the same depth_width and
+        //         depth_height as the Kinect data contains (how do we do it?) we would avoid up/down-sampling...
+        {
+            float       * const dst_buf = (float *)buffer_pos;
+            const float * const src_buf = &depth_img[0];
+
+            // Trying to fill the whole buffer with mean of near and far plane. Seems more or less like what we expect.
+//            for (size_t i=0; i<height*width; i++) {
+//                dst_buf[i] = 0.5f;
+//            }
+
+            // Far plane, will not produce splats. (Do we test on the value explicitly, or is it just outside of the frustum?)
+//            for (size_t i=0; i<height*width; i++) {
+//                dst_buf[i] = 1.0f;
+//            }
+
+            for (size_t dst_i=0; dst_i<height; dst_i++) {
+                size_t src_i = size_t( floor( dst_i/double(width)*kinect_width + 0.5 ) );
+                for (size_t dst_j=0; dst_j<width; dst_j++) {
+                    size_t src_j = size_t( floor( dst_j/double(height)*kinect_height + 0.5 ) );
+                    dst_buf[ dst_i*width + dst_j ] =
+                            ( src_buf[ (kinect_width-1-src_i)*kinect_height + src_j ] - min_depth_read_from_file ) /
+                            ( max_depth_read_from_file - min_depth_read_from_file ); //  * 0.99999;
+                }
+            }
+        }
+
 
         if( m_logger_callback != NULL ) { // (This goes to /tmp/job-id.stderr)
             m_logger_callback( m_logger_data, 0, package.c_str(), "Current canvas and depth buffer size: %d %d and %d %d", width, height, depth_width, depth_height );
@@ -515,6 +644,7 @@ IPCGLJobController::onGetSnapshot( char*               buffer,
 
         if ( (depth_width!=width) || (depth_height!=height) ) {
             // New path, downsampling, without bi-linear interpolation
+            // 160804: Hmm. Can we be sure depth size is always smaller or equal to image size?!
             float *tmp_buffer = new float[depth_width*depth_height];
             const float * const m_buf = (float *)buffer_pos;
             for (size_t i=0; i<depth_height; i++) {

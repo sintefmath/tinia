@@ -10,6 +10,9 @@
 
 attribute vec2 aVertexPosition;
 
+// 160805: Think "varying" is the only option for sending data from the VS to the FS in webgl. Note that since we render "points",
+//         these parameters should not be interpolated or changed in any way before reaching the FS... Think this was the idea...
+
 varying highp vec4 texCoo_depth_e;              // packed texCoo and depth_e for approximating the intra-splat depth, depth = sampled_depth + depth_e' * c
 
 varying highp vec4 frag_depth_e_F_sampled_depth_F_frag_depth; // Fused: frag_depth_e, sampled_depth, frag_depth
