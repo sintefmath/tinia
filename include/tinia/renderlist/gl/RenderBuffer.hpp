@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <tinia/renderlist/RenderList.hpp>
 #include <tinia/renderlist/gl/Renderer.hpp>

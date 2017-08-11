@@ -36,11 +36,11 @@ int main(int argc, char** argv) {
     //Q_INIT_RESOURCE( tutorial5 );
     QFile viewerSourceLoc( ":/tutorial5.js" );
     if( !viewerSourceLoc.open( (QIODevice::ReadOnly | QIODevice::Text) ) ) {
-        std::string err = std::string(viewerSourceLoc.errorString().toAscii() );
+        std::string err = std::string(viewerSourceLoc.errorString().toLatin1() );
         throw std::runtime_error( "Could not open file in QRC, aborting."  + err);
     }
 
-    std::string viewerSource ( QString(viewerSourceLoc.readAll()).toAscii() );
+    std::string viewerSource ( QString(viewerSourceLoc.readAll()).toLatin1() );
     controller.addScript( viewerSource );
 
     /** [jobtocontroller] */

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with the Tinia Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <iostream>
 #include <iomanip>

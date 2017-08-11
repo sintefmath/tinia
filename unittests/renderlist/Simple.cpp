@@ -40,12 +40,12 @@ struct Fixture
 {
     Fixture()
     {
-        BOOST_MESSAGE( "constructor" );
+        //BOOST_MESSAGE( "constructor" );
     }
 
     ~Fixture()
     {
-        BOOST_MESSAGE( "destructor" );
+        //BOOST_MESSAGE( "destructor" );
     }
 
     tinia::renderlist::Revision

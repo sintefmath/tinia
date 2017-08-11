@@ -2,7 +2,10 @@ PROJECT( tinia )
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6)
 SET( version_number "0.3.0" )
 SET(TINIA_VERSION ${version_number})
-
+set(GLEW_INCLUDE_DIR  "C:/opt/glew-2.0.0/include" CACHE PATH "")
+set(GLEW_DEFINITIONS -DGLEW_STATIC)
+set(GLEW_LIBRARY  "C:/opt/glew-2.0.0/lib/Release/x64/glew32s.lib" CACHE PATH "")
+set(GLEW_LIBRARIES  "C:/opt/glew-2.0.0/lib/Release/x64/glew32s.lib" CACHE PATH "")
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
@@ -109,14 +112,16 @@ SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${Boost_LIBRARIES})
 
 ##### QT #####
 IF(Tinia_DESKTOP)
-  FIND_PACKAGE(Qt4 COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript QtNetwork REQUIRED)
-  INCLUDE(${QT_USE_FILE})
+set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "C:/Qt/5.8/msvc2015_64/lib/cmake" )
+  FIND_PACKAGE(Qt5OpenGL COMPONENTS QtCore QtGui QtOpenGL QtXML QtScript QtNetwork REQUIRED)
+  #INCLUDE(${QT_USE_FILE})
+  
   SET(QT_USE_QTOPENGL TRUE)
   SET(QT_USE_QTXML TRUE)
     SET(QT_USE_QTNETWORK TRUE)
   SET(QT_USE_QTSCRIPT TRUE)
-  QT4_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
-  QT4_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
+  QT5_WRAP_CPP(qtcontroller_HEADERS_MOC ${qtcontroller_SOURCES_TO_BE_MOCED} ${qtcontroller_SOURCES})
+  QT5_WRAP_UI(qtcontroller_FORMS_HEADERS ${qtcontroller_FORMS})
   ADD_DEFINITIONS(${QT_DEFINITIONS})
   ADD_DEFINITIONS(-DQT_SHARED)
   SET(TINIA_LIBRARIES_FOR_CONFIG ${TINIA_LIBRARIES_FOR_CONFIG} ${LIBXML2_LIBRARIES} ${QT_LIBRARIES})
@@ -311,6 +316,7 @@ ELSE()
 	export(TARGETS tinia_model tinia_jobcontroller tinia_modelxml tinia_renderlist tinia_renderlistgl tiniaipc tinia_trell tinia_utils
 				FILE "${PROJECT_BINARY_DIR}/TiniaTargets${TINIA_TARGETS_APPEND}.cmake")
 ENDIF()
+
 
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" ${TINIA_EXTERNAL_INCLUDE_DIRS})
 set(CONF_APPS_DIR "${PROJECT_BINARY_DIR}")

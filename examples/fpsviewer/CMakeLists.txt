@@ -2,7 +2,7 @@
 FILE( GLOB fpsviewer_HEADERS "*.hpp" )
 FILE( GLOB fpsviewer_JS_SOURCES "*.js" )
 FILE(GLOB fpsviewer_RESOURCES "*.qrc" )
-QT4_ADD_RESOURCES( fpsviewer_QRC_SOURCES ${fpsviewer_RESOURCES} )
+QT5_ADD_RESOURCES( fpsviewer_QRC_SOURCES ${fpsviewer_RESOURCES} )
 
 IF(Tinia_DESKTOP)
 

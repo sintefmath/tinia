@@ -19,6 +19,7 @@
 #include <string>
 #include <typeinfo>
 #include <iostream>
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <tinia/renderlist/Logger.hpp>
 #include <tinia/renderlist/DataBase.hpp>

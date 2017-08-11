@@ -1,6 +1,6 @@
 FILE(GLOB javascript_RESOURCES "*.qrc")
 FILE(GLOB_RECURSE javascript_SOURCES "." "*.js" "*.html" "*.css")
-QT4_ADD_RESOURCES( javascript_QRC_SOURCES ${javascript_RESOURCES} )
+QT5_ADD_RESOURCES( javascript_QRC_SOURCES ${javascript_RESOURCES} )
 
 add_library( tinia_javascript
     ${javascript_QRC_SOURCES}
