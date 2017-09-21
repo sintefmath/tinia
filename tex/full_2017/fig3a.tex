@@ -1,0 +1,92 @@
+\begin{tikzpicture}[scale=0.32, >=triangle 45, % show background rectangle,
+  declare function = {
+    rotx(\x,\y,\th) = cos(\th)*\x - sin(\th)*\y; % NB! Cannot have space between parameters it seems!
+    roty(\x,\y,\th) = sin(\th)*\x + cos(\th)*\y;
+  }
+  ]
+
+  \input{fig3pre.tex}
+  \def \cy          {3} % overriding the one in fig3pre.tex
+  \def \pixels      {11}
+
+  \foreach \frame in {0, ..., 4} {
+
+    \pgfmathsetmacro\theta{25*\frame}
+
+    % The scene, using same coordinate calculations as in the loop below
+
+    \ifthenelse{ \frame = 0 \OR \frame = 2 \OR \frame = 4} {
+      \def \rightcolToUse {\rightcol}
+      \def \leftcolLToUse {\leftcolL}
+      \def \leftcolRToUse {\leftcolR}
+    }{
+      \def \rightcolToUse {red!10}
+      \def \leftcolLToUse {blue!10}
+      \def \leftcolRToUse {red!10}
+    }
+
+    \pgfmathsetmacro\s{1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (left) at ( \posxRot, \posyRot );
+    
+    \pgfmathsetmacro\s{\redpixels - 1}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (middle) at ( \posxRot, \posyRot );
+    
+    % The offset necessary for the red and green lines to meet properly
+    \pgfmathsetmacro\redgreenintersection{3.5 -(0.6+0.2)*(\s-1)}
+    
+    \pgfmathsetmacro\s{\pixels}
+    \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+    \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+    \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+    \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+    \coordinate (right) at ( \posxRot, \posyRot );
+    
+    % The "server-rendered model"
+    \fill[left color=\leftcolLToUse, right color=\leftcolRToUse, draw=none]
+      (left) -- (middle) -- +(0, 3*\linewidth) -- ($ (left) + (0, 3*\linewidth) $) -- cycle;
+    % Why is the factor 3 needed here?!?!
+    % And why is there a (very thin) border?
+    % And why is it not equally thick everywhere?
+    \draw[\rightcolToUse, line width=\linewidth] (middle) -- (right);
+
+    % Showing splats
+    \foreach \s in {1, ..., \pixels} {
+      \ifthenelse{\s < \redpixels} {
+        \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+        \pgfmathsetmacro\posy{3.5 - 0.6*(\s-1)}
+        \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+        \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+        
+        % Constant color
+        \pgfmathsetmacro\t{100*\s/\redpixels}
+        \pgfmathsetmacro\u{100*(1.0-\s/\redpixels)}
+        %      \draw[red!\t!blue!\u, line width=1.5pt] (\posxRot, \posyRot) -- +(-\halfWidthToUse, 0);
+        %      \draw[red!\t!blue!\u, line width=1.5pt] (\posxRot, \posyRot) -- +(\halfWidthToUse, 0);
+        
+%        \draw[fill=red!\t!blue!\u] (\posxRot, \posyRot) circle(0.15);
+        
+        %      \draw[red, fill=red!50] (\posxRot, \posyRot) circle(0.15);
+      } {
+        \pgfmathsetmacro\posx{0.5*(\s-1) + 2}
+        \pgfmathsetmacro\posy{0.2*(\s-1) + \redgreenintersection}
+        \pgfmathsetmacro\posxRot{rotx(\posx-\cx, \posy-\cy, \theta)+\cx}
+        \pgfmathsetmacro\posyRot{roty(\posx-\cx, \posy-\cy, \theta)+\cy}
+
+%        \draw[fill=\rightcolToUse] (\posxRot, \posyRot) circle(0.15);
+
+      }
+    }
+
+
+  }
+
+
+\end{tikzpicture}

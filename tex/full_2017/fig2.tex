@@ -1,0 +1,68 @@
+\begin{tikzpicture}[scale=0.5, >=triangle 45] % , show background rectangle]
+
+
+%  \node[scale=0.15, above right] (screenshotcenter) at (0,0) {\includegraphics{test.jpg}};
+%  \coordinate (widthheight) at ($2*(screenshotcenter)$);
+
+%  \draw [fill, circle, inner sep=0pt, minimum size=3pt, color=black] (0, 0) circle (3pt);
+%  \draw [fill, circle, inner sep=0pt, minimum size=3pt, color=red] (screenshotcenter) circle (3pt);
+
+%  \draw let
+%    \p1 = ( $ 2*(screenshotcenter) $ )
+%  in
+%    [fill=none] (0, 0) rectangle (\x1, \y1);
+
+
+%  \newcommand\expansion{0.5}
+%  \coordinate (lowerleft)        at ( $ (0, 0) - \expansion*(widthheight) $ );
+%  \coordinate (upperright)       at ( $ (widthheight) + \expansion*(widthheight) $ );
+  
+%  \draw [fill=none] (lowerleft) rectangle (upperright);
+
+  % View frustum
+  \fill[fill=gray!10] (1, 0.7) -- (9, 0.7) -- (10, 4.3) -- (0, 4.3) -- cycle;
+
+  % Some scene
+  \draw[red, line width=3pt] (2, 3) -- (5, 2);
+  \draw[green, line width=3pt] (5, 2) -- (8, 4);
+
+
+  % Corresponding pixels and depth fragments
+  \def \pixelwidth  {0.4}
+  \def \pixelheight {0.3}
+  \def \redstart    {2.2}
+  \def \redpixels   {7}
+  \def \pixels      {13}
+  \foreach \s in {1, ..., \pixels} {
+    \def \x { \redstart + \s * \pixelwidth }
+    \def \xx { \x + \pixelwidth }
+    \ifthenelse{\s < \redpixels} {
+      \draw[red, fill=red!50] (\x, 1) rectangle (\xx, 1+\pixelheight); 
+    } {
+      \draw[green, fill=green!50] (\x, 1) rectangle (\xx, 1+\pixelheight);
+    }
+    \pgfmathsetmacro\depthcol{abs(\redpixels-0.5-\s) * 25}
+    \draw[black, fill=gray!\depthcol] (\x, 1+\pixelheight) rectangle (\xx, 1+2*\pixelheight);
+  }
+
+
+%\def \n {5}
+%\def \radius {3cm}
+%\def \margin {8} % margin in angles, depends on the radius
+%\foreach \s in {1,...,\n}
+%{
+%  \node[draw, circle] at ({360/\n * (\s - 1)}:\radius) {$\s$};
+%  \draw[->, >=latex] ({360/\n * (\s - 1)+\margin}:\radius) 
+%    arc ({360/\n * (\s - 1)+\margin}:{360/\n * (\s)-\margin}:\radius);
+%}
+
+
+
+  % Indicated nodes and intersections
+%  \draw [fill, circle, inner sep=0pt, minimum size=3pt, color=black] (T0) circle (3pt);
+
+  % Labels
+%  \draw (T0) node[black, scale=0.8, shift={(0, -2ex)}] {$\Tv_0$};
+
+
+\end{tikzpicture}

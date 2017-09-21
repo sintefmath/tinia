@@ -1,0 +1,46 @@
+Husk aa faa med det viktige i at vi faar oekt serverkapasiteten til aa
+serve flere klienter ogsaa!
+
+
+katalogiseringsspøørsmålet
+
+
+diverse referanser 
+
+
+
+
+mange splatter mot faerre og mer kompliserte burde benchmarkes og inngaa
+i ``automatisk heuristikk''-opplegget... i det minste nevne at tynne klienter
+faar problem med mange. ``antall splats kan velges automatisk paa samme maate
+som jpg-kvalitet.''
+
+
+
+
+
+
+\item
+``server-image'' i steden for ``server-rendered image'' for aa spare plass?
+
+\item received stavekontroll
+
+\item Maa ta et lite soek paa prior art innen omraadet
+
+\item problem med shading/shadows ++ i forb. med ikke deferred shading/normal map
+
+\item About our test case: corners, smooth surfaces, texturing for which artifacts are easy to
+spot. What it does lack is self-occluding parts. The FRView rservoir model that
+we have tested on does contain some of this.
+
+\item Burde vi vise chemco?
+
+\item Sjekk konsistens ved bruk av kombinasjoner som ``server rendered'' og
+``server-rendered'' etc.
+
+\item Referanser? Prior work?
+
+\end{itemize}
+
+
+

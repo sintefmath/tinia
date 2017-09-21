@@ -1,0 +1,33 @@
+\begin{tikzpicture}[scale=0.32, >=triangle 45, % show background rectangle,
+  declare function = {
+    rotx(\x,\y,\th) = cos(\th)*\x - sin(\th)*\y; % NB! Cannot have space between parameters it seems!
+    roty(\x,\y,\th) = sin(\th)*\x + cos(\th)*\y;
+  }
+  ]
+
+  \input{fig3pre.tex}
+
+  \foreach \frame in {0} {  % , ..., 4} {
+    \pgfmathsetmacro\theta{25*\frame}
+
+    \ifthenelse{ \frame = 0 \OR \frame = 2 \OR \frame = 4} {
+      \def \rightcolToUse {red!100}
+      \def \leftcolLToUse {blue!100}
+      \def \leftcolRToUse {red!100}
+    }{
+      \def \rightcolToUse {red!10}
+      \def \leftcolLToUse {blue!10}
+      \def \leftcolRToUse {red!10}
+    }
+    
+    \def \withSplats {1}
+    \def \withLargeSplats {0}
+    \def \withConstantWidthSplats {1}
+    \def \withFragDepth {0}
+
+    \input{fig3main.tex}
+    
+  }
+
+
+\end{tikzpicture}
