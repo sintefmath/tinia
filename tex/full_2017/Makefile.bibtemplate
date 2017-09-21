@@ -1,0 +1,10 @@
+all:
+	@echo "Please, take a look into this Makefile first!"
+
+bibtemplate:
+	- pdflatex bibtemplate
+	- pdflatex bibtemplate
+	- bibtex bibtemplate
+	- pdflatex bibtemplate
+	- pdflatex bibtemplate
+

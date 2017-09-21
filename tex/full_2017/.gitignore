@@ -1,7 +1,9 @@
-paper.aux
-paper.bbl
-paper.blg
-paper.brf
-paper.lbl
+*.aux
+*.bbl
+*.blg
+*.brf
+*.lbl
 paper.pdf
+paper2.pdf
+bare_conf.pdf
 test.jpg
