@@ -660,9 +660,11 @@ Common to many IBR-algorithms is also that of stitching together 3D or 2.5D
 point clouds. We could do this for our 2.5D maps fetched from the server, but it
 is unclear if the benefit would outweigh the cost.
 %
-We are not aware of anybody else using depth maps exactly for our purpose, most
+\textbf{[OLD: We are not aware of anybody else using depth maps exactly for our purpose, most
 research seems to be focused on the retrieval of the depth map from images,
-while we use an existing depth map to distill and render temporary geometry.
+while we use an existing depth map to distill and render temporary geometry.]}
+\textbf{[NEW: Our approach differs from many similar ones, in that we use existing depth maps 
+to distill and render temporary geometry, rather than retrieveing the depth maps from images.]}
 %
 We observe that these 2.5D height maps are exactly what ``3D cameras''
 (time-of-flight and other range image sensors) produce, but most authors
@@ -675,6 +677,23 @@ away with transferring a lot less data due to our adaptive compression ratio
 depending on continuous bandwidth and latency measurements.
 %
 }
+%
+\textbf{In~\cite{CGF:CGF1871}, Pajak \etal considers remote rendering and
+  streaming of frames rendered from a dynamical 3D model, we are quite agnostic
+  to the source of imagery. Their setup requires more powerful clients than ours
+  (OpenGL vs. WebGL), but they will also have higher fidelity.  }
+%
+\textbf{A special case is provided for in the rendering of stereo images. In
+  this case, the 3D disparity is limited, while the rendering cost is doubled,
+  since two views per frame is needed. In~\cite{DidykERMS2010}, this is
+  exploited to make a solution tailored to such stereo synthesis; performance
+  approaches that of rendering non-stereo, with a minimization of depth
+  disparity artifacts. Occlusion and disocclusion holes are avoided by warping quads rather than
+  pixel and filling in with previous images.}
+%
+% Er denne egentlig relevant?
+%\textbf{Nalbach \etal,~\cite{Nalbach:2014:DSS:2556700.2556708}, ...
+%}
 
 
 
