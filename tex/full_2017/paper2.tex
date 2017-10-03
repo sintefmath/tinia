@@ -520,29 +520,83 @@ Email: {\tt Jon.Mikkelsen@sintef.no}}}
 
 
 % make the title area
-\maketitle
-
+%\maketitle
 
 %\teaser
-{
-  \centering
-  \subfigure[Server-rendered (OpenGL)]{
-    \includegraphics[width=0.32\linewidth, trim={1cm 1cm 1cm 1cm}, clip]{frviewb1.png}
-  }
-  \subfigure[Client-rendered (WebGL)]{
-    \includegraphics[width=0.32\linewidth, trim={0 1cm 0 1.5cm}, clip]{frviewb2.png}
-  }
-  \subfigure[Client-rendered (WebGL)]{
-    \includegraphics[width=0.32\linewidth, trim={0 1.5cm 0 2cm}, clip]{frviewb3.png}
-    % The trim params: left lower right upper
-  }
-  \caption{\label{fig:FRView} The oil reservoir viewer YYYY~\cite{cloudviz},
+%{
+%  \centering
+%  \subfigure[Server-rendered (OpenGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={1cm 1cm 1cm 1cm}, clip]{frviewb1.png}
+%  }
+%  \subfigure[Client-rendered (WebGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={0 1cm 0 1.5cm}, clip]{frviewb2.png}
+%  }
+%  \subfigure[Client-rendered (WebGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={0 1.5cm 0 2cm}, clip]{frviewb3.png}
+%    % The trim params: left lower right upper
+%  }
+%  \caption{\label{fig:FRView} The oil reservoir viewer YYYY~\cite{cloudviz},
+%  (name withheld for the double-blind review process) showing one
+%  server-rendered and two client-rendered images of automatically generated and
+%  slightly rotated proxy models.  For~(b), parameters are chosen to produce the
+%  best possible image, and in~(c) we want to highlight artifacts and
+%  implementational details. See the text for further discussion.}
+%}
+
+
+
+\twocolumn[{%
+\renewcommand\twocolumn[1][]{#1}%
+\maketitle
+\begin{center}
+    \centering
+		\begin{tabular}[b]{ccc}
+    \includegraphics[width=0.32\linewidth, trim={1cm 1cm 1cm 1cm}, clip]{frviewb1.png} &
+    \includegraphics[width=0.32\linewidth, trim={0 1cm 0 1.5cm}, clip]{frviewb2.png} &
+    \includegraphics[width=0.32\linewidth, trim={0 1.5cm 0 2cm}, clip]{frviewb3.png} \\
+		a) & b) & c)
+		\end{tabular}
+		\captionof{figure}{\label{fig:FRView} The oil reservoir viewer YYYY~\cite{cloudviz},
   (name withheld for the double-blind review process) showing one
   server-rendered and two client-rendered images of automatically generated and
   slightly rotated proxy models.  For~(b), parameters are chosen to produce the
   best possible image, and in~(c) we want to highlight artifacts and
   implementational details. See the text for further discussion.}
-}
+%    \protect \label{fig:wfedesign} }
+%    \captionof{figure}{Test caption}
+\end{center}%
+}]
+
+%\begin{figure*}
+%    % The star in \begin{figure*} makes the figure stretch across both columns.
+%    \centering
+%    \includegraphics[width=0.99\linewidth]{frviewb1.png}
+%    \caption{
+%        %The graphical user interface of WFE, where dotted lines represent flow of services, while solid lines connect parameters from outputs to inputs.
+%        The graphical user interface of Workflow Editor displays buttons to append services and to add code snippets for conditional branches, loops, parallel service execution (split), etc., as well as options for service %filtering. It also lets users add inputs and outputs to the workflow with appropriate buttons shown as I and O. The workflow is shown as a directed graph, where blue boxes represent single CloudFlow services, and dark green% boxes are sub-workflows. The execution order is represented by the dotted arrows, while data flow is visualized by solid lines, which connect output parameters from services to be input parameters of others.}
+%    \protect \label{fig:wfedesign}
+%\end{figure*}
+
+%\teaser
+%{
+%  \centering
+%  \subfigure[Server-rendered (OpenGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={1cm 1cm 1cm 1cm}, clip]{frviewb1.png}
+%  }
+%  \subfigure[Client-rendered (WebGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={0 1cm 0 1.5cm}, clip]{frviewb2.png}
+%  }
+%  \subfigure[Client-rendered (WebGL)]{
+%    \includegraphics[width=0.32\linewidth, trim={0 1.5cm 0 2cm}, clip]{frviewb3.png}
+%    % The trim params: left lower right upper
+%  }
+%  \caption{\label{fig:FRView} The oil reservoir viewer YYYY~\cite{cloudviz},
+%  (name withheld for the double-blind review process) showing one
+%  server-rendered and two client-rendered images of automatically generated and
+%  slightly rotated proxy models.  For~(b), parameters are chosen to produce the
+%  best possible image, and in~(c) we want to highlight artifacts and
+%  implementational details. See the text for further discussion.}
+%}
 
 
 \begin{abstract}
