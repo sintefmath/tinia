@@ -482,11 +482,11 @@ Applied Mathematics\\
 Norway\\
 Email: {\tt Jens.O.Nygaard@sintef.no}}
 \and
-\IEEEauthorblockN{~\\[-0.4ex]\large Jon Mikkelsen\\[0.3ex]\normalsize}
+\IEEEauthorblockN{~\\[-0.4ex]\large Jon Mikkelsen Hjelmervik\\[0.3ex]\normalsize}
 \IEEEauthorblockA{SINTEF Digital\\
 Applied Mathematics\\
 Norway\\
-Email: {\tt Jon.Mikkelsen@sintef.no}}}
+Email: {\tt Jon.M.Hjelmervik@sintef.no}}}
 
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
@@ -556,8 +556,7 @@ Email: {\tt Jon.Mikkelsen@sintef.no}}}
     \includegraphics[width=0.32\linewidth, trim={0 1.5cm 0 2cm}, clip]{frviewb3.png} \\
 		a) & b) & c)
 		\end{tabular}
-		\captionof{figure}{\label{fig:FRView} The oil reservoir viewer YYYY~\cite{cloudviz},
-  (name withheld for the double-blind review process) showing one
+		\captionof{figure}{\label{fig:FRView} Oil reservoir viewer showing one
   server-rendered and two client-rendered images of automatically generated and
   slightly rotated proxy models.  For~(b), parameters are chosen to produce the
   best possible image, and in~(c) we want to highlight artifacts and
@@ -659,7 +658,7 @@ Client-server; remote rendering; high latency; low bandwidth
 
 Hand in hand with increasingly powerful rendering engines comes ever increasing
 requirements on computational accuracy, power efficiency, data sizes, scaling
-properties, etc. This is also reinforced by new cloud-based approaches and
+properties, etc. This is also reinforced by popular cloud-based approaches and
 wireless usage patterns. An effect of this is that interactivity still is a
 difficult issue. We consider a client/server model for 3D rendering, addressing
 latency, bandwidth and scaling problems in a novel way.
@@ -683,8 +682,8 @@ integrates seamlessly with the slower stream of server-rendered frames.
 Even if bandwidth and latency is not a problem, it may be desirable to let a
 server of limited capacity serve many simultaneous users, hence limiting the
 effective server time available for each one. Suitable scaling may still be
-achieved using our solution. This is currently being commercialized in an
-ongoing XXXX (name withheld for the double-blind review process) project.
+achieved using our solution. This is currently being commercialized as a part of
+the result of  a recently finished EU-project called CloudFlow.
 
 
 %-------------------------------------------------------------------------
@@ -714,11 +713,8 @@ Common to many IBR-algorithms is also that of stitching together 3D or 2.5D
 point clouds. We could do this for our 2.5D maps fetched from the server, but it
 is unclear if the benefit would outweigh the cost.
 %
-\textbf{[OLD: We are not aware of anybody else using depth maps exactly for our purpose, most
-research seems to be focused on the retrieval of the depth map from images,
-while we use an existing depth map to distill and render temporary geometry.]}
-\textbf{[NEW: Our approach differs from many similar ones, in that we use existing depth maps 
-to distill and render temporary geometry, rather than retrieveing the depth maps from images.]}
+Our approach differs from many similar ones, in that we use existing depth maps 
+to distill and render temporary geometry, rather than retrieveing the depth maps from images.
 %
 We observe that these 2.5D height maps are exactly what ``3D cameras''
 (time-of-flight and other range image sensors) produce, but most authors
@@ -1052,18 +1048,17 @@ dynamically set the number of splats, number of proxy models, etc.
 %-------------------------------------------------------------------------
 \section{Results and discussion}
 
-We have tested the algorithms discussed in the ZZZZ (name withheld for the
-double-blind review process) framework, which is a programming framework for
+We have tested the algorithms proposed algorithms through the Tinia 
+framework~\cite{tinia}, which is a programming framework for
 setting up and managing client/server based interactive visualization
-applications, see~\cite{tinia}. As client we use Google Chrome, code is written
-in standard Javascript/WebGL.  The implementation in ZZZZ is invisible to the
-application, so all existing ZZZZ-applications will have the feature
+applications. As client we use Google Chrome, code is written
+in standard Javascript/WebGL.  The auto-proxy implementation in is invisible to the
+application, so all existing Tinia-applications will have the feature
 available. The algorithm is minimally intrusive in that only the depth buffer
 will have to be added to the rendering output of the application. We have tested
-several smaller test cases, but also on a larger oil reservoir viewer,
-YYYY~\cite{cloudviz}.
+several smaller test cases, but also on a larger oil reservoir viewer.
 
-YYYY utilizes several GLSL shaders to render reservoir cells, boundaries,
+The reservoir viewer utilizes several GLSL shaders to render reservoir cells, boundaries,
 tubular wells etc., and visualizes a 3D model that is not trivial to reduce in
 complexity. It is typically also very large, so rendering it on a thin client is
 prohibitive. With the automatic proxy model, we obtain interactive frame rates
