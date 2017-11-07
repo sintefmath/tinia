@@ -653,20 +653,21 @@ Email: {\tt Jens.O.Nygaard@sintef.no},\\ and {\tt Jon.M.Hjelmervik@sintef.no}}
 %
 % New version after comments from reviewers
 %
-A common problem in remote rendering setups, is that of temporarily insufficient
+A common problem in remote rendering setups is that of temporarily insufficient
 bandwidth and latency. For a proper experience of immersiveness, at least some
 rendering should be presented to the user, and it should appear to be responsive
 to user input, even in the presence of connection glitches. The all too familiar
 spinning hourglass symbol, or equivalent, will degrade such an experience. With
-the advent of VR and AR, solutions to this become important even though
-connectedness in general is improving. We are dealing with a remote rendering of
-3D geometry being pushed to a lesser client, and what we in essence do is to
-replace a spinning hourglass symbol with an automatically client-generated
-approximation of the 3D geometry rendered on the client, responding to
-client-recorded user input. We call this a {\em proxy model}.  Our main result
-is a system for automatically producing such proxy models on the client, from
-received images and depth buffers only, for showing on the client when remotely
-rendered frames do not arrive sufficiently fast.
+the advent of Virtual Reality (VR) and Augmented Reality (AR), solutions to this
+become important even though connectedness in general is improving. We are
+dealing with a remote rendering of three-dimensional (3D) geometry being pushed
+to a lesser client, and what we in essence do is to replace a spinning hourglass
+symbol with an automatically client-generated approximation of the 3D geometry
+rendered on the client, responding to client-recorded user input. We call this a
+{\em proxy model}.  Our main result is a system for automatically producing such
+proxy models on the client, from received images and depth buffers only, for
+showing on the client when remotely rendered frames do not arrive sufficiently
+fast.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -700,7 +701,7 @@ Client-server; remote rendering; high latency; low bandwidth
 
 
 
-
+\parskip 0pt 
 
 
 %-------------------------------------------------------------------------
@@ -729,7 +730,7 @@ properties, etc. This is also reinforced by popular cloud-based approaches and
 wireless usage patterns. An effect of this is that interactivity still is a
 difficult issue. We consider a client/server model for 3D rendering, addressing
 latency, bandwidth and scaling problems in a novel way.
-\\
+
 We introduce a {\em proxy model}, defined as a temporary model to be shown and
 manipulated locally on a client while waiting for the appropriate image from a
 connected server. Producing such proxy models can be difficult for many kinds of
@@ -740,17 +741,19 @@ example of both a full server-side rendering, and automatically generated proxy
 models rendered in Google Chrome.
 %
 Our solution is to pass depth information from the server along with ordinary
-rendered images. From this, a rudimentary 3D model is built, and with the RGB
-image as a texture, this model can be manipulated and rendered on the client
-while waiting for the next update from the server. If the client does not change
-the position or orientation of the model too much, this proxy model rendering
-integrates seamlessly with the slower stream of server-rendered frames.
+rendered images. From this, a rudimentary 3D model is built, and with the Red,
+Green and Blue (RGB) image as a texture, this model can be manipulated and
+rendered on the client while waiting for the next update from the server. If the
+client does not change the position or orientation of the model too much, this
+proxy model rendering integrates seamlessly with the slower stream of
+server-rendered frames.
 %
 Even if bandwidth and latency is not a problem, it may be desirable to let a
 server of limited capacity serve many simultaneous users, hence limiting the
 effective server time available for each one. Suitable scaling may still be
 achieved using our solution. This is currently being commercialized as a part of
-the result of  a recently finished EU-project called CloudFlow~\cite{cloudflow}.
+the result of a recently finished European Union (EU) project called
+CloudFlow~\cite{cloudflow}.
 \\
 In Section~\ref{sec:prevWork}, we review some previous and related work, before
 we consider our contribution in Section~\ref{sec:autoproxy}. This is further
@@ -806,10 +809,11 @@ where we use the http protocol, a more significant difference is that we get
 away with transferring a lot less data due to our adaptive compression ratio
 depending on continuous bandwidth and latency measurements.
 %
-In~\cite{CGF:CGF1871}, Pajak \etal~considers remote rendering and
-streaming of frames rendered from a dynamical 3D model, we are quite agnostic
-to the source of imagery. Their setup requires more powerful clients than ours
-(OpenGL vs. WebGL), but they will also have higher fidelity.
+In~\cite{CGF:CGF1871}, Pajak \etal~considers remote rendering and streaming of
+frames rendered from a dynamical 3D model, we are quite agnostic to the source
+of imagery. Their setup requires more powerful clients than ours, due to the use
+of the Open Graphics Library (OpenGL) vs.~Web Graphics Library (WebGL), but they
+will also have higher fidelity.
 %
 A special case is provided for in the rendering of stereo images. In this case,
 the 3D disparity is limited, while the rendering cost is doubled, since two
@@ -1124,10 +1128,11 @@ to get the proxy model to the client and keep from delaying the server-image
 more than necessary. These demands are not always compatible.
 \\
 We have adopted an adaptive specification of proxy model data from the server
-involving a more light-weight image (lossy JPG-compression with adaptive quality
-control) while interaction is ongoing.  Also, reduced resolution of the depth
-buffer sent from the server is used. Another possibility is to let the client
-dynamically set the number of splats, number of proxy models, etc.
+involving a more light-weight image (lossy Joint Photographic Experts Group
+(JPEG) compression with adaptive quality control) while interaction is ongoing.
+Also, reduced resolution of the depth buffer sent from the server is
+used. Another possibility is to let the client dynamically set the number of
+splats, number of proxy models, etc.
 
 
 %-------------------------------------------------------------------------
